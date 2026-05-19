@@ -5,8 +5,10 @@ import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { FlightSearch } from "@/components/FlightSearch";
 import { FlightResults, Flight } from "@/components/FlightResults";
+import { SearchLoadingModal } from "@/components/SearchLoadingModal";
 import { PromoBanner } from "@/components/PromoBanner";
 import { DestinationCard } from "@/components/DestinationCard";
+import { PopularFlights } from "@/components/PopularFlights";
 import { Footer } from "@/components/Footer";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
@@ -44,6 +46,9 @@ export default function Home() {
 
     const isRT = searchData.tripType === 'round-trip';
     setIsRoundTrip(isRT);
+
+    // Simulate premium search time of 2.5 seconds to showcase modern loading screen
+    await new Promise((resolve) => setTimeout(resolve, 2500));
 
     try {
       const params = new URLSearchParams();
@@ -86,6 +91,7 @@ export default function Home() {
   return (
     <main id="main-content" className="min-h-screen bg-slate-50 flex flex-col overflow-x-hidden w-full max-w-full">
       <Navbar />
+      <SearchLoadingModal isOpen={isLoading} />
       <Hero>
         <FlightSearch onSearch={fetchFlights} />
       </Hero>
@@ -98,18 +104,12 @@ export default function Home() {
               <p className="text-[16px] text-slate-500 font-medium">We could not load the flight data at this time. Please try again later.</p>
             </div>
           ) : (
-            <div className={`grid gap-8 ${isRoundTrip ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'}`}>
-              <div>
-                {isRoundTrip && <h3 className="text-xl font-bold text-slate-900 mb-6 bg-white p-4 rounded-xl border border-slate-100 shadow-sm inline-block">Outbound Flights</h3>}
-                <FlightResults flights={flights} isLoading={isLoading} />
-              </div>
-              {isRoundTrip && (
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-6 bg-white p-4 rounded-xl border border-slate-100 shadow-sm inline-block">Return Flights</h3>
-                  <FlightResults flights={returnFlights} isLoading={isLoading} />
-                </div>
-              )}
-            </div>
+            <FlightResults 
+              flights={flights} 
+              returnFlights={returnFlights}
+              isRoundTrip={isRoundTrip}
+              isLoading={isLoading}
+            />
           )}
         </div>
       ) : (
@@ -268,6 +268,9 @@ export default function Home() {
               </div>
             </div>
           </section>
+
+          {/* Popular Flights Section */}
+          <PopularFlights />
 
           {/* Footer Implementation */}
           <Footer />

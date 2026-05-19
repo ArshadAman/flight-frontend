@@ -10,7 +10,7 @@ export function Hero({ children }: HeroProps) {
             {/* Full Page Background Image */}
             <div
                 className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-                style={{ backgroundImage: "url('/hero.jpg')" }}
+                style={{ backgroundImage: "url('/hero-bg.png')" }}
             >
                 {/* Subtle gradient so text pops out but doesn't ruin the sunset */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-slate-900/60"></div>

@@ -33,12 +33,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     return (
         <div 
-            className="fixed inset-0 bg-black/40 backdrop-blur-md z-[50] flex items-center justify-center p-4 sm:p-10 pt-[80px]"
+            className="fixed inset-0 bg-black/40 backdrop-blur-md z-[200] flex items-center justify-center p-4 sm:p-10"
             onClick={onClose}
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white rounded-[1.25rem] w-full max-w-[520px] overflow-hidden shadow-2xl relative flex flex-col cursor-auto animate-in fade-in zoom-in-95 duration-200"
+                className="bg-white rounded-[1.25rem] w-full max-w-[520px] max-h-[95vh] overflow-y-auto shadow-2xl relative flex flex-col cursor-auto animate-in fade-in zoom-in-95 duration-200"
             >
                 {/* Top Tabs */}
                 <div className="flex w-full relative z-0">
@@ -161,6 +161,22 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                 {activeTab === "login" ? "Login" : "Signup"}
                                 <ArrowUpRight className="w-[18px] h-[18px] stroke-[2.5px]" />
                             </Button>
+                        </div>
+                    </div>
+
+                    {/* Social Logins Section */}
+                    <div className="w-full mt-6 mb-2 flex flex-col items-center">
+                        <p className="text-[14px] text-slate-500 font-medium mb-4">Or {activeTab === "login" ? "Login" : "Signup"} With</p>
+                        <div className="flex items-center gap-4">
+                            <button className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors shadow-sm">
+                                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-6 h-6" />
+                            </button>
+                            <button className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors shadow-sm">
+                                <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" className="w-6 h-6" />
+                            </button>
+                            <button className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors shadow-sm">
+                                <img src="https://www.svgrepo.com/show/511330/apple-173.svg" alt="Apple" className="w-6 h-6" />
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -21,7 +21,7 @@ export function Footer() {
 
                                 {/* Signature Red Arc Underline */}
                                 <svg width="120" height="8" viewBox="2 2 120 8" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary mt-0.5">
-                                    <path d="M2 6C35 0 85 0 118 6L140 C8 2 2500 10 10 5L2 6Z" fill="currentColor" />
+                                    <path d="M2 6C35 0 85 0 118 6L118 8C85 2 35 2 2 8Z" fill="currentColor" />
                                 </svg>
                             </div>
                         </div>
@@ -38,7 +38,7 @@ export function Footer() {
                         <h3 className="text-primary font-bold text-[24px] mb-6 tracking-tight font-sans">Services</h3>
                         <ul className="flex flex-col gap-4 items-center md:items-start">
                             <li><Link href="/my-booking" className="text-[19px] font-medium text-[#888] hover:text-primary transition-colors font-sans py-0.5">Flight Booking</Link></li>
-                            <li><Link href="/group-travel" className="text-[19px] font-medium text-[#888] hover:text-primary transition-colors font-sans py-0.5">Group Travel</Link></li>
+                            <li><Link href="/group-travel/new" className="text-[19px] font-medium text-[#888] hover:text-primary transition-colors font-sans py-0.5">Group Travel</Link></li>
                         </ul>
                     </div>
 
@@ -46,7 +46,7 @@ export function Footer() {
                     <div className="flex flex-col items-center md:items-start md:pl-0">
                         <h3 className="text-primary font-bold text-[24px] mb-6 tracking-tight font-sans">Company</h3>
                         <ul className="flex flex-col gap-4 items-center md:items-start">
-                            <li><Link href="#" className="text-[19px] font-medium text-[#888] hover:text-primary transition-colors font-sans py-0.5">About Us</Link></li>
+                            <li><Link href="/about" className="text-[19px] font-medium text-[#888] hover:text-primary transition-colors font-sans py-0.5">About Us</Link></li>
                             <li><Link href="#" className="text-[19px] font-medium text-[#888] hover:text-primary transition-colors font-sans py-0.5">Career</Link></li>
                             <li><Link href="#" className="text-[19px] font-medium text-[#888] hover:text-primary transition-colors font-sans py-0.5">Blog</Link></li>
                         </ul>

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AuthModal } from "@/components/AuthModal";
 import { Logo } from "@/components/ui/logo";
-import { Menu, X, User as UserIcon, LogOut, ChevronDown } from "lucide-react";
+import { Menu, X, User as UserIcon, LogOut, ChevronDown, CornerDownRight, ChevronRight, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { NavLink } from "@/components/NavLink";
 
@@ -15,13 +15,17 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isGroupTravelOpen, setIsGroupTravelOpen] = useState(false);
+  const [isMyAccountOpen, setIsMyAccountOpen] = useState(false);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const groupTravelRef = useRef<HTMLDivElement>(null);
+  const myAccountRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setIsGroupTravelOpen(false);
+    setIsMyAccountOpen(false);
   }, [pathname]);
 
   // Handle click outside to close dropdown
@@ -33,15 +37,18 @@ export function Navbar() {
       if (groupTravelRef.current && !groupTravelRef.current.contains(event.target as Node)) {
         setIsGroupTravelOpen(false);
       }
+      if (myAccountRef.current && !myAccountRef.current.contains(event.target as Node)) {
+        setIsMyAccountOpen(false);
+      }
     }
 
-    if (isDropdownOpen || isGroupTravelOpen) {
+    if (isDropdownOpen || isGroupTravelOpen || isMyAccountOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isDropdownOpen, isGroupTravelOpen]);
+  }, [isDropdownOpen, isGroupTravelOpen, isMyAccountOpen]);
 
   return (
     <>
@@ -50,7 +57,7 @@ export function Navbar() {
           <div className="flex justify-between items-center h-24">
             {/* Logo */}
 
-            <div className="flex flex-col items-center justify-center select-none">
+            <Link href="/" className="flex flex-col items-center justify-center select-none cursor-pointer">
               <Logo />
               {/* Brand Text Area */}
               <div className="flex flex-col items-center mt-1">
@@ -58,7 +65,7 @@ export function Navbar() {
                   className="text-[22px] font-[905] text-brand leading-none tracking-tighter font-sans"
                   style={{ letterSpacing: '-0.04em' }}
                 >
-                  Travel Deal
+                  My Travel Deal
                 </h1>
 
                 {/* Signature Red Arc Underline */}
@@ -72,27 +79,26 @@ export function Navbar() {
                 >
                   <path
                     /* This path creates the tapered 'sharp' ends seen in your brand image */
-                    d="M2 6C35 0 85 0 118 6L140 C8 2 2500 10 10 5L2 6Z"
+                    d="M2 6C35 0 85 0 118 6L118 8C85 2 35 2 2 8Z"
                     fill="currentColor"
                   />
                 </svg>
               </div>
-            </div>
+            </Link>
 
 
             {/* Nav Links */}
             <nav className="hidden lg:flex items-center space-x-4 xl:space-x-8 mt-1">
               <NavLink href="/">Home</NavLink>
-              
+
               {/* Group Travel Dropdown */}
               <div className="relative flex items-center h-full" ref={groupTravelRef}>
                 <button
                   onClick={() => setIsGroupTravelOpen(!isGroupTravelOpen)}
-                  className={`relative text-[16px] xl:text-[20px] py-1 flex flex-col items-center justify-center transition-colors duration-200 ${
-                    isGroupTravelOpen || pathname.startsWith('/group-travel')
-                      ? 'font-[700] text-primary'
-                      : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
-                  }`}
+                  className={`relative text-[16px] xl:text-[20px] py-1 flex flex-col items-center justify-center transition-colors duration-200 ${isGroupTravelOpen || pathname.startsWith('/group-travel')
+                    ? 'font-[700] text-primary'
+                    : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
+                    }`}
                 >
                   <div className="flex items-center gap-1">
                     Group Travel
@@ -100,40 +106,40 @@ export function Navbar() {
                   </div>
                   {(isGroupTravelOpen || pathname.startsWith('/group-travel')) && <div className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full" />}
                 </button>
-                
+
                 {isGroupTravelOpen && (
                   <div className="absolute top-full left-0 mt-5 w-64 bg-white border-t-[5px] border-[#E11D48] rounded-2xl shadow-xl z-50 p-2">
                     <div className="flex flex-col gap-1">
-                      <Link 
-                        href="/group-travel/new" 
+                      <Link
+                        href="/group-travel/new"
                         onClick={() => setIsGroupTravelOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-xl transition-colors"
                       >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                          <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <span className="font-bold text-slate-800">New Booking</span>
                       </Link>
-                      <Link 
-                        href="/group-travel/view-request" 
+                      <Link
+                        href="/group-travel/view-request"
                         onClick={() => setIsGroupTravelOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-xl transition-colors"
                       >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                          <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <span className="font-bold text-slate-800">Request</span>
                       </Link>
-                      <Link 
-                        href="/group-travel/add-passenger" 
+                      <Link
+                        href="/group-travel/add-passenger"
                         onClick={() => setIsGroupTravelOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-xl transition-colors"
                       >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                          <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <span className="font-bold text-slate-800">Modified Request</span>
                       </Link>
@@ -143,8 +149,6 @@ export function Navbar() {
               </div>
 
               <NavLink href="/about">About Us</NavLink>
-              <NavLink href="/my-booking">My Booking</NavLink>
-              <NavLink href="/customer-support">Customer Support</NavLink>
             </nav>
 
             {/* Desktop Action Button */}
@@ -164,6 +168,7 @@ export function Navbar() {
                         <p className="font-medium text-gray-900">{user.name}</p>
                         <p className="text-sm text-gray-500">{user.email}</p>
                       </div>
+
                       <button
                         onClick={() => {
                           logout();
@@ -224,9 +229,8 @@ export function Navbar() {
 
         <nav className="flex flex-col space-y-2 mt-4 px-4 w-full">
           <NavLink href="/" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
-          <NavLink href="/flights" isMobile onClick={() => setIsMobileMenuOpen(false)}>Flights</NavLink>
-          <NavLink href="/my-booking" isMobile onClick={() => setIsMobileMenuOpen(false)}>My Booking</NavLink>
-          <NavLink href="/customer-support" isMobile onClick={() => setIsMobileMenuOpen(false)}>Customer Support</NavLink>
+          <NavLink href="/group-travel" isMobile onClick={() => setIsMobileMenuOpen(false)}>Group Travel</NavLink>
+          <NavLink href="/about" isMobile onClick={() => setIsMobileMenuOpen(false)}>About Us</NavLink>
         </nav>
 
         <div className="mt-auto px-6 pt-6 pb-8 w-full border-t border-slate-100">

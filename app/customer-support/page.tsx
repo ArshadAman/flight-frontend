@@ -9,15 +9,15 @@ export default function CustomerSupportPage() {
             <Navbar />
 
             {/* Top Banner with Breadcrumbs */}
-            <div className="w-full bg-[#ebd9dc] py-14 sm:py-16 border-b border-rose-100">
+            <div className="w-full bg-gradient-to-r from-primary to-[#0B132B] py-14 sm:py-16">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-12 flex flex-col">
-                    <h1 className="text-[32px] md:text-[38px] font-[700] text-[#555a60] tracking-tight mb-3">
+                    <h1 className="text-[32px] md:text-[38px] font-[700] text-white tracking-tight mb-3">
                         Customer support
                     </h1>
-                    <div className="flex items-center text-[15px] font-[600] text-gray-500/80 gap-2">
-                        <Link href="/" className="hover:text-red-700 transition-colors">Home</Link>
+                    <div className="flex items-center text-[15px] font-[600] text-rose-100 gap-2">
+                        <Link href="/" className="hover:text-white transition-colors">Home</Link>
                         <span>→</span>
-                        <span className="text-gray-600/90">Customer Support</span>
+                        <span className="text-white/90">Customer Support</span>
                     </div>
                 </div>
             </div>
