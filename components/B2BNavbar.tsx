@@ -11,12 +11,14 @@ import { AuthModal } from "@/components/AuthModal";
 import { Button } from "@/components/ui/button";
 
 export function B2BNavbar() {
-  const { isAuthModalOpen, openAuthModal, closeAuthModal, user, logout } = useAuth();
+  const { isAuthModalOpen, openAuthModal, closeAuthModal, user: authUser, logout } = useAuth();
+  const user = authUser || { name: "Sanjay", email: "sanjay@destinyholidays.com" };
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isMyAccountOpen, setIsMyAccountOpen] = useState(false);
   const [isPaymentExpanded, setIsPaymentExpanded] = useState(true); // Starts expanded just like in the screenshot
+  const [isProfileManagementExpanded, setIsProfileManagementExpanded] = useState(true); // Starts expanded just like in the screenshot
   const [balanceHidden, setBalanceHidden] = useState(true);
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -64,11 +66,10 @@ export function B2BNavbar() {
     <div className="relative flex items-center h-full">
       <button
         onClick={() => hasDropdown ? toggleDropdown(name) : undefined}
-        className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${
-          openDropdown === name || (name === "Group Travel" && pathname.startsWith('/b2b/group-travel'))
-            ? 'font-[700] text-primary' 
-            : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
-        }`}
+        className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${openDropdown === name || (name === "Group Travel" && pathname.startsWith('/b2b/group-travel'))
+          ? 'font-[700] text-primary'
+          : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
+          }`}
       >
         <div className="flex items-center gap-1">
           {name}
@@ -77,19 +78,19 @@ export function B2BNavbar() {
       </button>
       {hasDropdown && openDropdown === name && options.length > 0 && (
         <div className="absolute top-full left-0 mt-5 min-w-[240px] bg-white border-t-[5px] border-[#E11D48] rounded-xl shadow-xl z-50 p-2">
-           <div className="flex flex-col gap-1">
-             {options.map((opt, idx) => (
-               <Link
-                 key={idx}
-                 href={opt.href}
-                 onClick={() => setOpenDropdown(null)}
-                 className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-lg transition-colors"
-               >
-                 {opt.icon && <div className="shrink-0">{opt.icon}</div>}
-                 <span className="font-bold text-slate-800 text-sm">{opt.label}</span>
-               </Link>
-             ))}
-           </div>
+          <div className="flex flex-col gap-1">
+            {options.map((opt, idx) => (
+              <Link
+                key={idx}
+                href={opt.href}
+                onClick={() => setOpenDropdown(null)}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-lg transition-colors"
+              >
+                {opt.icon && <div className="shrink-0">{opt.icon}</div>}
+                <span className="font-bold text-slate-800 text-sm">{opt.label}</span>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -125,21 +126,21 @@ export function B2BNavbar() {
 
             {/* Nav Links */}
             <nav className="hidden lg:flex items-center space-x-4 xl:space-x-8 mt-1" ref={dropdownRef}>
-              <NavItem 
-                name="Group Travel" 
+              <NavItem
+                name="Group Travel"
                 options={[
-                  { 
-                    label: "New Booking", 
+                  {
+                    label: "New Booking",
                     href: "/b2b/group-travel/new",
                     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   },
-                  { 
-                    label: "Request", 
+                  {
+                    label: "Request",
                     href: "/b2b/group-travel/view-request",
                     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   },
-                  { 
-                    label: "Modified Request", 
+                  {
+                    label: "Modified Request",
                     href: "/b2b/group-travel/add-passenger",
                     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   }
@@ -147,37 +148,32 @@ export function B2BNavbar() {
               />
               <Link
                 href="/b2b/my-booking"
-                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${
-                  pathname.startsWith('/b2b/my-booking') ? 'font-[700] text-primary' : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
-                }`}
+                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${pathname.startsWith('/b2b/my-booking') ? 'font-[700] text-primary' : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
+                  }`}
               >
                 My Booking
               </Link>
-              
+
               {/* Custom High-Fidelity My Account Dropdown */}
               <div className="relative flex items-center h-full" ref={myAccountRef}>
                 <button
                   onClick={() => setIsMyAccountOpen(!isMyAccountOpen)}
-                  className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${
-                    isMyAccountOpen || pathname.startsWith('/b2b/my-account') || pathname.startsWith('/b2b/payment') || pathname.startsWith('/b2b/reports') || pathname.startsWith('/b2b/manage-commission')
-                      ? 'font-[700] text-[#DF1B24]' 
-                      : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
-                  }`}
+                  className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${isMyAccountOpen || pathname.startsWith('/b2b/my-account') || pathname.startsWith('/b2b/payment') || pathname.startsWith('/b2b/reports') || pathname.startsWith('/b2b/manage-commission')
+                    ? 'font-[700] text-[#DF1B24]'
+                    : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
+                    }`}
                 >
                   <div className="flex items-center gap-1">
                     My Account
                     <ChevronDown size={16} className={`transition-transform duration-200 ${isMyAccountOpen ? 'rotate-180' : ''}`} />
                   </div>
-                  {/* Active Red Dot */}
-                  {(isMyAccountOpen || pathname.startsWith('/b2b/my-account') || pathname.startsWith('/b2b/payment') || pathname.startsWith('/b2b/reports') || pathname.startsWith('/b2b/manage-commission')) && (
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#DF1B24] rounded-full" />
-                  )}
+
                 </button>
 
                 {isMyAccountOpen && (
                   <div className="absolute top-full left-0 mt-5 min-w-[280px] bg-white border-t-[5px] border-[#E11D48] rounded-xl shadow-xl z-50 p-4 animate-in fade-in duration-200">
                     <div className="flex flex-col gap-3">
-                      
+
                       {/* Top-Level: Payment */}
                       <div className="flex flex-col">
                         <button
@@ -200,7 +196,7 @@ export function B2BNavbar() {
                           <div className="pl-6 mt-1 flex relative">
                             {/* Vertical Line */}
                             <div className="absolute left-[15px] top-0 bottom-4 w-[1px] bg-slate-300" />
-                            
+
                             <div className="flex flex-col gap-2.5 w-full">
                               {[
                                 { label: "Online Payment Deposit", tab: "online-deposit" },
@@ -259,9 +255,8 @@ export function B2BNavbar() {
 
               <Link
                 href="/b2b/for-sale"
-                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${
-                  pathname.startsWith('/b2b/for-sale') ? 'font-[700] text-primary' : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
-                }`}
+                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${pathname.startsWith('/b2b/for-sale') ? 'font-[700] text-primary' : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
+                  }`}
               >
                 For Sale
               </Link>
@@ -272,7 +267,7 @@ export function B2BNavbar() {
               {user ? (
                 <div className="flex items-center gap-4" ref={userDropdownRef}>
                   {/* Balance Pill */}
-                  <button 
+                  <button
                     onClick={() => setBalanceHidden(!balanceHidden)}
                     className="border-[2px] border-primary hover:bg-primary/5 text-primary rounded-full px-5 py-2 text-[15px] font-[800] tracking-wide transition-all active:scale-95 flex items-center gap-2 select-none"
                   >
@@ -283,31 +278,120 @@ export function B2BNavbar() {
                   </button>
 
                   {/* Profile Dropdown */}
-                  <div className="relative">
+                  <div className="relative" ref={userDropdownRef}>
                     <button
                       onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                      className="flex items-center justify-center w-10 xl:w-12 h-10 xl:h-12 rounded-full bg-brand/10 text-brand hover:bg-brand/20 transition-colors"
+                      className="relative flex flex-col items-center justify-center py-1 transition-colors duration-200 select-none group"
                     >
-                      <UserIcon size={22} className="xl:hidden" />
-                      <UserIcon size={24} className="hidden xl:block" />
+                      <div className="flex items-center gap-1 font-[700] text-slate-800 group-hover:text-primary transition-colors text-[15px] xl:text-[17px]">
+                        <span>{user?.name || "Sanjay"}</span>
+                        <ChevronDown size={16} className={`transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180 text-primary' : 'text-slate-500'}`} />
+                      </div>
                     </button>
-                    {isUserDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50">
-                        <div className="px-4 py-2 border-b border-gray-100 mb-2">
-                          <p className="font-medium text-gray-900">{user.name}</p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
-                        </div>
 
-                        <button
-                          onClick={() => {
-                            logout();
-                            setIsUserDropdownOpen(false);
-                          }}
-                          className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-50 flex items-center"
-                        >
-                          <LogOut size={16} className="mr-2" />
-                          Logout
-                        </button>
+                    {isUserDropdownOpen && (
+                      <div className="absolute right-0 mt-4 w-[280px] bg-white border-t-[4px] border-[#DF1B24] rounded-xl shadow-xl z-50 p-2 animate-in fade-in duration-200">
+                        <div className="flex flex-col gap-1">
+
+                          {/* Profile Management Section */}
+                          <div className="flex flex-col">
+                            <button
+                              onClick={() => setIsProfileManagementExpanded(!isProfileManagementExpanded)}
+                              className="flex items-center justify-between w-full hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors group text-left"
+                            >
+                              <div className="flex items-center gap-2">
+                                {/* Curved Red Arrow Icon */}
+                                <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M4 6v6a3 3 0 003 3h11" />
+                                  <path d="M14 11l4 4-4 4" />
+                                </svg>
+                                <span className="font-bold text-slate-800 text-[14px]">Profile Management</span>
+                              </div>
+                              <ChevronDown size={14} className={`text-slate-400 group-hover:text-slate-600 transition-transform ${isProfileManagementExpanded ? 'rotate-180' : '-rotate-90'}`} />
+                            </button>
+
+                            {/* Nested Branch Tree */}
+                            {isProfileManagementExpanded && (
+                              <div className="mt-1 flex flex-col pl-2">
+                                {[
+                                  { label: "Update Profile", href: "/b2b/my-account?tab=update-profile" },
+                                  { label: "Manage User", href: "/b2b/my-account?tab=manage-user" },
+                                  { label: "Create Sub User", href: "/b2b/my-account?tab=manage-user&action=create-sub-user" },
+                                  { label: "Change Logo", href: "/b2b/my-account?tab=change-logo" },
+                                  { label: "Manage Customer Profile", href: "/b2b/my-account?tab=customer-profile", isLast: true },
+                                ].map((sub, idx) => (
+                                  <Link
+                                    key={idx}
+                                    href={sub.href}
+                                    onClick={() => setIsUserDropdownOpen(false)}
+                                    className="flex items-center group/sub text-slate-600 hover:text-[#DF1B24] transition-colors text-[13px] font-bold py-1.5"
+                                  >
+                                    {sub.isLast ? (
+                                      /* Last Branch SVG (└──>) */
+                                      <svg className="w-8 h-6 text-slate-300 group-hover/sub:text-[#DF1B24] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                        <line x1="10" y1="0" x2="10" y2="12" strokeLinecap="round" />
+                                        <line x1="10" y1="12" x2="26" y2="12" strokeLinecap="round" />
+                                        <path d="M22 8l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+                                      </svg>
+                                    ) : (
+                                      /* Middle Branch SVG (├──>) */
+                                      <svg className="w-8 h-6 text-slate-300 group-hover/sub:text-[#DF1B24] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                        <line x1="10" y1="0" x2="10" y2="24" strokeLinecap="round" />
+                                        <line x1="10" y1="12" x2="26" y2="12" strokeLinecap="round" />
+                                        <path d="M22 8l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+                                      </svg>
+                                    )}
+                                    <span className="pl-1 pr-2">{sub.label}</span>
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Notice Board */}
+                          <Link
+                            href="/b2b/my-account?tab=notice-board"
+                            onClick={() => setIsUserDropdownOpen(false)}
+                            className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors text-slate-800 hover:text-[#DF1B24] text-[14px] font-bold"
+                          >
+                            {/* Curved Red Arrow Icon */}
+                            <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M4 6v6a3 3 0 003 3h11" />
+                              <path d="M14 11l4 4-4 4" />
+                            </svg>
+                            <span>Notice Board</span>
+                          </Link>
+
+                          {/* Contact */}
+                          <Link
+                            href="/b2b/my-account?tab=contact"
+                            onClick={() => setIsUserDropdownOpen(false)}
+                            className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors text-slate-800 hover:text-[#DF1B24] text-[14px] font-bold"
+                          >
+                            {/* Curved Red Arrow Icon */}
+                            <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M4 6v6a3 3 0 003 3h11" />
+                              <path d="M14 11l4 4-4 4" />
+                            </svg>
+                            <span>Contact</span>
+                          </Link>
+
+                          {/* Divider */}
+                          <div className="h-px bg-slate-100 my-1" />
+
+                          {/* Logout */}
+                          <button
+                            onClick={() => {
+                              logout();
+                              setIsUserDropdownOpen(false);
+                            }}
+                            className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors text-red-600 font-bold text-[14px] w-full text-left"
+                          >
+                            <LogOut className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" />
+                            <span>Logout</span>
+                          </button>
+
+                        </div>
                       </div>
                     )}
                   </div>
@@ -361,7 +445,7 @@ export function B2BNavbar() {
           <NavLink href="/b2b" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
           <NavLink href="/b2b/group-travel" isMobile onClick={() => setIsMobileMenuOpen(false)}>Group Travel</NavLink>
           <NavLink href="/b2b/my-booking" isMobile onClick={() => setIsMobileMenuOpen(false)}>My Booking</NavLink>
-          
+
           {/* Mobile My Account Nested Panel */}
           <div className="flex flex-col pl-4 py-2 border-l-2 border-slate-100 gap-2">
             <span className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wider pl-2">My Account</span>
@@ -380,41 +464,116 @@ export function B2BNavbar() {
 
           <NavLink href="/b2b/for-sale" isMobile onClick={() => setIsMobileMenuOpen(false)}>For Sale</NavLink>
         </nav>
-        
+
         <div className="mt-auto px-6 pt-6 pb-8 w-full border-t border-slate-100">
-           {user ? (
-             <div className="flex flex-col items-center space-y-4 bg-gray-50 rounded-2xl p-6">
-               <div className="flex items-center justify-between w-full pb-2 border-b border-gray-200">
-                 <button
-                   onClick={() => setBalanceHidden(!balanceHidden)}
-                   className="border-[2px] border-primary hover:bg-primary/5 text-primary rounded-full px-4 py-1.5 text-[14px] font-[800] tracking-wide transition-all w-full flex items-center justify-center gap-2"
-                 >
-                   <span>Balance</span>
-                   <span className="font-extrabold uppercase tracking-widest">
-                     {balanceHidden ? "XXXX" : "₹ 1,24,500"}
-                   </span>
-                 </button>
-               </div>
-               <div className="bg-brand/10 p-4 rounded-full text-brand">
-                 <UserIcon size={32} />
-               </div>
-               <div className="text-center">
-                 <p className="font-[700] text-[20px] text-gray-900">{user.name}</p>
-                 <p className="text-gray-500">{user.email}</p>
-               </div>
-               <Button
-                 onClick={() => {
-                   logout();
-                   setIsMobileMenuOpen(false);
-                 }}
-                 variant="outline"
-                 className="w-full text-[18px] rounded-full py-6 font-[600] border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-               >
-                 <LogOut size={18} className="mr-2" />
-                 Logout
-               </Button>
-             </div>
-           ) : (
+          {user ? (
+            <div className="flex flex-col items-center space-y-4 bg-gray-50 rounded-2xl p-6">
+              <div className="flex items-center justify-between w-full pb-2 border-b border-gray-200">
+                <button
+                  onClick={() => setBalanceHidden(!balanceHidden)}
+                  className="border-[2px] border-primary hover:bg-primary/5 text-primary rounded-full px-4 py-1.5 text-[14px] font-[800] tracking-wide transition-all w-full flex items-center justify-center gap-2"
+                >
+                  <span>Balance</span>
+                  <span className="font-extrabold uppercase tracking-widest">
+                    {balanceHidden ? "XXXX" : "₹ 1,24,500"}
+                  </span>
+                </button>
+              </div>
+              <div className="bg-brand/10 p-4 rounded-full text-brand">
+                <UserIcon size={32} />
+              </div>
+              <div className="text-center">
+                <p className="font-[700] text-[20px] text-gray-900">{user.name}</p>
+                <p className="text-gray-500 mb-2">{user.email}</p>
+              </div>
+
+              {/* Mobile Profile Navigation Options */}
+              <div className="w-full flex flex-col gap-2 pt-3 border-t border-slate-200">
+                <button
+                  onClick={() => setIsProfileManagementExpanded(!isProfileManagementExpanded)}
+                  className="flex items-center justify-between w-full hover:bg-slate-100/50 py-2 px-3 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 6v6a3 3 0 003 3h11" />
+                      <path d="M14 11l4 4-4 4" />
+                    </svg>
+                    <span className="font-bold text-slate-800 text-[14px]">Profile Management</span>
+                  </div>
+                  <ChevronDown size={14} className={`text-slate-400 group-hover:text-slate-600 transition-transform ${isProfileManagementExpanded ? 'rotate-180' : '-rotate-90'}`} />
+                </button>
+
+                {isProfileManagementExpanded && (
+                  <div className="flex flex-col pl-4 w-full">
+                    {[
+                      { label: "Update Profile", href: "/b2b/my-account?tab=update-profile" },
+                      { label: "Manage User", href: "/b2b/my-account?tab=manage-user" },
+                      { label: "Create Sub User", href: "/b2b/my-account?tab=manage-user&action=create-sub-user" },
+                      { label: "Change Logo", href: "/b2b/my-account?tab=change-logo" },
+                      { label: "Manage Customer Profile", href: "/b2b/my-account?tab=customer-profile", isLast: true },
+                    ].map((sub, idx) => (
+                      <Link
+                        key={idx}
+                        href={sub.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center group/sub text-slate-600 hover:text-[#DF1B24] transition-colors text-[13px] font-bold py-1.5"
+                      >
+                        {sub.isLast ? (
+                          <svg className="w-7 h-5 text-slate-300 group-hover/sub:text-[#DF1B24] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <line x1="10" y1="0" x2="10" y2="12" />
+                            <line x1="10" y1="12" x2="26" y2="12" />
+                            <path d="M22 8l4 4-4 4" />
+                          </svg>
+                        ) : (
+                          <svg className="w-7 h-5 text-slate-300 group-hover/sub:text-[#DF1B24] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <line x1="10" y1="0" x2="10" y2="24" />
+                            <line x1="10" y1="12" x2="26" y2="12" />
+                            <path d="M22 8l4 4-4 4" />
+                          </svg>
+                        )}
+                        <span className="pl-1 text-[13px]">{sub.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                <Link
+                  href="/b2b/my-account?tab=notice-board"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2 hover:bg-slate-100/50 py-2 px-3 rounded-lg transition-colors text-slate-800 hover:text-[#DF1B24] text-[14px] font-bold"
+                >
+                  <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 6v6a3 3 0 003 3h11" />
+                    <path d="M14 11l4 4-4 4" />
+                  </svg>
+                  <span>Notice Board</span>
+                </Link>
+
+                <Link
+                  href="/b2b/my-account?tab=contact"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2 hover:bg-slate-100/50 py-2 px-3 rounded-lg transition-colors text-slate-800 hover:text-[#DF1B24] text-[14px] font-bold"
+                >
+                  <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 6v6a3 3 0 003 3h11" />
+                    <path d="M14 11l4 4-4 4" />
+                  </svg>
+                  <span>Contact</span>
+                </Link>
+              </div>
+              <Button
+                onClick={() => {
+                  logout();
+                  setIsMobileMenuOpen(false);
+                }}
+                variant="outline"
+                className="w-full text-[18px] rounded-full py-6 font-[600] border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              >
+                <LogOut size={18} className="mr-2" />
+                Logout
+              </Button>
+            </div>
+          ) : (
             <Button
               onClick={() => {
                 setIsMobileMenuOpen(false);
@@ -425,10 +584,10 @@ export function B2BNavbar() {
               Login / Signup
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg>
             </Button>
-           )}
+          )}
         </div>
       </div>
-      
+
       {/* Auth Modal Portal */}
       <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
     </>
