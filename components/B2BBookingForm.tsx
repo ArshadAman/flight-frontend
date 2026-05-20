@@ -5,6 +5,7 @@ import { ArrowRight, Plane, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { COUNTRIES } from "@/lib/data/countries";
 
 export function B2BBookingForm() {
   const router = useRouter();
@@ -149,9 +150,8 @@ export function B2BBookingForm() {
                                     <input type="text" placeholder="Last Name" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[13px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400" />
                                     <input type="text" placeholder="First Name" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[13px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400" />
                                     <input type="text" placeholder="Middle Name" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[13px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400" />
-                                    <div className="col-span-1 relative">
-                                        <input type="text" placeholder="Date Of Birth" className="w-full border border-slate-200 rounded-md px-3 py-2.5 text-[13px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 pr-8" />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 select-none">📅</span>
+                                    <div className="col-span-1">
+                                        <input type="date" placeholder="Date Of Birth" className="w-full border border-slate-200 rounded-md px-3 py-2.5 text-[13px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white" />
                                     </div>
                                 </div>
 
@@ -189,8 +189,7 @@ export function B2BBookingForm() {
                                                     <input type="text" placeholder="First Name As Per Passport" className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                                     <input type="text" placeholder="Middle Name As Per Passport" className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                                     <div className="relative">
-                                                      <input type="text" placeholder="Date Of Birth" className="w-full border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 pr-8 bg-white" />
-                                                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[14px] select-none">📅</span>
+                                                      <input type="date" placeholder="Date Of Birth" className="w-full border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white" />
                                                     </div>
                                                 </div>
                                                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -202,14 +201,15 @@ export function B2BBookingForm() {
                                                         <option>Document Number</option>
                                                     </select>
                                                     <select className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
-                                                        <option>Country Of Issuance</option>
+                                                        <option value="">Country Of Issuance</option>
+                                                        {COUNTRIES.map(country => <option key={country} value={country}>{country}</option>)}
                                                     </select>
                                                     <select className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
-                                                        <option>Nationality</option>
+                                                        <option value="">Nationality</option>
+                                                        {COUNTRIES.map(country => <option key={country} value={country}>{country}</option>)}
                                                     </select>
                                                     <div className="relative">
-                                                      <input type="text" placeholder="Validity" className="w-full border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 pr-8 bg-white" />
-                                                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[14px] select-none">📅</span>
+                                                      <input type="date" placeholder="Validity" className="w-full border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -240,7 +240,10 @@ export function B2BBookingForm() {
                                                 </div>
                                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                     <input type="text" placeholder="State" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
-                                                    <input type="text" placeholder="Country" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
+                                                    <select className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
+                                                        <option value="">Country</option>
+                                                        {COUNTRIES.map(country => <option key={country} value={country}>{country}</option>)}
+                                                    </select>
                                                 </div>
                                             </div>
 
@@ -417,7 +420,10 @@ export function B2BBookingForm() {
                         <div className="flex flex-col border-b border-slate-100 px-6 py-6 gap-5">
                             <h3 className="text-slate-800 font-bold text-[14px]">Invoicing address :</h3>
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                                <input type="text" placeholder="Nationality" className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
+                                <select className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
+                                    <option value="">Nationality</option>
+                                    {COUNTRIES.map(country => <option key={country} value={country}>{country}</option>)}
+                                </select>
                                 <input type="text" placeholder="Last Name" className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                 <input type="text" placeholder="First Name" className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                 <input type="email" placeholder="Email Address" className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
@@ -428,7 +434,8 @@ export function B2BBookingForm() {
                                 <input type="text" placeholder="ZIP / Costal Code" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                 <input type="text" placeholder="City" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                 <select className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
-                                    <option>Country</option>
+                                    <option value="">Country</option>
+                                    {COUNTRIES.map(country => <option key={country} value={country}>{country}</option>)}
                                 </select>
                             </div>
                         </div>

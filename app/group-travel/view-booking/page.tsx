@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Bell, ChevronDown, CalendarIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useGroupTravel } from '@/context/GroupTravelContext';
+import { NotificationModal } from '@/components/NotificationModal';
 
 export default function ViewBookingPage() {
   const [activeTab, setActiveTab] = useState('View Booking');
   const { requests } = useGroupTravel();
+  const [notificationOpen, setNotificationOpen] = useState(false);
   
   // Filter for completed/paid bookings
   const paidPayments = requests.filter((req) => req.status === "Paid");
@@ -32,7 +34,7 @@ export default function ViewBookingPage() {
               <span className="opacity-100 font-semibold">View Booking</span>
             </div>
 
-            <div className="flex items-center gap-2 text-base">
+            <div className="flex items-center gap-2 text-base cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setNotificationOpen(true)}>
               <Bell className="w-4 h-4" />
               <span>Notification(0)</span>
             </div>
@@ -239,6 +241,7 @@ export default function ViewBookingPage() {
       </main>
 
       <Footer />
+      <NotificationModal isOpen={notificationOpen} onClose={() => setNotificationOpen(false)} />
     </div>
   );
 }

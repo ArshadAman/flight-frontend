@@ -40,7 +40,13 @@ export function B2BNavbar() {
     setOpenDropdown(openDropdown === name ? null : name);
   };
 
-  const NavItem = ({ name, hasDropdown = true }: { name: string, hasDropdown?: boolean }) => (
+  type DropdownOption = {
+    label: string;
+    href: string;
+    icon?: React.ReactNode;
+  };
+
+  const NavItem = ({ name, hasDropdown = true, options = [] }: { name: string, hasDropdown?: boolean, options?: DropdownOption[] }) => (
     <div className="relative flex items-center h-full">
       <button
         onClick={() => hasDropdown ? toggleDropdown(name) : undefined}
@@ -53,11 +59,20 @@ export function B2BNavbar() {
           {hasDropdown && <ChevronDown size={16} className={`transition-transform duration-200 ${openDropdown === name ? 'rotate-180' : ''}`} />}
         </div>
       </button>
-      {hasDropdown && openDropdown === name && (
-        <div className="absolute top-full left-0 mt-5 w-48 bg-white border-t-[5px] border-[#E11D48] rounded-xl shadow-xl z-50 p-2">
+      {hasDropdown && openDropdown === name && options.length > 0 && (
+        <div className="absolute top-full left-0 mt-5 min-w-[240px] bg-white border-t-[5px] border-[#E11D48] rounded-xl shadow-xl z-50 p-2">
            <div className="flex flex-col gap-1">
-             <div className="px-4 py-2 hover:bg-slate-50 rounded-lg text-sm cursor-pointer font-medium text-slate-800">Option 1</div>
-             <div className="px-4 py-2 hover:bg-slate-50 rounded-lg text-sm cursor-pointer font-medium text-slate-800">Option 2</div>
+             {options.map((opt, idx) => (
+               <Link
+                 key={idx}
+                 href={opt.href}
+                 onClick={() => setOpenDropdown(null)}
+                 className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-lg transition-colors"
+               >
+                 {opt.icon && <div className="shrink-0">{opt.icon}</div>}
+                 <span className="font-bold text-slate-800 text-sm">{opt.label}</span>
+               </Link>
+             ))}
            </div>
         </div>
       )}
@@ -94,11 +109,30 @@ export function B2BNavbar() {
 
             {/* Nav Links */}
             <nav className="hidden lg:flex items-center space-x-4 xl:space-x-8 mt-1" ref={dropdownRef}>
-              <NavItem name="Group Travel" />
+              <NavItem 
+                name="Group Travel" 
+                options={[
+                  { 
+                    label: "New Booking", 
+                    href: "/b2b/group-travel/new",
+                    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  },
+                  { 
+                    label: "Request", 
+                    href: "/b2b/group-travel/view-request",
+                    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  },
+                  { 
+                    label: "Modified Request", 
+                    href: "/b2b/group-travel/add-passenger",
+                    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  }
+                ]}
+              />
               <NavItem name="My Booking" />
               <NavItem name="My Account" />
               <NavItem name="For Sale" />
-              {user && <NavItem name={user.name || "Sanjay"} />}
+              {user && <NavItem name={user.name || "Sanjay"} hasDropdown={false} />}
             </nav>
 
             {/* Desktop Action Button */}
@@ -155,6 +189,7 @@ export function B2BNavbar() {
 
         <nav className="flex flex-col space-y-2 mt-4 px-4 w-full">
           <NavLink href="/b2b" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
+          <NavLink href="/b2b/group-travel" isMobile onClick={() => setIsMobileMenuOpen(false)}>Group Travel</NavLink>
         </nav>
         
         <div className="mt-auto px-6 pt-6 pb-8 w-full border-t border-slate-100">

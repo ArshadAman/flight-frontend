@@ -8,10 +8,12 @@ import { Bell, ChevronDown, CalendarIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useGroupTravel } from '@/context/GroupTravelContext';
 import { PAYMENT_CONFIG } from '@/lib/paymentConfig';
+import { NotificationModal } from '@/components/NotificationModal';
 
 export default function MakePaymentPage() {
   const [activeTab, setActiveTab] = useState('Make Payment');
   const { requests } = useGroupTravel();
+  const [notificationOpen, setNotificationOpen] = useState(false);
   
   // Filter for pending payments
   const pendingPayments = requests.filter((req) => req.status === "Payment pending");
@@ -33,7 +35,7 @@ export default function MakePaymentPage() {
               <span className="opacity-100 font-semibold">New Booking</span>
             </div>
 
-            <div className="flex items-center gap-2 text-base">
+            <div className="flex items-center gap-2 text-base cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setNotificationOpen(true)}>
               <Bell className="w-4 h-4" />
               <span>Notification(0)</span>
             </div>
@@ -241,6 +243,7 @@ export default function MakePaymentPage() {
       </main>
 
       <Footer />
+      <NotificationModal isOpen={notificationOpen} onClose={() => setNotificationOpen(false)} />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useGroupTravel, TravelRequest } from '@/context/GroupTravelContext';
+import { NotificationModal } from '@/components/NotificationModal';
 
 const getStatusColor = (status: string) => {
   if (status === "New Request" || status === "Quotation Accepted") {
@@ -37,6 +38,7 @@ export default function ViewRequestPage() {
   // --- Task 2 & 3: Modal state ---
   const [selectedRequest, setSelectedRequest] = useState<TravelRequest | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
   // Modal form state
   const [modalAdults, setModalAdults] = useState(1);
@@ -100,7 +102,7 @@ export default function ViewRequestPage() {
                  <span className="opacity-100 font-semibold">New Booking</span>
               </div>
               
-              <div className="flex items-center gap-2 text-base">
+              <div className="flex items-center gap-2 text-base cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setNotificationOpen(true)}>
                  <Bell className="w-4 h-4" />
                  <span>Notification(0)</span>
               </div>
@@ -492,6 +494,7 @@ export default function ViewRequestPage() {
       </Dialog>
 
       <Footer />
+      <NotificationModal isOpen={notificationOpen} onClose={() => setNotificationOpen(false)} />
     </div>
   );
 }

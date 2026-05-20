@@ -5,11 +5,14 @@ import { ArrowUpRight, Plane, Bell, Download, Share2, Printer, CheckCircle2 } fr
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { COUNTRIES } from "@/lib/data/countries";
+import { NotificationModal } from "./NotificationModal";
 
 export function B2BOrderDetails() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'APIS' | 'CTC' | 'FFN'>('APIS');
   const [docaType, setDocaType] = useState<'Destination' | 'Residence'>('Destination');
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
   return (
     <div className="w-full flex flex-col min-h-screen bg-[#ffffff]">
@@ -28,7 +31,10 @@ export function B2BOrderDetails() {
             <div className="cursor-pointer opacity-80 hover:opacity-100 transition-opacity">Ticket Print/shares</div>
         </div>
         <div className="flex-1 bg-[#1a1b26] text-white flex items-center justify-end px-10">
-            <div className="flex items-center gap-2 cursor-pointer opacity-90 hover:opacity-100 transition-opacity">
+            <div 
+              className="flex items-center gap-2 cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
+              onClick={() => setNotificationOpen(true)}
+            >
                 <Bell className="w-4 h-4" />
                 <span>Notification(0)</span>
             </div>
@@ -152,8 +158,7 @@ export function B2BOrderDetails() {
                                       <input type="text" placeholder="First Name As Per Passport" className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                       <input type="text" placeholder="Middle Name As Per Passport" className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                       <div className="relative">
-                                        <input type="text" placeholder="Date Of Birth" className="w-full border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 pr-8 bg-white" />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[14px] select-none">📅</span>
+                                        <input type="date" placeholder="Date Of Birth" className="w-full border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white" />
                                       </div>
                                   </div>
                                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -165,14 +170,15 @@ export function B2BOrderDetails() {
                                           <option>Document Number</option>
                                       </select>
                                       <select className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
-                                          <option>Country Of Issuance</option>
+                                          <option value="">Country Of Issuance</option>
+                                          {COUNTRIES.map(country => <option key={country} value={country}>{country}</option>)}
                                       </select>
                                       <select className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
-                                          <option>Nationality</option>
+                                          <option value="">Nationality</option>
+                                          {COUNTRIES.map(country => <option key={country} value={country}>{country}</option>)}
                                       </select>
                                       <div className="relative">
-                                        <input type="text" placeholder="Validity" className="w-full border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 pr-8 bg-white" />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[14px] select-none">📅</span>
+                                        <input type="date" placeholder="Validity" className="w-full border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white" />
                                       </div>
                                   </div>
                               </div>
@@ -203,7 +209,10 @@ export function B2BOrderDetails() {
                                   </div>
                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                       <input type="text" placeholder="State" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
-                                      <input type="text" placeholder="Country" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
+                                      <select className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
+                                          <option value="">Country</option>
+                                          {COUNTRIES.map(country => <option key={country} value={country}>{country}</option>)}
+                                      </select>
                                   </div>
                               </div>
 
@@ -310,7 +319,10 @@ export function B2BOrderDetails() {
                   <h3 className="text-slate-800 font-bold text-[14px]">Entry & health regulations :</h3>
               </div>
               <div className="px-6 py-5 flex flex-wrap items-center gap-4">
-                  <input type="text" placeholder="Nationality" className="w-full md:w-[220px] border border-slate-200 rounded-md px-3 py-2 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
+                  <select className="w-full md:w-[220px] border border-slate-200 rounded-md px-3 py-2 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
+                      <option value="">Nationality</option>
+                      {COUNTRIES.map(country => <option key={country} value={country}>{country}</option>)}
+                  </select>
                   <select className="w-full md:w-[220px] border border-slate-200 rounded-md px-3 py-2 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
                       <option>Language</option>
                       <option>English</option>
@@ -408,6 +420,8 @@ export function B2BOrderDetails() {
           </div>
 
       </div>
+      
+      <NotificationModal isOpen={notificationOpen} onClose={() => setNotificationOpen(false)} />
     </div>
   );
 }

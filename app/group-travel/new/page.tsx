@@ -32,6 +32,7 @@ import { useGroupTravel } from "@/context/GroupTravelContext";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { NotificationModal } from "@/components/NotificationModal";
 
 const flightQuotes = [
   { 
@@ -112,6 +113,7 @@ export default function GroupTravelPage() {
   const [isTermsAgreed, setIsTermsAgreed] = useState(false);
   const [isNegotiating, setIsNegotiating] = useState(false);
   const [isNegotiateSuccessOpen, setIsNegotiateSuccessOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
   const handleCloseNegotiateModal = () => {
     setIsNegotiateSuccessOpen(false);
@@ -200,7 +202,7 @@ export default function GroupTravelPage() {
           <span className="text-white/70">—</span>
           <span>New Booking</span>
         </div>
-        <div className="flex items-center gap-1 cursor-pointer">
+        <div className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setNotificationOpen(true)}>
           <Bell className="w-5 h-5" /> <span>Notification(0)</span>
         </div>
       </div>
@@ -1016,6 +1018,7 @@ export default function GroupTravelPage() {
       </div>
 
       <Footer />
+      <NotificationModal isOpen={notificationOpen} onClose={() => setNotificationOpen(false)} />
     </main>
   );
 }

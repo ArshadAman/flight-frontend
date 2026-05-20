@@ -6,6 +6,7 @@ import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Bell, ChevronDown, CalendarIcon } from 'lucide-react';
 import Link from 'next/link';
+import { NotificationModal } from '@/components/NotificationModal';
 
 // Mock data for Add Passenger dashboard
 const ADD_PASSENGER_DATA = [
@@ -30,6 +31,7 @@ const ADD_PASSENGER_DATA = [
 
 export default function AddPassengerPage() {
   const [activeTab, setActiveTab] = useState('Add Passenger');
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
   const tabs = ['View Request', 'Make Payment', 'Add Passenger', 'View Booking'];
 
@@ -48,7 +50,7 @@ export default function AddPassengerPage() {
               <span className="opacity-100 font-semibold">New Booking</span>
             </div>
 
-            <div className="flex items-center gap-2 text-base">
+            <div className="flex items-center gap-2 text-base cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setNotificationOpen(true)}>
               <Bell className="w-4 h-4" />
               <span>Notification(0)</span>
             </div>
@@ -249,6 +251,7 @@ export default function AddPassengerPage() {
       </main>
 
       <Footer />
+      <NotificationModal isOpen={notificationOpen} onClose={() => setNotificationOpen(false)} />
     </div>
   );
 }
