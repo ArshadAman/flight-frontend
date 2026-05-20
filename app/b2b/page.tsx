@@ -30,12 +30,15 @@ export default function Home() {
     }
   };
 
-  const handleSearch = (searchData: { origin: string; destination: string; nonStop: boolean; tripType: string }) => {
+  const handleSearch = (searchData: { origin: string; destination: string; nonStop: boolean; travellers: any; cabin: string; tripType: string }) => {
     const params = new URLSearchParams();
     params.set("origin", searchData.origin);
     params.set("destination", searchData.destination);
     if (searchData.nonStop) params.set("nonStop", "true");
     params.set("tripType", searchData.tripType);
+    const totalPax = (searchData.travellers?.adults || 1) + (searchData.travellers?.children || 0) + (searchData.travellers?.infants || 0);
+    params.set("passengers", String(totalPax));
+    params.set("cabin", searchData.cabin || "Economy");
     router.push(`/b2b/search?${params.toString()}`);
   };
 

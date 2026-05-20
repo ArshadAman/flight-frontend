@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
-import { FlightSearch } from "@/components/FlightSearch";
 import { FlightResults, Flight } from "@/components/FlightResults";
 import { SearchLoadingModal } from "@/components/SearchLoadingModal";
 import { Footer } from "@/components/Footer";
+import { ArrowUpRight, ArrowRight } from "lucide-react";
 
 function SearchResultsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [flights, setFlights] = useState<Flight[]>([]);
   const [returnFlights, setReturnFlights] = useState<Flight[]>([]);
@@ -19,12 +20,13 @@ function SearchResultsContent() {
   const [fetchError, setFetchError] = useState(false);
 
   // Read search params
-  const origin = searchParams.get("origin") || "";
-  const destination = searchParams.get("destination") || "";
+  const origin = searchParams.get("origin") || "New Delhi";
+  const destination = searchParams.get("destination") || "Mumbai";
   const nonStop = searchParams.get("nonStop") === "true";
   const tripType = searchParams.get("tripType") || "one-way";
+  const passengers = searchParams.get("passengers") || "1";
+  const cabin = searchParams.get("cabin") || "Economy";
 
-  // Fetch flights on mount using URL params
   useEffect(() => {
     if (origin && destination) {
       fetchFlights({ origin, destination, nonStop, tripType });
@@ -69,35 +71,41 @@ function SearchResultsContent() {
     }
   };
 
-  // Handle re-search from the embedded search bar
-  const handleSearch = (searchData: { origin: string; destination: string; nonStop: boolean; tripType: string }) => {
-    // Update URL params
-    const params = new URLSearchParams();
-    params.set("origin", searchData.origin);
-    params.set("destination", searchData.destination);
-    if (searchData.nonStop) params.set("nonStop", "true");
-    params.set("tripType", searchData.tripType);
-    window.history.replaceState(null, "", `/search?${params.toString()}`);
-
-    fetchFlights(searchData);
-  };
-
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col overflow-x-hidden w-full max-w-full">
+    <main className="min-h-screen bg-[#f5f6fa] flex flex-col w-full">
       <Navbar />
       <SearchLoadingModal isOpen={isLoading} />
 
-      {/* Compact search bar at the top */}
-      <div className="bg-gradient-to-b from-[#1a1b2e] to-[#2d1f3d] pt-6 pb-10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <FlightSearch onSearch={handleSearch} />
+      {/* Red Route Summary Bar */}
+      <div className="w-full bg-[#DE0A26] text-white select-none">
+        <div className="max-w-[1440px] mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2.5 text-[17px] font-bold tracking-wide">
+              <span>{origin}</span>
+              <ArrowRight className="w-4 h-4 opacity-80" />
+              <span>{destination}</span>
+            </div>
+            <div className="flex items-center gap-2 text-[12px] font-medium opacity-80">
+              <span>01 Oct</span>
+              <span className="w-[3px] h-[3px] bg-white/60 rounded-full" />
+              <span>{passengers} passenger</span>
+              <span className="w-[3px] h-[3px] bg-white/60 rounded-full" />
+              <span>{cabin}</span>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center gap-2 bg-[#b60820] hover:bg-[#9e0618] text-white font-bold text-[14px] px-6 py-2.5 rounded-lg transition-colors shadow-sm"
+          >
+            Search Again <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+          </button>
         </div>
       </div>
 
       {/* Results */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-12 flex-1">
+      <div className="max-w-[1440px] w-full mx-auto px-6 py-6 flex-1">
         {fetchError ? (
-          <div className="text-center py-20 bg-white rounded-[1.5rem] shadow-sm border border-rose-100">
+          <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-rose-100">
             <h3 className="text-[24px] font-[800] text-slate-800 mb-2">Data currently unavailable</h3>
             <p className="text-[16px] text-slate-500 font-medium">We could not load the flight data at this time. Please try again later.</p>
           </div>
@@ -109,7 +117,7 @@ function SearchResultsContent() {
             isLoading={isLoading}
           />
         ) : !isLoading ? (
-          <div className="text-center py-20 bg-white rounded-[1.5rem] shadow-sm border border-slate-100">
+          <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-slate-100">
             <h3 className="text-[24px] font-[800] text-slate-800 mb-2">Search for flights</h3>
             <p className="text-[16px] text-slate-500 font-medium">Use the search bar above to find the best deals.</p>
           </div>
@@ -124,7 +132,7 @@ function SearchResultsContent() {
 export default function SearchPage() {
   return (
     <Suspense fallback={
-      <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+      <main className="min-h-screen bg-[#f5f6fa] flex flex-col items-center justify-center">
         <SearchLoadingModal isOpen={true} />
       </main>
     }>
