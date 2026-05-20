@@ -323,13 +323,6 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                                 <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
                             </div>
 
-                            {/* +/- Day Dropdown */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">+/- Day <ChevronDown className="w-3.5 h-3.5" /></label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">+/- 00</div>
-                                <p className="text-[13px] text-slate-500 mt-1 font-medium">Day</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
 
                             {/* Search Button */}
                             <div className="flex items-center justify-end h-[70px] shrink-0 mt-3">
@@ -378,13 +371,6 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                             <div className="flex flex-col flex-1 h-[70px] w-full hidden lg:flex">
                             </div>
 
-                            {/* +/- Day Dropdown */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">+/- Day <ChevronDown className="w-3.5 h-3.5" /></label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">+/- 00</div>
-                                <p className="text-[13px] text-slate-500 mt-1 font-medium">Day</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
 
                             {/* Add City Button Area */}
                             <div className="flex items-center justify-start h-[70px] shrink-0 min-w-[120px] mt-3 lg:pl-6">
