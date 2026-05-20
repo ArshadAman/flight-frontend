@@ -147,11 +147,13 @@ export default function B2BFlightsPage() {
                 <div key={idx} className="relative group">
                   <button className="flex items-center gap-1 text-[16px] font-[700] text-slate-600 hover:text-primary transition-colors py-2">
                     {item === 'Group Travel' ? (
-                      <Link href="/group-travel/new">{item}</Link>
+                      <Link href="/b2b/group-travel/new">{item}</Link>
                     ) : item === 'My Booking' ? (
-                      <Link href="/my-booking">{item}</Link>
+                      <Link href="/b2b/my-booking">{item}</Link>
                     ) : item === 'My Account' ? (
-                      <Link href="/my-account">{item}</Link>
+                      <Link href="/b2b/my-account">{item}</Link>
+                    ) : item === 'For Sale' ? (
+                      <Link href="/b2b/for-sale">{item}</Link>
                     ) : (
                       <span>{item}</span>
                     )}
