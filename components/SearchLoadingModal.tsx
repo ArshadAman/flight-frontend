@@ -67,17 +67,8 @@ export function SearchLoadingModal({ isOpen }: SearchLoadingModalProps) {
 
                 {/* Airplane Flight Path Micro-animation */}
                 <div className="my-10 flex flex-col items-center justify-center relative w-full h-[60px]">
-                    {/* Dash Path Line */}
-                    <div className="absolute left-[15%] right-[15%] h-[2px] border-t-2 border-dashed border-rose-100" />
 
-                    <div className="w-[140px] h-[44px] relative z-10 animate-airplane-fly">
-                        <Image
-                            src="/red_airplane.png"
-                            alt="Searching Flights"
-                            fill
-                            className="object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.12)]"
-                        />
-                    </div>
+
                 </div>
 
                 {/* Figma style red pulsing loading text */}

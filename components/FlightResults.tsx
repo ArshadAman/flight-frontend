@@ -12,6 +12,12 @@ import {
   Clock, 
   PlaneTakeoff 
 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { QuoteModal } from "./QuoteModal";
+import { FareTypeModal } from "./FareTypeModal";
+import { AddOnModal } from "./AddOnModal";
+import { RulesModal } from "./RulesModal";
+import { cn } from "@/lib/utils";
 
 export type Flight = {
   id: string;
@@ -50,6 +56,13 @@ export function FlightResults({
   });
   const [activeSort, setActiveSort] = useState("Recommended");
   const [sortOpen, setSortOpen] = useState(false);
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [fareTypeModalOpen, setFareTypeModalOpen] = useState(false);
+  const [addOnModalOpen, setAddOnModalOpen] = useState(false);
+  const [rulesModalOpen, setRulesModalOpen] = useState(false);
+
+  const pathname = usePathname();
+  const isB2bRoute = pathname?.startsWith('/b2b');
 
   // Accordion active state trackers
   const [filtersOpen, setFiltersOpen] = useState({
@@ -207,18 +220,42 @@ export function FlightResults({
 
                 {/* Right aligned Badges */}
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="bg-[#1D70B8] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider">PUB</span>
+                  {/* PUB Badge -> Opens Rules Modal */}
+                  <button 
+                    onClick={() => isB2bRoute && setRulesModalOpen(true)}
+                    className={cn(
+                      "bg-[#1D70B8] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider transition-transform",
+                      isB2bRoute && "cursor-pointer hover:scale-105 active:scale-95 hover:bg-[#155b99]"
+                    )}
+                  >
+                    PUB
+                  </button>
                   
-                  {/* Suitcase Baggage Badge */}
-                  <span className="bg-[#DF1B24] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider flex items-center gap-1">
+                  {/* Suitcase Baggage Badge -> Opens Add On Modal */}
+                  <button 
+                    onClick={() => isB2bRoute && setAddOnModalOpen(true)}
+                    className={cn(
+                      "bg-[#DF1B24] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider flex items-center gap-1 transition-transform",
+                      isB2bRoute && "cursor-pointer hover:scale-105 active:scale-95 hover:bg-[#c1161e]"
+                    )}
+                  >
                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a3 3 0 00-6 0v2" />
                     </svg>
                     25K
-                  </span>
+                  </button>
 
-                  <span className="border border-slate-300 text-slate-500 bg-white text-[11px] font-[800] px-2 py-0.5 rounded select-none">TKT</span>
+                  {/* TKT Badge -> Opens Fare Type Modal */}
+                  <button 
+                    onClick={() => isB2bRoute && setFareTypeModalOpen(true)}
+                    className={cn(
+                      "border border-slate-300 text-slate-500 bg-white text-[11px] font-[800] px-2 py-0.5 rounded select-none transition-transform",
+                      isB2bRoute && "cursor-pointer hover:scale-105 active:scale-95 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-400"
+                    )}
+                  >
+                    FARE TYPES
+                  </button>
                   <span className="border border-slate-300 text-slate-500 bg-white text-[11px] font-[800] px-2 py-0.5 rounded select-none">FEE</span>
                 </div>
 
@@ -234,7 +271,14 @@ export function FlightResults({
                     
                     {/* Radio circle selector */}
                     <div className="flex justify-center items-center">
-                      <div className="w-5 h-5 rounded-full border border-slate-300 hover:border-primary cursor-pointer flex items-center justify-center transition-colors">
+                      <div 
+                        className="w-5 h-5 rounded-full border border-slate-300 hover:border-primary cursor-pointer flex items-center justify-center transition-colors"
+                        onClick={() => {
+                          if (isB2bRoute) {
+                            setQuoteModalOpen(true);
+                          }
+                        }}
+                      >
                         <div className="w-2.5 h-2.5 rounded-full bg-transparent hover:bg-primary transition-colors"></div>
                       </div>
                     </div>
@@ -566,6 +610,14 @@ export function FlightResults({
         </div>
 
       </section>
+
+      {/* Render QuoteModal for B2B */}
+      <QuoteModal isOpen={quoteModalOpen} onClose={() => setQuoteModalOpen(false)} />
+      
+      {/* Render Additional Info Modals for B2B */}
+      <FareTypeModal isOpen={fareTypeModalOpen} onClose={() => setFareTypeModalOpen(false)} />
+      <AddOnModal isOpen={addOnModalOpen} onClose={() => setAddOnModalOpen(false)} />
+      <RulesModal isOpen={rulesModalOpen} onClose={() => setRulesModalOpen(false)} />
 
     </div>
   );
