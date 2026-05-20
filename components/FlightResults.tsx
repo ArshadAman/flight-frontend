@@ -10,7 +10,8 @@ import {
   Plug, 
   Accessibility, 
   Clock, 
-  PlaneTakeoff 
+  PlaneTakeoff,
+  ArrowUpRight
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { QuoteModal } from "./QuoteModal";
@@ -60,6 +61,8 @@ export function FlightResults({
   const [fareTypeModalOpen, setFareTypeModalOpen] = useState(false);
   const [addOnModalOpen, setAddOnModalOpen] = useState(false);
   const [rulesModalOpen, setRulesModalOpen] = useState(false);
+  const [selectedOutboundId, setSelectedOutboundId] = useState<string | null>(null);
+  const [selectedReturnId, setSelectedReturnId] = useState<string | null>(null);
 
   const pathname = usePathname();
   const isB2bRoute = pathname?.startsWith('/b2b');
@@ -152,7 +155,7 @@ export function FlightResults({
   }
 
   // Common flight list renderer
-  const renderFlightCards = (flightList: Flight[], title?: string) => {
+  const renderFlightCards = (flightList: Flight[], isReturnFlight: boolean, title?: string) => {
     if (flightList.length === 0) {
       return (
         <div className="w-full text-center py-12 bg-white border border-slate-200 rounded-2xl mb-6">
@@ -160,6 +163,9 @@ export function FlightResults({
         </div>
       );
     }
+
+    const currentSelectedId = isReturnFlight ? selectedReturnId : selectedOutboundId;
+    const setCurrentSelectedId = isReturnFlight ? setSelectedReturnId : setSelectedOutboundId;
 
     return (
       <div className="flex flex-col gap-6">
@@ -220,42 +226,24 @@ export function FlightResults({
 
                 {/* Right aligned Badges */}
                 <div className="flex items-center gap-2 shrink-0">
-                  {/* PUB Badge -> Opens Rules Modal */}
-                  <button 
-                    onClick={() => isB2bRoute && setRulesModalOpen(true)}
-                    className={cn(
-                      "bg-[#1D70B8] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider transition-transform",
-                      isB2bRoute && "cursor-pointer hover:scale-105 active:scale-95 hover:bg-[#155b99]"
-                    )}
-                  >
+                  {/* PUB Badge */}
+                  <span className="bg-[#1D70B8] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider">
                     PUB
-                  </button>
+                  </span>
                   
-                  {/* Suitcase Baggage Badge -> Opens Add On Modal */}
-                  <button 
-                    onClick={() => isB2bRoute && setAddOnModalOpen(true)}
-                    className={cn(
-                      "bg-[#DF1B24] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider flex items-center gap-1 transition-transform",
-                      isB2bRoute && "cursor-pointer hover:scale-105 active:scale-95 hover:bg-[#c1161e]"
-                    )}
-                  >
+                  {/* Suitcase Baggage Badge */}
+                  <span className="bg-[#DF1B24] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider flex items-center gap-1">
                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a3 3 0 00-6 0v2" />
                     </svg>
                     25K
-                  </button>
+                  </span>
 
-                  {/* TKT Badge -> Opens Fare Type Modal */}
-                  <button 
-                    onClick={() => isB2bRoute && setFareTypeModalOpen(true)}
-                    className={cn(
-                      "border border-slate-300 text-slate-500 bg-white text-[11px] font-[800] px-2 py-0.5 rounded select-none transition-transform",
-                      isB2bRoute && "cursor-pointer hover:scale-105 active:scale-95 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-400"
-                    )}
-                  >
+                  {/* TKT Badge */}
+                  <span className="border border-slate-300 text-slate-500 bg-white text-[11px] font-[800] px-2 py-0.5 rounded select-none">
                     FARE TYPES
-                  </button>
+                  </span>
                   <span className="border border-slate-300 text-slate-500 bg-white text-[11px] font-[800] px-2 py-0.5 rounded select-none">FEE</span>
                 </div>
 
@@ -266,20 +254,20 @@ export function FlightResults({
                 {segments.map((seg, sIdx) => (
                   <div 
                     key={sIdx}
-                    className="grid grid-cols-[auto_1fr_1.1fr_1.1fr_1fr] md:grid-cols-[40px_1fr_1.5fr_1.8fr_1fr_1.2fr_auto] gap-4 items-center px-6 py-4 border-b border-slate-100 hover:bg-slate-50/60 transition-colors last:border-b-0"
+                    onClick={() => {
+                      if (isB2bRoute) {
+                        setCurrentSelectedId(flight.id);
+                      }
+                    }}
+                    className="grid grid-cols-[auto_1fr_1.1fr_1.1fr_1fr] md:grid-cols-[40px_1fr_1.5fr_1.8fr_1fr_1.2fr_auto] gap-4 items-center px-6 py-4 border-b border-slate-100 hover:bg-slate-50/60 transition-colors last:border-b-0 cursor-pointer"
                   >
                     
                     {/* Radio circle selector */}
                     <div className="flex justify-center items-center">
                       <div 
-                        className="w-5 h-5 rounded-full border border-slate-300 hover:border-primary cursor-pointer flex items-center justify-center transition-colors"
-                        onClick={() => {
-                          if (isB2bRoute) {
-                            setQuoteModalOpen(true);
-                          }
-                        }}
+                        className={cn("w-5 h-5 rounded-full border flex items-center justify-center transition-colors", currentSelectedId === flight.id ? "border-[#DE0A26]" : "border-slate-300")}
                       >
-                        <div className="w-2.5 h-2.5 rounded-full bg-transparent hover:bg-primary transition-colors"></div>
+                        <div className={cn("w-2.5 h-2.5 rounded-full transition-colors", currentSelectedId === flight.id ? "bg-[#DE0A26]" : "bg-transparent")}></div>
                       </div>
                     </div>
 
@@ -324,6 +312,42 @@ export function FlightResults({
                   </div>
                 ))}
               </div>
+
+              {/* Action Bar when selected */}
+              {currentSelectedId === flight.id && isB2bRoute && (
+                <div className="bg-[#FBEBEF] px-6 py-4 flex flex-wrap items-center gap-4 border-t border-[#f4d9df] animate-in slide-in-from-top-1 fade-in duration-200">
+                  <button 
+                    onClick={() => window.location.href = '/b2b/book'} 
+                    className="bg-[#DE0A26] hover:bg-[#C1161E] text-white rounded-[100px] px-8 h-[40px] font-bold text-[14px] flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95"
+                  >
+                    Book Now <ArrowUpRight className="w-4 h-4" strokeWidth={3} />
+                  </button>
+                  <button 
+                    onClick={() => setQuoteModalOpen(true)} 
+                    className="min-w-[120px] border border-[#102A4A] bg-transparent text-[#102A4A] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
+                  >
+                    Quote
+                  </button>
+                  <button 
+                    onClick={() => setFareTypeModalOpen(true)} 
+                    className="min-w-[120px] border border-[#102A4A] bg-transparent text-[#102A4A] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
+                  >
+                    Fare Type
+                  </button>
+                  <button 
+                    onClick={() => setAddOnModalOpen(true)} 
+                    className="min-w-[120px] border border-[#102A4A] bg-transparent text-[#102A4A] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
+                  >
+                    Add On
+                  </button>
+                  <button 
+                    onClick={() => setRulesModalOpen(true)} 
+                    className="min-w-[120px] border border-[#102A4A] bg-transparent text-[#102A4A] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
+                  >
+                    Rules
+                  </button>
+                </div>
+              )}
 
             </div>
           );
@@ -602,10 +626,10 @@ export function FlightResults({
         <div className="flex flex-col gap-8">
           
           {/* Outbound Flights list */}
-          {renderFlightCards(filteredOutbound, isRoundTrip ? "Outbound Flights" : undefined)}
+          {renderFlightCards(filteredOutbound, false, isRoundTrip ? "Outbound Flights" : undefined)}
 
           {/* Return Flights list */}
-          {isRoundTrip && renderFlightCards(filteredReturn, "Return Flights")}
+          {isRoundTrip && renderFlightCards(filteredReturn, true, "Return Flights")}
 
         </div>
 
