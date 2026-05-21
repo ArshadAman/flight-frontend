@@ -36,15 +36,15 @@ export default function B2BBookingDetailsPage() {
 
                 {/* Main Card Container */}
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden mb-12">
-                    <BookingHeader />
+                    <BookingHeader isB2B={true} />
                     <BookingInfo />
                     <PassengerDetails />
                     <ItineraryDetails />
                     <PassengerMoreDetails />
-                    <PaymentDetails />
+                    <PaymentDetails isB2B={true} />
                 </div>
 
-                <BookingActions />
+                <BookingActions isB2B={true} />
 
             </main>
 

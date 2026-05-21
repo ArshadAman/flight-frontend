@@ -44,11 +44,6 @@ const BookingCard = ({
                     <span>View Details</span>
                     <ChevronRight className="w-[16px] h-[16px]" strokeWidth={3} />
                 </Link>
-                <div className="w-[1px] h-4 bg-gray-200"></div>
-                <button className="flex items-center gap-1.5 text-[14px] font-[600] text-gray-400 hover:text-primary px-2 py-1.5 transition-colors">
-                    <Trash2 className="w-[18px] h-[18px]" strokeWidth={2.5} />
-                    <span>Delete</span>
-                </button>
             </div>
         </div>
 
