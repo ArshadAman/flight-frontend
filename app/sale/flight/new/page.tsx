@@ -3,14 +3,33 @@
 import React, { useState } from "react";
 import { ArrowLeft, ArrowRight, ArrowRightLeft, X, Plane, ChevronLeft, ChevronRight, Search, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { COUNTRIES } from "@/lib/data/countries";
+
+type Airport = {
+    code: string;
+    city: string;
+    country: string;
+    name: string;
+};
+
+const AIRPORTS: Airport[] = [
+    { code: "DEL", city: "New Delhi", country: "India", name: "Indira Gandhi International Airport" },
+    { code: "BOM", city: "Mumbai", country: "India", name: "Chhatrapati Shivaji Maharaj International" },
+    { code: "BKK", city: "Bangkok", country: "Thailand", name: "Suvarnabhumi Airport" },
+    { code: "JFK", city: "New York", country: "United States", name: "John F. Kennedy International" },
+    { code: "LHR", city: "London", country: "United Kingdom", name: "Heathrow Airport" },
+    { code: "DXB", city: "Dubai", country: "United Arab Emirates", name: "Dubai International Airport" },
+    { code: "SIN", city: "Singapore", country: "Singapore", name: "Changi Airport" },
+    { code: "CDG", city: "Paris", country: "France", name: "Charles de Gaulle Airport" },
+    { code: "SYD", city: "Sydney", country: "Australia", name: "Sydney Kingsford Smith Airport" },
+    { code: "YYZ", city: "Toronto", country: "Canada", name: "Toronto Pearson International" },
+];
 
 export default function AddFlightPage() {
     const router = useRouter();
     const [step, setStep] = useState(0); // 0 = empty, 1 = filled + dep date, 2 = return date, 3 = schedule screen
     
-    const [origin, setOrigin] = useState("");
-    const [destination, setDestination] = useState("");
+    const [origin, setOrigin] = useState<Airport | null>(null);
+    const [destination, setDestination] = useState<Airport | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeInput, setActiveInput] = useState<"origin" | "destination" | null>(null);
     const [selectedDate, setSelectedDate] = useState<number | null>(null);
@@ -19,17 +38,20 @@ export default function AddFlightPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSegmentConfirmed, setIsSegmentConfirmed] = useState(false);
 
-    const filteredCountries = COUNTRIES.filter(country => 
-        country.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredAirports = AIRPORTS.filter(airport => 
+        airport.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        airport.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        airport.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        airport.code.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const handleSelectCountry = (country: string) => {
+    const handleSelectAirport = (airport: Airport) => {
         if (activeInput === "origin") {
-            setOrigin(country);
+            setOrigin(airport);
             setActiveInput("destination");
             setSearchQuery("");
         } else if (activeInput === "destination") {
-            setDestination(country);
+            setDestination(airport);
             setActiveInput(null);
             setSearchQuery("");
             if (origin) {
@@ -48,7 +70,7 @@ export default function AddFlightPage() {
 
     // Calendar mock
     const renderCalendar = (title: string, month: string) => (
-        <div className="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden w-[320px] flex flex-col pointer-events-auto">
+        <div className="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden w-[320px] flex flex-col pointer-events-auto shrink-0 mb-10">
             <div className="bg-[#4b4347] text-white text-center py-2.5 text-[12px] font-bold tracking-widest uppercase">
                 {title}
             </div>
@@ -89,7 +111,7 @@ export default function AddFlightPage() {
     return (
         <div className="w-full h-screen flex flex-col bg-[#a3ccce] overflow-hidden font-sans relative">
             {/* Header */}
-            <div className="w-full h-16 bg-gradient-to-r from-[#C1161E] to-[#2b1723] text-white flex items-center justify-between px-6 z-20 shrink-0">
+            <div className="w-full h-16 bg-gradient-to-r from-[#C1161E] to-[#2b1723] text-white flex items-center justify-between px-6 z-20 shrink-0 shadow-md">
                 <button onClick={() => router.back()} className="flex items-center gap-2 font-bold text-[15px] hover:text-white/80 transition-colors">
                     <ArrowLeft className="w-5 h-5" /> Add flights
                 </button>
@@ -108,7 +130,7 @@ export default function AddFlightPage() {
 
             {/* Map Background Placeholder (Only for steps 0-2) */}
             {step < 3 && (
-                <div className="absolute inset-0 z-0 top-16 bottom-20 opacity-80" 
+                <div className="absolute inset-0 z-0 top-16 bottom-20 opacity-80 pointer-events-none" 
                      style={{
                          backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')`,
                          backgroundSize: 'cover',
@@ -131,8 +153,8 @@ export default function AddFlightPage() {
 
             {/* Step 0-2 View */}
             {step < 3 && (
-                <div className="relative z-20 flex-1 flex flex-col items-center pt-10 pointer-events-none">
-                    <div className="bg-white rounded-[24px] shadow-2xl p-4 flex items-center gap-4 w-[800px] pointer-events-auto transition-transform hover:scale-[1.01] relative">
+                <div className="relative z-20 flex-1 overflow-y-auto flex flex-col items-center pt-10 pb-20 pointer-events-none w-full">
+                    <div className="bg-white rounded-[24px] shadow-2xl p-4 flex items-center gap-4 w-[800px] pointer-events-auto transition-transform hover:scale-[1.01] relative shrink-0 z-30">
                         <div 
                             className={`flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "origin" ? "bg-slate-50 ring-2 ring-[#C1161E]/20" : "hover:bg-slate-50"}`}
                             onClick={() => setActiveInput("origin")}
@@ -143,13 +165,13 @@ export default function AddFlightPage() {
                                     autoFocus
                                     type="text" 
                                     className="w-full bg-transparent outline-none font-extrabold text-slate-800 text-[20px] placeholder:text-slate-300"
-                                    placeholder="Search country..."
+                                    placeholder="Search country or airport..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             ) : (
                                 <div className="font-extrabold text-slate-800 text-[20px] truncate">
-                                    {origin || <span className="text-slate-300">Select Origin</span>}
+                                    {origin ? `${origin.city} (${origin.code})` : <span className="text-slate-300">Select Origin</span>}
                                 </div>
                             )}
                         </div>
@@ -168,35 +190,42 @@ export default function AddFlightPage() {
                                     autoFocus
                                     type="text" 
                                     className="w-full bg-transparent outline-none font-extrabold text-slate-800 text-[20px] placeholder:text-slate-300"
-                                    placeholder="Search country..."
+                                    placeholder="Search country or airport..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             ) : (
                                 <div className="font-extrabold text-slate-800 text-[20px] truncate">
-                                    {destination || <span className="text-slate-300">Select Destination</span>}
+                                    {destination ? `${destination.city} (${destination.code})` : <span className="text-slate-300">Select Destination</span>}
                                 </div>
                             )}
                         </div>
 
                         {activeInput && (
                             <div className="absolute top-full left-0 mt-4 w-full bg-white rounded-2xl shadow-xl border border-slate-100 max-h-[300px] overflow-y-auto z-50">
-                                {filteredCountries.length > 0 ? (
-                                    filteredCountries.map((country, idx) => (
+                                {filteredAirports.length > 0 ? (
+                                    filteredAirports.map((airport, idx) => (
                                         <div 
                                             key={idx}
-                                            className="px-6 py-4 hover:bg-slate-50 cursor-pointer flex items-center gap-3 border-b border-slate-50 last:border-0"
-                                            onClick={() => handleSelectCountry(country)}
+                                            className="px-6 py-4 hover:bg-slate-50 cursor-pointer flex items-center gap-4 border-b border-slate-50 last:border-0"
+                                            onClick={() => handleSelectAirport(airport)}
                                         >
-                                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                                                <Search className="w-4 h-4 text-slate-400" />
+                                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                                <Plane className="w-4 h-4 text-slate-400" />
                                             </div>
-                                            <div className="font-bold text-slate-700 text-[16px]">{country}</div>
+                                            <div>
+                                                <div className="font-bold text-slate-700 text-[16px]">
+                                                    {airport.city} <span className="text-[#C1161E]">({airport.code})</span>
+                                                </div>
+                                                <div className="text-[13px] text-slate-500 font-medium">
+                                                    {airport.country} — {airport.name}
+                                                </div>
+                                            </div>
                                         </div>
                                     ))
                                 ) : (
                                     <div className="p-8 text-center text-slate-400 font-medium">
-                                        No countries found.
+                                        No airports found.
                                     </div>
                                 )}
                             </div>
@@ -204,7 +233,7 @@ export default function AddFlightPage() {
                     </div>
 
                     {step > 0 && (
-                        <div className="mt-10 flex gap-6 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="mt-10 flex gap-6 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-20">
                             {step === 1 && renderCalendar("DEPARTURE", "October 2025")}
                             {step === 2 && (
                                 <>
@@ -223,16 +252,16 @@ export default function AddFlightPage() {
                     {/* Header route text */}
                     <div className="w-full bg-white pt-6 px-10">
                         <div className="font-extrabold text-slate-800 flex items-center gap-3 text-[18px]">
-                            {origin} <span className="text-slate-400">({origin.substring(0,3).toUpperCase()})</span>
+                            {origin?.city} <span className="text-slate-400">({origin?.code})</span>
                             <div className="w-6 h-6 rounded-full border border-[#C1161E] flex items-center justify-center">
                                 <ArrowRight className="w-3 h-3 text-[#C1161E]" />
                             </div>
-                            {destination} <span className="text-slate-400">({destination.substring(0,3).toUpperCase()})</span>
+                            {destination?.city} <span className="text-slate-400">({destination?.code})</span>
                         </div>
                     </div>
 
                     {/* Header Tabs */}
-                    <div className="w-full bg-white px-10 flex items-center gap-12 border-b border-slate-200 mt-6">
+                    <div className="w-full bg-white px-10 flex items-center gap-12 border-b border-slate-200 mt-6 shrink-0">
                         <div className="font-bold text-[#C1161E] border-b-4 border-[#C1161E] py-4 cursor-pointer">Sundays</div>
                         <div className="font-bold text-slate-300 py-4 cursor-pointer hover:text-slate-500">Mondays</div>
                         <div className="font-bold text-slate-800 py-4 cursor-pointer">Tuesdays</div>
@@ -242,12 +271,12 @@ export default function AddFlightPage() {
                         <div className="font-bold text-slate-300 py-4 cursor-pointer hover:text-slate-500">Saturdays</div>
                     </div>
 
-                    <div className="w-[1100px] mt-10">
+                    <div className="w-[1100px] mt-10 pb-20">
                         {/* Main card */}
                         <div className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 mb-6">
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-4 py-2 font-bold text-slate-700 text-[14px]">
-                                    {origin.substring(0,3).toUpperCase()} <ArrowRight className="w-4 h-4 text-[#C1161E]" /> {destination.substring(0,3).toUpperCase()}
+                                    {origin?.code} <ArrowRight className="w-4 h-4 text-[#C1161E]" /> {destination?.code}
                                 </div>
                                 <div className="flex items-center border border-[#C1161E] rounded-xl overflow-hidden font-bold">
                                     <div className="bg-[#C1161E] text-white px-3 py-2 text-[14px]">OCT</div>
@@ -341,11 +370,11 @@ export default function AddFlightPage() {
                             </button>
                             <div className="font-bold text-[16px] mb-1">New flights</div>
                             <div className="font-extrabold text-[18px] flex items-center gap-2">
-                                {origin} ({origin.substring(0,3).toUpperCase()}) 
+                                {origin?.city} ({origin?.code}) 
                                 <div className="w-5 h-5 rounded-full border border-white flex items-center justify-center mx-1">
                                     <ArrowRight className="w-3 h-3 text-white" />
                                 </div> 
-                                {destination} ({destination.substring(0,3).toUpperCase()})
+                                {destination?.city} ({destination?.code})
                             </div>
                         </div>
 
@@ -378,7 +407,7 @@ export default function AddFlightPage() {
                                 <div className="flex-1 space-y-6">
                                     <div className="flex gap-4">
                                         <div className="w-32">
-                                            <label className="text-[12px] font-bold text-slate-500 mb-1 block">DEL local time</label>
+                                            <label className="text-[12px] font-bold text-slate-500 mb-1 block">{origin?.code} local time</label>
                                             <div className="border border-slate-200 rounded-lg p-3.5 flex items-center gap-2">
                                                 <div className="w-4 h-4 rounded-full border-2 border-slate-400"></div>
                                                 <span className="font-bold text-slate-700">23 : 00</span>
@@ -386,7 +415,7 @@ export default function AddFlightPage() {
                                         </div>
                                         <div className="flex-1">
                                             <label className="text-[12px] font-bold text-slate-500 mb-1 block">Airport</label>
-                                            <input type="text" className="w-full border border-slate-200 rounded-lg p-3.5 bg-slate-50 font-bold text-slate-500 outline-none" value={`${origin.substring(0,3).toUpperCase()} (${origin})`} readOnly />
+                                            <input type="text" className="w-full border border-slate-200 rounded-lg p-3.5 bg-slate-50 font-bold text-slate-500 outline-none" value={`${origin?.code} (${origin?.city})`} readOnly />
                                         </div>
                                     </div>
                                     <div>
@@ -415,7 +444,7 @@ export default function AddFlightPage() {
                                         <div className="flex-1">
                                             <label className="text-[12px] font-bold text-slate-500 mb-1 block">Airport</label>
                                             <select className="w-full border border-slate-200 rounded-lg p-3.5 bg-white font-bold text-slate-700 appearance-none outline-none">
-                                                <option>BOM (Bombay)</option>
+                                                <option>{destination?.code} ({destination?.city})</option>
                                             </select>
                                         </div>
                                         <div className="w-32">
