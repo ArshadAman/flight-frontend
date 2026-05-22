@@ -479,7 +479,7 @@ export default function B2BMyAccountPage() {
                                                 <input type="text" disabled={!isProfileEditing} value={profileForm.altPhone} onChange={(e) => setProfileForm({...profileForm, altPhone: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
 
-                                            <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 grid grid-cols-2 gap-4 md:col-span-2">
+                                            <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
                                                 <div className="flex flex-col gap-1.5">
                                                     <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Create Username *</label>
                                                     <input type="text" required disabled={!isProfileEditing} value={profileForm.username} onChange={(e) => setProfileForm({...profileForm, username: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400 bg-white" />
@@ -531,17 +531,17 @@ export default function B2BMyAccountPage() {
 
                                     {/* Action Buttons */}
                                     {isProfileEditing && (
-                                        <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
+                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4 border-t border-slate-100">
                                             <button 
                                                 type="submit"
-                                                className="bg-[#DF1B24] hover:bg-[#C1161E] text-white font-extrabold text-[14px] px-8 py-3 rounded-full shadow-md active:scale-95 transition-all"
+                                                className="bg-[#DF1B24] hover:bg-[#C1161E] text-white font-extrabold text-[14px] px-8 py-3 rounded-full shadow-md active:scale-95 transition-all w-full sm:w-auto"
                                             >
                                                 Submit
                                             </button>
                                             <button 
                                                 type="button"
                                                 onClick={() => setIsProfileEditing(false)}
-                                                className="border border-slate-350 hover:bg-slate-50 text-slate-700 font-extrabold text-[14px] px-8 py-3 rounded-full transition-all"
+                                                className="border border-slate-350 hover:bg-slate-50 text-slate-700 font-extrabold text-[14px] px-8 py-3 rounded-full transition-all w-full sm:w-auto"
                                             >
                                                 Cancel
                                             </button>

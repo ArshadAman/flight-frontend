@@ -31,20 +31,20 @@ const BookingCard = ({
 }) => (
     <div className="bg-white rounded-[1.5rem] shadow-sm border border-rose-50 overflow-hidden mb-8">
         {/* Card Header */}
-        <div className="bg-[#fff5f6] px-8 py-5 flex justify-between items-center border-b border-rose-100">
-            <div className="flex items-center gap-6 text-[15px] font-[600] text-gray-400 tracking-wide">
+        <div className="bg-[#fff5f6] px-4 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 border-b border-rose-100">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6 text-[14px] sm:text-[15px] font-[600] text-gray-400 tracking-wide">
                 <div className="flex items-center gap-2">
                     <Plane className="w-5 h-5 text-primary rotate-45" />
                     <span>Booking No. <b className="text-gray-700 tracking-tighter ml-1">{bookingNo}</b></span>
                 </div>
                 <span>Booking Date: <b className="text-gray-700 tracking-tighter ml-1">{date}</b></span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end mt-2 sm:mt-0">
                 <Link href={`/b2b/my-booking/${bookingNo}`} className="flex items-center gap-1 text-[14px] font-[700] text-primary hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
                     <span>View Details</span>
                     <ChevronRight className="w-[16px] h-[16px]" strokeWidth={3} />
                 </Link>
-                <div className="w-[1px] h-4 bg-gray-200"></div>
+                <div className="hidden sm:block w-[1px] h-4 bg-gray-200"></div>
                 <button className="flex items-center gap-1.5 text-[14px] font-[600] text-gray-400 hover:text-primary px-2 py-1.5 transition-colors">
                     <Trash2 className="w-[18px] h-[18px]" strokeWidth={2.5} />
                     <span>Delete</span>
@@ -53,17 +53,17 @@ const BookingCard = ({
         </div>
 
         {/* Card Body */}
-        <div className="p-8 flex flex-col lg:flex-row gap-8">
+        <div className="p-4 sm:p-8 flex flex-col lg:flex-row gap-6 sm:gap-8">
             {/* Route Info */}
-            <div className="flex-1 bg-[#f8f9fa] rounded-2xl p-10 flex items-center justify-between relative">
-                <div className="text-center w-[120px]">
+            <div className="flex-1 bg-[#f8f9fa] rounded-2xl p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between relative gap-8 sm:gap-0">
+                <div className="text-center w-full sm:w-[120px]">
                     <h3 className="text-[22px] font-[800] text-[#1e2329] tracking-tight">{from}, {fromCode}</h3>
                     <p className="text-[14px] font-[600] text-gray-400 mt-1">Terminal {terminal}</p>
                     <span className="inline-block mt-4 px-3 py-1 bg-white border border-gray-200 rounded text-[13px] font-[800] text-gray-700">{fromCode === "DEL" ? "23:00" : "10:00"}</span>
                 </div>
 
                 {/* Plane Path Line */}
-                <div className="flex-1 px-4 flex flex-col items-center">
+                <div className="w-full sm:flex-1 px-4 flex flex-col items-center">
                     <div className="w-full flex items-center gap-0">
                         <div className="h-2 w-2 bg-white border-[2px] border-gray-300 rounded-full z-10"></div>
                         <div className="h-[2px] flex-1 border-t-2 border-dashed border-gray-300"></div>
@@ -75,7 +75,7 @@ const BookingCard = ({
                         <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center mb-2 shadow-sm">
                           <span className="text-white text-[13px] font-[900] tracking-tighter">AI</span>
                         </div>
-                        <p className="text-[13px] font-[800] text-gray-700 tracking-tight">{flight}</p>
+                        <p className="text-[13px] font-[800] text-gray-700 tracking-tight text-center">{flight}</p>
                         <div className="flex items-center gap-1.5 text-blue-600 text-[13px] font-[700] mt-1 relative">
                             <Clock className="w-3.5 h-3.5" strokeWidth={2.5} />
                             <span>4 hr</span>
@@ -83,7 +83,7 @@ const BookingCard = ({
                     </div>
                 </div>
 
-                <div className="text-center w-[120px]">
+                <div className="text-center w-full sm:w-[120px]">
                     <h3 className="text-[22px] font-[800] text-[#1e2329] tracking-tight">{to}, {toCode}</h3>
                     <p className="text-[14px] font-[600] text-gray-400 mt-1">Terminal {terminal}</p>
                     <span className="inline-block mt-4 px-3 py-1 bg-white border border-gray-200 rounded text-[13px] font-[800] text-gray-700">{toCode === "DEL" ? "23:00" : "03:00"}</span>

@@ -443,7 +443,18 @@ export function B2BNavbar() {
 
         <nav className="flex flex-col space-y-2 mt-4 px-4 w-full">
           <NavLink href="/b2b" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
-          <NavLink href="/b2b/group-travel" isMobile onClick={() => setIsMobileMenuOpen(false)}>Group Travel</NavLink>
+          
+          <div className="flex flex-col pl-4 py-2 border-l-2 border-slate-100 gap-2">
+            <span className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wider pl-2">Group Travel</span>
+            <div className="pl-2 flex flex-col gap-2">
+              <div className="pl-4 flex flex-col gap-2 border-l border-slate-200">
+                <Link href="/b2b/group-travel/new" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">New Booking</Link>
+                <Link href="/b2b/group-travel/view-request" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">Request</Link>
+                <Link href="/b2b/group-travel/add-passenger" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">Modified Request</Link>
+              </div>
+            </div>
+          </div>
+
           <NavLink href="/b2b/my-booking" isMobile onClick={() => setIsMobileMenuOpen(false)}>My Booking</NavLink>
 
           {/* Mobile My Account Nested Panel */}

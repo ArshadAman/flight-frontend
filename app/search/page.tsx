@@ -78,14 +78,14 @@ function SearchResultsContent() {
 
       {/* Red Route Summary Bar */}
       <div className="w-full bg-[#DE0A26] text-white select-none">
-        <div className="max-w-[1440px] mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex flex-col gap-0.5">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
+          <div className="flex flex-col gap-0.5 w-full sm:w-auto min-w-0">
             <div className="flex items-center gap-2.5 text-[17px] font-bold tracking-wide">
               <span>{origin}</span>
-              <ArrowRight className="w-4 h-4 opacity-80" />
-              <span>{destination}</span>
+              <ArrowRight className="w-4 h-4 opacity-80 shrink-0" />
+              <span className="truncate">{destination}</span>
             </div>
-            <div className="flex items-center gap-2 text-[12px] font-medium opacity-80">
+            <div className="flex flex-wrap items-center gap-2 text-[12px] font-medium opacity-80">
               <span>01 Oct</span>
               <span className="w-[3px] h-[3px] bg-white/60 rounded-full" />
               <span>{passengers} passenger</span>
@@ -95,7 +95,7 @@ function SearchResultsContent() {
           </div>
           <button
             onClick={() => router.push("/")}
-            className="flex items-center gap-2 bg-[#b60820] hover:bg-[#9e0618] text-white font-bold text-[14px] px-6 py-2.5 rounded-lg transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-[#b60820] hover:bg-[#9e0618] text-white font-bold text-[14px] px-6 py-2.5 rounded-lg transition-colors shadow-sm w-full sm:w-auto justify-center shrink-0"
           >
             Search Again <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
           </button>
