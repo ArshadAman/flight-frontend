@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/ui/logo";
-import { Menu, X, ChevronDown, User as UserIcon, LogOut } from "lucide-react";
+import { Menu, X, ChevronDown, User as UserIcon, LogOut, Bell } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/context/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { Button } from "@/components/ui/button";
+import { NotificationModal } from "@/components/NotificationModal";
 
 export function B2BNavbar() {
   const { isAuthModalOpen, openAuthModal, closeAuthModal, user: authUser, logout } = useAuth();
@@ -20,6 +21,7 @@ export function B2BNavbar() {
   const [isPaymentExpanded, setIsPaymentExpanded] = useState(true); // Starts expanded just like in the screenshot
   const [isProfileManagementExpanded, setIsProfileManagementExpanded] = useState(true); // Starts expanded just like in the screenshot
   const [balanceHidden, setBalanceHidden] = useState(true);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
@@ -264,6 +266,14 @@ export function B2BNavbar() {
 
             {/* Desktop Action Button */}
             <div className="hidden lg:flex items-center gap-4 mt-1">
+              <button 
+                onClick={() => setIsNotificationOpen(true)}
+                className="relative text-slate-600 hover:text-brand transition-colors p-2 rounded-full hover:bg-slate-50"
+              >
+                <Bell size={20} />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-brand rounded-full border-2 border-white"></span>
+              </button>
+
               {user ? (
                 <div className="flex items-center gap-4" ref={userDropdownRef}>
                   {/* Balance Pill */}
@@ -410,6 +420,13 @@ export function B2BNavbar() {
 
             {/* Mobile Menu Toggle */}
             <div className="lg:hidden flex items-center">
+              <button 
+                onClick={() => setIsNotificationOpen(true)}
+                className="text-slate-600 p-2 mr-1 relative"
+              >
+                <Bell size={24} />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-brand rounded-full border border-white"></span>
+              </button>
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="text-brand p-2 focus:outline-none -mr-2"
@@ -601,6 +618,9 @@ export function B2BNavbar() {
 
       {/* Auth Modal Portal */}
       <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+
+      {/* Notification Modal */}
+      <NotificationModal isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />
     </>
   );
 }

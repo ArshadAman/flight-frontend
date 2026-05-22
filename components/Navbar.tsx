@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AuthModal } from "@/components/AuthModal";
 import { Logo } from "@/components/ui/logo";
-import { Menu, X, User as UserIcon, LogOut, ChevronDown, CornerDownRight, ChevronRight, ArrowRight } from "lucide-react";
+import { Menu, X, User as UserIcon, LogOut, ChevronDown, CornerDownRight, ChevronRight, ArrowRight, Bell } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { NavLink } from "@/components/NavLink";
+import { NotificationModal } from "@/components/NotificationModal";
 
 export function Navbar() {
   const { isAuthModalOpen, openAuthModal, closeAuthModal, user, logout } = useAuth();
@@ -17,6 +18,7 @@ export function Navbar() {
   const [isGroupTravelOpen, setIsGroupTravelOpen] = useState(false);
   const [isMyAccountOpen, setIsMyAccountOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const groupTravelRef = useRef<HTMLDivElement>(null);
   const myAccountRef = useRef<HTMLDivElement>(null);
@@ -153,7 +155,15 @@ export function Navbar() {
             </nav>
 
             {/* Desktop Action Button */}
-            <div className="hidden lg:flex items-center mt-1">
+            <div className="hidden lg:flex items-center gap-2 mt-1">
+              <button 
+                onClick={() => setIsNotificationOpen(true)}
+                className="relative text-slate-600 hover:text-brand transition-colors p-2 rounded-full hover:bg-slate-50 mr-2"
+              >
+                <Bell size={20} />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-brand rounded-full border-2 border-white"></span>
+              </button>
+              
               {user ? (
                 <div className="relative" ref={dropdownRef}>
                   <button
@@ -217,6 +227,13 @@ export function Navbar() {
 
             {/* Mobile Menu Toggle */}
             <div className="lg:hidden flex items-center">
+              <button 
+                onClick={() => setIsNotificationOpen(true)}
+                className="text-slate-600 p-2 mr-1 relative"
+              >
+                <Bell size={24} />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-brand rounded-full border border-white"></span>
+              </button>
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="text-brand p-2 focus:outline-none -mr-2"
@@ -328,6 +345,9 @@ export function Navbar() {
 
       {/* Auth Modal Portal */}
       <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+
+      {/* Notification Modal Portal */}
+      <NotificationModal isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />
     </>
   );
 }
