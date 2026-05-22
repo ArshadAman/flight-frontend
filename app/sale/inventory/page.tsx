@@ -10,6 +10,7 @@ export default function InventoryPage() {
     const [selectedFlight, setSelectedFlight] = useState<any>(null);
     const [activeDrawerTab, setActiveDrawerTab] = useState("Segment");
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const flightsJuly = [
         { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Closed" },
@@ -70,9 +71,9 @@ export default function InventoryPage() {
                             <Filter className="w-5 h-5" /> Filters
                         </button>
                         
-                        <button className="bg-[#C1161E] hover:bg-[#a01219] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center gap-2">
+                        <Link href="/sale/inventory/new" className="bg-[#C1161E] hover:bg-[#a01219] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center gap-2">
                             <Plus className="w-4 h-4" /> Add PNR
-                        </button>
+                        </Link>
                     </div>
 
                     {/* Flights Table */}
@@ -211,34 +212,30 @@ export default function InventoryPage() {
                             <div>
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="font-bold text-[15px] text-slate-800">Tickets Volume</div>
-                                    <button className="flex items-center gap-1 text-[13px] font-bold text-slate-500 hover:text-slate-700">
+                                    <button onClick={() => setIsEditModalOpen(true)} className="flex items-center gap-1 text-[13px] font-bold text-slate-400 hover:text-slate-600">
                                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg> Edit
                                     </button>
                                 </div>
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between text-[14px]">
-                                        <span className="text-slate-500">Total seats</span>
-                                        <span className="font-bold text-[#C1161E]">10</span>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-white shadow-sm">
+                                        <div className="font-bold text-[#C1161E] text-[18px]">10</div>
+                                        <div className="text-[12px] font-medium text-slate-500 mt-1">Total</div>
                                     </div>
-                                    <div className="w-full h-px bg-slate-100"></div>
-                                    <div className="flex items-center justify-between text-[14px]">
-                                        <span className="text-slate-500">Open for sale</span>
-                                        <span className="font-bold text-[#C1161E]">08</span>
+                                    <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-white shadow-sm">
+                                        <div className="font-bold text-[#C1161E] text-[18px]">08</div>
+                                        <div className="text-[12px] font-medium text-slate-500 mt-1 text-center leading-tight">Open for<br/>sale</div>
                                     </div>
-                                    <div className="w-full h-px bg-slate-100"></div>
-                                    <div className="flex items-center justify-between text-[14px]">
-                                        <span className="text-slate-500">Sold seats</span>
-                                        <span className="font-bold text-[#C1161E]">04</span>
+                                    <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-white shadow-sm">
+                                        <div className="font-bold text-[#C1161E] text-[18px]">04</div>
+                                        <div className="text-[12px] font-medium text-slate-500 mt-1">Sold</div>
                                     </div>
-                                    <div className="w-full h-px bg-slate-100"></div>
-                                    <div className="flex items-center justify-between text-[14px]">
-                                        <span className="text-slate-500">Available seats</span>
-                                        <span className="font-bold text-[#C1161E]">04</span>
+                                    <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-white shadow-sm">
+                                        <div className="font-bold text-[#C1161E] text-[18px]">04</div>
+                                        <div className="text-[12px] font-medium text-slate-500 mt-1">Available</div>
                                     </div>
-                                    <div className="w-full h-px bg-slate-100"></div>
-                                    <div className="flex items-center justify-between text-[14px]">
-                                        <span className="text-slate-500">Reserved seats</span>
-                                        <span className="font-bold text-[#C1161E]">02</span>
+                                    <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-white shadow-sm">
+                                        <div className="font-bold text-[#C1161E] text-[18px]">02</div>
+                                        <div className="text-[12px] font-medium text-slate-500 mt-1">Reserved</div>
                                     </div>
                                 </div>
                             </div>
@@ -282,8 +279,76 @@ export default function InventoryPage() {
 
                     {activeDrawerTab === "PNR Booking" && (
                         <div className="flex-1 overflow-y-auto p-6 bg-white">
-                            <div className="font-bold text-[15px] text-slate-800 mb-4">PNR Booking</div>
-                            <div className="text-slate-500 text-[14px]">No PNR bookings found.</div>
+                            <div className="font-bold text-[15px] text-slate-800 mb-6">PNR Booking (GPNR \u2192 UYS12345)</div>
+                            
+                            <div className="grid grid-cols-3 gap-4 text-[12px] text-slate-400 font-medium mb-4">
+                                <div>Name</div>
+                                <div>Airline PNR</div>
+                                <div>Ticket No.</div>
+                            </div>
+
+                            <div className="space-y-6">
+                                {/* CPTUWK */}
+                                <div>
+                                    <div className="bg-slate-100 py-1.5 px-3 font-bold text-slate-600 text-[12px] mb-2">MTDPNR: <span className="text-slate-800 underline">CPTUWK</span></div>
+                                    <div className="space-y-3 px-3">
+                                        <div className="grid grid-cols-3 gap-4 text-[12px] font-bold text-slate-700">
+                                            <div>Mr. Harshit Chirgania</div>
+                                            <div className="text-slate-500 font-medium">XYUZ1245</div>
+                                            <div className="text-slate-500 font-medium">98712845612</div>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-4 text-[12px] font-bold text-slate-700">
+                                            <div>Mr. Ajay Saxena</div>
+                                            <div className="text-slate-500 font-medium">AAUC9802</div>
+                                            <div className="text-slate-500 font-medium">10823561273</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* CPWLWB */}
+                                <div>
+                                    <div className="bg-slate-100 py-1.5 px-3 font-bold text-slate-600 text-[12px] mb-2">MTDPNR: <span className="text-slate-800 underline">CPWLWB</span></div>
+                                    <div className="space-y-3 px-3">
+                                        <div className="grid grid-cols-3 gap-4 text-[12px] font-bold text-slate-700">
+                                            <div>Mrs. Ayushi Kushwaha</div>
+                                            <div className="text-slate-500 font-medium">AWUC3802</div>
+                                            <div className="text-slate-500 font-medium">23712845612</div>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-4 text-[12px] font-bold text-slate-700">
+                                            <div>Mr. Ayush Kushwaha</div>
+                                            <div className="text-slate-500 font-medium">XYUZ1245</div>
+                                            <div className="text-slate-500 font-medium">10823561273</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* CPWLWW */}
+                                <div>
+                                    <div className="bg-slate-100 py-1.5 px-3 font-bold text-slate-600 text-[12px] mb-2">MTDPNR: <span className="text-slate-800 underline">CPWLWW</span></div>
+                                    <div className="space-y-3 px-3">
+                                        <div className="grid grid-cols-3 gap-4 text-[12px] font-bold text-slate-700">
+                                            <div>Mr. Harshit Kushwaha</div>
+                                            <div className="text-slate-500 font-medium">XYUZ1245</div>
+                                            <div className="text-slate-500 font-medium">90912845612</div>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-4 text-[12px] font-bold text-slate-700">
+                                            <div>Mr. Ajay Saxena</div>
+                                            <div className="text-slate-500 font-medium">AWUC3899</div>
+                                            <div className="text-slate-500 font-medium">10823961273</div>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-4 text-[12px] font-bold text-slate-700">
+                                            <div>Mr. Ajay Mehra</div>
+                                            <div className="text-slate-500 font-medium">XYUZ1245</div>
+                                            <div className="text-slate-500 font-medium">00823561273</div>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-4 text-[12px] font-bold text-slate-700">
+                                            <div>Mr. Ajay Rajput</div>
+                                            <div className="text-slate-500 font-medium">BWUC3802</div>
+                                            <div className="text-slate-500 font-medium">11823561273</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -360,6 +425,33 @@ export default function InventoryPage() {
                                         </div>
                                     </div>
                                     <div className="font-bold text-blue-600 text-[12px]">INCLUDED</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {isEditModalOpen && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl w-[450px] shadow-2xl overflow-hidden flex flex-col">
+                        <div className="bg-rose-50 p-5 relative shrink-0">
+                            <button onClick={() => setIsEditModalOpen(false)} className="absolute top-5 right-5 text-slate-500 hover:bg-white/50 p-1 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+                            <h2 className="font-extrabold text-[18px] text-slate-800">Change seats volume</h2>
+                        </div>
+                        <div className="p-6">
+                            <div className="mb-6">
+                                <div className="font-bold text-slate-800 text-[14px] mb-1">If you want go with new GPNR</div>
+                                <div className="text-[13px] text-slate-500 flex items-center gap-1.5">
+                                    To change the seat volume: <button className="text-[#C1161E] font-bold hover:underline">Add PNR</button>
+                                </div>
+                            </div>
+                            <div className="w-full h-px bg-slate-200 mb-6"></div>
+                            <div>
+                                <div className="font-bold text-slate-800 text-[14px] mb-1">If you want go with same GPNR</div>
+                                <div className="text-[13px] text-slate-500 flex items-center gap-1.5">
+                                    To change the seat volume: <button className="text-blue-600 font-bold hover:underline">Edit now</button>
                                 </div>
                             </div>
                         </div>
