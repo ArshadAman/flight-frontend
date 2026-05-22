@@ -82,7 +82,7 @@ export default function Home() {
 
           {/* Card 1 */}
           <div className="flex flex-col sm:flex-row bg-white rounded-[10px] border border-slate-200 overflow-hidden h-full shadow-sm">
-            <div className="w-full sm:w-[120px] h-[100px] sm:h-full bg-[#fbebef] flex items-center justify-center shrink-0">
+            <div className="w-full sm:w-[125px] h-[100px] sm:h-full bg-[#fbebef] flex items-center justify-center shrink-0">
               <div className="relative w-20 h-20">
                 <ShieldIcon className="w-full h-full drop-shadow-sm" />
                 <div className="absolute inset-0 flex items-center justify-center top-[-3px]">
@@ -100,7 +100,7 @@ export default function Home() {
 
           {/* Card 2 */}
           <div className="flex flex-col sm:flex-row bg-white rounded-[10px] border border-slate-200 overflow-hidden h-full shadow-sm">
-            <div className="w-full sm:w-[120px] h-[100px] sm:h-full bg-[#fbebef] flex items-center justify-center shrink-0">
+            <div className="w-full sm:w-[125px] h-[100px] sm:h-full bg-[#fbebef] flex items-center justify-center shrink-0">
               <div className="relative w-16 h-16 flex flex-col items-center">
                 <div className="w-16 h-12 bg-[#8ca8ca] rounded-sm relative flex flex-col overflow-hidden shadow-inner">
                   <div className="h-[20px] w-full bg-[#df2d3b] flex items-center justify-around px-2 pt-0.5">
@@ -126,7 +126,7 @@ export default function Home() {
 
           {/* Card 3 */}
           <div className="flex flex-col sm:flex-row bg-white rounded-[10px] border border-slate-200 overflow-hidden h-full shadow-sm">
-            <div className="w-full sm:w-[120px] h-[100px] sm:h-full bg-[#fbebef] flex items-center justify-center shrink-0">
+            <div className="w-full sm:w-[125px] h-[100px] sm:h-full bg-[#fbebef] flex items-center justify-center shrink-0">
               <div className="relative w-[68px] h-[68px]">
                 <SupportClockIcon className="w-full h-full drop-shadow-sm" />
                 <div className="absolute inset-0 flex items-center justify-center">
