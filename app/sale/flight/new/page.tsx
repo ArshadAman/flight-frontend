@@ -1,16 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
-import { ArrowLeft, ArrowRight, ArrowRightLeft, X, Plane, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { ArrowLeft, ArrowRight, ArrowRightLeft, X, Plane, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { COUNTRIES } from "@/lib/data/countries";
 
 export default function AddFlightPage() {
     const router = useRouter();
     const [step, setStep] = useState(0); // 0 = empty, 1 = filled + dep date, 2 = return date
 
-    const handleSelectRoute = () => {
-        if (step === 0) setStep(1);
+    const [origin, setOrigin] = useState("");
+    const [destination, setDestination] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [activeInput, setActiveInput] = useState<"origin" | "destination" | null>(null);
+
+    const filteredCountries = COUNTRIES.filter(country => 
+        country.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const handleSelectCountry = (country: string) => {
+        if (activeInput === "origin") {
+            setOrigin(country);
+            setActiveInput("destination");
+            setSearchQuery("");
+        } else if (activeInput === "destination") {
+            setDestination(country);
+            setActiveInput(null);
+            setSearchQuery("");
+            if (origin) {
+                setStep(1);
+            }
+        }
     };
 
     // Calendar mock
@@ -75,7 +96,7 @@ export default function AddFlightPage() {
                      opacity: 0.3
                  }}
             >
-                {step > 0 && (
+                {step > 0 && origin && destination && (
                     <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none">
                         <path d="M 450 350 Q 750 200 1050 400" fill="none" stroke="#333" strokeWidth="2.5" strokeDasharray="8 8" />
                         <circle cx="450" cy="350" r="8" fill="#C1161E" stroke="white" strokeWidth="2" />
@@ -93,34 +114,77 @@ export default function AddFlightPage() {
                 
                 {/* Route Input Card */}
                 <div 
-                    className="bg-white rounded-[24px] shadow-2xl p-4 flex items-center gap-4 w-[600px] pointer-events-auto cursor-pointer transition-transform hover:scale-[1.02]" 
-                    onClick={handleSelectRoute}
+                    className="bg-white rounded-[24px] shadow-2xl p-4 flex items-center gap-4 w-[800px] pointer-events-auto transition-transform hover:scale-[1.01] relative" 
                 >
-                    <div className="flex-1 px-6">
-                        {step === 0 ? (
-                            <div className="text-slate-400 font-bold text-[18px]">Origin</div>
+                    <div 
+                        className={`flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "origin" ? "bg-slate-50 ring-2 ring-[#C1161E]/20" : "hover:bg-slate-50"}`}
+                        onClick={() => setActiveInput("origin")}
+                    >
+                        <div className="text-[12px] text-slate-400 font-bold uppercase tracking-wider mb-1">Origin</div>
+                        {activeInput === "origin" ? (
+                            <input 
+                                autoFocus
+                                type="text" 
+                                className="w-full bg-transparent outline-none font-extrabold text-slate-800 text-[20px] placeholder:text-slate-300"
+                                placeholder="Search country..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         ) : (
-                            <div>
-                                <div className="text-[12px] text-slate-400 font-bold uppercase tracking-wider mb-1">Origin</div>
-                                <div className="font-extrabold text-slate-800 text-[20px]">New Delhi <span className="text-[#C1161E]">(DEL)</span></div>
+                            <div className="font-extrabold text-slate-800 text-[20px] truncate">
+                                {origin || <span className="text-slate-300">Select Origin</span>}
                             </div>
                         )}
                     </div>
                     
-                    <div className="w-12 h-12 rounded-full border border-[#C1161E] text-[#C1161E] flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 rounded-full border border-[#C1161E] text-[#C1161E] flex items-center justify-center shrink-0 bg-white z-10">
                         <ArrowRight className="w-5 h-5" />
                     </div>
 
-                    <div className="flex-1 px-6">
-                        {step === 0 ? (
-                            <div className="text-slate-400 font-bold text-[18px]">Destination</div>
+                    <div 
+                        className={`flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "destination" ? "bg-slate-50 ring-2 ring-[#C1161E]/20" : "hover:bg-slate-50"}`}
+                        onClick={() => setActiveInput("destination")}
+                    >
+                        <div className="text-[12px] text-slate-400 font-bold uppercase tracking-wider mb-1">Destination</div>
+                        {activeInput === "destination" ? (
+                            <input 
+                                autoFocus
+                                type="text" 
+                                className="w-full bg-transparent outline-none font-extrabold text-slate-800 text-[20px] placeholder:text-slate-300"
+                                placeholder="Search country..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         ) : (
-                            <div>
-                                <div className="text-[12px] text-slate-400 font-bold uppercase tracking-wider mb-1">Destination</div>
-                                <div className="font-extrabold text-slate-800 text-[20px]">Bangkok <span className="text-[#C1161E]">(BKK)</span></div>
+                            <div className="font-extrabold text-slate-800 text-[20px] truncate">
+                                {destination || <span className="text-slate-300">Select Destination</span>}
                             </div>
                         )}
                     </div>
+
+                    {/* Dropdown Menu */}
+                    {activeInput && (
+                        <div className="absolute top-full left-0 mt-4 w-full bg-white rounded-2xl shadow-xl border border-slate-100 max-h-[300px] overflow-y-auto z-50">
+                            {filteredCountries.length > 0 ? (
+                                filteredCountries.map((country, idx) => (
+                                    <div 
+                                        key={idx}
+                                        className="px-6 py-4 hover:bg-slate-50 cursor-pointer flex items-center gap-3 border-b border-slate-50 last:border-0"
+                                        onClick={() => handleSelectCountry(country)}
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                            <Search className="w-4 h-4 text-slate-400" />
+                                        </div>
+                                        <div className="font-bold text-slate-700 text-[16px]">{country}</div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="p-8 text-center text-slate-400 font-medium">
+                                    No countries found.
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Calendar Pickers */}
@@ -174,6 +238,15 @@ export default function AddFlightPage() {
                     </button>
                 </div>
             </div>
+            
+            {/* Click outside handler for dropdown */}
+            {activeInput && (
+                <div 
+                    className="fixed inset-0 z-10 pointer-events-auto"
+                    onClick={() => setActiveInput(null)}
+                />
+            )}
         </div>
     );
 }
+
