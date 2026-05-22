@@ -67,13 +67,10 @@ export default function B2BManageCommissionPage() {
                 
                 {/* Header Row (Only for some tabs) */}
                 {activeTab !== "Custom Calculation" && (
-                    <div className="w-full bg-[#f4f9fc] border-b border-slate-100 py-6">
+                    <div className="w-full bg-white border-b border-slate-100 py-8">
                         <div className="container mx-auto px-6 lg:px-12 flex justify-between items-center max-w-5xl">
-                            <div className="flex items-center gap-4">
-                                <h1 className="text-2xl font-bold text-slate-700">All Fares types:</h1>
-                                <span className="bg-[#1e73be] text-white text-xs font-bold px-2 py-1 rounded">PUB</span>
-                            </div>
-                            <button className="bg-[#C1161E] hover:bg-[#a01219] text-white px-8 py-2 rounded-full font-bold text-sm transition-colors">
+                            <h1 className="text-[22px] font-bold text-[#0a2540]">All Fares types:</h1>
+                            <button className="bg-[#C1161E] hover:bg-[#a01219] text-white px-8 py-2 rounded-full font-bold text-sm transition-colors shadow-sm">
                                 Edit
                             </button>
                         </div>

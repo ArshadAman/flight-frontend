@@ -254,8 +254,8 @@ export function B2BNavbar() {
               </div>
 
               <Link
-                href="/b2b/for-sale"
-                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${pathname.startsWith('/b2b/for-sale') ? 'font-[700] text-primary' : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
+                href="/sale"
+                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${pathname.startsWith('/sale') ? 'font-[700] text-primary' : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
                   }`}
               >
                 For Sale
@@ -473,7 +473,7 @@ export function B2BNavbar() {
             </div>
           </div>
 
-          <NavLink href="/b2b/for-sale" isMobile onClick={() => setIsMobileMenuOpen(false)}>For Sale</NavLink>
+          <NavLink href="/sale" isMobile onClick={() => setIsMobileMenuOpen(false)}>For Sale</NavLink>
         </nav>
 
         <div className="mt-auto px-6 pt-6 pb-8 w-full border-t border-slate-100">
