@@ -91,9 +91,9 @@ export default function SaleAllFlightsPage() {
                             <Filter className="w-5 h-5" /> Filters
                         </button>
                         
-                        <button className="bg-[#C1161E] hover:bg-[#a01219] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center gap-2">
+                        <Link href="/sale/flight/new" className="bg-[#C1161E] hover:bg-[#a01219] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center gap-2">
                             <Plus className="w-4 h-4" /> New Flight
-                        </button>
+                        </Link>
                     </div>
 
                     {/* Flights Table */}
