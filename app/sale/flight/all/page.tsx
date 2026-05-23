@@ -62,7 +62,7 @@ export default function SaleAllFlightsPage() {
             {/* Dark Red/Blue Secondary Navigation */}
             <div className="w-full bg-gradient-to-r from-[#C1161E] to-[#0F2027] text-white">
                 <div className="container mx-auto px-6 lg:px-10 flex justify-between items-center h-14">
-                    <div className="flex items-center gap-8 text-[14px] h-full">
+                    <div className="flex items-center gap-5 sm:gap-8 text-[14px] h-full overflow-x-auto whitespace-nowrap no-scrollbar flex-1">
                         {[
                             { name: "All booking", count: 7 },
                             { name: "Pending booking", count: 1 },
@@ -73,7 +73,7 @@ export default function SaleAllFlightsPage() {
                             <button
                                 key={tab.name}
                                 onClick={() => setActiveTab(tab.name)}
-                                className={`relative h-full flex items-center transition-colors ${activeTab === tab.name ? 'text-white font-bold' : 'text-white/70 hover:text-white'}`}
+                                className={`relative h-full flex items-center transition-colors shrink-0 ${activeTab === tab.name ? 'text-white font-bold' : 'text-white/70 hover:text-white'}`}
                             >
                                 {tab.name} {tab.count !== undefined ? `(${tab.count})` : ''}
                                 {activeTab === tab.name && (
@@ -90,47 +90,51 @@ export default function SaleAllFlightsPage() {
 
             {/* Main Content with Drawer Flex */}
             <div className="flex-1 w-full flex overflow-hidden relative">
-                <main className={`flex-1 overflow-y-auto transition-all duration-300 flex flex-col items-center ${selectedFlight ? 'pr-[400px]' : ''}`}>
+                <main className={`flex-1 overflow-y-auto transition-all duration-300 flex flex-col items-center ${selectedFlight ? 'xl:pr-[400px]' : ''}`}>
                     <div className="container mx-auto px-6 lg:px-10 py-6 w-full max-w-[1400px]">
                     
                     {/* Header Controls */}
-                    <div className="flex justify-between items-center mb-6">
-                        <button className="flex items-center gap-2 text-[#C1161E] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 w-full">
+                        <button className="flex items-center gap-2 text-[#C1161E] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto justify-center border border-rose-100 sm:border-transparent">
                             <Filter className="w-5 h-5" /> Filters
                         </button>
                         
-                        <Link href="/sale/flight/new" className="bg-[#C1161E] hover:bg-[#a01219] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center gap-2">
+                        <Link href="/sale/flight/new" className="bg-[#C1161E] hover:bg-[#a01219] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
                             <Plus className="w-4 h-4" /> New Flight
                         </Link>
                     </div>
 
                     {/* Flights Table */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-                        {/* Table Header */}
-                        <div className="grid grid-cols-7 gap-4 px-6 py-4 border-b border-slate-100 bg-white text-slate-400 text-[13px] font-bold">
-                            <div>Route</div>
-                            <div>Date</div>
-                            <div>Dep. & Arr. Time</div>
-                            <div>Flight number</div>
-                            <div>Number of seats</div>
-                            <div>Ticket fare</div>
-                            <div>Status</div>
-                        </div>
+                        <div className="overflow-x-auto">
+                            <div className="min-w-[1000px]">
+                                {/* Table Header */}
+                                <div className="grid grid-cols-7 gap-4 px-6 py-4 border-b border-slate-100 bg-white text-slate-400 text-[13px] font-bold">
+                                    <div>Route</div>
+                                    <div>Date</div>
+                                    <div>Dep. & Arr. Time</div>
+                                    <div>Flight number</div>
+                                    <div>Number of seats</div>
+                                    <div>Ticket fare</div>
+                                    <div>Status</div>
+                                </div>
 
-                        {/* July Group */}
-                        <div className="bg-[#f4f9fc] px-6 py-3 font-bold text-slate-700 text-[14px]">
-                            July, 2025
-                        </div>
-                        <div className="flex flex-col">
-                            {flightsJuly.map((flight, i) => renderFlightRow(flight, i))}
-                        </div>
+                                {/* July Group */}
+                                <div className="bg-[#f4f9fc] px-6 py-3 font-bold text-slate-700 text-[14px]">
+                                    July, 2025
+                                </div>
+                                <div className="flex flex-col">
+                                    {flightsJuly.map((flight, i) => renderFlightRow(flight, i))}
+                                </div>
 
-                        {/* August Group */}
-                        <div className="bg-[#f4f9fc] px-6 py-3 font-bold text-slate-700 text-[14px]">
-                            August, 2025
-                        </div>
-                        <div className="flex flex-col">
-                            {flightsAugust.map((flight, i) => renderFlightRow(flight, i))}
+                                {/* August Group */}
+                                <div className="bg-[#f4f9fc] px-6 py-3 font-bold text-slate-700 text-[14px]">
+                                    August, 2025
+                                </div>
+                                <div className="flex flex-col">
+                                    {flightsAugust.map((flight, i) => renderFlightRow(flight, i))}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Pagination Footer */}
@@ -150,7 +154,7 @@ export default function SaleAllFlightsPage() {
 
             {/* Right Drawer */}
             {selectedFlight && (
-                <div className="w-[400px] bg-white border-l border-slate-200 fixed top-[120px] right-0 bottom-0 z-40 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
+                <div className="w-full xl:w-[400px] bg-white border-l border-slate-200 fixed top-0 xl:top-[120px] right-0 bottom-0 z-50 xl:z-40 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
                     <div className="p-6 bg-slate-100 border-b border-slate-200 flex items-start justify-between shrink-0">
                         <div>
                             <div className="font-bold text-[16px] text-slate-800 flex items-center gap-2">
@@ -161,12 +165,12 @@ export default function SaleAllFlightsPage() {
                         <button onClick={() => setSelectedFlight(null)} className="hover:bg-slate-200 p-1 rounded-full transition-colors"><X className="w-5 h-5 text-slate-700" /></button>
                     </div>
                     
-                    <div className="flex items-center border-b border-slate-200 shrink-0">
+                    <div className="flex items-center border-b border-slate-200 shrink-0 overflow-x-auto">
                         {["Segment", "Inventory", "Booking"].map(tab => (
                             <button 
                                 key={tab} 
                                 onClick={() => setActiveDrawerTab(tab)} 
-                                className={`flex-1 py-3.5 font-bold text-[14px] transition-colors ${activeDrawerTab === tab ? 'text-[#C1161E] bg-rose-50 border-b-2 border-[#C1161E]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                className={`flex-1 px-4 py-3.5 font-bold text-[14px] transition-colors whitespace-nowrap ${activeDrawerTab === tab ? 'text-[#C1161E] bg-rose-50 border-b-2 border-[#C1161E]' : 'text-slate-600 hover:bg-slate-50'}`}
                             >
                                 {tab}
                             </button>
@@ -302,8 +306,8 @@ export default function SaleAllFlightsPage() {
 
             {/* Booking Details Modal */}
             {selectedBooking && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl w-[550px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-[550px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                         <div className="bg-[#e8faef] p-6 relative shrink-0 border-b border-green-100">
                             <button onClick={() => setSelectedBooking(null)} className="absolute top-6 right-6 text-slate-500 hover:bg-white/50 p-1 rounded-full"><X className="w-5 h-5" /></button>
                             <div className="flex items-center gap-3 mb-2">

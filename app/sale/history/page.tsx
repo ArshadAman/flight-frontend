@@ -29,12 +29,12 @@ export default function HistoryPage() {
                     <div className="container mx-auto px-6 lg:px-10 py-6 w-full max-w-[1400px]">
                     
                     {/* Header Controls */}
-                    <div className="flex items-center gap-6 mb-8 mt-2">
-                        <button className="flex items-center gap-2 text-[#C1161E] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors shrink-0">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-8 mt-2 w-full">
+                        <button className="flex items-center gap-2 text-[#C1161E] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors shrink-0 w-full sm:w-auto justify-center sm:justify-start border border-rose-100 sm:border-transparent">
                             <Filter className="w-5 h-5" /> Filters
                         </button>
                         
-                        <div className="flex-1 max-w-[600px] relative">
+                        <div className="flex-1 w-full sm:max-w-[600px] relative">
                             <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                             <input 
                                 type="text" 
@@ -58,32 +58,36 @@ export default function HistoryPage() {
                             </div>
                         </div>
 
-                        {/* Table Header */}
-                        <div className="grid grid-cols-[1fr_1fr_1fr_2.5fr_1fr] gap-4 px-6 py-4 border-b border-slate-100 bg-white text-slate-400 text-[13px] font-bold">
-                            <div>Date</div>
-                            <div>Time</div>
-                            <div>Action</div>
-                            <div>Entry</div>
-                            <div>By Agent</div>
-                        </div>
-
-                        {/* Table Rows */}
-                        <div className="flex flex-col">
-                            {historyEntries.map((entry, i) => (
-                                <div 
-                                    key={i} 
-                                    onClick={() => setSelectedEntry(entry)}
-                                    className="grid grid-cols-[1fr_1fr_1fr_2.5fr_1fr] gap-4 items-center py-4 border-b border-slate-50 text-[13px] font-medium transition-colors px-6 cursor-pointer text-slate-700 hover:bg-slate-50"
-                                >
-                                    <div className="text-slate-600 font-bold">{entry.date}</div>
-                                    <div className="text-slate-600 font-bold">{entry.time}</div>
-                                    <div>
-                                        <FileText className="w-5 h-5 text-blue-500" />
-                                    </div>
-                                    <div className="font-bold text-slate-800">{entry.action}</div>
-                                    <div className="text-slate-600">{entry.agent}</div>
+                        <div className="overflow-x-auto">
+                            <div className="min-w-[800px]">
+                                {/* Table Header */}
+                                <div className="grid grid-cols-[1fr_1fr_1fr_2.5fr_1fr] gap-4 px-6 py-4 border-b border-slate-100 bg-white text-slate-400 text-[13px] font-bold">
+                                    <div>Date</div>
+                                    <div>Time</div>
+                                    <div>Action</div>
+                                    <div>Entry</div>
+                                    <div>By Agent</div>
                                 </div>
-                            ))}
+
+                                {/* Table Rows */}
+                                <div className="flex flex-col">
+                                    {historyEntries.map((entry, i) => (
+                                        <div 
+                                            key={i} 
+                                            onClick={() => setSelectedEntry(entry)}
+                                            className="grid grid-cols-[1fr_1fr_1fr_2.5fr_1fr] gap-4 items-center py-4 border-b border-slate-50 text-[13px] font-medium transition-colors px-6 cursor-pointer text-slate-700 hover:bg-slate-50"
+                                        >
+                                            <div className="text-slate-600 font-bold">{entry.date}</div>
+                                            <div className="text-slate-600 font-bold">{entry.time}</div>
+                                            <div>
+                                                <FileText className="w-5 h-5 text-blue-500" />
+                                            </div>
+                                            <div className="font-bold text-slate-800">{entry.action}</div>
+                                            <div className="text-slate-600">{entry.agent}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Pagination Footer */}
@@ -103,8 +107,8 @@ export default function HistoryPage() {
 
             {/* History Details Modal */}
             {selectedEntry && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl w-[500px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-[500px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                         <div className="bg-[#e8faef] p-6 relative shrink-0 border-b border-green-100">
                             <button onClick={() => setSelectedEntry(null)} className="absolute top-6 right-6 text-slate-500 hover:bg-white/50 p-1 rounded-full transition-colors"><X className="w-5 h-5" /></button>
                             <div className="flex flex-col gap-1">
