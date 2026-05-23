@@ -212,10 +212,10 @@ export default function AddFlightPage() {
 
             {/* Step 0-2 View */}
             {step < 3 && (
-                <div className="relative z-20 flex-1 overflow-y-auto flex flex-col items-center pt-10 pb-20 pointer-events-none w-full">
-                    <div className="bg-white rounded-[24px] shadow-2xl p-4 flex items-center gap-4 w-[800px] pointer-events-auto transition-transform hover:scale-[1.01] relative shrink-0 z-30">
+                <div className="relative z-20 flex-1 overflow-y-auto flex flex-col items-center pt-10 pb-20 px-4 pointer-events-none w-full">
+                    <div className="bg-white rounded-[24px] shadow-2xl p-4 flex flex-col sm:flex-row items-center gap-4 w-full max-w-[800px] pointer-events-auto transition-transform hover:scale-[1.01] relative shrink-0 z-30">
                         <div 
-                            className={`flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "origin" ? "bg-slate-50 ring-2 ring-[#C1161E]/20" : "hover:bg-slate-50"}`}
+                            className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "origin" ? "bg-slate-50 ring-2 ring-[#C1161E]/20" : "hover:bg-slate-50"}`}
                             onClick={() => setActiveInput("origin")}
                         >
                             <div className="text-[12px] text-slate-400 font-bold uppercase tracking-wider mb-1">Origin</div>
@@ -240,7 +240,7 @@ export default function AddFlightPage() {
                         </div>
 
                         <div 
-                            className={`flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "destination" ? "bg-slate-50 ring-2 ring-[#C1161E]/20" : "hover:bg-slate-50"}`}
+                            className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "destination" ? "bg-slate-50 ring-2 ring-[#C1161E]/20" : "hover:bg-slate-50"}`}
                             onClick={() => setActiveInput("destination")}
                         >
                             <div className="text-[12px] text-slate-400 font-bold uppercase tracking-wider mb-1">Destination</div>
@@ -292,7 +292,7 @@ export default function AddFlightPage() {
                     </div>
 
                     {step > 0 && (
-                        <div className="mt-10 flex gap-6 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-20">
+                        <div className="mt-10 flex flex-col md:flex-row gap-6 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-20 items-center">
                             {step === 1 && renderCalendar("DEPARTURE", "October 2025")}
                             {step === 2 && (
                                 <>
@@ -320,7 +320,7 @@ export default function AddFlightPage() {
                     </div>
 
                     {/* Header Tabs */}
-                    <div className="w-full bg-white px-10 flex items-center gap-12 border-b border-slate-200 mt-6 shrink-0">
+                    <div className="w-full bg-white px-6 sm:px-10 flex items-center gap-8 sm:gap-12 border-b border-slate-200 mt-6 shrink-0 overflow-x-auto whitespace-nowrap no-scrollbar">
                         <div className="font-bold text-[#C1161E] border-b-4 border-[#C1161E] py-4 cursor-pointer">Sundays</div>
                         <div className="font-bold text-slate-300 py-4 cursor-pointer hover:text-slate-500">Mondays</div>
                         <div className="font-bold text-slate-800 py-4 cursor-pointer">Tuesdays</div>
@@ -330,7 +330,7 @@ export default function AddFlightPage() {
                         <div className="font-bold text-slate-300 py-4 cursor-pointer hover:text-slate-500">Saturdays</div>
                     </div>
 
-                    <div className="w-[1100px] mt-10 pb-20">
+                    <div className="w-full max-w-[1100px] px-4 sm:px-10 mt-10 pb-20">
                         {/* Main card */}
                         <div className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 mb-6">
                             <div className="flex items-center gap-4 mb-6">
@@ -356,9 +356,9 @@ export default function AddFlightPage() {
                             </div>
 
                             {hasScheduledFlight && (
-                                <div className="mt-4 flex items-stretch justify-between bg-white border border-slate-200 rounded-xl shadow-sm relative overflow-hidden h-[70px] animate-in slide-in-from-top-2 duration-300">
-                                    <div className="w-24 bg-[#C1161E]"></div>
-                                    <div className="flex-1 flex items-center px-8 font-bold text-slate-600 text-[14px] justify-between">
+                                <div className="mt-4 flex items-stretch justify-between bg-white border border-slate-200 rounded-xl shadow-sm relative overflow-x-auto sm:overflow-hidden h-[70px] animate-in slide-in-from-top-2 duration-300">
+                                    <div className="w-24 bg-[#C1161E] shrink-0"></div>
+                                    <div className="flex-1 flex items-center px-4 sm:px-8 font-bold text-slate-600 text-[14px] justify-between min-w-[500px]">
                                         <div className="w-[180px]">AI 121(+1) / AI 242</div>
                                         <div className="w-[150px] text-center">AIR INDIA</div>
                                         <div className="w-[200px] text-right">23:00-03:00 / 05:00-11:00</div>
@@ -382,9 +382,11 @@ export default function AddFlightPage() {
 
             {/* Step 4 View: Confirmation Screen */}
             {step === 4 && (
-                <div className="flex-1 bg-white flex flex-col w-full relative z-30 overflow-y-auto pt-10 px-10 pb-20">
+                <div className="flex-1 bg-white flex flex-col w-full relative z-30 overflow-y-auto pt-10 px-4 sm:px-10 pb-20">
                     <div className="w-full max-w-[1400px] mx-auto">
-                        <div className="grid grid-cols-8 gap-4 text-[13px] font-bold text-slate-400 mb-4 px-4">
+                        <div className="overflow-x-auto">
+                            <div className="min-w-[1000px]">
+                                <div className="grid grid-cols-8 gap-4 text-[13px] font-bold text-slate-400 mb-4 px-4">
                             <div className="col-span-2">Route</div>
                             <div>Date</div>
                             <div>Time</div>
@@ -416,12 +418,14 @@ export default function AddFlightPage() {
                                 <span className="border border-green-300 text-green-500 bg-green-50 rounded-full px-5 py-1.5 text-[12px] font-bold">Need</span>
                             </div>
                         </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* Bottom Footer */}
-            <div className="w-full h-[88px] bg-white border-t border-slate-200 flex items-center justify-between px-10 z-30 shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+            <div className="w-full min-h-[88px] py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between px-4 sm:px-10 z-30 shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
                 {step < 3 ? (
                     <>
                         <div className="flex items-center gap-6">
@@ -439,13 +443,13 @@ export default function AddFlightPage() {
                         </div>
                         <div className="flex items-center gap-4">
                             {step === 1 && (
-                                <button onClick={() => setStep(2)} className="border border-[#C1161E] text-[#C1161E] hover:bg-rose-50 rounded-full px-8 py-3.5 font-bold text-[15px] flex items-center gap-2 transition-colors">
+                                <button onClick={() => setStep(2)} className="border border-[#C1161E] text-[#C1161E] hover:bg-rose-50 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[13px] sm:text-[15px] flex items-center gap-2 transition-colors">
                                     <ArrowRightLeft className="w-4 h-4" /> Add return flight
                                 </button>
                             )}
                             <button 
                                 onClick={handleAddFlightDetails}
-                                className={`rounded-full px-10 py-3.5 font-bold text-[15px] flex items-center gap-2 transition-colors ${
+                                className={`rounded-full px-4 sm:px-10 py-3.5 font-bold text-[13px] sm:text-[15px] flex items-center gap-2 transition-colors ${
                                     step > 0 && selectedDate 
                                         ? 'bg-[#C1161E] hover:bg-[#a01219] text-white shadow-md cursor-pointer' 
                                         : 'bg-[#f4a7a9] text-white cursor-not-allowed'
@@ -457,13 +461,13 @@ export default function AddFlightPage() {
                     </>
                 ) : (
                     <>
-                        <button onClick={() => setStep(step - 1)} className="border border-slate-300 text-slate-600 font-bold hover:bg-slate-50 px-8 py-3.5 rounded-full transition-colors text-[15px]">
+                        <button onClick={() => setStep(step - 1)} className="border border-slate-300 text-slate-600 font-bold hover:bg-slate-50 px-4 sm:px-8 py-3.5 rounded-full transition-colors text-[13px] sm:text-[15px]">
                             Change The Route
                         </button>
                         {step === 3 ? (
                             <button 
                                 onClick={() => { if (hasScheduledFlight) setStep(4); }}
-                                className={`px-10 py-3.5 rounded-full font-bold text-[15px] transition-colors flex items-center gap-2 ${
+                                className={`px-4 sm:px-10 py-3.5 rounded-full font-bold text-[13px] sm:text-[15px] transition-colors flex items-center gap-2 ${
                                     hasScheduledFlight ? 'bg-[#C1161E] text-white hover:bg-[#a01219] shadow-md' : 'bg-[#f4a7a9] text-white cursor-not-allowed'
                                 }`}
                             >
@@ -488,8 +492,8 @@ export default function AddFlightPage() {
 
             {/* Modal for "Schedule A Flights" */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 pointer-events-auto animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl w-[900px] max-h-[90vh] shadow-2xl overflow-hidden flex flex-col">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 pointer-events-auto animate-in fade-in duration-200 p-4">
+                    <div className="bg-white rounded-3xl w-full max-w-[900px] max-h-[90vh] shadow-2xl overflow-hidden flex flex-col">
                         {/* Modal Header */}
                         <div className="bg-gradient-to-r from-[#C1161E] to-[#2b1723] text-white p-6 relative shrink-0">
                             <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 hover:bg-white/20 p-1 rounded-full transition-colors">
@@ -506,7 +510,7 @@ export default function AddFlightPage() {
                         </div>
 
                         {/* Modal Tabs */}
-                        <div className="flex items-center justify-center gap-12 border-b border-slate-100 font-bold text-[14px] pt-4 shrink-0 bg-white z-10">
+                        <div className="flex items-center justify-start sm:justify-center gap-8 sm:gap-12 border-b border-slate-100 font-bold text-[14px] pt-4 shrink-0 bg-white z-10 overflow-x-auto whitespace-nowrap px-6">
                             {[1, 2, 3, 4, 5].map((tab) => (
                                 <button 
                                     key={tab}
@@ -713,7 +717,7 @@ export default function AddFlightPage() {
 
                             {modalTab === 2 && (
                                 <div className="flex items-center justify-center py-10 animate-in fade-in duration-300">
-                                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-[500px] overflow-hidden">
+                                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-full max-w-[500px] overflow-hidden">
                                         <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 font-bold text-slate-700 text-[15px]">
                                             Checked Baggage
                                         </div>
@@ -762,7 +766,7 @@ export default function AddFlightPage() {
 
                             {modalTab === 3 && (
                                 <div className="flex items-center justify-center py-10 animate-in fade-in duration-300">
-                                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-[500px] overflow-hidden">
+                                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-full max-w-[500px] overflow-hidden">
                                         <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 font-bold text-slate-700 text-[15px]">
                                             Seats and price
                                         </div>
@@ -807,7 +811,7 @@ export default function AddFlightPage() {
 
                             {modalTab === 4 && (
                                 <div className="flex items-center justify-center py-10 animate-in fade-in duration-300">
-                                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-[500px] overflow-hidden">
+                                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-full max-w-[500px] overflow-hidden">
                                         <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 font-bold text-slate-700 text-[15px]">
                                             Operating dates
                                         </div>
@@ -839,7 +843,7 @@ export default function AddFlightPage() {
 
                             {modalTab === 5 && (
                                 <div className="flex items-center justify-center py-10 animate-in fade-in duration-300">
-                                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-[550px] overflow-hidden">
+                                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-full max-w-[550px] overflow-hidden">
                                         <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 font-bold text-slate-700 text-[15px]">
                                             Policies / Terms & Conditions
                                         </div>
@@ -874,7 +878,7 @@ export default function AddFlightPage() {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-4 shrink-0">
+                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
                             <button 
                                 onClick={() => setModalTab(Math.max(1, modalTab - 1))}
                                 disabled={modalTab === 1}
@@ -901,8 +905,8 @@ export default function AddFlightPage() {
 
             {/* Confirm APIS Modal */}
             {isConfirmModalOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm pointer-events-auto animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl w-[600px] shadow-2xl overflow-hidden flex flex-col">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm pointer-events-auto animate-in fade-in duration-200 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-[600px] shadow-2xl overflow-hidden flex flex-col">
                         <div className="bg-slate-50 border-b border-slate-100 p-5 font-bold text-[16px] text-slate-700">
                             Confirm this flight
                         </div>
