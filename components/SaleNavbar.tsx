@@ -63,17 +63,17 @@ export function SaleNavbar() {
 
   const NavItem = ({ name, hasDropdown = true, options = [], linkHref }: { name: string, hasDropdown?: boolean, options?: DropdownOption[], linkHref?: string }) => {
     const isActive = openDropdown === name || (linkHref && pathname === linkHref) || (!linkHref && pathname.includes(name.toLowerCase()));
-    
+
     if (!hasDropdown && linkHref) {
       return (
         <div className="relative flex items-center h-full">
-            <Link
-                href={linkHref}
-                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${isActive ? 'font-[700] text-[#DF1B24]' : 'font-[500] text-[#8C959F] hover:text-[#57606a]'}`}
-            >
-                {name}
-                {isActive && <div className="absolute -bottom-1 w-1 h-1 bg-[#DF1B24] rounded-full" />}
-            </Link>
+          <Link
+            href={linkHref}
+            className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${isActive ? 'font-[700] text-[#DF1B24]' : 'font-[500] text-[#8C959F] hover:text-[#57606a]'}`}
+          >
+            {name}
+            {isActive && <div className="absolute -bottom-1 w-1 h-1 bg-[#DF1B24] rounded-full" />}
+          </Link>
         </div>
       );
     }
@@ -155,8 +155,8 @@ export function SaleNavbar() {
                   { label: "Export", href: "/sale/flight/export", icon: <CurvedArrowIcon /> },
                 ]}
               />
-              <NavItem name="Booking" hasDropdown={false} linkHref="/booking" />
-              <NavItem name="Reports" hasDropdown={false} linkHref="/reports" />
+              <NavItem name="Booking" hasDropdown={false} linkHref="/my-booking" />
+              <NavItem name="Reports" hasDropdown={false} linkHref="sales/reports" />
               <NavItem name="Inventory" hasDropdown={false} linkHref="/sale/inventory" />
               <NavItem name="History" hasDropdown={false} linkHref="/sale/history" />
             </nav>
@@ -165,7 +165,7 @@ export function SaleNavbar() {
             <div className="hidden lg:flex items-center gap-4 mt-1">
               {user ? (
                 <div className="flex items-center gap-4" ref={userDropdownRef}>
-                  
+
                   {/* Profile Dropdown */}
                   <div className="relative" ref={userDropdownRef}>
                     <button
@@ -181,23 +181,23 @@ export function SaleNavbar() {
                     {isUserDropdownOpen && (
                       <div className="absolute right-0 mt-4 w-[240px] bg-white border-t-[4px] border-[#DF1B24] rounded-xl shadow-xl z-50 p-2 animate-in fade-in duration-200">
                         <div className="flex flex-col gap-1">
-                          
+
                           <Link href="/sale/profile" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center justify-between hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors group">
-                              <div className="flex items-center gap-2">
-                                  <CurvedArrowIcon />
-                                  <span className="font-bold text-slate-800 text-[14px]">Profile Management</span>
-                              </div>
-                              <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
+                            <div className="flex items-center gap-2">
+                              <CurvedArrowIcon />
+                              <span className="font-bold text-slate-800 text-[14px]">Profile Management</span>
+                            </div>
+                            <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
                           </Link>
 
                           <Link href="/sale/notice-board" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors group">
-                              <CurvedArrowIcon />
-                              <span className="font-bold text-slate-800 text-[14px]">Notice Board</span>
+                            <CurvedArrowIcon />
+                            <span className="font-bold text-slate-800 text-[14px]">Notice Board</span>
                           </Link>
 
                           <Link href="/sale/contact" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors group">
-                              <CurvedArrowIcon />
-                              <span className="font-bold text-slate-800 text-[14px]">Contact</span>
+                            <CurvedArrowIcon />
+                            <span className="font-bold text-slate-800 text-[14px]">Contact</span>
                           </Link>
 
                           {/* Divider */}
@@ -286,17 +286,17 @@ export function SaleNavbar() {
 
         <div className="mt-auto px-6 pt-6 pb-8 w-full border-t border-slate-100">
           {user && (
-              <Button
-                onClick={() => {
-                  logout();
-                  setIsMobileMenuOpen(false);
-                }}
-                variant="outline"
-                className="w-full text-[18px] rounded-full py-6 font-[600] border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-              >
-                <LogOut size={18} className="mr-2" />
-                Logout
-              </Button>
+            <Button
+              onClick={() => {
+                logout();
+                setIsMobileMenuOpen(false);
+              }}
+              variant="outline"
+              className="w-full text-[18px] rounded-full py-6 font-[600] border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              <LogOut size={18} className="mr-2" />
+              Logout
+            </Button>
           )}
         </div>
       </div>

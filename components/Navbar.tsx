@@ -156,14 +156,8 @@ export function Navbar() {
 
             {/* Desktop Action Button */}
             <div className="hidden lg:flex items-center gap-2 mt-1">
-              <button 
-                onClick={() => setIsNotificationOpen(true)}
-                className="relative text-slate-600 hover:text-brand transition-colors p-2 rounded-full hover:bg-slate-50 mr-2"
-              >
-                <Bell size={20} />
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-brand rounded-full border-2 border-white"></span>
-              </button>
-              
+
+
               {user ? (
                 <div className="relative" ref={dropdownRef}>
                   <button
@@ -195,7 +189,7 @@ export function Navbar() {
                         className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center"
                       >
                         <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                           <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         My Bookings
                       </Link>
@@ -227,7 +221,7 @@ export function Navbar() {
 
             {/* Mobile Menu Toggle */}
             <div className="lg:hidden flex items-center">
-              <button 
+              <button
                 onClick={() => setIsNotificationOpen(true)}
                 className="text-slate-600 p-2 mr-1 relative"
               >
@@ -267,7 +261,7 @@ export function Navbar() {
 
         <nav className="flex flex-col space-y-2 mt-4 px-4 w-full">
           <NavLink href="/" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
-          
+
           <div className="flex flex-col pl-4 py-2 border-l-2 border-slate-100 gap-2">
             <span className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wider pl-2">Group Travel</span>
             <div className="pl-2 flex flex-col gap-2">
