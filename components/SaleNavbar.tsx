@@ -120,7 +120,7 @@ export function SaleNavbar() {
         <div className="container mx-auto px-4 md:px-8 lg:px-10">
           <div className="flex justify-between items-center h-24">
             {/* Logo */}
-            <Link href="/sale" className="flex flex-col items-center justify-center select-none cursor-pointer">
+            <Link href="/" className="flex flex-col items-center justify-center select-none cursor-pointer">
               <Logo />
               <div className="flex flex-col items-center mt-1">
                 <h1
@@ -144,7 +144,7 @@ export function SaleNavbar() {
 
             {/* Nav Links */}
             <nav className="hidden lg:flex items-center space-x-4 xl:space-x-8 mt-1" ref={dropdownRef}>
-              <NavItem name="Home" hasDropdown={false} linkHref="/sale" />
+              <NavItem name="Home" hasDropdown={false} linkHref="/" />
               <NavItem
                 name="Flight"
                 options={[
@@ -155,15 +155,8 @@ export function SaleNavbar() {
                   { label: "Export", href: "/sale/flight/export", icon: <CurvedArrowIcon /> },
                 ]}
               />
-              <NavItem
-                name="Booking"
-                options={[
-                  { label: "Upcoming", href: "/sale/booking/upcoming", icon: <CurvedArrowIcon /> },
-                  { label: "Departed", href: "/sale/booking/departed", icon: <CurvedArrowIcon /> },
-                  { label: "Travel", href: "/sale/booking/travel", icon: <CurvedArrowIcon /> },
-                ]}
-              />
-              <NavItem name="Reports" hasDropdown={false} linkHref="/sale/reports" />
+              <NavItem name="Booking" hasDropdown={false} linkHref="/booking" />
+              <NavItem name="Reports" hasDropdown={false} linkHref="/reports" />
               <NavItem name="Inventory" hasDropdown={false} linkHref="/sale/inventory" />
               <NavItem name="History" hasDropdown={false} linkHref="/sale/history" />
             </nav>
@@ -283,10 +276,10 @@ export function SaleNavbar() {
         </div>
 
         <nav className="flex flex-col space-y-2 mt-4 px-4 w-full">
-          <NavLink href="/sale" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
+          <NavLink href="/" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
           <NavLink href="/sale/flight/all" isMobile onClick={() => setIsMobileMenuOpen(false)}>Flight</NavLink>
-          <NavLink href="/sale/booking/upcoming" isMobile onClick={() => setIsMobileMenuOpen(false)}>Booking</NavLink>
-          <NavLink href="/sale/reports" isMobile onClick={() => setIsMobileMenuOpen(false)}>Reports</NavLink>
+          <NavLink href="/booking" isMobile onClick={() => setIsMobileMenuOpen(false)}>Booking</NavLink>
+          <NavLink href="/reports" isMobile onClick={() => setIsMobileMenuOpen(false)}>Reports</NavLink>
           <NavLink href="/sale/inventory" isMobile onClick={() => setIsMobileMenuOpen(false)}>Inventory</NavLink>
           <NavLink href="/sale/history" isMobile onClick={() => setIsMobileMenuOpen(false)}>History</NavLink>
         </nav>
