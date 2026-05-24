@@ -156,7 +156,7 @@ export function SaleNavbar() {
                 ]}
               />
               <NavItem name="Booking" hasDropdown={false} linkHref="/my-booking" />
-              <NavItem name="Reports" hasDropdown={false} linkHref="sales/reports" />
+              <NavItem name="Reports" hasDropdown={false} linkHref="reports" />
               <NavItem name="Inventory" hasDropdown={false} linkHref="/sale/inventory" />
               <NavItem name="History" hasDropdown={false} linkHref="/sale/history" />
             </nav>
