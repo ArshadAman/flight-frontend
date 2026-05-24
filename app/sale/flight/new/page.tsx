@@ -161,6 +161,9 @@ export default function AddFlightPage() {
         </div>
     );
 
+    const mapQuery = origin ? `${origin.city}, ${origin.country}` : "World";
+    const mapZoom = origin ? (destination ? 4 : 5) : 2;
+
     return (
         <div className="w-full h-screen flex flex-col bg-[#a3ccce] overflow-hidden font-sans relative">
             {/* Header */}
@@ -191,7 +194,7 @@ export default function AddFlightPage() {
             {step < 3 && (
                 <div className="absolute inset-0 z-0 top-16 bottom-20">
                     <iframe 
-                        src="https://maps.google.com/maps?q=India&t=p&z=5&ie=UTF8&iwloc=&output=embed" 
+                        src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=p&z=${mapZoom}&ie=UTF8&iwloc=&output=embed`}
                         width="100%" 
                         height="100%" 
                         style={{ border: 0, opacity: 0.8 }} 
