@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -9,10 +9,7 @@ import {
   Coffee, 
   Plug, 
   Accessibility, 
-  Clock, 
-  PlaneTakeoff,
   ArrowUpRight,
-  ArrowLeft,
   CheckCircle2,
   X
 } from "lucide-react";
@@ -49,6 +46,32 @@ interface FlightResultsProps {
   infants?: number;
 }
 
+type BaggageOption = {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  note?: string;
+};
+
+type TicketWithBaggage = Record<string, unknown> & {
+  baggage_check_in?: string;
+  baggage_hand?: string;
+  selected_baggage_title?: string;
+  selected_baggage_price?: string;
+  passengers_data?: Array<{
+    title?: string;
+    first_name?: string;
+    last_name?: string;
+  }>;
+  pnr_number?: string;
+  ticket_number?: string;
+  airline_name?: string;
+  airline_code?: string;
+  flight_number?: string;
+  total_amount?: string | number;
+};
+
 export function FlightResults({ 
   flights, 
   returnFlights = [], 
@@ -79,6 +102,7 @@ export function FlightResults({
   const [fareTypeModalOpen, setFareTypeModalOpen] = useState(false);
   const [addOnModalOpen, setAddOnModalOpen] = useState(false);
   const [rulesModalOpen, setRulesModalOpen] = useState(false);
+  const [selectedBaggageOption, setSelectedBaggageOption] = useState<BaggageOption | null>(null);
   const [selectedOutboundId, setSelectedOutboundId] = useState<string | null>(null);
   const [selectedReturnId, setSelectedReturnId] = useState<string | null>(null);
 
@@ -86,7 +110,7 @@ export function FlightResults({
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutFlight, setCheckoutFlight] = useState<Flight | null>(null);
   const [isBookingLoading, setIsBookingLoading] = useState(false);
-  const [bookingSuccessData, setBookingSuccessData] = useState<any | null>(null);
+  const [bookingSuccessData, setBookingSuccessData] = useState<TicketWithBaggage | null>(null);
 
   // Multi-Passenger Form State: array of per-pax form entries
   type PaxEntry = {
@@ -141,6 +165,42 @@ export function FlightResults({
     }));
   };
 
+  const resolveBaggageDetails = (option: BaggageOption | null) => {
+    if (!option) {
+      return {
+        baggage_check_in: undefined,
+        baggage_hand: undefined,
+        selected_baggage_title: undefined,
+        selected_baggage_price: undefined,
+      };
+    }
+
+    if (option.id.startsWith("cabin")) {
+      return {
+        baggage_check_in: undefined,
+        baggage_hand: option.title,
+        selected_baggage_title: option.title,
+        selected_baggage_price: option.price,
+      };
+    }
+
+    if (option.id.startsWith("child") || option.id.startsWith("infant")) {
+      return {
+        baggage_check_in: option.title,
+        baggage_hand: undefined,
+        selected_baggage_title: option.title,
+        selected_baggage_price: option.price,
+      };
+    }
+
+    return {
+      baggage_check_in: option.title,
+      baggage_hand: undefined,
+      selected_baggage_title: option.title,
+      selected_baggage_price: option.price,
+    };
+  };
+
   const handleStopToggle = (stopCount: number) => {
     setSelectedStops(prev => ({
       ...prev,
@@ -149,7 +209,7 @@ export function FlightResults({
   };
 
   // Helper to filter and sort list of flights dynamically
-  const processFlights = (flightList: Flight[]) => {
+  const processFlights = useCallback((flightList: Flight[]) => {
     let result = [...flightList];
 
     // 1. Non-stop filter
@@ -185,10 +245,10 @@ export function FlightResults({
     }
 
     return result;
-  };
+  }, [activeSort, maxPrice, nonStopOnly, selectedStops]);
 
-  const filteredOutbound = useMemo(() => processFlights(flights), [flights, nonStopOnly, selectedStops, maxPrice, activeSort]);
-  const filteredReturn = useMemo(() => processFlights(returnFlights), [returnFlights, nonStopOnly, selectedStops, maxPrice, activeSort]);
+  const filteredOutbound = useMemo(() => processFlights(flights), [flights, processFlights]);
+  const filteredReturn = useMemo(() => processFlights(returnFlights), [returnFlights, processFlights]);
 
   // Handle book click
   const handleBookClick = (flight: Flight) => {
@@ -265,7 +325,10 @@ export function FlightResults({
         if (response.ok) {
             const confirmedTicket = await response.json();
             console.log("[FlightResults Booking Response] Live ticketing succeeded. Ticket returned:", confirmedTicket);
-            setBookingSuccessData(confirmedTicket);
+          setBookingSuccessData({
+            ...confirmedTicket,
+            ...resolveBaggageDetails(selectedBaggageOption),
+          } as TicketWithBaggage);
         } else {
             const errorText = await response.text();
             console.warn("[FlightResults Booking Warning] API ticketing failed with response status:", response.status, errorText);
@@ -300,6 +363,7 @@ export function FlightResults({
             baggage_hand: "7 Kg",
             is_refundable: true,
             food_onboard: true,
+            ...resolveBaggageDetails(selectedBaggageOption),
             passengers_data: passengers.map(pax => ({
                 pax_type: pax.pax_type,
                 title: pax.title,
@@ -854,7 +918,12 @@ export function FlightResults({
       
       {/* Render Additional Info Modals for B2B */}
       <FareTypeModal isOpen={fareTypeModalOpen} onClose={() => setFareTypeModalOpen(false)} />
-      <AddOnModal isOpen={addOnModalOpen} onClose={() => setAddOnModalOpen(false)} />
+      <AddOnModal
+        isOpen={addOnModalOpen}
+        onClose={() => setAddOnModalOpen(false)}
+        onApply={(option) => setSelectedBaggageOption(option)}
+        initialSelectedOptionId={selectedBaggageOption?.id || null}
+      />
       <RulesModal isOpen={rulesModalOpen} onClose={() => setRulesModalOpen(false)} />
 
       {/* ============================================================== */}
@@ -1101,7 +1170,7 @@ export function FlightResults({
               <div className="flex justify-between border-b border-slate-200/60 pb-2">
                 <span className="text-slate-400 font-bold uppercase tracking-wider text-xs">Passengers</span>
                 <span className="text-slate-800 font-extrabold text-right">
-                  {bookingSuccessData.passengers_data?.map((p: any, i: number) => (
+                  {bookingSuccessData.passengers_data?.map((p, i: number) => (
                     <span key={i} className="block">{p.title}. {p.first_name} {p.last_name}</span>
                   ))}
                 </span>
