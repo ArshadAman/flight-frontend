@@ -7,7 +7,7 @@ export default function AboutPage() {
             <Navbar />
 
             {/* Top Header Banner */}
-            <div className="w-full bg-gradient-to-r from-primary to-[#0B132B] py-10 sm:py-12">
+            <div className="w-full bg-gradient-to-r from-primary to-[#121121] py-10 sm:py-12">
                 <div className="container mx-auto px-6 lg:px-20">
                     <h1 className="text-2xl md:text-3xl font-[700] text-white tracking-tight">
                         About Us
@@ -19,7 +19,7 @@ export default function AboutPage() {
             <main className="w-full flex-1 flex flex-col">
                 <div className="container mx-auto px-6 lg:px-20 py-16 md:py-20 max-w-[1200px] w-full"> 
                     <div className="flex flex-col">
-                        <h2 className="text-[25px] md:text-[32px] font-[700] text-[#1e2329] leading-tight mb-6">
+                        <h2 className="text-[25px] md:text-[32px] font-[700] text-[#121121] leading-tight mb-6">
                             Why Us?
                         </h2>
 

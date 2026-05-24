@@ -21,7 +21,7 @@ export function NavLink({ href, children, onClick, isMobile = false }: NavLinkPr
                 onClick={onClick}
                 className={`text-[18px] w-full text-center py-3 border-b border-gray-100 transition-colors ${isActive
                     ? "font-[700] text-primary"
-                    : "font-[500] text-[#8C959F] active:text-[#57606a]"
+                    : "font-[500] text-[#888] active:text-[#0C2342]"
                     }`}
             >
                 {children}
@@ -35,7 +35,7 @@ export function NavLink({ href, children, onClick, isMobile = false }: NavLinkPr
             onClick={onClick}
             className={`relative text-[16px] xl:text-[20px] py-1 flex flex-col items-center transition-colors ${isActive
                 ? "font-[700] text-primary"
-                : "font-[500] text-[#8C959F] hover:text-[#57606a]"
+                : "font-[500] text-[#888] hover:text-[#0C2342]"
                 }`}
         >
             {children}

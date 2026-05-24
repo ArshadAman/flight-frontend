@@ -17,7 +17,7 @@ export default function B2BManageCommissionPage() {
             <B2BNavbar />
 
             {/* Dark Red Navigation Header */}
-            <div className="w-full bg-gradient-to-r from-[#C1161E] to-[#1a0b16] text-white">
+            <div className="w-full bg-gradient-to-r from-[#D60D26] to-[#121121] text-white">
                 <div className="container mx-auto px-6 lg:px-12 py-4">
                     <div className="flex items-center gap-6 mb-6 text-sm">
                         <div className="flex items-center text-white/80">
@@ -69,8 +69,8 @@ export default function B2BManageCommissionPage() {
                 {activeTab !== "Custom Calculation" && (
                     <div className="w-full bg-white border-b border-slate-100 py-8">
                         <div className="container mx-auto px-6 lg:px-12 flex justify-between items-center max-w-5xl">
-                            <h1 className="text-[22px] font-bold text-[#0a2540]">All Fares types:</h1>
-                            <button className="bg-[#C1161E] hover:bg-[#a01219] text-white px-8 py-2 rounded-full font-bold text-sm transition-colors shadow-sm">
+                            <h1 className="text-[22px] font-bold text-[#0C2342]">All Fares types:</h1>
+                            <button className="bg-[#D60D26] hover:bg-[#D60D26] text-white px-8 py-2 rounded-full font-bold text-sm transition-colors shadow-sm">
                                 Edit
                             </button>
                         </div>
@@ -87,16 +87,16 @@ export default function B2BManageCommissionPage() {
 
                     {activeTab === "Flat Calculation" && (
                         <div className="w-full space-y-6">
-                            <div className="bg-[#f4f9fc] rounded-3xl p-8 flex items-center gap-6">
+                            <div className="bg-[#F2FBFF] rounded-3xl p-8 flex items-center gap-6">
                                 <span className="text-slate-600 font-medium text-lg w-40">Your Markup:</span>
                                 <input 
                                     type="text" 
                                     defaultValue="$20.00" 
-                                    className="border border-slate-200 rounded-full px-6 py-2.5 w-48 text-center font-medium text-slate-700 outline-none focus:border-[#1e73be]"
+                                    className="border border-slate-200 rounded-full px-6 py-2.5 w-48 text-center font-medium text-slate-700 outline-none focus:border-[#888]"
                                 />
                             </div>
                             <div className="flex gap-4">
-                                <button className="flex-1 bg-[#C1161E] hover:bg-[#a01219] text-white py-3 rounded-full font-bold transition-colors">
+                                <button className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white py-3 rounded-full font-bold transition-colors">
                                     Upload
                                 </button>
                                 <button className="flex-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 py-3 rounded-full font-bold transition-colors">
@@ -109,7 +109,7 @@ export default function B2BManageCommissionPage() {
                     {activeTab === "Standard Calculation" && (
                         <div className="w-full space-y-6">
                             <p className="text-slate-500 italic mb-6">This calculation is not editable. It is the default calculation.</p>
-                            <div className="bg-[#f4f9fc] rounded-3xl p-8 space-y-6">
+                            <div className="bg-[#F2FBFF] rounded-3xl p-8 space-y-6">
                                 <div className="flex items-center gap-6">
                                     <span className="text-slate-600 font-medium text-lg w-48">Domestic & IATA EU:</span>
                                     <input type="text" defaultValue="$20.00" disabled className="border border-slate-200 rounded-full px-6 py-2.5 w-48 text-center font-medium text-slate-700 bg-white" />
@@ -124,7 +124,7 @@ export default function B2BManageCommissionPage() {
                                 </div>
                             </div>
                             <div className="flex gap-4">
-                                <button className="flex-1 bg-[#C1161E] hover:bg-[#a01219] text-white py-3 rounded-full font-bold transition-colors">
+                                <button className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white py-3 rounded-full font-bold transition-colors">
                                     Upload
                                 </button>
                                 <button className="flex-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 py-3 rounded-full font-bold transition-colors">
@@ -136,22 +136,22 @@ export default function B2BManageCommissionPage() {
 
                     {activeTab === "Simple Calculation" && (
                         <div className="w-full space-y-6">
-                            <div className="bg-[#f4f9fc] rounded-3xl p-8 space-y-6">
+                            <div className="bg-[#F2FBFF] rounded-3xl p-8 space-y-6">
                                 <div className="flex items-center gap-6">
                                     <span className="text-slate-600 font-medium text-lg w-48">Domestic & IATA EU:</span>
-                                    <input type="text" defaultValue="$20.00" className="border border-slate-200 rounded-full px-6 py-2.5 w-48 text-center font-medium text-slate-700 outline-none focus:border-[#1e73be] bg-white" />
+                                    <input type="text" defaultValue="$20.00" className="border border-slate-200 rounded-full px-6 py-2.5 w-48 text-center font-medium text-slate-700 outline-none focus:border-[#888] bg-white" />
                                 </div>
                                 <div className="flex items-center gap-6">
                                     <span className="text-slate-600 font-medium text-lg w-48">Worldwide:</span>
-                                    <input type="text" defaultValue="$20.00" className="border border-slate-200 rounded-full px-6 py-2.5 w-48 text-center font-medium text-slate-700 outline-none focus:border-[#1e73be] bg-white" />
+                                    <input type="text" defaultValue="$20.00" className="border border-slate-200 rounded-full px-6 py-2.5 w-48 text-center font-medium text-slate-700 outline-none focus:border-[#888] bg-white" />
                                 </div>
                                 <div className="flex items-center gap-6">
                                     <span className="text-slate-600 font-medium text-lg w-48">LOW /DIR / CHA:</span>
-                                    <input type="text" defaultValue="$20.00" className="border border-slate-200 rounded-full px-6 py-2.5 w-48 text-center font-medium text-slate-700 outline-none focus:border-[#1e73be] bg-white" />
+                                    <input type="text" defaultValue="$20.00" className="border border-slate-200 rounded-full px-6 py-2.5 w-48 text-center font-medium text-slate-700 outline-none focus:border-[#888] bg-white" />
                                 </div>
                             </div>
                             <div className="flex gap-4">
-                                <button className="flex-1 bg-[#C1161E] hover:bg-[#a01219] text-white py-3 rounded-full font-bold transition-colors">
+                                <button className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white py-3 rounded-full font-bold transition-colors">
                                     Upload
                                 </button>
                                 <button className="flex-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 py-3 rounded-full font-bold transition-colors">
@@ -169,7 +169,7 @@ export default function B2BManageCommissionPage() {
                                 "Negotiated fares (0)",
                                 "LOW/DIR/CHA (0)"
                             ].map((fareType, i) => (
-                                <div key={i} className="bg-[#f4f9fc] rounded-3xl p-6 flex items-center justify-between">
+                                <div key={i} className="bg-[#F2FBFF] rounded-3xl p-6 flex items-center justify-between">
                                     <div className="flex items-center gap-6">
                                         <span className="text-slate-700 font-medium text-xl w-64">{fareType}</span>
                                         <div className="flex gap-2">
@@ -179,7 +179,7 @@ export default function B2BManageCommissionPage() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        <button className="flex items-center gap-1 text-[#C1161E] font-medium border border-[#C1161E] rounded-full px-4 py-1.5 hover:bg-rose-50 transition-colors">
+                                        <button className="flex items-center gap-1 text-[#D60D26] font-medium border border-[#D60D26] rounded-full px-4 py-1.5 hover:bg-rose-50 transition-colors">
                                             <Plus className="w-4 h-4" /> Add
                                         </button>
                                         <button className="text-slate-400 hover:text-slate-600">

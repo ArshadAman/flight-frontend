@@ -303,7 +303,7 @@ export default function AddFlightPage() {
 
             {/* Step 3 View: Schedule Screen */}
             {step === 3 && (
-                <div className="flex-1 bg-[#f8f9fc] flex flex-col items-center w-full relative z-30 overflow-y-auto">
+                <div className="flex-1 bg-[#F2FBFF] flex flex-col items-center w-full relative z-30 overflow-y-auto">
                     {/* Header route text */}
                     <div className="w-full bg-white pt-6 px-10">
                         <div className="font-extrabold text-slate-800 flex items-center gap-3 text-[18px]">
@@ -812,7 +812,7 @@ export default function AddFlightPage() {
                                             Operating dates
                                         </div>
                                         <div className="flex flex-col">
-                                            <div className="bg-[#eef5fc] px-6 py-2.5 text-[13px] font-bold text-slate-600">October 2025</div>
+                                            <div className="bg-[#F2FBFF] px-6 py-2.5 text-[13px] font-bold text-slate-600">October 2025</div>
                                             <div className="p-6 flex gap-4">
                                                 {[9, 16, 23, 30].map(day => (
                                                     <div key={day} className="bg-rose-50 rounded-lg p-3 flex flex-col items-center gap-2.5 cursor-pointer border border-rose-100 w-16 hover:bg-rose-100 transition-colors">
@@ -823,7 +823,7 @@ export default function AddFlightPage() {
                                                     </div>
                                                 ))}
                                             </div>
-                                            <div className="bg-[#eef5fc] px-6 py-2.5 text-[13px] font-bold text-slate-600">November 2025</div>
+                                            <div className="bg-[#F2FBFF] px-6 py-2.5 text-[13px] font-bold text-slate-600">November 2025</div>
                                             <div className="p-6 flex gap-4">
                                                 <div className="bg-rose-50 rounded-lg p-3 flex flex-col items-center gap-2.5 cursor-pointer border border-rose-100 w-16 hover:bg-rose-100 transition-colors">
                                                     <span className="text-[12px] font-bold text-slate-800">Sun 2</span>

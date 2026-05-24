@@ -120,7 +120,7 @@ export default function B2BFlightsPage() {
   ];
 
   return (
-    <div className="w-full min-h-screen bg-[#F9FAFB] flex flex-col font-sans text-slate-800 antialiased">
+    <div className="w-full min-h-screen bg-[#F2FBFF] flex flex-col font-sans text-slate-800 antialiased">
       
       {/* 1. B2B Custom Header matching Figma exactly */}
       <header className="w-full bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-3">
@@ -206,7 +206,7 @@ export default function B2BFlightsPage() {
       </header>
 
       {/* 2. Red Gradient Sub-Header Bar matching Figma exactly */}
-      <section className="w-full bg-gradient-to-r from-primary to-[#0B132B] py-5 px-6 shadow-md">
+      <section className="w-full bg-gradient-to-r from-primary to-[#121121] py-5 px-6 shadow-md">
         <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           {/* Destination Details */}
           <div className="flex flex-col items-center md:items-start text-white">
@@ -227,7 +227,7 @@ export default function B2BFlightsPage() {
           {/* Search Again capsule CTA */}
           <Link 
             href="/"
-            className="bg-primary hover:bg-[#c60823] border border-white/20 text-white rounded-full px-6 py-2.5 font-[700] text-[15px] shadow-lg flex items-center gap-2 transition hover:scale-105 active:scale-95"
+            className="bg-primary hover:bg-[#D60D26] border border-white/20 text-white rounded-full px-6 py-2.5 font-[700] text-[15px] shadow-lg flex items-center gap-2 transition hover:scale-105 active:scale-95"
           >
             <span>Search Again</span>
             <ArrowUpRight className="w-4 h-4 stroke-[2.5px]" />
@@ -243,7 +243,7 @@ export default function B2BFlightsPage() {
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col">
             
             {/* Filter Panel Header */}
-            <div className="flex items-center gap-2 text-[17px] font-[900] text-[#0B132B] pb-4 border-b border-slate-100 mb-2">
+            <div className="flex items-center gap-2 text-[17px] font-[900] text-[#121121] pb-4 border-b border-slate-100 mb-2">
               <SlidersHorizontal className="w-4.5 h-4.5 text-primary stroke-[2.5px]" />
               <span>Filters :</span>
             </div>
@@ -255,7 +255,7 @@ export default function B2BFlightsPage() {
               <div className="border-b border-slate-100 py-3">
                 <button 
                   onClick={() => toggleFilter('general')}
-                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
                 >
                   <span>General</span>
                   {filtersOpen.general ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -278,7 +278,7 @@ export default function B2BFlightsPage() {
               <div className="border-b border-slate-100 py-3">
                 <button 
                   onClick={() => toggleFilter('baggage')}
-                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
                 >
                   <span>Baggage</span>
                   {filtersOpen.baggage ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -301,7 +301,7 @@ export default function B2BFlightsPage() {
               <div className="border-b border-slate-100 py-3">
                 <button 
                   onClick={() => toggleFilter('fareType')}
-                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
                 >
                   <span>Fare type</span>
                   {filtersOpen.fareType ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -324,7 +324,7 @@ export default function B2BFlightsPage() {
               <div className="border-b border-slate-100 py-3">
                 <button 
                   onClick={() => toggleFilter('ticketLimit')}
-                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
                 >
                   <span>Ticket time limit</span>
                   {filtersOpen.ticketLimit ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -340,7 +340,7 @@ export default function B2BFlightsPage() {
               <div className="border-b border-slate-100 py-3">
                 <button 
                   onClick={() => toggleFilter('maxTime')}
-                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
                 >
                   <span>Max. time travel</span>
                   {filtersOpen.maxTime ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -356,7 +356,7 @@ export default function B2BFlightsPage() {
               <div className="border-b border-slate-100 py-3">
                 <button 
                   onClick={() => toggleFilter('price')}
-                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
                 >
                   <span>Price</span>
                   {filtersOpen.price ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -376,7 +376,7 @@ export default function B2BFlightsPage() {
               <div className="border-b border-slate-100 py-3">
                 <button 
                   onClick={() => toggleFilter('stops')}
-                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
                 >
                   <span>No. of stops</span>
                   {filtersOpen.stops ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -403,7 +403,7 @@ export default function B2BFlightsPage() {
               <div className="border-b border-slate-100 py-3">
                 <button 
                   onClick={() => toggleFilter('equipment')}
-                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
                 >
                   <span>Equipment</span>
                   {filtersOpen.equipment ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -419,7 +419,7 @@ export default function B2BFlightsPage() {
               <div className="py-3">
                 <button 
                   onClick={() => toggleFilter('times')}
-                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                  className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
                 >
                   <span>Departure & arrival time</span>
                   {filtersOpen.times ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -450,7 +450,7 @@ export default function B2BFlightsPage() {
                 onClick={() => setSortOpen(!sortOpen)}
                 className="flex items-center gap-1.5 text-[15px] font-[750] text-slate-700 bg-white border border-slate-200 rounded-xl px-4 py-2 hover:bg-slate-50 transition shadow-sm"
               >
-                <span>Sort by: <span className="text-[#0B132B] font-[900]">{activeSort}</span></span>
+                <span>Sort by: <span className="text-[#121121] font-[900]">{activeSort}</span></span>
                 <ChevronDown className="w-4 h-4 text-slate-400" />
               </button>
               {sortOpen && (
@@ -481,14 +481,14 @@ export default function B2BFlightsPage() {
               >
                 
                 {/* Horizontal Top Header Row (Grey blue surface background matching Figma!) */}
-                <div className="bg-[#EEF2F7] px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 select-none">
+                <div className="bg-[#F2FBFF] px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 select-none">
                   
                   {/* Left block: Price & Taxes */}
                   <div className="flex items-baseline">
-                    <span className="text-[#0B132B] font-[900] text-[25px] tracking-tight">
+                    <span className="text-[#121121] font-[900] text-[25px] tracking-tight">
                       ${card.price}
                     </span>
-                    <span className="text-[12px] font-[750] text-[#6B7280] ml-2 tracking-wide uppercase">
+                    <span className="text-[12px] font-[750] text-[#888] ml-2 tracking-wide uppercase">
                       Incl. ${card.tax} tax
                     </span>
                   </div>
@@ -505,10 +505,10 @@ export default function B2BFlightsPage() {
 
                   {/* Right block: B2B/B2C Badges */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="bg-[#1D70B8] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider">PUB</span>
+                    <span className="bg-[#888] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider">PUB</span>
                     
                     {/* Suitcase Baggage Badge */}
-                    <span className="bg-[#DF1B24] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider flex items-center gap-1">
+                    <span className="bg-[#D60D26] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider flex items-center gap-1">
                       <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a3 3 0 00-6 0v2" />
@@ -563,7 +563,7 @@ export default function B2BFlightsPage() {
                       {/* Seat availability */}
                       <div className="flex flex-col min-w-[60px]">
                         <span className="text-[15px] font-[900] text-slate-800">{seg.seatsCode}</span>
-                        <span className="text-[12px] font-bold text-[#FF6B00] mt-0.5">Seats Left</span>
+                        <span className="text-[12px] font-bold text-[#D60D26] mt-0.5">Seats Left</span>
                       </div>
 
                       {/* Amenities Column (Wheelchair, Power, Wifi, Meal icons matching Figma!) */}
@@ -590,7 +590,7 @@ export default function B2BFlightsPage() {
 
       </div>
 
-      <div className="w-full bg-[#1e2329] text-white/50 text-center py-6 text-sm font-semibold select-none">
+      <div className="w-full bg-[#121121] text-white/50 text-center py-6 text-sm font-semibold select-none">
         © 2026 My Travel Deal B2B Booking Portal. Authorized Agents Area.
       </div>
 

@@ -287,7 +287,7 @@ export default function B2BMyAccountPage() {
             <B2BNavbar />
             
             {/* Dark Red Gradient Header */}
-            <div className="w-full bg-gradient-to-r from-[#DF1B24] via-[#6e0f1d] to-[#121021] pt-8 pb-16 px-4 md:px-10 lg:px-20 relative z-0 flex flex-col justify-between items-start">
+            <div className="w-full bg-gradient-to-r from-[#D60D26] via-[#30060F] to-[#121121] pt-8 pb-16 px-4 md:px-10 lg:px-20 relative z-0 flex flex-col justify-between items-start">
                 <div className="text-[12px] font-semibold text-white/60 mb-2 flex items-center gap-1">
                     <span>Sanjay</span>
                     <span>→</span>
@@ -320,7 +320,7 @@ export default function B2BMyAccountPage() {
                                 <span className={activeTab === t.id ? "text-white font-extrabold" : "text-white/70 hover:text-white transition-colors"}>
                                     {t.label}
                                 </span>
-                                {activeTab === t.id && <div className="absolute -bottom-1 w-1.5 h-1.5 bg-[#DF1B24] rounded-full" />}
+                                {activeTab === t.id && <div className="absolute -bottom-1 w-1.5 h-1.5 bg-[#D60D26] rounded-full" />}
                             </div>
                         ))}
                     </div>
@@ -329,13 +329,13 @@ export default function B2BMyAccountPage() {
 
             {/* Main Content Area */}
             <div className="flex-1 w-full max-w-[1440px] mx-auto px-4 md:px-10 lg:px-16 -mt-8 relative z-10 pb-20">
-                <div className="bg-[#fcfcfc] w-full rounded-2xl p-6 md:p-10 shadow-xl border border-slate-100 min-h-[500px]">
+                <div className="bg-[#FFFFFF] w-full rounded-2xl p-6 md:p-10 shadow-xl border border-slate-100 min-h-[500px]">
                     
                     {/* TAB: UPDATE PROFILE */}
                     {activeTab === "update-profile" && (
                         <div className="animate-in fade-in duration-300">
                             {/* Update Profile Card Header */}
-                            <div className="bg-[#102a43] text-white rounded-t-xl px-6 py-4 flex justify-between items-center">
+                            <div className="bg-[#0C2342] text-white rounded-t-xl px-6 py-4 flex justify-between items-center">
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-[17px] font-extrabold tracking-wide uppercase">Update Profile:</h2>
                                 </div>
@@ -359,7 +359,7 @@ export default function B2BMyAccountPage() {
                                             name="accreditation" 
                                             checked={isIataAccredited} 
                                             onChange={() => setIsIataAccredited(true)}
-                                            className="w-4.5 h-4.5 text-[#DF1B24] focus:ring-[#DF1B24]" 
+                                            className="w-4.5 h-4.5 text-[#D60D26] focus:ring-[#D60D26]" 
                                         />
                                         <span className="text-[13px] font-extrabold text-slate-700">B2B Travel Agent (IATA Accredited)</span>
                                     </label>
@@ -369,7 +369,7 @@ export default function B2BMyAccountPage() {
                                             name="accreditation" 
                                             checked={!isIataAccredited} 
                                             onChange={() => setIsIataAccredited(false)}
-                                            className="w-4.5 h-4.5 text-[#DF1B24] focus:ring-[#DF1B24]" 
+                                            className="w-4.5 h-4.5 text-[#D60D26] focus:ring-[#D60D26]" 
                                         />
                                         <span className="text-[13px] font-extrabold text-slate-700">B2B Travel Agent (Non-IATA Accredited)</span>
                                     </label>
@@ -387,41 +387,41 @@ export default function B2BMyAccountPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Agency / Trading Name *</label>
-                                                <input type="text" required disabled={!isProfileEditing} value={profileForm.agencyName} onChange={(e) => setProfileForm({...profileForm, agencyName: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="text" required disabled={!isProfileEditing} value={profileForm.agencyName} onChange={(e) => setProfileForm({...profileForm, agencyName: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Legal Company Name</label>
-                                                <input type="text" disabled={!isProfileEditing} value={profileForm.legalName} onChange={(e) => setProfileForm({...profileForm, legalName: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="text" disabled={!isProfileEditing} value={profileForm.legalName} onChange={(e) => setProfileForm({...profileForm, legalName: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Company Registration Number</label>
-                                                <input type="text" disabled={!isProfileEditing} value={profileForm.regNumber} onChange={(e) => setProfileForm({...profileForm, regNumber: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="text" disabled={!isProfileEditing} value={profileForm.regNumber} onChange={(e) => setProfileForm({...profileForm, regNumber: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">VAT Identification Number</label>
-                                                <input type="text" disabled={!isProfileEditing} value={profileForm.vatNumber} onChange={(e) => setProfileForm({...profileForm, vatNumber: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="text" disabled={!isProfileEditing} value={profileForm.vatNumber} onChange={(e) => setProfileForm({...profileForm, vatNumber: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
                                             
                                             <div className="flex flex-col gap-1.5 md:col-span-2">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Address (Street Name) *</label>
-                                                <input type="text" required disabled={!isProfileEditing} value={profileForm.address} onChange={(e) => setProfileForm({...profileForm, address: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="text" required disabled={!isProfileEditing} value={profileForm.address} onChange={(e) => setProfileForm({...profileForm, address: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
 
                                             <div className="grid grid-cols-3 gap-4 md:col-span-2">
                                                 <div className="flex flex-col gap-1.5">
                                                     <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Postal Code *</label>
-                                                    <input type="text" required disabled={!isProfileEditing} value={profileForm.postalCode} onChange={(e) => setProfileForm({...profileForm, postalCode: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                    <input type="text" required disabled={!isProfileEditing} value={profileForm.postalCode} onChange={(e) => setProfileForm({...profileForm, postalCode: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                                 </div>
                                                 <div className="flex flex-col gap-1.5">
                                                     <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Country Name *</label>
-                                                    <select disabled={!isProfileEditing} value={profileForm.country} onChange={(e) => setProfileForm({...profileForm, country: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
+                                                    <select disabled={!isProfileEditing} value={profileForm.country} onChange={(e) => setProfileForm({...profileForm, country: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
                                                         <option value="India">India</option>
                                                         <option value="Nepal">Nepal</option>
                                                     </select>
                                                 </div>
                                                 <div className="flex flex-col gap-1.5">
                                                     <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">City Name *</label>
-                                                    <select disabled={!isProfileEditing} value={profileForm.city} onChange={(e) => setProfileForm({...profileForm, city: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
+                                                    <select disabled={!isProfileEditing} value={profileForm.city} onChange={(e) => setProfileForm({...profileForm, city: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
                                                         <option value="Gurugram">Gurugram</option>
                                                         <option value="Bhopal">Bhopal</option>
                                                         <option value="Delhi">Delhi</option>
@@ -431,11 +431,11 @@ export default function B2BMyAccountPage() {
 
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Agency Website URL</label>
-                                                <input type="text" disabled={!isProfileEditing} value={profileForm.website} onChange={(e) => setProfileForm({...profileForm, website: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="text" disabled={!isProfileEditing} value={profileForm.website} onChange={(e) => setProfileForm({...profileForm, website: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Types of Business</label>
-                                                <select disabled={!isProfileEditing} value={profileForm.businessType} onChange={(e) => setProfileForm({...profileForm, businessType: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
+                                                <select disabled={!isProfileEditing} value={profileForm.businessType} onChange={(e) => setProfileForm({...profileForm, businessType: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
                                                     <option value="Private Limited">Private Limited</option>
                                                     <option value="Sole Proprietorship">Sole Proprietorship</option>
                                                     <option value="Partnership">Partnership</option>
@@ -443,11 +443,11 @@ export default function B2BMyAccountPage() {
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">IATA Number *</label>
-                                                <input type="text" required disabled={!isProfileEditing} value={profileForm.iataNumber} onChange={(e) => setProfileForm({...profileForm, iataNumber: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="text" required disabled={!isProfileEditing} value={profileForm.iataNumber} onChange={(e) => setProfileForm({...profileForm, iataNumber: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">ODC / PCC Code (If Applicable)</label>
-                                                <input type="text" disabled={!isProfileEditing} value={profileForm.odcCode} onChange={(e) => setProfileForm({...profileForm, odcCode: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="text" disabled={!isProfileEditing} value={profileForm.odcCode} onChange={(e) => setProfileForm({...profileForm, odcCode: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
                                         </div>
                                     </div>
@@ -460,33 +460,33 @@ export default function B2BMyAccountPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Contact Person Name *</label>
-                                                <input type="text" required disabled={!isProfileEditing} value={profileForm.contactName} onChange={(e) => setProfileForm({...profileForm, contactName: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="text" required disabled={!isProfileEditing} value={profileForm.contactName} onChange={(e) => setProfileForm({...profileForm, contactName: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Job Title / Position</label>
-                                                <input type="text" disabled={!isProfileEditing} value={profileForm.jobTitle} onChange={(e) => setProfileForm({...profileForm, jobTitle: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="text" disabled={!isProfileEditing} value={profileForm.jobTitle} onChange={(e) => setProfileForm({...profileForm, jobTitle: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Email Address *</label>
-                                                <input type="email" required disabled={!isProfileEditing} value={profileForm.email} onChange={(e) => setProfileForm({...profileForm, email: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="email" required disabled={!isProfileEditing} value={profileForm.email} onChange={(e) => setProfileForm({...profileForm, email: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Mobile / Phone Number *</label>
-                                                <input type="text" required disabled={!isProfileEditing} value={profileForm.mobile} onChange={(e) => setProfileForm({...profileForm, mobile: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="text" required disabled={!isProfileEditing} value={profileForm.mobile} onChange={(e) => setProfileForm({...profileForm, mobile: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
                                             <div className="flex flex-col gap-1.5 md:col-span-2">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Alternate Contact Number (Optional)</label>
-                                                <input type="text" disabled={!isProfileEditing} value={profileForm.altPhone} onChange={(e) => setProfileForm({...profileForm, altPhone: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
+                                                <input type="text" disabled={!isProfileEditing} value={profileForm.altPhone} onChange={(e) => setProfileForm({...profileForm, altPhone: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400" />
                                             </div>
 
                                             <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-150 grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
                                                 <div className="flex flex-col gap-1.5">
                                                     <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Create Username *</label>
-                                                    <input type="text" required disabled={!isProfileEditing} value={profileForm.username} onChange={(e) => setProfileForm({...profileForm, username: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400 bg-white" />
+                                                    <input type="text" required disabled={!isProfileEditing} value={profileForm.username} onChange={(e) => setProfileForm({...profileForm, username: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400 bg-white" />
                                                 </div>
                                                 <div className="flex flex-col gap-1.5">
                                                     <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Create Password *</label>
-                                                    <input type="password" required disabled={!isProfileEditing} value={profileForm.password} onChange={(e) => setProfileForm({...profileForm, password: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none disabled:bg-slate-50 disabled:text-slate-400 bg-white" />
+                                                    <input type="password" required disabled={!isProfileEditing} value={profileForm.password} onChange={(e) => setProfileForm({...profileForm, password: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none disabled:bg-slate-50 disabled:text-slate-400 bg-white" />
                                                 </div>
                                             </div>
                                         </div>
@@ -500,28 +500,28 @@ export default function B2BMyAccountPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Markets Served</label>
-                                                <select disabled={!isProfileEditing} value={profileForm.markets} onChange={(e) => setProfileForm({...profileForm, markets: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
+                                                <select disabled={!isProfileEditing} value={profileForm.markets} onChange={(e) => setProfileForm({...profileForm, markets: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
                                                     <option value="Domestic & International">Domestic & International</option>
                                                     <option value="Only Domestic">Only Domestic</option>
                                                 </select>
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Main Sales Channels</label>
-                                                <select disabled={!isProfileEditing} value={profileForm.channels} onChange={(e) => setProfileForm({...profileForm, channels: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
+                                                <select disabled={!isProfileEditing} value={profileForm.channels} onChange={(e) => setProfileForm({...profileForm, channels: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
                                                     <option value="B2B Agent Network">B2B Agent Network</option>
                                                     <option value="Online / OTA">Online / OTA</option>
                                                 </select>
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Do You Currently Issue Airline Under Your Own IATA?</label>
-                                                <select disabled={!isProfileEditing} value={profileForm.issueAirline} onChange={(e) => setProfileForm({...profileForm, issueAirline: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
+                                                <select disabled={!isProfileEditing} value={profileForm.issueAirline} onChange={(e) => setProfileForm({...profileForm, issueAirline: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
                                                     <option value="YES">YES</option>
                                                     <option value="NO">NO</option>
                                                 </select>
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Area of Specialization</label>
-                                                <select disabled={!isProfileEditing} value={profileForm.specialization} onChange={(e) => setProfileForm({...profileForm, specialization: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#DF1B24] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
+                                                <select disabled={!isProfileEditing} value={profileForm.specialization} onChange={(e) => setProfileForm({...profileForm, specialization: e.target.value})} className="border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-800 focus:border-[#D60D26] outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 cursor-pointer">
                                                     <option value="Leisure & Corporate Travel">Leisure & Corporate Travel</option>
                                                     <option value="Adventure Travel">Adventure Travel</option>
                                                 </select>
@@ -534,7 +534,7 @@ export default function B2BMyAccountPage() {
                                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4 border-t border-slate-100">
                                             <button 
                                                 type="submit"
-                                                className="bg-[#DF1B24] hover:bg-[#C1161E] text-white font-extrabold text-[14px] px-8 py-3 rounded-full shadow-md active:scale-95 transition-all w-full sm:w-auto"
+                                                className="bg-[#D60D26] hover:bg-[#D60D26] text-white font-extrabold text-[14px] px-8 py-3 rounded-full shadow-md active:scale-95 transition-all w-full sm:w-auto"
                                             >
                                                 Submit
                                             </button>
@@ -567,7 +567,7 @@ export default function B2BMyAccountPage() {
                                 <h3 className="font-extrabold text-[16px] text-slate-800">Sanjay → Profile management</h3>
                                 <button 
                                     onClick={() => setIsCreateSubUserOpen(true)}
-                                    className="bg-[#DF1B24] hover:bg-[#C1161E] text-white font-extrabold text-[13px] px-6 py-2.5 rounded-full flex items-center gap-1 shadow-md active:scale-95 transition-all"
+                                    className="bg-[#D60D26] hover:bg-[#D60D26] text-white font-extrabold text-[13px] px-6 py-2.5 rounded-full flex items-center gap-1 shadow-md active:scale-95 transition-all"
                                 >
                                     Add New User
                                 </button>
@@ -582,7 +582,7 @@ export default function B2BMyAccountPage() {
                                         value={userSearchName}
                                         onChange={(e) => setUserSearchName(e.target.value)}
                                         placeholder="Enter name" 
-                                        className="w-full bg-transparent border-b border-slate-300 pb-1 text-slate-800 text-[13px] font-semibold outline-none focus:border-[#DF1B24]" 
+                                        className="w-full bg-transparent border-b border-slate-300 pb-1 text-slate-800 text-[13px] font-semibold outline-none focus:border-[#D60D26]" 
                                     />
                                 </div>
                                 <div className="flex flex-col gap-1 w-full sm:w-[160px]">
@@ -590,7 +590,7 @@ export default function B2BMyAccountPage() {
                                     <select 
                                         value={userSearchEmail}
                                         onChange={(e) => setUserSearchEmail(e.target.value)}
-                                        className="w-full bg-transparent border-b border-slate-300 pb-1 text-slate-800 text-[13px] font-semibold outline-none focus:border-[#DF1B24] cursor-pointer"
+                                        className="w-full bg-transparent border-b border-slate-300 pb-1 text-slate-800 text-[13px] font-semibold outline-none focus:border-[#D60D26] cursor-pointer"
                                     >
                                         <option value="all">All</option>
                                         <option value="Harshit.Chirgania123@gmail.com">Harshit.Chirgania123@gmail.com</option>
@@ -609,14 +609,14 @@ export default function B2BMyAccountPage() {
                                     <select 
                                         value={userSearchStatus}
                                         onChange={(e) => setUserSearchStatus(e.target.value)}
-                                        className="w-full bg-transparent border-b border-slate-300 pb-1 text-slate-800 text-[13px] font-semibold outline-none focus:border-[#DF1B24] cursor-pointer"
+                                        className="w-full bg-transparent border-b border-slate-300 pb-1 text-slate-800 text-[13px] font-semibold outline-none focus:border-[#D60D26] cursor-pointer"
                                     >
                                         <option value="all">All</option>
                                         <option value="Active">Active</option>
                                         <option value="Suspended">Suspended</option>
                                     </select>
                                 </div>
-                                <button className="bg-[#DF1B24] hover:bg-[#C1161E] text-white px-8 py-2 rounded-full font-bold text-[13px] transition-colors shadow-sm ml-auto sm:w-auto w-full">
+                                <button className="bg-[#D60D26] hover:bg-[#D60D26] text-white px-8 py-2 rounded-full font-bold text-[13px] transition-colors shadow-sm ml-auto sm:w-auto w-full">
                                     Search
                                 </button>
                             </div>
@@ -653,7 +653,7 @@ export default function B2BMyAccountPage() {
                                                         onChange={(e) => {
                                                             setUsersList(usersList.map(u => u.id === usr.id ? {...u, checked: e.target.checked} : u));
                                                         }}
-                                                        className="w-4 h-4 text-[#DF1B24] border-slate-300 rounded focus:ring-[#DF1B24] cursor-pointer"
+                                                        className="w-4 h-4 text-[#D60D26] border-slate-300 rounded focus:ring-[#D60D26] cursor-pointer"
                                                     />
                                                 </td>
                                                 <td className="py-5 px-5 font-bold text-slate-700 text-[13.5px]">{usr.name}</td>
@@ -693,22 +693,22 @@ export default function B2BMyAccountPage() {
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                                     
                                     {/* Upload Dash Area */}
-                                    <div className="lg:col-span-2 border-2 border-dashed border-slate-200 bg-[#edf5fd]/40 rounded-2xl p-12 flex flex-col items-center justify-center text-center relative group">
+                                    <div className="lg:col-span-2 border-2 border-dashed border-slate-200 bg-[#F2FBFF]/40 rounded-2xl p-12 flex flex-col items-center justify-center text-center relative group">
                                         <div className="absolute inset-0 bg-transparent flex items-center justify-center p-4">
                                             {uploadedLogo ? (
                                                 <img src={uploadedLogo} alt="Uploaded logo" className="max-h-24 max-w-full object-contain" />
                                             ) : (
                                                 <div className="flex flex-col items-center">
-                                                    <div className="flex items-center gap-1 bg-[#DF1B24]/10 rounded-xl p-3 mb-2">
-                                                        <div className="text-[#DF1B24] shrink-0 font-extrabold animate-pulse">
+                                                    <div className="flex items-center gap-1 bg-[#D60D26]/10 rounded-xl p-3 mb-2">
+                                                        <div className="text-[#D60D26] shrink-0 font-extrabold animate-pulse">
                                                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                                               <rect x="3" y="8" width="18" height="13" rx="2" />
                                                               <path d="M16 8V6a4 4 0 0 0-8 0v2" />
                                                             </svg>
                                                         </div>
                                                         <div className="flex flex-col items-start leading-none select-none">
-                                                            <span className="font-extrabold text-[#DF1B24] text-[16px]">My</span>
-                                                            <span className="font-extrabold text-[#DF1B24] text-[15px]">Travel Deal</span>
+                                                            <span className="font-extrabold text-[#D60D26] text-[16px]">My</span>
+                                                            <span className="font-extrabold text-[#D60D26] text-[15px]">Travel Deal</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -724,7 +724,7 @@ export default function B2BMyAccountPage() {
                                     </div>
 
                                     {/* Instructions box */}
-                                    <div className="bg-[#edf5fd]/40 border border-sky-100 rounded-2xl p-6 text-[13px] font-semibold text-slate-700 leading-relaxed">
+                                    <div className="bg-[#F2FBFF]/40 border border-sky-100 rounded-2xl p-6 text-[13px] font-semibold text-slate-700 leading-relaxed">
                                         <h4 className="font-extrabold text-[14px] text-slate-800 mb-3">Instructions to upload a Logo:</h4>
                                         <ul className="list-disc pl-5 space-y-2 text-slate-600">
                                             <li>Logo Dimension should not be more than <span className="font-bold text-slate-850">300px*80px</span></li>
@@ -745,7 +745,7 @@ export default function B2BMyAccountPage() {
 
                                 {/* Action Buttons */}
                                 <div className="flex items-center gap-4 pt-6 border-t border-slate-100">
-                                    <button type="submit" className="bg-[#DF1B24] hover:bg-[#C1161E] text-white font-extrabold text-[14px] px-10 py-3 rounded-full shadow-md active:scale-95 transition-all">
+                                    <button type="submit" className="bg-[#D60D26] hover:bg-[#D60D26] text-white font-extrabold text-[14px] px-10 py-3 rounded-full shadow-md active:scale-95 transition-all">
                                         Upload
                                     </button>
                                     <button type="button" onClick={() => {
@@ -767,7 +767,7 @@ export default function B2BMyAccountPage() {
                                 <h3 className="font-extrabold text-[16px] text-slate-800">Sanjay → Profile management</h3>
                                 <button 
                                     onClick={() => setIsAddCustOpen(true)}
-                                    className="bg-[#DF1B24] hover:bg-[#C1161E] text-white font-extrabold text-[13px] px-6 py-2.5 rounded-full flex items-center gap-1 shadow-md active:scale-95 transition-all"
+                                    className="bg-[#D60D26] hover:bg-[#D60D26] text-white font-extrabold text-[13px] px-6 py-2.5 rounded-full flex items-center gap-1 shadow-md active:scale-95 transition-all"
                                 >
                                     Add New Customer
                                 </button>
@@ -782,7 +782,7 @@ export default function B2BMyAccountPage() {
                                         value={custSearchFirstName}
                                         onChange={(e) => setCustSearchFirstName(e.target.value)}
                                         placeholder="Enter first name" 
-                                        className="w-full bg-transparent border-b border-slate-300 pb-1 text-slate-800 text-[13px] font-semibold outline-none focus:border-[#DF1B24]" 
+                                        className="w-full bg-transparent border-b border-slate-300 pb-1 text-slate-800 text-[13px] font-semibold outline-none focus:border-[#D60D26]" 
                                     />
                                 </div>
                                 <div className="flex flex-col gap-1 w-full sm:w-[220px]">
@@ -792,10 +792,10 @@ export default function B2BMyAccountPage() {
                                         value={custSearchLastName}
                                         onChange={(e) => setCustSearchLastName(e.target.value)}
                                         placeholder="Enter last name" 
-                                        className="w-full bg-transparent border-b border-slate-300 pb-1 text-slate-800 text-[13px] font-semibold outline-none focus:border-[#DF1B24]" 
+                                        className="w-full bg-transparent border-b border-slate-300 pb-1 text-slate-800 text-[13px] font-semibold outline-none focus:border-[#D60D26]" 
                                     />
                                 </div>
-                                <button className="bg-[#DF1B24] hover:bg-[#C1161E] text-white px-8 py-2 rounded-full font-bold text-[13px] transition-colors shadow-sm ml-auto sm:w-auto w-full">
+                                <button className="bg-[#D60D26] hover:bg-[#D60D26] text-white px-8 py-2 rounded-full font-bold text-[13px] transition-colors shadow-sm ml-auto sm:w-auto w-full">
                                     Search
                                 </button>
                             </div>
@@ -861,8 +861,8 @@ export default function B2BMyAccountPage() {
                                 
                                 {/* 1. Airline information */}
                                 <div className="flex flex-col border border-slate-200/80 rounded-xl overflow-hidden shadow-sm bg-white min-h-[420px]">
-                                    <div className="bg-[#fff0f1] text-[#DF1B24] font-extrabold text-[14px] py-3.5 px-5 border-b border-slate-150 uppercase tracking-wide flex items-center gap-2">
-                                        <Plane className="w-4 h-4 text-[#DF1B24]" />
+                                    <div className="bg-[#FFFFFF] text-[#D60D26] font-extrabold text-[14px] py-3.5 px-5 border-b border-slate-150 uppercase tracking-wide flex items-center gap-2">
+                                        <Plane className="w-4 h-4 text-[#D60D26]" />
                                         <span>Airline information</span>
                                     </div>
                                     <div className="p-5 flex-1 flex flex-col gap-4 text-[13px] font-semibold text-slate-700">
@@ -879,8 +879,8 @@ export default function B2BMyAccountPage() {
 
                                 {/* 2. Finance Information */}
                                 <div className="flex flex-col border border-slate-200/80 rounded-xl overflow-hidden shadow-sm bg-white min-h-[420px]">
-                                    <div className="bg-[#fff0f1] text-[#DF1B24] font-extrabold text-[14px] py-3.5 px-5 border-b border-slate-150 uppercase tracking-wide flex items-center gap-2">
-                                        <Coins className="w-4 h-4 text-[#DF1B24]" />
+                                    <div className="bg-[#FFFFFF] text-[#D60D26] font-extrabold text-[14px] py-3.5 px-5 border-b border-slate-150 uppercase tracking-wide flex items-center gap-2">
+                                        <Coins className="w-4 h-4 text-[#D60D26]" />
                                         <span>Finance Information</span>
                                     </div>
                                     <div className="p-5 flex-1 flex flex-col gap-4 text-[13px] font-semibold text-slate-700">
@@ -897,8 +897,8 @@ export default function B2BMyAccountPage() {
 
                                 {/* 3. Contact Information */}
                                 <div className="flex flex-col border border-slate-200/80 rounded-xl overflow-hidden shadow-sm bg-white min-h-[420px]">
-                                    <div className="bg-[#fff0f1] text-[#DF1B24] font-extrabold text-[14px] py-3.5 px-5 border-b border-slate-150 uppercase tracking-wide flex items-center gap-2">
-                                        <Contact2 className="w-4 h-4 text-[#DF1B24]" />
+                                    <div className="bg-[#FFFFFF] text-[#D60D26] font-extrabold text-[14px] py-3.5 px-5 border-b border-slate-150 uppercase tracking-wide flex items-center gap-2">
+                                        <Contact2 className="w-4 h-4 text-[#D60D26]" />
                                         <span>Contact Information</span>
                                     </div>
                                     <div className="p-5 flex-1 flex flex-col gap-4 text-[13px] font-semibold text-slate-700">
@@ -917,8 +917,8 @@ export default function B2BMyAccountPage() {
 
                                 {/* 4. Others */}
                                 <div className="flex flex-col border border-slate-200/80 rounded-xl overflow-hidden shadow-sm bg-white min-h-[420px]">
-                                    <div className="bg-[#fff0f1] text-[#DF1B24] font-extrabold text-[14px] py-3.5 px-5 border-b border-slate-150 uppercase tracking-wide flex items-center gap-2">
-                                        <Settings className="w-4 h-4 text-[#DF1B24]" />
+                                    <div className="bg-[#FFFFFF] text-[#D60D26] font-extrabold text-[14px] py-3.5 px-5 border-b border-slate-150 uppercase tracking-wide flex items-center gap-2">
+                                        <Settings className="w-4 h-4 text-[#D60D26]" />
                                         <span>Others</span>
                                     </div>
                                     <div className="p-5 flex-1 flex flex-col gap-4 text-[13px] font-semibold text-slate-700">
@@ -972,12 +972,12 @@ export default function B2BMyAccountPage() {
                                         </div>
                                     </div>
 
-                                    <div className="border border-slate-150 rounded-2xl p-6 bg-[#6e0f1d]/5 flex flex-col gap-4">
+                                    <div className="border border-slate-150 rounded-2xl p-6 bg-[#30060F]/5 flex flex-col gap-4">
                                         <h3 className="font-extrabold text-[15px] text-slate-800">Emergency Ticketing Hotlines</h3>
                                         <p className="text-[12px] text-slate-500 font-medium leading-relaxed">
                                             Need immediate booking changes within 4 hours of departure? Use our 24/7 dedicated agents line.
                                         </p>
-                                        <div className="font-extrabold text-[18px] text-[#DF1B24]">
+                                        <div className="font-extrabold text-[18px] text-[#D60D26]">
                                             1800-400-5050 (Toll Free)
                                         </div>
                                     </div>
@@ -990,7 +990,7 @@ export default function B2BMyAccountPage() {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Ticket Category</label>
-                                                <select className="border border-slate-200 rounded-lg px-3.5 py-3 outline-none focus:border-[#DF1B24] text-[13px] font-semibold text-slate-700 bg-white">
+                                                <select className="border border-slate-200 rounded-lg px-3.5 py-3 outline-none focus:border-[#D60D26] text-[13px] font-semibold text-slate-700 bg-white">
                                                     <option>Refund / Voiding Escalation</option>
                                                     <option>Name Correction Request</option>
                                                     <option>API Webhook / GDS Failure</option>
@@ -1000,7 +1000,7 @@ export default function B2BMyAccountPage() {
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Booking Ref (PNR)</label>
-                                                <input type="text" placeholder="e.g. DEL-89472" className="border border-slate-200 rounded-lg px-3.5 py-3 outline-none focus:border-[#DF1B24] text-[13px] font-semibold text-slate-800 placeholder:text-slate-300" />
+                                                <input type="text" placeholder="e.g. DEL-89472" className="border border-slate-200 rounded-lg px-3.5 py-3 outline-none focus:border-[#D60D26] text-[13px] font-semibold text-slate-800 placeholder:text-slate-300" />
                                             </div>
                                         </div>
 
@@ -1012,7 +1012,7 @@ export default function B2BMyAccountPage() {
                                                 value={contactMessage}
                                                 onChange={(e) => setContactMessage(e.target.value)}
                                                 required
-                                                className="border border-slate-200 rounded-lg px-3.5 py-3 outline-none focus:border-[#DF1B24] text-[13px] font-semibold text-slate-800 placeholder:text-slate-400 resize-none"
+                                                className="border border-slate-200 rounded-lg px-3.5 py-3 outline-none focus:border-[#D60D26] text-[13px] font-semibold text-slate-800 placeholder:text-slate-400 resize-none"
                                             />
                                         </div>
 
@@ -1020,7 +1020,7 @@ export default function B2BMyAccountPage() {
                                             <button 
                                                 type="submit" 
                                                 disabled={isSendingMessage}
-                                                className="bg-[#DF1B24] hover:bg-[#C1161E] text-white font-bold text-[13px] py-3.5 px-6 rounded-full flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 disabled:opacity-50"
+                                                className="bg-[#D60D26] hover:bg-[#D60D26] text-white font-bold text-[13px] py-3.5 px-6 rounded-full flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 disabled:opacity-50"
                                             >
                                                 {isSendingMessage ? "Sending..." : "Submit Incident"}
                                             </button>
@@ -1045,7 +1045,7 @@ export default function B2BMyAccountPage() {
                 <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4">
                     <div className="bg-white rounded-xl w-full max-w-[550px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                         {/* Modal Header */}
-                        <div className="bg-gradient-to-r from-[#DF1B24] via-[#6e0f1d] to-[#121021] px-6 py-4 flex items-center justify-between text-white border-b border-slate-200">
+                        <div className="bg-gradient-to-r from-[#D60D26] via-[#30060F] to-[#121121] px-6 py-4 flex items-center justify-between text-white border-b border-slate-200">
                             <h2 className="font-extrabold text-[15px] uppercase tracking-wider">Create sub user</h2>
                             <button onClick={() => setIsCreateSubUserOpen(false)} className="hover:bg-white/20 p-1.5 rounded-full transition-colors">
                                 <X className="w-5 h-5" />
@@ -1057,38 +1057,38 @@ export default function B2BMyAccountPage() {
                             <div className="grid grid-cols-3 gap-x-4 gap-y-3.5 text-[13px] font-semibold text-slate-700 items-center">
                                 
                                 <span className="text-slate-500">Email Id</span>
-                                <input type="email" required placeholder="--" value={subUserForm.email} onChange={(e) => setSubUserForm({...subUserForm, email: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="email" required placeholder="--" value={subUserForm.email} onChange={(e) => setSubUserForm({...subUserForm, email: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
                                 
                                 <span className="text-slate-500">Title</span>
-                                <select value={subUserForm.title} onChange={(e) => setSubUserForm({...subUserForm, title: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24] cursor-pointer">
+                                <select value={subUserForm.title} onChange={(e) => setSubUserForm({...subUserForm, title: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26] cursor-pointer">
                                     <option value="Mr">Mr</option>
                                     <option value="Mrs">Mrs</option>
                                     <option value="Ms">Ms</option>
                                 </select>
 
                                 <span className="text-slate-500">First Name</span>
-                                <input type="text" required placeholder="--" value={subUserForm.firstName} onChange={(e) => setSubUserForm({...subUserForm, firstName: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="text" required placeholder="--" value={subUserForm.firstName} onChange={(e) => setSubUserForm({...subUserForm, firstName: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
 
                                 <span className="text-slate-500">Last Name</span>
-                                <input type="text" required placeholder="--" value={subUserForm.lastName} onChange={(e) => setSubUserForm({...subUserForm, lastName: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="text" required placeholder="--" value={subUserForm.lastName} onChange={(e) => setSubUserForm({...subUserForm, lastName: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
 
                                 <span className="text-slate-500">Customer Mobile</span>
-                                <input type="text" required placeholder="--" value={subUserForm.mobile} onChange={(e) => setSubUserForm({...subUserForm, mobile: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="text" required placeholder="--" value={subUserForm.mobile} onChange={(e) => setSubUserForm({...subUserForm, mobile: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
 
                                 <span className="text-slate-500">Address 1</span>
-                                <input type="text" placeholder="--" value={subUserForm.address1} onChange={(e) => setSubUserForm({...subUserForm, address1: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="text" placeholder="--" value={subUserForm.address1} onChange={(e) => setSubUserForm({...subUserForm, address1: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
 
                                 <span className="text-slate-500">Address 2</span>
-                                <input type="text" placeholder="--" value={subUserForm.address2} onChange={(e) => setSubUserForm({...subUserForm, address2: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="text" placeholder="--" value={subUserForm.address2} onChange={(e) => setSubUserForm({...subUserForm, address2: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
 
                                 <span className="text-slate-500">Country</span>
-                                <select value={subUserForm.country} onChange={(e) => setSubUserForm({...subUserForm, country: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24] cursor-pointer">
+                                <select value={subUserForm.country} onChange={(e) => setSubUserForm({...subUserForm, country: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26] cursor-pointer">
                                     <option value="India">India</option>
                                     <option value="Nepal">Nepal</option>
                                 </select>
 
                                 <span className="text-slate-500">State</span>
-                                <select value={subUserForm.state} onChange={(e) => setSubUserForm({...subUserForm, state: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24] cursor-pointer">
+                                <select value={subUserForm.state} onChange={(e) => setSubUserForm({...subUserForm, state: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26] cursor-pointer">
                                     <option value="">--</option>
                                     <option value="Haryana">Haryana</option>
                                     <option value="Madhya Pradesh">Madhya Pradesh</option>
@@ -1096,7 +1096,7 @@ export default function B2BMyAccountPage() {
                                 </select>
 
                                 <span className="text-slate-500">City</span>
-                                <select value={subUserForm.city} onChange={(e) => setSubUserForm({...subUserForm, city: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24] cursor-pointer">
+                                <select value={subUserForm.city} onChange={(e) => setSubUserForm({...subUserForm, city: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26] cursor-pointer">
                                     <option value="">--</option>
                                     <option value="Gurugram">Gurugram</option>
                                     <option value="Bhopal">Bhopal</option>
@@ -1104,7 +1104,7 @@ export default function B2BMyAccountPage() {
                                 </select>
 
                                 <span className="text-slate-500">Pincode</span>
-                                <input type="text" placeholder="--" value={subUserForm.pincode} onChange={(e) => setSubUserForm({...subUserForm, pincode: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="text" placeholder="--" value={subUserForm.pincode} onChange={(e) => setSubUserForm({...subUserForm, pincode: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
                             </div>
 
                             {/* Buttons footer */}
@@ -1112,7 +1112,7 @@ export default function B2BMyAccountPage() {
                                 <button type="button" onClick={() => setIsCreateSubUserOpen(false)} className="flex-1 border border-slate-350 hover:bg-slate-50 text-slate-700 font-extrabold text-[13.5px] py-2.5 rounded-full transition-colors active:scale-98">
                                     Cancel
                                 </button>
-                                <button type="submit" className="flex-1 bg-[#DF1B24] hover:bg-[#C1161E] text-white font-extrabold text-[13.5px] py-2.5 rounded-full transition-colors shadow-md active:scale-98">
+                                <button type="submit" className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white font-extrabold text-[13.5px] py-2.5 rounded-full transition-colors shadow-md active:scale-98">
                                     Submit
                                 </button>
                             </div>
@@ -1126,7 +1126,7 @@ export default function B2BMyAccountPage() {
                 <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4">
                     <div className="bg-white rounded-xl w-full max-w-[550px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                         {/* Modal Header */}
-                        <div className="bg-gradient-to-r from-[#DF1B24] via-[#6e0f1d] to-[#121021] px-6 py-4 flex items-center justify-between text-white border-b border-slate-200">
+                        <div className="bg-gradient-to-r from-[#D60D26] via-[#30060F] to-[#121121] px-6 py-4 flex items-center justify-between text-white border-b border-slate-200">
                             <h2 className="font-extrabold text-[15px] uppercase tracking-wider">Add new customer details</h2>
                             <button onClick={() => setIsAddCustOpen(false)} className="hover:bg-white/20 p-1.5 rounded-full transition-colors">
                                 <X className="w-5 h-5" />
@@ -1138,14 +1138,14 @@ export default function B2BMyAccountPage() {
                             <div className="grid grid-cols-3 gap-x-4 gap-y-3.5 text-[13px] font-semibold text-slate-700 items-center">
                                 
                                 <span className="text-slate-500">Type</span>
-                                <select value={newCustForm.type} onChange={(e) => setNewCustForm({...newCustForm, type: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24] cursor-pointer">
+                                <select value={newCustForm.type} onChange={(e) => setNewCustForm({...newCustForm, type: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26] cursor-pointer">
                                     <option value="Select Type">Select Type</option>
                                     <option value="Retail">Retail</option>
                                     <option value="Corporate">Corporate</option>
                                 </select>
 
                                 <span className="text-slate-500">Title</span>
-                                <select value={newCustForm.title} onChange={(e) => setNewCustForm({...newCustForm, title: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24] cursor-pointer">
+                                <select value={newCustForm.title} onChange={(e) => setNewCustForm({...newCustForm, title: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26] cursor-pointer">
                                     <option value="--">--</option>
                                     <option value="Mr">Mr</option>
                                     <option value="Mrs">Mrs</option>
@@ -1153,10 +1153,10 @@ export default function B2BMyAccountPage() {
                                 </select>
                                 
                                 <span className="text-slate-500">First Name</span>
-                                <input type="text" required placeholder="--" value={newCustForm.firstName} onChange={(e) => setNewCustForm({...newCustForm, firstName: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="text" required placeholder="--" value={newCustForm.firstName} onChange={(e) => setNewCustForm({...newCustForm, firstName: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
                                 
                                 <span className="text-slate-500">Last Name</span>
-                                <input type="text" required placeholder="--" value={newCustForm.lastName} onChange={(e) => setNewCustForm({...newCustForm, lastName: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="text" required placeholder="--" value={newCustForm.lastName} onChange={(e) => setNewCustForm({...newCustForm, lastName: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
 
                                 <span className="text-slate-500">Date of Birth</span>
                                 <div className="col-span-2 flex items-center border border-slate-200 rounded px-3 py-1.5 relative bg-white">
@@ -1165,36 +1165,36 @@ export default function B2BMyAccountPage() {
                                 </div>
 
                                 <span className="text-slate-500">Customer Mobile</span>
-                                <input type="text" placeholder="--" value={newCustForm.mobile} onChange={(e) => setNewCustForm({...newCustForm, mobile: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="text" placeholder="--" value={newCustForm.mobile} onChange={(e) => setNewCustForm({...newCustForm, mobile: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
 
                                 <span className="text-slate-500">Email ID</span>
-                                <input type="email" placeholder="--" value={newCustForm.email} onChange={(e) => setNewCustForm({...newCustForm, email: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="email" placeholder="--" value={newCustForm.email} onChange={(e) => setNewCustForm({...newCustForm, email: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
 
                                 <span className="text-slate-500">Passport Number</span>
-                                <input type="text" placeholder="--" value={newCustForm.passportNumber} onChange={(e) => setNewCustForm({...newCustForm, passportNumber: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="text" placeholder="--" value={newCustForm.passportNumber} onChange={(e) => setNewCustForm({...newCustForm, passportNumber: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
 
                                 <span className="text-slate-500">Location</span>
-                                <input type="text" placeholder="--" value={newCustForm.location} onChange={(e) => setNewCustForm({...newCustForm, location: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="text" placeholder="--" value={newCustForm.location} onChange={(e) => setNewCustForm({...newCustForm, location: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
 
                                 <span className="text-slate-500">Nationality</span>
-                                <input type="text" placeholder="--" value={newCustForm.nationality} onChange={(e) => setNewCustForm({...newCustForm, nationality: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24]" />
+                                <input type="text" placeholder="--" value={newCustForm.nationality} onChange={(e) => setNewCustForm({...newCustForm, nationality: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 placeholder:text-slate-300 border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26]" />
 
                                 <span className="text-slate-500">Country</span>
-                                <select value={newCustForm.country} onChange={(e) => setNewCustForm({...newCustForm, country: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24] cursor-pointer">
+                                <select value={newCustForm.country} onChange={(e) => setNewCustForm({...newCustForm, country: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26] cursor-pointer">
                                     <option value="--">--</option>
                                     <option value="India">India</option>
                                     <option value="Nepal">Nepal</option>
                                 </select>
 
                                 <span className="text-slate-500">State</span>
-                                <select value={newCustForm.state} onChange={(e) => setNewCustForm({...newCustForm, state: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24] cursor-pointer">
+                                <select value={newCustForm.state} onChange={(e) => setNewCustForm({...newCustForm, state: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26] cursor-pointer">
                                     <option value="--">--</option>
                                     <option value="Haryana">Haryana</option>
                                     <option value="Madhya Pradesh">Madhya Pradesh</option>
                                 </select>
 
                                 <span className="text-slate-500">City</span>
-                                <select value={newCustForm.city} onChange={(e) => setNewCustForm({...newCustForm, city: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#DF1B24] cursor-pointer">
+                                <select value={newCustForm.city} onChange={(e) => setNewCustForm({...newCustForm, city: e.target.value})} className="col-span-2 outline-none text-[13px] text-slate-800 bg-white border border-slate-200 rounded px-3 py-1.5 focus:border-[#D60D26] cursor-pointer">
                                     <option value="--">--</option>
                                     <option value="Gurugram">Gurugram</option>
                                     <option value="Bhopal">Bhopal</option>
@@ -1219,7 +1219,7 @@ export default function B2BMyAccountPage() {
                                 <button type="button" onClick={() => setIsAddCustOpen(false)} className="flex-1 border border-slate-350 hover:bg-slate-50 text-slate-700 font-extrabold text-[13.5px] py-2.5 rounded-full transition-colors active:scale-98">
                                     Cancel
                                 </button>
-                                <button type="submit" className="flex-1 bg-[#DF1B24] hover:bg-[#C1161E] text-white font-extrabold text-[13.5px] py-2.5 rounded-full transition-colors shadow-md active:scale-98">
+                                <button type="submit" className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white font-extrabold text-[13.5px] py-2.5 rounded-full transition-colors shadow-md active:scale-98">
                                     Submit
                                 </button>
                             </div>

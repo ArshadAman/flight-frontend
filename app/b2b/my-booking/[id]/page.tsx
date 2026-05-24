@@ -17,9 +17,9 @@ export default function B2BBookingDetailsPage() {
             <B2BNavbar />
 
             {/* Header Banner */}
-            <div className="w-full bg-[#ebd9dc] py-10 sm:py-12 border-b border-rose-100">
+            <div className="w-full bg-[#F2FBFF] py-10 sm:py-12 border-b border-rose-100">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-12 flex flex-col">
-                    <h1 className="text-[30px] md:text-[36px] font-[750] text-[#555a60] tracking-tight mb-2">
+                    <h1 className="text-[30px] md:text-[36px] font-[750] text-[#0C2342] tracking-tight mb-2">
                         My booking (B2B)
                     </h1>
                     <div className="flex items-center text-[16px] font-[600] text-gray-500/80 gap-2">

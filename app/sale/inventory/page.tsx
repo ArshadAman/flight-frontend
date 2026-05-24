@@ -29,7 +29,7 @@ export default function InventoryPage() {
         <div 
             key={index} 
             onClick={() => { setSelectedFlight(flight); setActiveDrawerTab("Segment"); }}
-            className={`grid grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 items-center py-4 border-b border-slate-100 text-[13px] font-medium transition-colors px-6 cursor-pointer ${selectedFlight === flight ? 'bg-rose-50 border-l-2 border-l-[#C1161E]' : 'text-slate-700 hover:bg-slate-50'}`}
+            className={`grid grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 items-center py-4 border-b border-slate-100 text-[13px] font-medium transition-colors px-6 cursor-pointer ${selectedFlight === flight ? 'bg-rose-50 border-l-2 border-l-[#D60D26]' : 'text-slate-700 hover:bg-slate-50'}`}
         >
             <div className="font-bold text-slate-800">{flight.groupPnr}</div>
             <div className="flex items-center gap-1">
@@ -67,11 +67,11 @@ export default function InventoryPage() {
                     
                     {/* Header Controls */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 w-full">
-                        <button className="flex items-center gap-2 text-[#C1161E] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto justify-center border border-rose-100 sm:border-transparent">
+                        <button className="flex items-center gap-2 text-[#D60D26] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto justify-center border border-rose-100 sm:border-transparent">
                             <Filter className="w-5 h-5" /> Filters
                         </button>
                         
-                        <Link href="/sale/inventory/new" className="bg-[#C1161E] hover:bg-[#a01219] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
+                        <Link href="/sale/inventory/new" className="bg-[#D60D26] hover:bg-[#D60D26] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
                             <Plus className="w-4 h-4" /> Add PNR
                         </Link>
                     </div>
@@ -94,7 +94,7 @@ export default function InventoryPage() {
                                 </div>
 
                                 {/* July Group */}
-                                <div className="bg-[#f4f9fc] px-6 py-3 font-bold text-slate-700 text-[14px]">
+                                <div className="bg-[#F2FBFF] px-6 py-3 font-bold text-slate-700 text-[14px]">
                                     July, 2025
                                 </div>
                                 <div className="flex flex-col">
@@ -102,7 +102,7 @@ export default function InventoryPage() {
                                 </div>
 
                                 {/* August Group */}
-                                <div className="bg-[#f4f9fc] px-6 py-3 font-bold text-slate-700 text-[14px]">
+                                <div className="bg-[#F2FBFF] px-6 py-3 font-bold text-slate-700 text-[14px]">
                                     August, 2025
                                 </div>
                                 <div className="flex flex-col">
@@ -132,7 +132,7 @@ export default function InventoryPage() {
                     <div className="p-6 bg-slate-50 border-b border-slate-200 flex items-start justify-between shrink-0">
                         <div>
                             <div className="font-bold text-[16px] text-slate-800 flex items-center gap-2">
-                                New Delhi <ArrowRight className="w-4 h-4 text-[#C1161E]" /> Mumbai
+                                New Delhi <ArrowRight className="w-4 h-4 text-[#D60D26]" /> Mumbai
                             </div>
                             <div className="text-[13px] text-slate-500 mt-1">Saturday, July 26, 2025</div>
                         </div>
@@ -144,7 +144,7 @@ export default function InventoryPage() {
                             <button 
                                 key={tab} 
                                 onClick={() => setActiveDrawerTab(tab)} 
-                                className={`flex-1 px-4 py-4 font-bold text-[13px] whitespace-nowrap transition-colors ${activeDrawerTab === tab ? 'text-[#C1161E] bg-rose-50 border-b-2 border-[#C1161E]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                className={`flex-1 px-4 py-4 font-bold text-[13px] whitespace-nowrap transition-colors ${activeDrawerTab === tab ? 'text-[#D60D26] bg-rose-50 border-b-2 border-[#D60D26]' : 'text-slate-600 hover:bg-slate-50'}`}
                             >
                                 {tab}
                             </button>
@@ -163,16 +163,16 @@ export default function InventoryPage() {
                                     <div className="w-3 h-3 rounded-full bg-slate-800 relative z-10 shrink-0 mt-1"></div>
                                     <div className="flex-1">
                                         <div className="text-[13px] text-slate-700 font-bold mb-4">
-                                            16:30 <span className="text-slate-400 font-medium">(UTC +02:00)</span> <span className="text-[#C1161E] mx-1">•</span> DEL <span className="text-[#C1161E] mx-1">•</span> Terminal 1
+                                            16:30 <span className="text-slate-400 font-medium">(UTC +02:00)</span> <span className="text-[#D60D26] mx-1">•</span> DEL <span className="text-[#D60D26] mx-1">•</span> Terminal 1
                                         </div>
                                         
                                         <div className="flex items-center gap-4 py-8">
-                                            <div className="w-8 h-8 bg-[#C1161E] rounded flex items-center justify-center shrink-0 shadow-sm relative -ml-[22px]">
+                                            <div className="w-8 h-8 bg-[#D60D26] rounded flex items-center justify-center shrink-0 shadow-sm relative -ml-[22px]">
                                                 <Plane className="w-4 h-4 text-white -rotate-45" />
                                             </div>
                                             <div className="flex items-center gap-4 text-[13px] font-bold text-blue-600">
                                                 <span>1 stop</span>
-                                                <button className="flex items-center gap-1 text-[#C1161E] underline underline-offset-2">See flight details <ChevronDown className="w-4 h-4" /></button>
+                                                <button className="flex items-center gap-1 text-[#D60D26] underline underline-offset-2">See flight details <ChevronDown className="w-4 h-4" /></button>
                                             </div>
                                         </div>
                                     </div>
@@ -182,7 +182,7 @@ export default function InventoryPage() {
                                     <div className="w-3 h-3 rounded-full border-2 border-slate-800 bg-white relative z-10 shrink-0 mt-1"></div>
                                     <div className="flex-1">
                                         <div className="text-[13px] text-slate-700 font-bold">
-                                            12:20(+1) <span className="text-slate-400 font-medium">(UTC +08:00)</span> <span className="text-[#C1161E] mx-1">•</span> MUM <span className="text-[#C1161E] mx-1">•</span> Terminal 2
+                                            12:20(+1) <span className="text-slate-400 font-medium">(UTC +08:00)</span> <span className="text-[#D60D26] mx-1">•</span> MUM <span className="text-[#D60D26] mx-1">•</span> Terminal 2
                                         </div>
                                     </div>
                                 </div>
@@ -222,23 +222,23 @@ export default function InventoryPage() {
                                 </div>
                                 <div className="grid grid-cols-3 gap-3">
                                     <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-white shadow-sm">
-                                        <div className="font-bold text-[#C1161E] text-[18px]">10</div>
+                                        <div className="font-bold text-[#D60D26] text-[18px]">10</div>
                                         <div className="text-[12px] font-medium text-slate-500 mt-1">Total</div>
                                     </div>
                                     <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-white shadow-sm">
-                                        <div className="font-bold text-[#C1161E] text-[18px]">08</div>
+                                        <div className="font-bold text-[#D60D26] text-[18px]">08</div>
                                         <div className="text-[12px] font-medium text-slate-500 mt-1 text-center leading-tight">Open for<br/>sale</div>
                                     </div>
                                     <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-white shadow-sm">
-                                        <div className="font-bold text-[#C1161E] text-[18px]">04</div>
+                                        <div className="font-bold text-[#D60D26] text-[18px]">04</div>
                                         <div className="text-[12px] font-medium text-slate-500 mt-1">Sold</div>
                                     </div>
                                     <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-white shadow-sm">
-                                        <div className="font-bold text-[#C1161E] text-[18px]">04</div>
+                                        <div className="font-bold text-[#D60D26] text-[18px]">04</div>
                                         <div className="text-[12px] font-medium text-slate-500 mt-1">Available</div>
                                     </div>
                                     <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-white shadow-sm">
-                                        <div className="font-bold text-[#C1161E] text-[18px]">02</div>
+                                        <div className="font-bold text-[#D60D26] text-[18px]">02</div>
                                         <div className="text-[12px] font-medium text-slate-500 mt-1">Reserved</div>
                                     </div>
                                 </div>
@@ -247,7 +247,7 @@ export default function InventoryPage() {
                             {/* Price */}
                             <div>
                                 <div className="font-bold text-[15px] text-slate-800 mb-4">Price</div>
-                                <div className="flex items-center gap-2 text-[#C1161E] font-bold text-[13px] mb-4">
+                                <div className="flex items-center gap-2 text-[#D60D26] font-bold text-[13px] mb-4">
                                     <ArrowRight className="w-4 h-4" /> ONE WAY
                                 </div>
                                 <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Price (INR)</label>
@@ -363,7 +363,7 @@ export default function InventoryPage() {
             {selectedBooking && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 p-4">
                     <div className="bg-white rounded-2xl w-full max-w-[550px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="bg-[#e8faef] p-6 relative shrink-0 border-b border-green-100">
+                        <div className="bg-[#F2FBFF] p-6 relative shrink-0 border-b border-green-100">
                             <button onClick={() => setSelectedBooking(null)} className="absolute top-6 right-6 text-slate-500 hover:bg-white/50 p-1 rounded-full"><X className="w-5 h-5" /></button>
                             <div className="flex items-center gap-3 mb-2">
                                 <span className="font-extrabold text-[20px] text-slate-800">{selectedBooking.displayId || selectedBooking.id}</span>
@@ -384,7 +384,7 @@ export default function InventoryPage() {
                                 </div>
                                 <div className="flex items-center justify-between py-2.5 border-b border-slate-100">
                                     <div className="flex items-center gap-2 text-[13px] font-bold text-slate-600">
-                                        <div className="w-3 h-3 bg-[#C1161E] rounded-sm"></div> MTDPNR reference
+                                        <div className="w-3 h-3 bg-[#D60D26] rounded-sm"></div> MTDPNR reference
                                     </div>
                                     <div className="font-bold text-slate-800 text-[13px]">{selectedBooking.displayId || selectedBooking.id}</div>
                                 </div>
@@ -448,7 +448,7 @@ export default function InventoryPage() {
                             <div className="mb-6">
                                 <div className="font-bold text-slate-800 text-[14px] mb-1">If you want go with new GPNR</div>
                                 <div className="text-[13px] text-slate-500 flex items-center gap-1.5">
-                                    To change the seat volume: <button className="text-[#C1161E] font-bold hover:underline">Add PNR</button>
+                                    To change the seat volume: <button className="text-[#D60D26] font-bold hover:underline">Add PNR</button>
                                 </div>
                             </div>
                             <div className="w-full h-px bg-slate-200 mb-6"></div>

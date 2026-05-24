@@ -72,12 +72,12 @@ function SearchResultsContent() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f5f6fa] flex flex-col w-full">
+    <main className="min-h-screen bg-[#F2FBFF] flex flex-col w-full">
       <Navbar />
       <SearchLoadingModal isOpen={isLoading} />
 
       {/* Red Route Summary Bar */}
-      <div className="w-full bg-[#DE0A26] text-white select-none">
+      <div className="w-full bg-[#D60D26] text-white select-none">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
           <div className="flex flex-col gap-0.5 w-full sm:w-auto min-w-0">
             <div className="flex items-center gap-2.5 text-[17px] font-bold tracking-wide">
@@ -95,7 +95,7 @@ function SearchResultsContent() {
           </div>
           <button
             onClick={() => router.push("/")}
-            className="flex items-center gap-2 bg-[#b60820] hover:bg-[#9e0618] text-white font-bold text-[14px] px-6 py-2.5 rounded-lg transition-colors shadow-sm w-full sm:w-auto justify-center shrink-0"
+            className="flex items-center gap-2 bg-[#D60D26] hover:bg-[#D60D26] text-white font-bold text-[14px] px-6 py-2.5 rounded-lg transition-colors shadow-sm w-full sm:w-auto justify-center shrink-0"
           >
             Search Again <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
           </button>
@@ -132,7 +132,7 @@ function SearchResultsContent() {
 export default function SearchPage() {
   return (
     <Suspense fallback={
-      <main className="min-h-screen bg-[#f5f6fa] flex flex-col items-center justify-center">
+      <main className="min-h-screen bg-[#F2FBFF] flex flex-col items-center justify-center">
         <SearchLoadingModal isOpen={true} />
       </main>
     }>

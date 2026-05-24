@@ -55,7 +55,7 @@ export function SaleNavbar() {
   };
 
   const CurvedArrowIcon = () => (
-    <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 6v6a3 3 0 003 3h11" />
       <path d="M14 11l4 4-4 4" />
     </svg>
@@ -69,10 +69,10 @@ export function SaleNavbar() {
         <div className="relative flex items-center h-full">
           <Link
             href={linkHref}
-            className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${isActive ? 'font-[700] text-[#DF1B24]' : 'font-[500] text-[#8C959F] hover:text-[#57606a]'}`}
+            className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${isActive ? 'font-[700] text-[#D60D26]' : 'font-[500] text-[#888] hover:text-[#0C2342]'}`}
           >
             {name}
-            {isActive && <div className="absolute -bottom-1 w-1 h-1 bg-[#DF1B24] rounded-full" />}
+            {isActive && <div className="absolute -bottom-1 w-1 h-1 bg-[#D60D26] rounded-full" />}
           </Link>
         </div>
       );
@@ -83,18 +83,18 @@ export function SaleNavbar() {
         <button
           onClick={() => hasDropdown ? toggleDropdown(name) : undefined}
           className={`relative text-[14px] xl:text-[16px] py-1 flex flex-col items-center justify-center transition-colors duration-200 ${isActive
-            ? 'font-[700] text-[#DF1B24]'
-            : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
+            ? 'font-[700] text-[#D60D26]'
+            : 'font-[500] text-[#888] hover:text-[#0C2342]'
             }`}
         >
           <div className="flex items-center gap-1">
             {name}
             {hasDropdown && <ChevronDown size={16} className={`transition-transform duration-200 ${openDropdown === name ? 'rotate-180' : ''}`} />}
           </div>
-          {isActive && <div className="absolute -bottom-1 w-1 h-1 bg-[#DF1B24] rounded-full" />}
+          {isActive && <div className="absolute -bottom-1 w-1 h-1 bg-[#D60D26] rounded-full" />}
         </button>
         {hasDropdown && openDropdown === name && options.length > 0 && (
-          <div className="absolute top-full left-0 mt-5 min-w-[200px] bg-white border-t-[5px] border-[#E11D48] rounded-xl shadow-xl z-50 p-2">
+          <div className="absolute top-full left-0 mt-5 min-w-[200px] bg-white border-t-[5px] border-[#D60D26] rounded-xl shadow-xl z-50 p-2">
             <div className="flex flex-col gap-1">
               {options.map((opt, idx) => (
                 <Link
@@ -179,7 +179,7 @@ export function SaleNavbar() {
                     </button>
 
                     {isUserDropdownOpen && (
-                      <div className="absolute right-0 mt-4 w-[240px] bg-white border-t-[4px] border-[#DF1B24] rounded-xl shadow-xl z-50 p-2 animate-in fade-in duration-200">
+                      <div className="absolute right-0 mt-4 w-[240px] bg-white border-t-[4px] border-[#D60D26] rounded-xl shadow-xl z-50 p-2 animate-in fade-in duration-200">
                         <div className="flex flex-col gap-1">
 
                           <Link href="/sale/profile" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center justify-between hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors group">
@@ -211,7 +211,7 @@ export function SaleNavbar() {
                             }}
                             className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors text-red-600 font-bold text-[14px] w-full text-left"
                           >
-                            <LogOut className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" />
+                            <LogOut className="w-4.5 h-4.5 text-[#D60D26] shrink-0" />
                             <span>Logout</span>
                           </button>
 

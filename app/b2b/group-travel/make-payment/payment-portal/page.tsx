@@ -17,7 +17,7 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
   return (
     <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
       {toasts.map((t) => (
-        <div key={t.id} className={`flex items-center gap-3 rounded-xl px-4 py-3 shadow-lg text-white text-[14px] font-medium min-w-[300px] pointer-events-auto ${ t.type === "success" ? "bg-green-600" : "bg-[#E11D48]" }`}>
+        <div key={t.id} className={`flex items-center gap-3 rounded-xl px-4 py-3 shadow-lg text-white text-[14px] font-medium min-w-[300px] pointer-events-auto ${ t.type === "success" ? "bg-green-600" : "bg-[#D60D26]" }`}>
           {t.type === "success" ? <CheckCircle2 className="w-5 h-5 flex-shrink-0" /> : <AlertCircle className="w-5 h-5 flex-shrink-0" />}
           <span className="flex-1">{t.message}</span>
           <button onClick={() => onDismiss(t.id)} className="hover:opacity-70"><X className="w-4 h-4" /></button>
@@ -78,28 +78,28 @@ function PaymentPortalContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F2FBFF] flex flex-col font-sans">
       <Navbar />
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
       <main className="flex-1 w-full max-w-[1000px] mx-auto px-4 py-8 pb-20">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-[14px] text-gray-500 mb-6">
-          <Link href="/b2b/group-travel/view-request" className="hover:text-[#E11D48] transition-colors">Request</Link>
+          <Link href="/b2b/group-travel/view-request" className="hover:text-[#D60D26] transition-colors">Request</Link>
           <ChevronRight className="w-4 h-4" />
-          <Link href="/b2b/group-travel/make-payment" className="hover:text-[#E11D48] transition-colors">Make payment</Link>
+          <Link href="/b2b/group-travel/make-payment" className="hover:text-[#D60D26] transition-colors">Make payment</Link>
           <ChevronRight className="w-4 h-4" />
-          <Link href="/b2b/group-travel/make-payment/payment-summary" className="hover:text-[#E11D48] transition-colors">Payment summary</Link>
+          <Link href="/b2b/group-travel/make-payment/payment-summary" className="hover:text-[#D60D26] transition-colors">Payment summary</Link>
           <ChevronRight className="w-4 h-4" />
           <span className="text-gray-900 font-semibold">Payment portal</span>
         </div>
 
         {/* Mandatory Note */}
-        <div className="bg-[#FFF1F2] border border-[#FECDD3] rounded-lg p-4 mb-8 flex items-start gap-3">
-          <div className="bg-[#E11D48] rounded-full p-1 mt-0.5">
+        <div className="bg-[#FFFFFF] border border-[#FFA8B3] rounded-lg p-4 mb-8 flex items-start gap-3">
+          <div className="bg-[#D60D26] rounded-full p-1 mt-0.5">
             <CheckCircle2 className="w-4 h-4 text-white" />
           </div>
-          <p className="text-[#9F1239] text-[15px] font-medium">
+          <p className="text-[#D60D26] text-[15px] font-medium">
             Note: Please submit the screen shot of payment it is compulsory
           </p>
         </div>
@@ -109,7 +109,7 @@ function PaymentPortalContent() {
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-[#E11D48]" />
+                <CreditCard className="w-5 h-5 text-[#D60D26]" />
                 Payment Options
               </h2>
 
@@ -172,7 +172,7 @@ function PaymentPortalContent() {
             <div className="space-y-6">
               <div 
                 className={`relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center transition-all ${
-                  selectedFile ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50 hover:border-[#E11D48]/30 hover:bg-gray-100'
+                  selectedFile ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50 hover:border-[#D60D26]/30 hover:bg-gray-100'
                 }`}
               >
                 <input
@@ -211,8 +211,8 @@ function PaymentPortalContent() {
                 )}
               </div>
 
-              <div className="bg-[#FFFBEB] p-4 rounded-xl border border-[#FEF3C7]">
-                <p className="text-[13px] text-[#92400E] leading-relaxed">
+              <div className="bg-[#FFFFFF] p-4 rounded-xl border border-[#FFFFFF]">
+                <p className="text-[13px] text-[#D60D26] leading-relaxed">
                   <strong>Important:</strong> After successful transfer, please upload the receipt/screenshot here. Our team will verify it within 24 hours.
                 </p>
               </div>
@@ -220,10 +220,10 @@ function PaymentPortalContent() {
               <button
                 onClick={handleSubmit}
                 disabled={isUploading}
-                className={`w-full py-4 rounded-xl font-bold text-[16px] shadow-lg shadow-[#E11D48]/20 flex items-center justify-center gap-2 transition-all ${
+                className={`w-full py-4 rounded-xl font-bold text-[16px] shadow-lg shadow-[#D60D26]/20 flex items-center justify-center gap-2 transition-all ${
                   isUploading 
                   ? 'bg-gray-400 cursor-not-allowed text-white' 
-                  : 'bg-[#E11D48] hover:bg-[#be1238] text-white hover:translate-y-[-2px] active:translate-y-[0px]'
+                  : 'bg-[#D60D26] hover:bg-[#D60D26] text-white hover:translate-y-[-2px] active:translate-y-[0px]'
                 }`}
               >
                 {isUploading ? (

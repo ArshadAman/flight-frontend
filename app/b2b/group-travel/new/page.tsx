@@ -196,7 +196,7 @@ export default function GroupTravelPage() {
       <Navbar />
 
       {/* Red Status Bar */}
-      <div className="bg-[#E11D48] text-white px-4 md:px-8 py-2 md:py-3 flex justify-between items-center text-[14px] md:text-[16px]">
+      <div className="bg-[#D60D26] text-white px-4 md:px-8 py-2 md:py-3 flex justify-between items-center text-[14px] md:text-[16px]">
         <div className="flex gap-2 items-center">
           <span className="font-semibold text-[20px] md:text-[22px]">Group Travel</span>
           <span className="text-white/70">—</span>
@@ -221,13 +221,13 @@ export default function GroupTravelPage() {
               key={step.id}
               onClick={() => setActiveStep(step.id)}
               className={`flex items-center gap-2 px-6 py-4 border-b-2 transition-all ${
-                activeStep === step.id ? "border-[#E11D48]" : "border-transparent"
+                activeStep === step.id ? "border-[#D60D26]" : "border-transparent"
               }`}
             >
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-[14px] font-bold border transition-colors ${
                   activeStep === step.id
-                    ? "border-[#E11D48] text-[#E11D48]"
+                    ? "border-[#D60D26] text-[#D60D26]"
                     : "border-gray-400 text-gray-400"
                 }`}
               >
@@ -251,7 +251,7 @@ export default function GroupTravelPage() {
         {activeStep === 1 && (
           <>
             {/* White Card background similar to Figma */}
-            <div className="w-full max-w-[1100px] bg-[#f8f9fa] border border-gray-100/50 shadow-sm rounded-[24px] p-6 md:p-10 mb-10">
+            <div className="w-full max-w-[1100px] bg-[#F2FBFF] border border-gray-100/50 shadow-sm rounded-[24px] p-6 md:p-10 mb-10">
               
               <h2 className="text-[22px] md:text-[24px] font-bold text-gray-800 mb-6">Group request details:</h2>
               
@@ -272,13 +272,13 @@ export default function GroupTravelPage() {
               {/* Radio Buttons */}
               <div className="flex gap-6 mb-8">
                 <label className="flex items-center gap-2 text-[16px] text-gray-500 cursor-pointer">
-                  <input type="radio" name="trip" className="accent-[#E11D48] w-4 h-4 cursor-pointer" /> One Way
+                  <input type="radio" name="trip" className="accent-[#D60D26] w-4 h-4 cursor-pointer" /> One Way
                 </label>
                 <label className="flex items-center gap-2 text-[16px] font-bold text-gray-900 cursor-pointer">
-                  <input type="radio" name="trip" defaultChecked className="accent-[#E11D48] w-4 h-4 cursor-pointer" /> Round Trip
+                  <input type="radio" name="trip" defaultChecked className="accent-[#D60D26] w-4 h-4 cursor-pointer" /> Round Trip
                 </label>
                 <label className="flex items-center gap-2 text-[16px] text-gray-500 cursor-pointer">
-                  <input type="radio" name="trip" className="accent-[#E11D48] w-4 h-4 cursor-pointer" /> Multi City
+                  <input type="radio" name="trip" className="accent-[#D60D26] w-4 h-4 cursor-pointer" /> Multi City
                 </label>
               </div>
 
@@ -291,13 +291,13 @@ export default function GroupTravelPage() {
                     <TabsList className="bg-transparent border-b border-gray-200 w-full justify-start h-auto p-0 space-x-2 md:space-x-8 rounded-none">
                       <TabsTrigger
                         value="main"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#E11D48] data-[state=active]:text-gray-900 data-[state=active]:bg-[#fceef0] bg-[#f8f9fa] data-[state=inactive]:text-gray-500 px-6 py-3 data-[state=active]:shadow-none text-[16px] font-bold"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#D60D26] data-[state=active]:text-gray-900 data-[state=active]:bg-[#F2FBFF] bg-[#F2FBFF] data-[state=inactive]:text-gray-500 px-6 py-3 data-[state=active]:shadow-none text-[16px] font-bold"
                       >
                         Main Details
                       </TabsTrigger>
                       <TabsTrigger
                         value="preference"
-                        className="rounded-none border-b-[3px] border-transparent data-[state=active]:border-[#E11D48] data-[state=active]:text-gray-900 data-[state=active]:bg-[#fceef0] bg-[#f8f9fa] data-[state=inactive]:text-gray-500 px-6 py-3 data-[state=active]:shadow-none text-[16px] font-bold"
+                        className="rounded-none border-b-[3px] border-transparent data-[state=active]:border-[#D60D26] data-[state=active]:text-gray-900 data-[state=active]:bg-[#F2FBFF] bg-[#F2FBFF] data-[state=inactive]:text-gray-500 px-6 py-3 data-[state=active]:shadow-none text-[16px] font-bold"
                       >
                         Preference
                       </TabsTrigger>
@@ -321,7 +321,7 @@ export default function GroupTravelPage() {
                         
                         {/* Swap icon */}
                         <div className="flex justify-center shrink-0">
-                          <div className="w-9 h-9 rounded-full border border-[#E11D48] text-[#E11D48] flex items-center justify-center cursor-pointer">
+                          <div className="w-9 h-9 rounded-full border border-[#D60D26] text-[#D60D26] flex items-center justify-center cursor-pointer">
                             <ArrowRightLeft className="w-5 h-5" />
                           </div>
                         </div>
@@ -493,7 +493,7 @@ export default function GroupTravelPage() {
                         <div className="flex flex-col items-center">
                           <div className="flex items-center gap-4 text-[22px] font-bold text-gray-900 mb-2">
                               <span className="text-[18px] md:text-[22px]">{watchedValues.origin || "Origin"}</span>
-                              <Plane className="w-6 h-6 text-[#E11D48] transform rotate-45" />
+                              <Plane className="w-6 h-6 text-[#D60D26] transform rotate-45" />
                               <span className="text-[18px] md:text-[22px]">{watchedValues.destination || "Destination"}</span>
                           </div>
                           <span className="text-gray-700 text-[16px] font-medium">{watchedValues.departureDate || "Date"}</span>
@@ -502,7 +502,7 @@ export default function GroupTravelPage() {
                         <div className="flex flex-col items-center">
                           <div className="flex items-center gap-4 text-[22px] font-bold text-gray-900 mb-2">
                               <span className="text-[18px] md:text-[22px]">{watchedValues.destination || "Destination"}</span>
-                              <Plane className="w-6 h-6 text-[#E11D48] transform rotate-45" />
+                              <Plane className="w-6 h-6 text-[#D60D26] transform rotate-45" />
                               <span className="text-[18px] md:text-[22px]">{watchedValues.origin || "Origin"}</span>
                           </div>
                           <span className="text-gray-700 text-[16px] font-medium">{watchedValues.returnDate || "Date"}</span>
@@ -550,7 +550,7 @@ export default function GroupTravelPage() {
                         <ChevronDown className="w-5 h-5 text-gray-400 transform rotate-180" />
                       </div>
 
-                      <div className="bg-[#fceef0] py-2 px-4 flex justify-end">
+                      <div className="bg-[#F2FBFF] py-2 px-4 flex justify-end">
                         <span className="text-[14px] font-bold text-gray-900 flex items-center gap-1.5"><User className="w-4 h-4"/> {totalPassengers} Adult{totalPassengers > 1 ? 's' : ''}</span>
                       </div>
 
@@ -571,7 +571,7 @@ export default function GroupTravelPage() {
                             <span className="text-[16px] font-semibold w-3 text-center">{adults}</span>
                             <button
                               onClick={() => setAdults(adults + 1)}
-                              className="w-7 h-7 rounded-full border border-[#E11D48] flex items-center justify-center text-[#E11D48] hover:bg-[#E11D48] hover:text-white transition"
+                              className="w-7 h-7 rounded-full border border-[#D60D26] flex items-center justify-center text-[#D60D26] hover:bg-[#D60D26] hover:text-white transition"
                             >
                               <Plus className="w-4 h-4" />
                             </button>
@@ -594,7 +594,7 @@ export default function GroupTravelPage() {
                             <span className="text-[16px] font-semibold w-3 text-center">{children}</span>
                             <button
                               onClick={() => setChildren(children + 1)}
-                              className="w-7 h-7 rounded-full border border-[#E11D48] flex items-center justify-center text-[#E11D48] hover:bg-[#E11D48] hover:text-white transition"
+                              className="w-7 h-7 rounded-full border border-[#D60D26] flex items-center justify-center text-[#D60D26] hover:bg-[#D60D26] hover:text-white transition"
                             >
                               <Plus className="w-4 h-4" />
                             </button>
@@ -617,7 +617,7 @@ export default function GroupTravelPage() {
                             <span className="text-[16px] font-semibold w-3 text-center">{infants}</span>
                             <button
                               onClick={() => setInfants(infants + 1)}
-                              className="w-7 h-7 rounded-full border border-[#E11D48] flex items-center justify-center text-[#E11D48] hover:bg-[#E11D48] hover:text-white transition"
+                              className="w-7 h-7 rounded-full border border-[#D60D26] flex items-center justify-center text-[#D60D26] hover:bg-[#D60D26] hover:text-white transition"
                             >
                               <Plus className="w-4 h-4" />
                             </button>
@@ -644,7 +644,7 @@ export default function GroupTravelPage() {
                 <span className="transform rotate-45 text-[20px] leading-none mt-[-2px]">⭧</span>
               </Button>
               
-              <Button onClick={handleSubmit(handleFormSubmit)} className="flex-1 py-7 rounded-full bg-[#E11D48] hover:bg-[#be1238] font-bold text-white flex gap-2 w-full text-[18px]">
+              <Button onClick={handleSubmit(handleFormSubmit)} className="flex-1 py-7 rounded-full bg-[#D60D26] hover:bg-[#D60D26] font-bold text-white flex gap-2 w-full text-[18px]">
                 Proceed 
                 <span className="transform rotate-45 text-[20px] leading-none mt-[-2px]">⭧</span>
               </Button>
@@ -670,7 +670,7 @@ export default function GroupTravelPage() {
                           setIsModalOpen(false);
                           setActiveStep(2);
                         }}
-                        className="bg-[#E11D48] hover:bg-[#be1238] text-white px-8 py-2.5 rounded-full font-bold shadow-sm"
+                        className="bg-[#D60D26] hover:bg-[#D60D26] text-white px-8 py-2.5 rounded-full font-bold shadow-sm"
                       >
                         Okay
                       </Button>
@@ -690,7 +690,7 @@ export default function GroupTravelPage() {
               
               {/* Customer Request Column */}
               <div className="flex flex-col">
-                <div className="bg-[#fceef0] text-slate-800 font-bold px-5 py-2.5 rounded-t-[14px] w-max text-[15px] tracking-tight">
+                <div className="bg-[#F2FBFF] text-slate-800 font-bold px-5 py-2.5 rounded-t-[14px] w-max text-[15px] tracking-tight">
                   Customer Request
                 </div>
                 
@@ -701,8 +701,8 @@ export default function GroupTravelPage() {
                     <div className="flex-1 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-50/30">
                       <div className="flex items-center gap-3 font-bold text-[17px] text-slate-800">
                         <span>DEL</span>
-                        <div className="w-6 h-6 rounded-full border border-[#E11D48] flex items-center justify-center">
-                           <ArrowRightLeft className="w-3.5 h-3.5 text-[#E11D48]" />
+                        <div className="w-6 h-6 rounded-full border border-[#D60D26] flex items-center justify-center">
+                           <ArrowRightLeft className="w-3.5 h-3.5 text-[#D60D26]" />
                         </div>
                         <span>BKK</span>
                       </div>
@@ -712,8 +712,8 @@ export default function GroupTravelPage() {
                     <div className="flex-1 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-50/30">
                       <div className="flex items-center gap-3 font-bold text-[17px] text-slate-800">
                         <span>BKK</span>
-                        <div className="w-6 h-6 rounded-full border border-[#E11D48] flex items-center justify-center">
-                           <ArrowRightLeft className="w-3.5 h-3.5 text-[#E11D48]" />
+                        <div className="w-6 h-6 rounded-full border border-[#D60D26] flex items-center justify-center">
+                           <ArrowRightLeft className="w-3.5 h-3.5 text-[#D60D26]" />
                         </div>
                         <span>DEL</span>
                       </div>
@@ -746,14 +746,14 @@ export default function GroupTravelPage() {
 
               {/* Agent Response Column */}
               <div className="flex flex-col h-full">
-                <div className="bg-[#fceef0] text-slate-800 font-bold px-5 py-2.5 rounded-t-[14px] w-max text-[15px] tracking-tight">
+                <div className="bg-[#F2FBFF] text-slate-800 font-bold px-5 py-2.5 rounded-t-[14px] w-max text-[15px] tracking-tight">
                   Agent Response
                 </div>
                 
                 <div className="bg-white p-6 md:p-8 rounded-b-[20px] rounded-tr-[20px] shadow-sm border border-slate-100 h-full">
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <h4 className="text-[#3b82f6] font-bold text-[18px]">INR 00.00</h4>
+                      <h4 className="text-[#888] font-bold text-[18px]">INR 00.00</h4>
                       <p className="text-slate-400 text-[12px] font-medium">Total fare(Base fare + taxes)</p>
                     </div>
                     <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-md font-bold text-[11px] uppercase tracking-wider">
@@ -764,7 +764,7 @@ export default function GroupTravelPage() {
                   <div className="space-y-4 mb-8">
                     <div className="flex justify-between items-center text-[14px]">
                       <span className="text-slate-400 font-medium">Adult fare/pax</span>
-                      <span className="text-[#3b82f6] font-bold">INR 00.00</span>
+                      <span className="text-[#888] font-bold">INR 00.00</span>
                     </div>
                     <div className="flex justify-between items-center text-[14px]">
                       <span className="text-slate-400 font-medium">Last responded on</span>
@@ -795,7 +795,7 @@ export default function GroupTravelPage() {
                     </div>
                   </div>
 
-                  <p className="text-[#3b82f6] font-bold text-[14px] italic cursor-pointer hover:underline">
+                  <p className="text-[#888] font-bold text-[14px] italic cursor-pointer hover:underline">
                     *Select flight quote given by agent <span className="underline italic">"Flight Quotes"</span>
                   </p>
                 </div>
@@ -805,7 +805,7 @@ export default function GroupTravelPage() {
 
             {/* Warning Text */}
             <div className="mt-8">
-              <p className="text-[#E11D48] text-[14px] font-bold leading-relaxed">
+              <p className="text-[#D60D26] text-[14px] font-bold leading-relaxed">
                 (Fare are available first come first serve basis. The quoted fare may get invalid without intimation. Seats are not guaranteed until booked. Taxes are subject to change)
               </p>
             </div>
@@ -818,10 +818,10 @@ export default function GroupTravelPage() {
                   
                   {/* Airline Tabs */}
                   <div className="flex gap-4 mb-0">
-                    <button className="bg-[#fceef0] text-[#E11D48] font-bold px-6 py-3 rounded-t-xl border-t-2 border-[#E11D48] text-[14px] flex items-center gap-2">
+                    <button className="bg-[#F2FBFF] text-[#D60D26] font-bold px-6 py-3 rounded-t-xl border-t-2 border-[#D60D26] text-[14px] flex items-center gap-2">
                       AIR INDIA <span className="text-[10px]">✈</span>
                     </button>
-                    <button className="bg-white text-[#3b82f6] font-bold px-6 py-3 rounded-t-xl border border-b-0 border-slate-100 text-[14px] flex items-center gap-2">
+                    <button className="bg-white text-[#888] font-bold px-6 py-3 rounded-t-xl border border-b-0 border-slate-100 text-[14px] flex items-center gap-2">
                       IndiGo <span className="text-[10px]">✈</span>
                     </button>
                   </div>
@@ -847,7 +847,7 @@ export default function GroupTravelPage() {
                       <span className="text-[14px] font-bold text-slate-800">{quote.route}</span>
                       
                       <div className="flex flex-col">
-                        <span className="text-[11px] font-bold text-[#E11D48] italic">{quote.airline}</span>
+                        <span className="text-[11px] font-bold text-[#D60D26] italic">{quote.airline}</span>
                         <span className="text-[14px] font-bold text-slate-800">{quote.flight}</span>
                       </div>
 
@@ -863,17 +863,17 @@ export default function GroupTravelPage() {
 
                       <span className="text-[14px] font-bold text-slate-800">{quote.stops}</span>
                       
-                      <span className="text-[14px] font-bold text-[#3b82f6]">{quote.ssr}</span>
+                      <span className="text-[14px] font-bold text-[#888]">{quote.ssr}</span>
 
                       <div className="flex flex-col">
-                        <span className="text-[14px] font-bold text-[#3b82f6]">INR {quote.fare}</span>
-                        <span className="text-[11px] text-[#3b82f6] font-bold underline cursor-pointer">Fare breakdown</span>
+                        <span className="text-[14px] font-bold text-[#888]">INR {quote.fare}</span>
+                        <span className="text-[11px] text-[#888] font-bold underline cursor-pointer">Fare breakdown</span>
                       </div>
 
                       <div className="flex justify-center">
                         <input 
                           type="checkbox" 
-                          className="w-5 h-5 rounded border-slate-300 accent-[#E11D48] cursor-pointer"
+                          className="w-5 h-5 rounded border-slate-300 accent-[#D60D26] cursor-pointer"
                           checked={selectedFlights.includes(idx)}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -896,7 +896,7 @@ export default function GroupTravelPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6 md:p-8 space-y-6 shadow-sm">
                     <div className="flex justify-between items-center border-b border-slate-50 pb-4">
                       <span className="text-slate-500 text-[14px] font-medium">Fare advised (taxes included)</span>
-                      <span className="text-[#3b82f6] font-bold text-[14px]">INR 20,000.00 / Per pax</span>
+                      <span className="text-[#888] font-bold text-[14px]">INR 20,000.00 / Per pax</span>
                     </div>
 
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -904,21 +904,21 @@ export default function GroupTravelPage() {
                       <input 
                         type="number" 
                         placeholder="Per pax" 
-                        className="border border-slate-200 rounded-lg p-3 outline-none focus:border-[#E11D48] w-full md:w-48 text-[14px]"
+                        className="border border-slate-200 rounded-lg p-3 outline-none focus:border-[#D60D26] w-full md:w-48 text-[14px]"
                       />
                     </div>
 
                     <div className="space-y-2">
                       <textarea 
                         placeholder="Remarks" 
-                        className="w-full border border-slate-200 rounded-lg p-4 h-32 outline-none focus:border-[#E11D48] text-[14px] resize-none"
+                        className="w-full border border-slate-200 rounded-lg p-4 h-32 outline-none focus:border-[#D60D26] text-[14px] resize-none"
                       ></textarea>
                     </div>
 
                     <div className="flex justify-end pt-2">
                       <Button 
                         onClick={(e) => { e.preventDefault(); setIsNegotiateSuccessOpen(true); }}
-                        className="bg-[#E11D48] hover:bg-[#BE123C] text-white rounded-full px-12 py-6 text-[15px] font-bold"
+                        className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-12 py-6 text-[15px] font-bold"
                       >
                         Submit
                       </Button>
@@ -936,7 +936,7 @@ export default function GroupTravelPage() {
               <label className="flex items-center gap-3 text-[14px] text-slate-500 font-medium cursor-pointer group">
                 <input 
                   type="checkbox" 
-                  className="accent-[#E11D48] w-4 h-4 rounded cursor-pointer transition-all"
+                  className="accent-[#D60D26] w-4 h-4 rounded cursor-pointer transition-all"
                   checked={isTermsAgreed}
                   onChange={(e) => setIsTermsAgreed(e.target.checked)}
                 /> 
@@ -970,9 +970,9 @@ export default function GroupTravelPage() {
               <button 
                 disabled={!isTermsAgreed || selectedFlights.length === 0 || isNegotiating}
                 className={`flex-1 py-4 font-bold rounded-full transition-all text-[16px] flex items-center justify-center gap-2 ${
-                  isNegotiating ? 'bg-[#fceef0] text-[#f8a5b2] cursor-not-allowed' : 
-                  (!isTermsAgreed || selectedFlights.length === 0) ? 'bg-[#E11D48] text-white opacity-30 cursor-not-allowed' : 
-                  'bg-[#E11D48] text-white hover:bg-[#be1238] shadow-md'
+                  isNegotiating ? 'bg-[#F2FBFF] text-[#FFA8B3] cursor-not-allowed' : 
+                  (!isTermsAgreed || selectedFlights.length === 0) ? 'bg-[#D60D26] text-white opacity-30 cursor-not-allowed' : 
+                  'bg-[#D60D26] text-white hover:bg-[#D60D26] shadow-md'
                 }`}
               >
                 Accept <ArrowUpRight className="w-5 h-5" />
@@ -989,7 +989,7 @@ export default function GroupTravelPage() {
           }}
         >
           <DialogContent className="max-w-md bg-white p-0 overflow-hidden rounded-2xl border-none shadow-2xl">
-            <div className="bg-[#f0fdf4] p-6 flex flex-col gap-4">
+            <div className="bg-[#F2FBFF] p-6 flex flex-col gap-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="w-6 h-6 text-green-600" />
@@ -1007,7 +1007,7 @@ export default function GroupTravelPage() {
               <div className="flex justify-end mt-4">
                 <button 
                   onClick={handleCloseNegotiateModal}
-                  className="bg-[#E11D48] hover:bg-[#BE123C] text-white rounded-full px-10 py-3 text-[14px] font-bold transition-colors shadow-md"
+                  className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-10 py-3 text-[14px] font-bold transition-colors shadow-md"
                 >
                   Okay
                 </button>

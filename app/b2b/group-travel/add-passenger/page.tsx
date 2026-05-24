@@ -42,7 +42,7 @@ export default function AddPassengerPage() {
       <main className="flex-1 w-full max-w-[1440px] mx-auto bg-white shadow-sm mt-4 mb-10 overflow-hidden relative pb-20">
 
         {/* Header with gradient background */}
-        <div className="bg-gradient-to-r from-[#991b1b] to-[#0f172a] text-white px-8 py-6 rounded-t-lg">
+        <div className="bg-gradient-to-r from-[#D60D26] to-[#121121] text-white px-8 py-6 rounded-t-lg">
           <div className="flex justify-between items-center mb-6">
             <div className="text-base font-medium opacity-80 flex items-center gap-2">
               <span>Group Travel</span>
@@ -143,17 +143,17 @@ export default function AddPassengerPage() {
                 <CalendarIcon className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
               </div>
 
-              <Button className="bg-[#E11D48] hover:bg-[#be1238] text-white rounded-full px-6 py-2 h-auto font-bold text-base shadow-sm whitespace-nowrap">
+              <Button className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-2 h-auto font-bold text-base shadow-sm whitespace-nowrap">
                 Apply Filters
               </Button>
-              <button className="text-[#E11D48] font-bold text-base hover:underline whitespace-nowrap px-2">
+              <button className="text-[#D60D26] font-bold text-base hover:underline whitespace-nowrap px-2">
                 Reset
               </button>
             </div>
           </div>
 
           <div className="mt-4">
-            <button className="text-[#E11D48] font-semibold text-base hover:underline">
+            <button className="text-[#D60D26] font-semibold text-base hover:underline">
               More filters
             </button>
           </div>
@@ -198,13 +198,13 @@ export default function AddPassengerPage() {
                 <div className="flex items-center gap-5">
                   <div className="flex flex-col items-start">
                     <div className="flex items-center gap-1 font-bold text-gray-900 text-[15px]">
-                      {req.flightFrom} <span className="text-[#E11D48]">✈</span> {req.flightTo}
+                      {req.flightFrom} <span className="text-[#D60D26]">✈</span> {req.flightTo}
                     </div>
                     <div className="text-gray-400 text-[13px]">{req.departDate}</div>
                   </div>
                   <div className="flex flex-col items-start">
                     <div className="flex items-center gap-1 font-bold text-gray-900 text-[15px]">
-                      {req.returnFrom} <span className="text-[#E11D48]" style={{display:'inline-block',transform:'scaleX(-1)'}}>✈</span> {req.returnTo}
+                      {req.returnFrom} <span className="text-[#D60D26]" style={{display:'inline-block',transform:'scaleX(-1)'}}>✈</span> {req.returnTo}
                     </div>
                     <div className="text-gray-400 text-[13px]">{req.returnDate}</div>
                   </div>
@@ -212,7 +212,7 @@ export default function AddPassengerPage() {
 
                 {/* Airline */}
                 <div>
-                  <span className="text-[#E11D48] font-bold text-[15px] tracking-wide uppercase leading-tight">
+                  <span className="text-[#D60D26] font-bold text-[15px] tracking-wide uppercase leading-tight">
                     AIR INDIA<sup className="text-[8px]">✈</sup>
                   </span>
                 </div>
@@ -220,7 +220,7 @@ export default function AddPassengerPage() {
                 {/* Request Details */}
                 <div className="flex flex-col text-[14px]">
                   <span className="text-gray-700 font-medium">{req.passengers}</span>
-                  <span className="text-[#E11D48]">Request Date: {req.requestDate}</span>
+                  <span className="text-[#D60D26]">Request Date: {req.requestDate}</span>
                 </div>
 
                 {/* PNR - Updated to show two blue links */}

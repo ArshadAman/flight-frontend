@@ -99,7 +99,7 @@ export function Navbar() {
                   onClick={() => setIsGroupTravelOpen(!isGroupTravelOpen)}
                   className={`relative text-[16px] xl:text-[20px] py-1 flex flex-col items-center justify-center transition-colors duration-200 ${isGroupTravelOpen || pathname.startsWith('/group-travel')
                     ? 'font-[700] text-primary'
-                    : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
+                    : 'font-[500] text-[#888] hover:text-[#0C2342]'
                     }`}
                 >
                   <div className="flex items-center gap-1">
@@ -110,7 +110,7 @@ export function Navbar() {
                 </button>
 
                 {isGroupTravelOpen && (
-                  <div className="absolute top-full left-0 mt-5 w-64 bg-white border-t-[5px] border-[#E11D48] rounded-2xl shadow-xl z-50 p-2">
+                  <div className="absolute top-full left-0 mt-5 w-64 bg-white border-t-[5px] border-[#D60D26] rounded-2xl shadow-xl z-50 p-2">
                     <div className="flex flex-col gap-1">
                       <Link
                         href="/group-travel/new"
@@ -118,8 +118,8 @@ export function Navbar() {
                         className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-xl transition-colors"
                       >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                          <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#D60D26" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M15 13L18 16L15 19" stroke="#D60D26" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <span className="font-bold text-slate-800">New Booking</span>
                       </Link>
@@ -129,8 +129,8 @@ export function Navbar() {
                         className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-xl transition-colors"
                       >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                          <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#D60D26" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M15 13L18 16L15 19" stroke="#D60D26" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <span className="font-bold text-slate-800">Request</span>
                       </Link>
@@ -140,8 +140,8 @@ export function Navbar() {
                         className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-xl transition-colors"
                       >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                          <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#D60D26" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M15 13L18 16L15 19" stroke="#D60D26" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <span className="font-bold text-slate-800">Modified Request</span>
                       </Link>

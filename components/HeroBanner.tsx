@@ -23,7 +23,7 @@ export function HeroBanner() {
                                     viewBox="0 0 400 20"
                                     fill="none"
                                     xmlns="http://www.w3.org/2000/svg"
-                                    className="w-full h-auto text-[#E11D48] drop-shadow-[0_2px_2px_rgba(225,29,72,0.3)]"
+                                    className="w-full h-auto text-[#D60D26] drop-shadow-[0_2px_2px_rgba(225,29,72,0.3)]"
                                 >
                                     <path
                                         d="M0 30C100 5 300 -5 400 18L398 18C300 10 10 15 5 35L0 30Z"

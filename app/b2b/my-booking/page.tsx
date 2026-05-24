@@ -31,7 +31,7 @@ const BookingCard = ({
 }) => (
     <div className="bg-white rounded-[1.5rem] shadow-sm border border-rose-50 overflow-hidden mb-8">
         {/* Card Header */}
-        <div className="bg-[#fff5f6] px-4 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 border-b border-rose-100">
+        <div className="bg-[#FFFFFF] px-4 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 border-b border-rose-100">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6 text-[14px] sm:text-[15px] font-[600] text-gray-400 tracking-wide">
                 <div className="flex items-center gap-2">
                     <Plane className="w-5 h-5 text-primary rotate-45" />
@@ -55,9 +55,9 @@ const BookingCard = ({
         {/* Card Body */}
         <div className="p-4 sm:p-8 flex flex-col lg:flex-row gap-6 sm:gap-8">
             {/* Route Info */}
-            <div className="flex-1 bg-[#f8f9fa] rounded-2xl p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between relative gap-8 sm:gap-0">
+            <div className="flex-1 bg-[#F2FBFF] rounded-2xl p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between relative gap-8 sm:gap-0">
                 <div className="text-center w-full sm:w-[120px]">
-                    <h3 className="text-[22px] font-[800] text-[#1e2329] tracking-tight">{from}, {fromCode}</h3>
+                    <h3 className="text-[22px] font-[800] text-[#121121] tracking-tight">{from}, {fromCode}</h3>
                     <p className="text-[14px] font-[600] text-gray-400 mt-1">Terminal {terminal}</p>
                     <span className="inline-block mt-4 px-3 py-1 bg-white border border-gray-200 rounded text-[13px] font-[800] text-gray-700">{fromCode === "DEL" ? "23:00" : "10:00"}</span>
                 </div>
@@ -84,7 +84,7 @@ const BookingCard = ({
                 </div>
 
                 <div className="text-center w-full sm:w-[120px]">
-                    <h3 className="text-[22px] font-[800] text-[#1e2329] tracking-tight">{to}, {toCode}</h3>
+                    <h3 className="text-[22px] font-[800] text-[#121121] tracking-tight">{to}, {toCode}</h3>
                     <p className="text-[14px] font-[600] text-gray-400 mt-1">Terminal {terminal}</p>
                     <span className="inline-block mt-4 px-3 py-1 bg-white border border-gray-200 rounded text-[13px] font-[800] text-gray-700">{toCode === "DEL" ? "23:00" : "03:00"}</span>
                 </div>
@@ -94,10 +94,10 @@ const BookingCard = ({
             <div className="w-full lg:w-[320px] flex flex-col gap-6 pt-2">
                 <div className="flex justify-between items-center px-1">
                     <span className="text-[16px] font-[600] text-gray-400">Payment:</span>
-                    <span className="text-[22px] font-[800] text-[#1e2329]">$ {price}</span>
+                    <span className="text-[22px] font-[800] text-[#121121]">$ {price}</span>
                 </div>
-                <div className="bg-[#f0f2f5] rounded-2xl p-6 flex-1">
-                    <h4 className="font-[750] text-[#1e2329] text-[16px] mb-5 tracking-tight">Passengers: {passengers.length < 10 ? `0${passengers.length}` : passengers.length}</h4>
+                <div className="bg-[#F2FBFF] rounded-2xl p-6 flex-1">
+                    <h4 className="font-[750] text-[#121121] text-[16px] mb-5 tracking-tight">Passengers: {passengers.length < 10 ? `0${passengers.length}` : passengers.length}</h4>
                     <div className="space-y-4">
                         {passengers.map((p, i: number) => (
                             <div key={i} className="flex justify-between text-[15px] font-[600] text-gray-500">
@@ -139,9 +139,9 @@ export default function B2BMyBooking() {
             <B2BNavbar />
 
             {/* Header Banner */}
-            <div className="w-full bg-[#ebd9dc] py-14 sm:py-16 border-b border-rose-100">
+            <div className="w-full bg-[#F2FBFF] py-14 sm:py-16 border-b border-rose-100">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-12 flex flex-col">
-                    <h1 className="text-[32px] md:text-[38px] font-[700] text-[#555a60] tracking-tight mb-3">
+                    <h1 className="text-[32px] md:text-[38px] font-[700] text-[#0C2342] tracking-tight mb-3">
                         My booking (B2B)
                     </h1>
                     <div className="flex items-center text-[15px] font-[600] text-gray-500/80 gap-2">
@@ -154,10 +154,10 @@ export default function B2BMyBooking() {
 
             <main className="container mx-auto px-4 sm:px-6 lg:px-12 py-16 flex-1 max-w-[1450px]">
                 <div className="flex justify-between items-center mb-10">
-                    <span className="font-[800] text-[18px] text-[#1e2329] tracking-tight">Showing {bookings.length < 10 ? `0${bookings.length}` : bookings.length}</span>
+                    <span className="font-[800] text-[18px] text-[#121121] tracking-tight">Showing {bookings.length < 10 ? `0${bookings.length}` : bookings.length}</span>
                     <div className="flex items-center gap-3 text-[15px]">
                         <span className="text-gray-400 font-[600]">Sort by</span>
-                        <span className="font-[750] text-[#1e2329] flex items-center gap-1 cursor-pointer hover:text-red-600 transition-colors">
+                        <span className="font-[750] text-[#121121] flex items-center gap-1 cursor-pointer hover:text-red-600 transition-colors">
                             Recommended <ChevronRight className="w-4 h-4 rotate-90" strokeWidth={3} />
                         </span>
                     </div>

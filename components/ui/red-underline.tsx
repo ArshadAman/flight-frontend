@@ -4,7 +4,7 @@ export function RedUnderline({ className }: { className?: string }) {
             <div
                 className="w-full h-full"
                 style={{
-                    background: '#cc0f2b',
+                    background: '#D60D26',
                     clipPath: 'polygon(0% 50%, 15% 15%, 50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%)',
                     transform: 'rotate(-1.5deg) scaleY(0.8)',
                     borderRadius: '50% / 100%'

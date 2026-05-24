@@ -100,7 +100,7 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
         <div
           key={t.id}
           className={`flex items-center gap-3 rounded-xl px-4 py-3 shadow-lg text-white text-[14px] font-medium min-w-[280px] pointer-events-auto ${
-            t.type === "success" ? "bg-green-600" : "bg-[#E11D48]"
+            t.type === "success" ? "bg-green-600" : "bg-[#D60D26]"
           }`}
         >
           <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
@@ -259,7 +259,7 @@ export default function AddPaxDetailsPage() {
                   <tr key={i} className="border-b border-gray-50 last:border-0">
                     <td className="py-4 font-bold text-gray-900 text-[15px]">{f.route}</td>
                     <td className="py-4">
-                      <div className="text-[#E11D48] font-bold text-[13px] uppercase tracking-wide">
+                      <div className="text-[#D60D26] font-bold text-[13px] uppercase tracking-wide">
                         {f.airline}<sup className="text-[8px]">✈</sup>
                       </div>
                       <div className="text-gray-900 font-bold text-[13px]">{f.flightNo}</div>
@@ -419,7 +419,7 @@ export default function AddPaxDetailsPage() {
             <div className="flex justify-center mt-6">
               <button
                 onClick={handleAddPassenger}
-                className="flex items-center gap-2 border border-[#E11D48] text-[#E11D48] rounded-full px-6 py-2 text-[14px] font-semibold hover:bg-red-50 transition-colors"
+                className="flex items-center gap-2 border border-[#D60D26] text-[#D60D26] rounded-full px-6 py-2 text-[14px] font-semibold hover:bg-red-50 transition-colors"
               >
                 <Plus className="w-4 h-4" /> Add Passenger
               </button>
@@ -437,7 +437,7 @@ export default function AddPaxDetailsPage() {
             </button>
             <button
               onClick={handleSubmit(onSubmit, onError)}
-              className="flex-1 flex items-center justify-center gap-2 bg-[#E11D48] hover:bg-[#be1238] text-white rounded-full py-3 font-semibold text-[15px] transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full py-3 font-semibold text-[15px] transition-colors"
             >
               Save Passenger <span className="text-[14px]">↗</span>
             </button>
@@ -456,10 +456,10 @@ export default function AddPaxDetailsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border border-gray-100 rounded-lg overflow-hidden">
-      <div className="bg-[#fdf2f4] border-b border-gray-100 px-4 py-2.5 inline-block min-w-[200px]">
-        <span className="text-[#E11D48] font-bold text-[13px]">{title}</span>
+      <div className="bg-[#FFFFFF] border-b border-gray-100 px-4 py-2.5 inline-block min-w-[200px]">
+        <span className="text-[#D60D26] font-bold text-[13px]">{title}</span>
       </div>
-      <div className="px-5 py-5 bg-[#fafcfd]">{children}</div>
+      <div className="px-5 py-5 bg-[#FFFFFF]">{children}</div>
     </div>
   );
 }

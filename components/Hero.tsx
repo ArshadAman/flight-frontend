@@ -44,7 +44,7 @@ export function Hero({ children }: HeroProps) {
                                     viewBox="0 0 400 20"
                                     fill="none"
                                     xmlns="http://www.w3.org/2000/svg"
-                                    className="w-full h-auto text-[#E11D48] drop-shadow-sm"
+                                    className="w-full h-auto text-[#D60D26] drop-shadow-sm"
                                 >
                                     <path
                                         d="M10 30C110 5 310 -5 390 18L388 18C290 10 20 15 15 35L10 30Z"

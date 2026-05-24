@@ -191,8 +191,8 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
         row: "flex w-full mt-2",
         cell: "text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
         day: cn("h-11 w-11 p-0 font-bold hover:bg-slate-100 rounded-xl transition-all text-[15px]"),
-        day_selected: "bg-[#2196F3] text-white hover:bg-[#2196F3] rounded-xl shadow-md",
-        day_today: "text-[#2196F3] border border-[#2196F3]",
+        day_selected: "bg-[#888] text-white hover:bg-[#888] rounded-xl shadow-md",
+        day_today: "text-[#888] border border-[#888]",
         day_outside: "text-slate-300 opacity-50",
         day_disabled: "text-slate-300 opacity-50",
     };
@@ -284,7 +284,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                             </div>
 
                             {/* Red Arrow Circle */}
-                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#E11D48] text-[#E11D48] items-center justify-center relative mt-3 mx-2">
+                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
                                 <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
                             </div>
 
@@ -326,7 +326,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
 
                             {/* Search Button */}
                             <div className="flex items-center justify-end h-[70px] shrink-0 mt-3">
-                                <Button onClick={handleSearch} className="bg-[#DF1B24] hover:bg-[#C1161E] text-white rounded-full px-6 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
+                                <Button onClick={handleSearch} className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
                                     Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
                                 </Button>
                             </div>
@@ -343,7 +343,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                             </div>
 
                             {/* Red Arrow Circle */}
-                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#E11D48] text-[#E11D48] items-center justify-center relative mt-3 mx-2">
+                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
                                 <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
                             </div>
 
@@ -374,7 +374,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
 
                             {/* Add City Button Area */}
                             <div className="flex items-center justify-start h-[70px] shrink-0 min-w-[120px] mt-3 lg:pl-6">
-                                <button className="text-[#E11D48] font-bold text-[15px] hover:underline flex items-center gap-1">
+                                <button className="text-[#D60D26] font-bold text-[15px] hover:underline flex items-center gap-1">
                                     <Plus className="w-4 h-4" strokeWidth={3} /> Add City
                                 </button>
                             </div>
@@ -624,21 +624,21 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                                     <div className="space-y-2.5">
                                         {['Economy', 'Prem. Economy', 'Business', 'First'].map((cabin) => (
                                             <label key={cabin} className="flex items-center gap-3 cursor-pointer group" onClick={() => setCabinClass(cabin)}>
-                                                <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", cabinClass === cabin ? "border-[#3b82f6]" : "border-slate-300")}>
-                                                    {cabinClass === cabin && <div className="w-2.5 h-2.5 rounded-full bg-[#3b82f6]" />}
+                                                <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", cabinClass === cabin ? "border-[#888]" : "border-slate-300")}>
+                                                    {cabinClass === cabin && <div className="w-2.5 h-2.5 rounded-full bg-[#888]" />}
                                                 </div>
                                                 <span className="text-[14px] font-semibold text-slate-700">{cabin}</span>
                                             </label>
                                         ))}
                                     </div>
                                     {/* Done Button Logic: Closes the Popover */}
-                                    <Button className="w-full mt-2 py-5 bg-white border-2 border-[#3b82f6] text-[#3b82f6] hover:bg-blue-50 font-bold text-[16px] rounded-xl shadow-none" onClick={() => setIsTravellerOpen(false)}>Done</Button>
+                                    <Button className="w-full mt-2 py-5 bg-white border-2 border-[#888] text-[#888] hover:bg-blue-50 font-bold text-[16px] rounded-xl shadow-none" onClick={() => setIsTravellerOpen(false)}>Done</Button>
                                 </div>
                             </PopoverContent>
                         </Popover>
 
                         <div className="flex items-center justify-center lg:justify-end h-auto pb-2 lg:pl-4 w-full lg:w-auto mt-2 lg:mt-0">
-                            <Button onClick={handleSearch} className="w-full lg:w-auto bg-[#DF1B24] hover:bg-[#C1161E] text-white rounded-full px-8 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
+                            <Button onClick={handleSearch} className="w-full lg:w-auto bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-8 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
                                 Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
                             </Button>
                         </div>
@@ -648,8 +648,8 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                 {/* Checkboxes Row */}
                 <div className="flex items-center space-x-6 pt-2">
                     <div className="flex items-center space-x-2.5">
-                        <button id="baggageFares" onClick={() => setBaggageFares(!baggageFares)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", baggageFares ? "bg-white border-[#DF1B24]" : "border-slate-300 bg-white")}>
-                            {baggageFares && <svg className="w-3.5 h-3.5 text-[#DF1B24]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                        <button id="baggageFares" onClick={() => setBaggageFares(!baggageFares)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", baggageFares ? "bg-white border-[#D60D26]" : "border-slate-300 bg-white")}>
+                            {baggageFares && <svg className="w-3.5 h-3.5 text-[#D60D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                         </button>
                         <label htmlFor="baggageFares" className="text-[13px] font-bold text-slate-400 cursor-pointer select-none" onClick={() => setBaggageFares(!baggageFares)}>Baggage Fares Only</label>
                     </div>
@@ -658,8 +658,8 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                     <div className="hidden sm:block w-[1.5px] h-4 bg-slate-200" />
 
                     <div className="flex items-center space-x-2.5">
-                        <button id="nonStop" onClick={() => setNonStop(!nonStop)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", nonStop ? "bg-white border-[#DF1B24]" : "border-slate-300 bg-white")}>
-                            {nonStop && <svg className="w-3.5 h-3.5 text-[#DF1B24]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                        <button id="nonStop" onClick={() => setNonStop(!nonStop)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", nonStop ? "bg-white border-[#D60D26]" : "border-slate-300 bg-white")}>
+                            {nonStop && <svg className="w-3.5 h-3.5 text-[#D60D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                         </button>
                         <label htmlFor="nonStop" className="text-[13px] font-bold text-slate-400 cursor-pointer select-none" onClick={() => setNonStop(!nonStop)}>Non-Stops Flights</label>
                     </div>

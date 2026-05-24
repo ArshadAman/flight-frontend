@@ -15,7 +15,7 @@ export default function ErrorBoundary({
     }, [error]);
 
     return (
-        <div className="min-h-screen bg-[#F5F7FA] flex flex-col items-center justify-center p-4 font-sans">
+        <div className="min-h-screen bg-[#F2FBFF] flex flex-col items-center justify-center p-4 font-sans">
             <div className="bg-white p-8 md:p-12 rounded-2xl shadow-sm text-center max-w-md w-full">
                 <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
                     <svg
@@ -43,7 +43,7 @@ export default function ErrorBoundary({
                         reset();
                         window.location.reload();
                     }}
-                    className="w-full bg-primary hover:bg-[#a60c23] text-white font-bold py-6 rounded-xl transition-all active:scale-95"
+                    className="w-full bg-primary hover:bg-[#D60D26] text-white font-bold py-6 rounded-xl transition-all active:scale-95"
                 >
                     Try Again
                 </Button>

@@ -3,8 +3,8 @@ import { Armchair } from "lucide-react";
 export function PassengerMoreDetails() {
   return (
     <>
-      <div className="w-full bg-[#f4f5f7] px-8 py-3.5 border-y border-gray-200">
-        <h3 className="text-[17px] font-[750] text-[#333] tracking-tight">More details:</h3>
+      <div className="w-full bg-[#F2FBFF] px-8 py-3.5 border-y border-gray-200">
+        <h3 className="text-[17px] font-[750] text-[#0C2342] tracking-tight">More details:</h3>
       </div>
 
       <div className="p-8 flex flex-col gap-8">
@@ -15,7 +15,7 @@ export function PassengerMoreDetails() {
               <div>
                 <span className="text-[14px] font-[700] text-gray-400 block mb-2">Baggage</span>
                 <div className="flex flex-col gap-1">
-                  <div className="w-8 h-8 rounded border border-[#DE0A26] flex items-center justify-center text-[#DE0A26] shadow-sm bg-red-50 text-[13px] font-bold">25Kg</div>
+                  <div className="w-8 h-8 rounded border border-[#D60D26] flex items-center justify-center text-[#D60D26] shadow-sm bg-red-50 text-[13px] font-bold">25Kg</div>
                   <span className="text-[13px] font-[600] text-gray-500">Check in bag</span>
                 </div>
               </div>
@@ -55,7 +55,7 @@ export function PassengerMoreDetails() {
               <div>
                 <span className="text-[14px] font-[700] text-gray-400 block mb-2">Baggage</span>
                 <div className="flex flex-col gap-1">
-                  <div className="w-8 h-8 rounded border border-[#DE0A26] flex items-center justify-center text-[#DE0A26] shadow-sm bg-red-50 text-[13px] font-bold">25Kg</div>
+                  <div className="w-8 h-8 rounded border border-[#D60D26] flex items-center justify-center text-[#D60D26] shadow-sm bg-red-50 text-[13px] font-bold">25Kg</div>
                   <span className="text-[13px] font-[600] text-gray-500">Check in bag</span>
                 </div>
               </div>

@@ -70,7 +70,7 @@ export function B2BNavbar() {
         onClick={() => hasDropdown ? toggleDropdown(name) : undefined}
         className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${openDropdown === name || (name === "Group Travel" && pathname.startsWith('/b2b/group-travel'))
           ? 'font-[700] text-primary'
-          : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
+          : 'font-[500] text-[#888] hover:text-[#0C2342]'
           }`}
       >
         <div className="flex items-center gap-1">
@@ -79,7 +79,7 @@ export function B2BNavbar() {
         </div>
       </button>
       {hasDropdown && openDropdown === name && options.length > 0 && (
-        <div className="absolute top-full left-0 mt-5 min-w-[240px] bg-white border-t-[5px] border-[#E11D48] rounded-xl shadow-xl z-50 p-2">
+        <div className="absolute top-full left-0 mt-5 min-w-[240px] bg-white border-t-[5px] border-[#D60D26] rounded-xl shadow-xl z-50 p-2">
           <div className="flex flex-col gap-1">
             {options.map((opt, idx) => (
               <Link
@@ -134,23 +134,23 @@ export function B2BNavbar() {
                   {
                     label: "New Booking",
                     href: "/b2b/group-travel/new",
-                    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#D60D26" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="#D60D26" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   },
                   {
                     label: "Request",
                     href: "/b2b/group-travel/view-request",
-                    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#D60D26" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="#D60D26" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   },
                   {
                     label: "Modified Request",
                     href: "/b2b/group-travel/add-passenger",
-                    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="#D60D26" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="#D60D26" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   }
                 ]}
               />
               <Link
                 href="/b2b/my-booking"
-                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${pathname.startsWith('/b2b/my-booking') ? 'font-[700] text-primary' : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
+                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${pathname.startsWith('/b2b/my-booking') ? 'font-[700] text-primary' : 'font-[500] text-[#888] hover:text-[#0C2342]'
                   }`}
               >
                 My Booking
@@ -161,8 +161,8 @@ export function B2BNavbar() {
                 <button
                   onClick={() => setIsMyAccountOpen(!isMyAccountOpen)}
                   className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${isMyAccountOpen || pathname.startsWith('/b2b/my-account') || pathname.startsWith('/b2b/payment') || pathname.startsWith('/b2b/reports') || pathname.startsWith('/b2b/manage-commission')
-                    ? 'font-[700] text-[#DF1B24]'
-                    : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
+                    ? 'font-[700] text-[#D60D26]'
+                    : 'font-[500] text-[#888] hover:text-[#0C2342]'
                     }`}
                 >
                   <div className="flex items-center gap-1">
@@ -173,7 +173,7 @@ export function B2BNavbar() {
                 </button>
 
                 {isMyAccountOpen && (
-                  <div className="absolute top-full left-0 mt-5 min-w-[280px] bg-white border-t-[5px] border-[#E11D48] rounded-xl shadow-xl z-50 p-4 animate-in fade-in duration-200">
+                  <div className="absolute top-full left-0 mt-5 min-w-[280px] bg-white border-t-[5px] border-[#D60D26] rounded-xl shadow-xl z-50 p-4 animate-in fade-in duration-200">
                     <div className="flex flex-col gap-3">
 
                       {/* Top-Level: Payment */}
@@ -184,7 +184,7 @@ export function B2BNavbar() {
                         >
                           <div className="flex items-center gap-2">
                             {/* Curved Red Arrow Icon */}
-                            <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M4 6v6a3 3 0 003 3h11" />
                               <path d="M14 11l4 4-4 4" />
                             </svg>
@@ -210,7 +210,7 @@ export function B2BNavbar() {
                                   key={idx}
                                   href={`/b2b/payment?tab=${sub.tab}`}
                                   onClick={() => setIsMyAccountOpen(false)}
-                                  className="flex items-center gap-2 pl-1.5 group/sub text-slate-600 hover:text-[#DF1B24] transition-colors text-[13px] font-bold"
+                                  className="flex items-center gap-2 pl-1.5 group/sub text-slate-600 hover:text-[#D60D26] transition-colors text-[13px] font-bold"
                                 >
                                   {/* Branch Line */}
                                   <div className="w-3.5 h-3 border-l border-b border-slate-300 relative -top-1 shrink-0" />
@@ -226,10 +226,10 @@ export function B2BNavbar() {
                       <Link
                         href="/b2b/reports"
                         onClick={() => setIsMyAccountOpen(false)}
-                        className="flex items-center gap-2 hover:bg-slate-50 py-1.5 px-2 rounded transition-colors text-slate-800 hover:text-[#DF1B24] text-[14px] font-bold"
+                        className="flex items-center gap-2 hover:bg-slate-50 py-1.5 px-2 rounded transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold"
                       >
                         {/* Curved Red Arrow Icon */}
-                        <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M4 6v6a3 3 0 003 3h11" />
                           <path d="M14 11l4 4-4 4" />
                         </svg>
@@ -240,10 +240,10 @@ export function B2BNavbar() {
                       <Link
                         href="/b2b/manage-commission"
                         onClick={() => setIsMyAccountOpen(false)}
-                        className="flex items-center gap-2 hover:bg-slate-50 py-1.5 px-2 rounded transition-colors text-slate-800 hover:text-[#DF1B24] text-[14px] font-bold"
+                        className="flex items-center gap-2 hover:bg-slate-50 py-1.5 px-2 rounded transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold"
                       >
                         {/* Curved Red Arrow Icon */}
-                        <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M4 6v6a3 3 0 003 3h11" />
                           <path d="M14 11l4 4-4 4" />
                         </svg>
@@ -257,7 +257,7 @@ export function B2BNavbar() {
 
               <Link
                 href="/sale"
-                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${pathname.startsWith('/sale') ? 'font-[700] text-primary' : 'font-[500] text-[#8C959F] hover:text-[#57606a]'
+                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${pathname.startsWith('/sale') ? 'font-[700] text-primary' : 'font-[500] text-[#888] hover:text-[#0C2342]'
                   }`}
               >
                 For Sale
@@ -300,7 +300,7 @@ export function B2BNavbar() {
                     </button>
 
                     {isUserDropdownOpen && (
-                      <div className="absolute right-0 mt-4 w-[280px] bg-white border-t-[4px] border-[#DF1B24] rounded-xl shadow-xl z-50 p-2 animate-in fade-in duration-200">
+                      <div className="absolute right-0 mt-4 w-[280px] bg-white border-t-[4px] border-[#D60D26] rounded-xl shadow-xl z-50 p-2 animate-in fade-in duration-200">
                         <div className="flex flex-col gap-1">
 
                           {/* Profile Management Section */}
@@ -311,7 +311,7 @@ export function B2BNavbar() {
                             >
                               <div className="flex items-center gap-2">
                                 {/* Curved Red Arrow Icon */}
-                                <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M4 6v6a3 3 0 003 3h11" />
                                   <path d="M14 11l4 4-4 4" />
                                 </svg>
@@ -334,18 +334,18 @@ export function B2BNavbar() {
                                     key={idx}
                                     href={sub.href}
                                     onClick={() => setIsUserDropdownOpen(false)}
-                                    className="flex items-center group/sub text-slate-600 hover:text-[#DF1B24] transition-colors text-[13px] font-bold py-1.5"
+                                    className="flex items-center group/sub text-slate-600 hover:text-[#D60D26] transition-colors text-[13px] font-bold py-1.5"
                                   >
                                     {sub.isLast ? (
                                       /* Last Branch SVG (└──>) */
-                                      <svg className="w-8 h-6 text-slate-300 group-hover/sub:text-[#DF1B24] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                      <svg className="w-8 h-6 text-slate-300 group-hover/sub:text-[#D60D26] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                                         <line x1="10" y1="0" x2="10" y2="12" strokeLinecap="round" />
                                         <line x1="10" y1="12" x2="26" y2="12" strokeLinecap="round" />
                                         <path d="M22 8l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
                                       </svg>
                                     ) : (
                                       /* Middle Branch SVG (├──>) */
-                                      <svg className="w-8 h-6 text-slate-300 group-hover/sub:text-[#DF1B24] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                      <svg className="w-8 h-6 text-slate-300 group-hover/sub:text-[#D60D26] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                                         <line x1="10" y1="0" x2="10" y2="24" strokeLinecap="round" />
                                         <line x1="10" y1="12" x2="26" y2="12" strokeLinecap="round" />
                                         <path d="M22 8l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
@@ -362,10 +362,10 @@ export function B2BNavbar() {
                           <Link
                             href="/b2b/my-account?tab=notice-board"
                             onClick={() => setIsUserDropdownOpen(false)}
-                            className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors text-slate-800 hover:text-[#DF1B24] text-[14px] font-bold"
+                            className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold"
                           >
                             {/* Curved Red Arrow Icon */}
-                            <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M4 6v6a3 3 0 003 3h11" />
                               <path d="M14 11l4 4-4 4" />
                             </svg>
@@ -376,10 +376,10 @@ export function B2BNavbar() {
                           <Link
                             href="/b2b/my-account?tab=contact"
                             onClick={() => setIsUserDropdownOpen(false)}
-                            className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors text-slate-800 hover:text-[#DF1B24] text-[14px] font-bold"
+                            className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold"
                           >
                             {/* Curved Red Arrow Icon */}
-                            <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M4 6v6a3 3 0 003 3h11" />
                               <path d="M14 11l4 4-4 4" />
                             </svg>
@@ -397,7 +397,7 @@ export function B2BNavbar() {
                             }}
                             className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors text-red-600 font-bold text-[14px] w-full text-left"
                           >
-                            <LogOut className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" />
+                            <LogOut className="w-4.5 h-4.5 text-[#D60D26] shrink-0" />
                             <span>Logout</span>
                           </button>
 
@@ -522,7 +522,7 @@ export function B2BNavbar() {
                   className="flex items-center justify-between w-full hover:bg-slate-100/50 py-2 px-3 rounded-lg transition-colors group"
                 >
                   <div className="flex items-center gap-2">
-                    <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 6v6a3 3 0 003 3h11" />
                       <path d="M14 11l4 4-4 4" />
                     </svg>
@@ -544,16 +544,16 @@ export function B2BNavbar() {
                         key={idx}
                         href={sub.href}
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center group/sub text-slate-600 hover:text-[#DF1B24] transition-colors text-[13px] font-bold py-1.5"
+                        className="flex items-center group/sub text-slate-600 hover:text-[#D60D26] transition-colors text-[13px] font-bold py-1.5"
                       >
                         {sub.isLast ? (
-                          <svg className="w-7 h-5 text-slate-300 group-hover/sub:text-[#DF1B24] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <svg className="w-7 h-5 text-slate-300 group-hover/sub:text-[#D60D26] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                             <line x1="10" y1="0" x2="10" y2="12" />
                             <line x1="10" y1="12" x2="26" y2="12" />
                             <path d="M22 8l4 4-4 4" />
                           </svg>
                         ) : (
-                          <svg className="w-7 h-5 text-slate-300 group-hover/sub:text-[#DF1B24] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <svg className="w-7 h-5 text-slate-300 group-hover/sub:text-[#D60D26] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                             <line x1="10" y1="0" x2="10" y2="24" />
                             <line x1="10" y1="12" x2="26" y2="12" />
                             <path d="M22 8l4 4-4 4" />
@@ -568,9 +568,9 @@ export function B2BNavbar() {
                 <Link
                   href="/b2b/my-account?tab=notice-board"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-2 hover:bg-slate-100/50 py-2 px-3 rounded-lg transition-colors text-slate-800 hover:text-[#DF1B24] text-[14px] font-bold"
+                  className="flex items-center gap-2 hover:bg-slate-100/50 py-2 px-3 rounded-lg transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold"
                 >
-                  <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 6v6a3 3 0 003 3h11" />
                     <path d="M14 11l4 4-4 4" />
                   </svg>
@@ -580,9 +580,9 @@ export function B2BNavbar() {
                 <Link
                   href="/b2b/my-account?tab=contact"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-2 hover:bg-slate-100/50 py-2 px-3 rounded-lg transition-colors text-slate-800 hover:text-[#DF1B24] text-[14px] font-bold"
+                  className="flex items-center gap-2 hover:bg-slate-100/50 py-2 px-3 rounded-lg transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold"
                 >
-                  <svg className="w-4.5 h-4.5 text-[#DF1B24] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 6v6a3 3 0 003 3h11" />
                     <path d="M14 11l4 4-4 4" />
                   </svg>

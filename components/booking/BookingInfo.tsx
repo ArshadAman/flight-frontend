@@ -32,7 +32,7 @@ export function BookingInfo() {
       </div>
 
       <div className="col-span-1 lg:col-span-2 flex justify-end items-end h-full mt-4 lg:mt-0">
-        <span className="text-[36px] font-[900] text-[#DE0A26] tracking-tighter">$123.89</span>
+        <span className="text-[36px] font-[900] text-[#D60D26] tracking-tighter">$123.89</span>
       </div>
     </div>
   );

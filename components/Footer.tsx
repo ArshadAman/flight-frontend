@@ -3,7 +3,7 @@ import { Logo } from "@/components/ui/logo";
 
 export function Footer() {
     return (
-        <footer className="w-full bg-[#e2e4e8] py-10 md:py-16 mt-8">
+        <footer className="w-full bg-[#F2FBFF] py-10 md:py-16 mt-8">
             <div className="container mx-auto px-6 lg:px-8 max-w-[1450px]">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 md:gap-8 lg:gap-16">
 

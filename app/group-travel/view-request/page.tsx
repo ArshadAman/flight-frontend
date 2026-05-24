@@ -94,7 +94,7 @@ export default function ViewRequestPage() {
       <main className="flex-1 w-full max-w-[1440px] mx-auto bg-white shadow-sm mt-4 mb-10 overflow-hidden relative pb-20">
         
         {/* Header with gradient background */}
-        <div className="bg-gradient-to-r from-[#991b1b] to-[#0f172a] text-white px-8 py-6 rounded-t-lg">
+        <div className="bg-gradient-to-r from-[#D60D26] to-[#121121] text-white px-8 py-6 rounded-t-lg">
            <div className="flex justify-between items-center mb-6">
               <div className="text-base font-medium opacity-80 flex items-center gap-2">
                  <span>Group Travel</span>
@@ -199,10 +199,10 @@ export default function ViewRequestPage() {
                    <CalendarIcon className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
                  </div>
                  
-                 <Button className="bg-[#E11D48] hover:bg-[#be1238] text-white rounded-full px-6 py-2 h-auto font-bold text-base shadow-sm whitespace-nowrap">
+                 <Button className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-2 h-auto font-bold text-base shadow-sm whitespace-nowrap">
                    Apply Filters
                  </Button>
-                 <button className="text-[#E11D48] font-bold text-base hover:underline whitespace-nowrap px-2">
+                 <button className="text-[#D60D26] font-bold text-base hover:underline whitespace-nowrap px-2">
                    Reset
                  </button>
               </div>
@@ -210,7 +210,7 @@ export default function ViewRequestPage() {
            </div>
            
            <div className="mt-4">
-              <button className="text-[#E11D48] font-semibold text-base hover:underline">
+              <button className="text-[#D60D26] font-semibold text-base hover:underline">
                  More filters
               </button>
            </div>
@@ -259,7 +259,7 @@ export default function ViewRequestPage() {
                         {/* Departure */}
                         <div className="flex flex-col items-start min-w-[100px]">
                            <div className="flex items-center gap-1.5 font-bold text-gray-900 text-[14px]">
-                              {req.origin} <span className="text-[#E11D48] text-xs">✈</span> {req.destination}
+                              {req.origin} <span className="text-[#D60D26] text-xs">✈</span> {req.destination}
                            </div>
                            <div className="text-gray-400 text-[12px] mt-0.5 whitespace-nowrap">{req.departureDate}</div>
                         </div>
@@ -267,14 +267,14 @@ export default function ViewRequestPage() {
                         {/* Return */}
                         <div className="flex flex-col items-start min-w-[100px]">
                            <div className="flex items-center gap-1.5 font-bold text-gray-900 text-[14px]">
-                              {req.destination} <span className="text-[#E11D48] text-xs transform rotate-180">✈</span> {req.origin}
+                              {req.destination} <span className="text-[#D60D26] text-xs transform rotate-180">✈</span> {req.origin}
                            </div>
                            <div className="text-gray-400 text-[12px] mt-0.5 whitespace-nowrap">{req.returnDate}</div>
                         </div>
                      </div>
 
                      {/* Col 3: Airline */}
-                     <div className="text-[#E11D48] font-bold text-[14px] tracking-wide uppercase truncate pr-2">
+                     <div className="text-[#D60D26] font-bold text-[14px] tracking-wide uppercase truncate pr-2">
                         {req.airline}
                      </div>
 
@@ -283,7 +283,7 @@ export default function ViewRequestPage() {
                         <span className="text-gray-700 font-medium truncate pr-2">
                            {req.adults + req.children} pax({req.adults + req.children}A)
                         </span>
-                        <span className="text-[#E11D48] truncate pr-2">Request Date: {req.requestDate}</span>
+                        <span className="text-[#D60D26] truncate pr-2">Request Date: {req.requestDate}</span>
                      </div>
 
                      {/* Col 5: PNR */}
@@ -363,7 +363,7 @@ export default function ViewRequestPage() {
                     <span className="text-[17px] font-bold w-5 text-center">{modalAdults}</span>
                     <button
                       onClick={() => setModalAdults(modalAdults + 1)}
-                      className="w-7 h-7 rounded-full border border-[#E11D48] flex items-center justify-center text-[#E11D48] hover:bg-[#E11D48] hover:text-white transition"
+                      className="w-7 h-7 rounded-full border border-[#D60D26] flex items-center justify-center text-[#D60D26] hover:bg-[#D60D26] hover:text-white transition"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -386,7 +386,7 @@ export default function ViewRequestPage() {
                     <span className="text-[17px] font-bold w-5 text-center">{modalChildren}</span>
                     <button
                       onClick={() => setModalChildren(modalChildren + 1)}
-                      className="w-7 h-7 rounded-full border border-[#E11D48] flex items-center justify-center text-[#E11D48] hover:bg-[#E11D48] hover:text-white transition"
+                      className="w-7 h-7 rounded-full border border-[#D60D26] flex items-center justify-center text-[#D60D26] hover:bg-[#D60D26] hover:text-white transition"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -409,7 +409,7 @@ export default function ViewRequestPage() {
                     <span className="text-[17px] font-bold w-5 text-center">{modalInfants}</span>
                     <button
                       onClick={() => setModalInfants(modalInfants + 1)}
-                      className="w-7 h-7 rounded-full border border-[#E11D48] flex items-center justify-center text-[#E11D48] hover:bg-[#E11D48] hover:text-white transition"
+                      className="w-7 h-7 rounded-full border border-[#D60D26] flex items-center justify-center text-[#D60D26] hover:bg-[#D60D26] hover:text-white transition"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -419,8 +419,8 @@ export default function ViewRequestPage() {
                 <p className="text-[12px] text-gray-400 italic">NOTE: Infant not added to passenger count</p>
 
                 {/* Summary chip */}
-                <div className="inline-flex items-center gap-1.5 bg-[#fceef0] px-3 py-1.5 rounded-full">
-                  <User className="w-3.5 h-3.5 text-[#E11D48]" />
+                <div className="inline-flex items-center gap-1.5 bg-[#F2FBFF] px-3 py-1.5 rounded-full">
+                  <User className="w-3.5 h-3.5 text-[#D60D26]" />
                   <span className="text-[14px] font-bold text-gray-800">
                     {totalModalPassengers} Passenger{totalModalPassengers !== 1 ? 's' : ''}
                   </span>
@@ -443,7 +443,7 @@ export default function ViewRequestPage() {
                        setModalExpectedFare(val);
                     }}
                     placeholder="0.00"
-                    className="w-full border border-gray-200 rounded-lg pl-7 pr-4 py-2.5 text-[18px] text-gray-800 outline-none focus:border-[#E11D48] focus:ring-1 focus:ring-[#E11D48] transition"
+                    className="w-full border border-gray-200 rounded-lg pl-7 pr-4 py-2.5 text-[18px] text-gray-800 outline-none focus:border-[#D60D26] focus:ring-1 focus:ring-[#D60D26] transition"
                   />
                 </div>
               </div>
@@ -459,7 +459,7 @@ export default function ViewRequestPage() {
                   value={modalTotalFare}
                   onChange={(e) => setModalTotalFare(e.target.value)}
                   placeholder="0.00"
-                  className="w-full border border-gray-200 rounded-lg pl-7 pr-4 py-2.5 text-[16px] text-gray-800 outline-none focus:border-[#E11D48] focus:ring-1 focus:ring-[#E11D48] transition"
+                  className="w-full border border-gray-200 rounded-lg pl-7 pr-4 py-2.5 text-[16px] text-gray-800 outline-none focus:border-[#D60D26] focus:ring-1 focus:ring-[#D60D26] transition"
                 />
               </div>
 
@@ -485,7 +485,7 @@ export default function ViewRequestPage() {
             </Button>
             <Button
               onClick={handleModalDone}
-              className="px-8 py-2.5 h-auto rounded-full bg-[#E11D48] hover:bg-[#be1238] text-white font-bold text-[16px]"
+              className="px-8 py-2.5 h-auto rounded-full bg-[#D60D26] hover:bg-[#D60D26] text-white font-bold text-[16px]"
             >
               Done
             </Button>

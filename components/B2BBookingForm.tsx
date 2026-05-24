@@ -15,10 +15,10 @@ export function B2BBookingForm() {
   const [paymentMethod, setPaymentMethod] = useState<'Card' | 'Net Banking' | 'Wallet'>('Card');
 
   return (
-    <div className="w-full flex flex-col min-h-screen bg-[#ffffff]">
+    <div className="w-full flex flex-col min-h-screen bg-[#FFFFFF]">
       {/* Top Split Header */}
       <div className="flex w-full h-[60px] select-none">
-        <div className="flex-1 bg-[#DE0A26] text-white flex flex-col justify-center pl-10">
+        <div className="flex-1 bg-[#D60D26] text-white flex flex-col justify-center pl-10">
             <div className="flex items-center gap-2 font-bold text-[15px]">
                 New Delhi <ArrowRight className="w-4 h-4" /> Mumbai
             </div>
@@ -26,10 +26,10 @@ export function B2BBookingForm() {
                 01 Oct • 1 passenger • Economy
             </div>
         </div>
-        <div className="flex-1 bg-[#1a1b26] flex items-center justify-end pr-10">
+        <div className="flex-1 bg-[#121121] flex items-center justify-end pr-10">
             <Button 
                 onClick={() => router.push('/b2b')}
-                className="bg-[#DE0A26] hover:bg-[#C1161E] text-white rounded-[100px] px-6 h-[34px] font-bold text-[12px] shadow-sm flex items-center gap-1.5 transition-transform active:scale-95"
+                className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-6 h-[34px] font-bold text-[12px] shadow-sm flex items-center gap-1.5 transition-transform active:scale-95"
             >
                 Search Again <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={3} />
             </Button>
@@ -39,7 +39,7 @@ export function B2BBookingForm() {
       {/* Main Content Area */}
       <div className="w-full max-w-[1280px] mx-auto py-8 px-4 flex flex-col">
           {/* Results text */}
-          <div className="text-[#DE0A26] font-semibold text-[14px] mb-5 pl-2 tracking-wide">
+          <div className="text-[#D60D26] font-semibold text-[14px] mb-5 pl-2 tracking-wide">
             Results: <span className="font-bold">72</span> result with 1 carrier found
           </div>
 
@@ -48,7 +48,7 @@ export function B2BBookingForm() {
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                   {/* Header */}
                   <div 
-                    className={cn("px-6 py-3.5 flex items-center justify-between cursor-pointer transition-colors", activeStep === 'details' ? "bg-[#1D70B8]" : "bg-[#102A4A] hover:bg-[#163a66]")}
+                    className={cn("px-6 py-3.5 flex items-center justify-between cursor-pointer transition-colors", activeStep === 'details' ? "bg-[#888]" : "bg-[#0C2342] hover:bg-[#0C2342]")}
                     onClick={() => setActiveStep('details')}
                   >
                       <h2 className="text-white font-bold text-[15px]">Details / Passenger Data</h2>
@@ -63,7 +63,7 @@ export function B2BBookingForm() {
                             {/* Flight Info Row */}
                             <div className="flex flex-wrap items-center gap-x-8 gap-y-4 mb-4">
                                 <div className="flex items-center gap-2 w-[120px]">
-                                    <span className="font-black text-[#DE0A26] text-[16px] italic tracking-widest drop-shadow-sm">AIR INDIA</span>
+                                    <span className="font-black text-[#D60D26] text-[16px] italic tracking-widest drop-shadow-sm">AIR INDIA</span>
                                 </div>
                                 <span className="text-[13px] font-semibold text-slate-600">AI 2814</span>
                                 <span className="text-[13px] font-semibold text-slate-600">Wed, 01 Oct 25</span>
@@ -79,9 +79,9 @@ export function B2BBookingForm() {
 
                             {/* Badges */}
                             <div className="flex items-center gap-3 mt-1 select-none">
-                                <span className="bg-[#1D70B8] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider">PUB</span>
+                                <span className="bg-[#888] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider">PUB</span>
                                 <span className="border border-slate-300 text-slate-600 bg-white text-[11px] font-[800] px-2.5 py-1 rounded shadow-sm">FEE</span>
-                                <span className="bg-[#DE0A26] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider flex items-center gap-1.5">
+                                <span className="bg-[#D60D26] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider flex items-center gap-1.5">
                                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a3 3 0 00-6 0v2" />
@@ -95,7 +95,7 @@ export function B2BBookingForm() {
 
                         {/* Price Details */}
                         <div className="flex flex-col border-b border-slate-100">
-                            <div className="bg-[#F8F9FA] px-6 py-3 border-b border-slate-100">
+                            <div className="bg-[#F2FBFF] px-6 py-3 border-b border-slate-100">
                                 <h3 className="text-slate-800 font-bold text-[14px]">Price details:</h3>
                             </div>
                             <div className="px-6 py-4 overflow-x-auto">
@@ -130,7 +130,7 @@ export function B2BBookingForm() {
 
                         {/* Passenger Details Form */}
                         <div className="flex flex-col border-b border-slate-100">
-                            <div className="bg-[#F0F7FA] px-6 py-3 border-b border-[#e1eaf0]">
+                            <div className="bg-[#F2FBFF] px-6 py-3 border-b border-[#F2FBFF]">
                                 <h3 className="text-slate-800 font-bold text-[14px]">Passengers details:</h3>
                             </div>
                             
@@ -159,26 +159,26 @@ export function B2BBookingForm() {
                                 <div className="flex items-center gap-1 mb-0 border-b border-slate-100 px-2">
                                     <button 
                                         onClick={() => setActiveTab('APIS')}
-                                        className={cn("px-5 py-3 text-[12px] font-bold rounded-t-lg transition-colors border-b-2", activeTab === 'APIS' ? "bg-[#FBEBEF] text-[#DE0A26] border-[#DE0A26]" : "text-slate-500 hover:bg-slate-50 border-transparent")}
+                                        className={cn("px-5 py-3 text-[12px] font-bold rounded-t-lg transition-colors border-b-2", activeTab === 'APIS' ? "bg-[#F2FBFF] text-[#D60D26] border-[#D60D26]" : "text-slate-500 hover:bg-slate-50 border-transparent")}
                                     >
                                         APIS <span className="font-semibold text-[11px] opacity-80">(Advance passenger information)</span>
                                     </button>
                                     <button 
                                         onClick={() => setActiveTab('CTC')}
-                                        className={cn("px-5 py-3 text-[12px] font-bold rounded-t-lg transition-colors border-b-2", activeTab === 'CTC' ? "bg-[#FBEBEF] text-[#DE0A26] border-[#DE0A26]" : "text-slate-500 hover:bg-slate-50 border-transparent")}
+                                        className={cn("px-5 py-3 text-[12px] font-bold rounded-t-lg transition-colors border-b-2", activeTab === 'CTC' ? "bg-[#F2FBFF] text-[#D60D26] border-[#D60D26]" : "text-slate-500 hover:bg-slate-50 border-transparent")}
                                     >
                                         CTC <span className="font-semibold text-[11px] opacity-80">(Passenger contact data)</span>
                                     </button>
                                     <button 
                                         onClick={() => setActiveTab('FFN')}
-                                        className={cn("px-5 py-3 text-[12px] font-bold rounded-t-lg transition-colors border-b-2", activeTab === 'FFN' ? "bg-[#FBEBEF] text-[#DE0A26] border-[#DE0A26]" : "text-slate-500 hover:bg-slate-50 border-transparent")}
+                                        className={cn("px-5 py-3 text-[12px] font-bold rounded-t-lg transition-colors border-b-2", activeTab === 'FFN' ? "bg-[#F2FBFF] text-[#D60D26] border-[#D60D26]" : "text-slate-500 hover:bg-slate-50 border-transparent")}
                                     >
                                         FFN <span className="font-semibold text-[11px] opacity-80">(Frequent flyer number)</span>
                                     </button>
                                 </div>
 
                                 {/* Tab Content */}
-                                <div className="bg-[#F0F7FA]/40 rounded-b-xl border border-slate-100 p-8">
+                                <div className="bg-[#F2FBFF]/40 rounded-b-xl border border-slate-100 p-8">
                                     {activeTab === 'APIS' && (
                                         <div className="flex flex-col gap-8 animate-in fade-in duration-200">
                                             {/* Primary DOCS */}
@@ -220,14 +220,14 @@ export function B2BBookingForm() {
                                                 <div className="flex items-center gap-6 mb-1">
                                                     <span className="text-[12px] text-slate-500 font-medium">Types of address:</span>
                                                     <label className="flex items-center gap-2 cursor-pointer group" onClick={() => setDocaType('Destination')}>
-                                                        <div className={cn("w-[14px] h-[14px] rounded-full border-2 flex items-center justify-center transition-all", docaType === 'Destination' ? "border-[#DE0A26]" : "border-slate-300 group-hover:border-[#DE0A26]")}>
-                                                            {docaType === 'Destination' && <div className="w-[6px] h-[6px] bg-[#DE0A26] rounded-full" />}
+                                                        <div className={cn("w-[14px] h-[14px] rounded-full border-2 flex items-center justify-center transition-all", docaType === 'Destination' ? "border-[#D60D26]" : "border-slate-300 group-hover:border-[#D60D26]")}>
+                                                            {docaType === 'Destination' && <div className="w-[6px] h-[6px] bg-[#D60D26] rounded-full" />}
                                                         </div>
                                                         <span className="text-[12px] font-bold text-slate-800">Destination</span>
                                                     </label>
                                                     <label className="flex items-center gap-2 cursor-pointer group" onClick={() => setDocaType('Residence')}>
-                                                        <div className={cn("w-[14px] h-[14px] rounded-full border-2 flex items-center justify-center transition-all", docaType === 'Residence' ? "border-[#DE0A26]" : "border-slate-300 group-hover:border-[#DE0A26]")}>
-                                                            {docaType === 'Residence' && <div className="w-[6px] h-[6px] bg-[#DE0A26] rounded-full" />}
+                                                        <div className={cn("w-[14px] h-[14px] rounded-full border-2 flex items-center justify-center transition-all", docaType === 'Residence' ? "border-[#D60D26]" : "border-slate-300 group-hover:border-[#D60D26]")}>
+                                                            {docaType === 'Residence' && <div className="w-[6px] h-[6px] bg-[#D60D26] rounded-full" />}
                                                         </div>
                                                         <span className="text-[12px] font-bold text-slate-800">Residence</span>
                                                     </label>
@@ -249,7 +249,7 @@ export function B2BBookingForm() {
 
                                             {/* Tab Actions */}
                                             <div className="flex items-center gap-3 mt-4">
-                                                <Button className="bg-[#DE0A26] hover:bg-[#C1161E] text-white rounded-[100px] px-8 h-[38px] font-bold text-[13px] shadow-sm transition-transform active:scale-95">
+                                                <Button className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-8 h-[38px] font-bold text-[13px] shadow-sm transition-transform active:scale-95">
                                                     Confirm
                                                 </Button>
                                                 <Button variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-[100px] px-6 h-[38px] font-bold text-[13px] shadow-sm transition-transform active:scale-95">
@@ -273,7 +273,7 @@ export function B2BBookingForm() {
                         </div>
 
                         {/* Entry & Health Regulations */}
-                        <div className="flex flex-col bg-[#F8F9FA] rounded-b-xl px-6 py-6 border-t border-slate-100">
+                        <div className="flex flex-col bg-[#F2FBFF] rounded-b-xl px-6 py-6 border-t border-slate-100">
                             <h3 className="text-slate-800 font-bold text-[14px] mb-4">Entry & health regulations :</h3>
                             <div className="flex flex-wrap items-center gap-4">
                                 <input type="text" placeholder="Nationality" className="w-full md:w-[220px] border border-slate-200 rounded-md px-3 py-2 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
@@ -293,7 +293,7 @@ export function B2BBookingForm() {
                                 setActiveStep('payment');
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                             }}
-                            className="w-full bg-[#DE0A26] hover:bg-[#C1161E] text-white rounded-[100px] py-7 text-[17px] font-bold shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-[0.99] mt-6 mb-16"
+                            className="w-full bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] py-7 text-[17px] font-bold shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-[0.99] mt-6 mb-16"
                         >
                             Proceed Payment <ArrowUpRight className="w-5 h-5" strokeWidth={3} />
                         </Button>
@@ -305,7 +305,7 @@ export function B2BBookingForm() {
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm mb-16">
                   {/* Header */}
                   <div 
-                    className={cn("px-6 py-3.5 flex items-center justify-between cursor-pointer transition-colors", activeStep === 'payment' ? "bg-[#1D70B8]" : "bg-[#102A4A] hover:bg-[#163a66]")}
+                    className={cn("px-6 py-3.5 flex items-center justify-between cursor-pointer transition-colors", activeStep === 'payment' ? "bg-[#888]" : "bg-[#0C2342] hover:bg-[#0C2342]")}
                     onClick={() => setActiveStep('payment')}
                   >
                       <h2 className="text-white font-bold text-[15px]">Payment</h2>
@@ -319,7 +319,7 @@ export function B2BBookingForm() {
                             <h3 className="text-slate-800 font-bold text-[14px] mb-5">Itinerary details:</h3>
                             <div className="flex flex-wrap items-center gap-x-8 gap-y-4 mb-4">
                                 <div className="flex items-center gap-2 w-[120px]">
-                                    <span className="font-black text-[#DE0A26] text-[16px] italic tracking-widest drop-shadow-sm">AIR INDIA</span>
+                                    <span className="font-black text-[#D60D26] text-[16px] italic tracking-widest drop-shadow-sm">AIR INDIA</span>
                                 </div>
                                 <span className="text-[13px] font-semibold text-slate-600">AI 2814</span>
                                 <span className="text-[13px] font-semibold text-slate-600">Wed, 01 Oct 25</span>
@@ -333,9 +333,9 @@ export function B2BBookingForm() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 mt-1 select-none">
-                                <span className="bg-[#1D70B8] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider">PUB</span>
+                                <span className="bg-[#888] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider">PUB</span>
                                 <span className="border border-slate-300 text-slate-600 bg-white text-[11px] font-[800] px-2.5 py-1 rounded shadow-sm">FEE</span>
-                                <span className="bg-[#DE0A26] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider flex items-center gap-1.5">
+                                <span className="bg-[#D60D26] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider flex items-center gap-1.5">
                                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a3 3 0 00-6 0v2" />
@@ -355,8 +355,8 @@ export function B2BBookingForm() {
                             <div className="flex items-center gap-6">
                                 {(['Card', 'Net Banking', 'Wallet'] as const).map(method => (
                                     <label key={method} className="flex items-center gap-2 cursor-pointer group" onClick={() => setPaymentMethod(method)}>
-                                        <div className={cn("w-[14px] h-[14px] rounded-full border-2 flex items-center justify-center transition-all", paymentMethod === method ? "border-[#DE0A26]" : "border-slate-300 group-hover:border-[#DE0A26]")}>
-                                            {paymentMethod === method && <div className="w-[6px] h-[6px] bg-[#DE0A26] rounded-full" />}
+                                        <div className={cn("w-[14px] h-[14px] rounded-full border-2 flex items-center justify-center transition-all", paymentMethod === method ? "border-[#D60D26]" : "border-slate-300 group-hover:border-[#D60D26]")}>
+                                            {paymentMethod === method && <div className="w-[6px] h-[6px] bg-[#D60D26] rounded-full" />}
                                         </div>
                                         <span className="text-[12px] font-bold text-slate-800">{method}</span>
                                     </label>
@@ -371,7 +371,7 @@ export function B2BBookingForm() {
                                     <input type="text" placeholder="Year" className="flex-[0.8] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                     <input type="text" placeholder="CVV" className="flex-[0.8] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                     <input type="text" placeholder="Full Name As On Card" className="flex-[1.5] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
-                                    <Button className="bg-[#DE0A26] hover:bg-[#C1161E] text-white rounded-[100px] px-8 h-[38px] font-bold text-[13px] shadow-sm transition-transform active:scale-95 shrink-0">
+                                    <Button className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-8 h-[38px] font-bold text-[13px] shadow-sm transition-transform active:scale-95 shrink-0">
                                         Save
                                     </Button>
                                 </div>
@@ -385,7 +385,7 @@ export function B2BBookingForm() {
 
                         {/* Price Details */}
                         <div className="flex flex-col border-b border-slate-100">
-                            <div className="bg-[#F8F9FA] px-6 py-3 border-b border-slate-100">
+                            <div className="bg-[#F2FBFF] px-6 py-3 border-b border-slate-100">
                                 <h3 className="text-slate-800 font-bold text-[14px]">Price details:</h3>
                             </div>
                             <div className="px-6 py-4 overflow-x-auto">
@@ -441,7 +441,7 @@ export function B2BBookingForm() {
                         </div>
 
                         {/* Additional Information */}
-                        <div className="flex flex-col bg-[#F8F9FA] rounded-b-xl px-6 py-6 gap-5">
+                        <div className="flex flex-col bg-[#F2FBFF] rounded-b-xl px-6 py-6 gap-5">
                             <h3 className="text-slate-800 font-bold text-[14px]">Additional information :</h3>
                             <div className="flex items-center gap-4">
                                 <input type="text" placeholder="Booking Staff" className="w-[250px] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
@@ -453,7 +453,7 @@ export function B2BBookingForm() {
                         <div className="p-6 pt-0 mt-4 flex items-center justify-between gap-4 w-full">
                             <Button 
                                 onClick={() => router.push('/b2b/booking/XYR9NF')}
-                                className="flex-1 bg-[#DE0A26] hover:bg-[#C1161E] text-white rounded-[100px] h-[52px] font-bold text-[16px] shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+                                className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] h-[52px] font-bold text-[16px] shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
                             >
                                 Pay And Order <ArrowUpRight className="w-4.5 h-4.5" strokeWidth={3} />
                             </Button>

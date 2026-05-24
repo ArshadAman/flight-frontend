@@ -11,8 +11,8 @@ export function AddOnModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       <div className="bg-white rounded-xl w-full max-w-[500px] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="bg-[#FBEBEF] px-6 py-4 flex items-center justify-between">
-          <h2 className="text-[#DF1B24] text-[18px] font-bold tracking-tight">Add On</h2>
+        <div className="bg-[#F2FBFF] px-6 py-4 flex items-center justify-between">
+          <h2 className="text-[#D60D26] text-[18px] font-bold tracking-tight">Add On</h2>
           <button onClick={onClose} className="text-slate-800 hover:bg-white/50 p-1 rounded-md transition-colors">
             <X className="w-5 h-5" strokeWidth={3} />
           </button>
@@ -26,7 +26,7 @@ export function AddOnModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         </div>
 
         {/* Section Title */}
-        <div className="bg-[#EBEBEB] px-6 py-2.5">
+        <div className="bg-[#F2FBFF] px-6 py-2.5">
           <h3 className="font-bold text-slate-800 text-[14px]">Baggage</h3>
         </div>
 

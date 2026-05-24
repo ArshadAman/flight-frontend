@@ -1,8 +1,8 @@
 export function PassengerDetails() {
   return (
     <>
-      <div className="w-full bg-[#f4f5f7] px-8 py-3.5 border-b border-gray-200">
-        <h3 className="text-[17px] font-[750] text-[#333] tracking-tight">Passenger details:</h3>
+      <div className="w-full bg-[#F2FBFF] px-8 py-3.5 border-b border-gray-200">
+        <h3 className="text-[17px] font-[750] text-[#0C2342] tracking-tight">Passenger details:</h3>
       </div>
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left min-w-[800px]">

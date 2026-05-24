@@ -30,7 +30,7 @@ export default function HistoryPage() {
                     
                     {/* Header Controls */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-8 mt-2 w-full">
-                        <button className="flex items-center gap-2 text-[#C1161E] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors shrink-0 w-full sm:w-auto justify-center sm:justify-start border border-rose-100 sm:border-transparent">
+                        <button className="flex items-center gap-2 text-[#D60D26] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors shrink-0 w-full sm:w-auto justify-center sm:justify-start border border-rose-100 sm:border-transparent">
                             <Filter className="w-5 h-5" /> Filters
                         </button>
                         
@@ -109,7 +109,7 @@ export default function HistoryPage() {
             {selectedEntry && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 p-4">
                     <div className="bg-white rounded-2xl w-full max-w-[500px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="bg-[#e8faef] p-6 relative shrink-0 border-b border-green-100">
+                        <div className="bg-[#F2FBFF] p-6 relative shrink-0 border-b border-green-100">
                             <button onClick={() => setSelectedEntry(null)} className="absolute top-6 right-6 text-slate-500 hover:bg-white/50 p-1 rounded-full transition-colors"><X className="w-5 h-5" /></button>
                             <div className="flex flex-col gap-1">
                                 <span className="font-extrabold text-[20px] text-slate-800">{selectedEntry.date}</span>
@@ -129,7 +129,7 @@ export default function HistoryPage() {
                                 </div>
                                 <div className="flex items-center justify-between py-2.5 border-b border-slate-100">
                                     <div className="flex items-center gap-2 text-[13px] font-bold text-slate-600">
-                                        <div className="w-3 h-3 bg-[#C1161E] rounded-sm transform rotate-45"></div> Airline Route
+                                        <div className="w-3 h-3 bg-[#D60D26] rounded-sm transform rotate-45"></div> Airline Route
                                     </div>
                                     <div className="font-bold text-slate-800 text-[13px]">DEL - BOM</div>
                                 </div>

@@ -17,7 +17,7 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
   return (
     <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
       {toasts.map((t) => (
-        <div key={t.id} className={`flex items-center gap-3 rounded-xl px-4 py-3 shadow-lg text-white text-[14px] font-medium min-w-[300px] pointer-events-auto ${t.type === "success" ? "bg-green-600" : "bg-[#E11D48]"}`}>
+        <div key={t.id} className={`flex items-center gap-3 rounded-xl px-4 py-3 shadow-lg text-white text-[14px] font-medium min-w-[300px] pointer-events-auto ${t.type === "success" ? "bg-green-600" : "bg-[#D60D26]"}`}>
           {t.type === "success" ? <CheckCircle2 className="w-5 h-5 flex-shrink-0" /> : <AlertCircle className="w-5 h-5 flex-shrink-0" />}
           <span className="flex-1">{t.message}</span>
           <button onClick={() => onDismiss(t.id)} className="hover:opacity-70"><X className="w-4 h-4" /></button>
@@ -227,7 +227,7 @@ function PaymentSummaryContent() {
                   <tr key={i} className="border-b border-gray-50 last:border-0">
                     <td className="py-3 font-semibold text-gray-800">{f.route}</td>
                     <td className="py-3">
-                      <div className="text-[#E11D48] font-bold text-[13px] uppercase leading-tight">
+                      <div className="text-[#D60D26] font-bold text-[13px] uppercase leading-tight">
                         {f.airline}
                       </div>
                       <div className="text-gray-600">{f.flightNo}</div>
@@ -274,7 +274,7 @@ function PaymentSummaryContent() {
                       <div className="text-blue-500 text-[11px] cursor-pointer hover:underline">Fare breakdown</div>
                     </td>
                     <td className="py-3 text-gray-700">{p.dueDate}</td>
-                    <td className={`py-3 font-bold ${p.status === "Paid" ? "text-green-600" : "text-[#E11D48]"}`}>
+                    <td className={`py-3 font-bold ${p.status === "Paid" ? "text-green-600" : "text-[#D60D26]"}`}>
                       {p.status}
                     </td>
                     <td className="py-3">
@@ -303,7 +303,7 @@ function PaymentSummaryContent() {
               </thead>
               <tbody>
                 <tr>
-                  <td className="py-3 text-[#E11D48] font-semibold">{displayData.makePaymentRow.requestId}</td>
+                  <td className="py-3 text-[#D60D26] font-semibold">{displayData.makePaymentRow.requestId}</td>
                   <td className="py-3 text-gray-500">{displayData.makePaymentRow.pnr}</td>
                   <td className="py-3 text-gray-800 font-medium">{displayData.makePaymentRow.groupNumber}</td>
                   <td className="py-3">
@@ -320,7 +320,7 @@ function PaymentSummaryContent() {
                         type="checkbox"
                         checked={checked}
                         onChange={(e) => setChecked(e.target.checked)}
-                        className="w-4 h-4 accent-[#E11D48] cursor-pointer"
+                        className="w-4 h-4 accent-[#D60D26] cursor-pointer"
                       />
                     </div>
                   </td>
@@ -342,7 +342,7 @@ function PaymentSummaryContent() {
               </div>
               <div className="flex justify-between border-b border-gray-100 pb-2">
                 <span className="text-gray-600">Current remaining percentage</span>
-                <span className="text-[#E11D48] font-bold">{displayData.summary.remainingPercentage}</span>
+                <span className="text-[#D60D26] font-bold">{displayData.summary.remainingPercentage}</span>
               </div>
               <div className="flex justify-between border-b border-gray-100 pb-2">
                 <span className="text-gray-600">Total amount due later</span>
@@ -374,7 +374,7 @@ function PaymentSummaryContent() {
               className={`flex-1 flex items-center justify-center gap-2 rounded-full py-3 font-semibold text-[16px] transition-colors ${
                 displayData.summary.remainingPercentage === "0%"
                   ? "bg-gray-400 cursor-not-allowed text-white"
-                  : "bg-[#E11D48] hover:bg-[#be1238] text-white"
+                  : "bg-[#D60D26] hover:bg-[#D60D26] text-white"
               }`}
             >
               Submit <span className="text-base">↗</span>
@@ -401,8 +401,8 @@ export default function PaymentSummaryPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border border-gray-100 rounded-lg overflow-hidden">
-      <div className="bg-[#fdf2f4] border-b border-gray-100 px-4 py-2">
-        <span className="text-[#E11D48] font-semibold text-[15px]">{title}</span>
+      <div className="bg-[#FFFFFF] border-b border-gray-100 px-4 py-2">
+        <span className="text-[#D60D26] font-semibold text-[15px]">{title}</span>
       </div>
       <div className="px-4 py-4">{children}</div>
     </div>

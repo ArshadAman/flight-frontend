@@ -170,7 +170,7 @@ export function FlightResults({
     return (
       <div className="flex flex-col gap-6">
         {title && (
-          <h3 className="text-xl font-bold text-[#0B132B] mb-2 bg-white px-5 py-3.5 rounded-xl border border-slate-100 shadow-sm inline-block self-start">
+          <h3 className="text-xl font-bold text-[#121121] mb-2 bg-white px-5 py-3.5 rounded-xl border border-slate-100 shadow-sm inline-block self-start">
             {title}
           </h3>
         )}
@@ -202,14 +202,14 @@ export function FlightResults({
             >
               
               {/* Horizontal Top Header Row (Figma specs: Light blue-grey background) */}
-              <div className="bg-[#EEF2F7] px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 select-none">
+              <div className="bg-[#F2FBFF] px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 select-none">
                 
                 {/* Price block */}
                 <div className="flex items-baseline">
-                  <span className="text-[#0B132B] font-[900] text-[25px] tracking-tight">
+                  <span className="text-[#121121] font-[900] text-[25px] tracking-tight">
                     ₹{flight.price.toLocaleString('en-IN')}
                   </span>
-                  <span className="text-[12px] font-[750] text-[#6B7280] ml-2 tracking-wide uppercase">
+                  <span className="text-[12px] font-[750] text-[#888] ml-2 tracking-wide uppercase">
                     Incl. ₹{taxAmount.toLocaleString('en-IN')} tax
                   </span>
                 </div>
@@ -227,12 +227,12 @@ export function FlightResults({
                 {/* Right aligned Badges */}
                 <div className="flex items-center gap-2 shrink-0">
                   {/* PUB Badge */}
-                  <span className="bg-[#1D70B8] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider">
+                  <span className="bg-[#888] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider">
                     PUB
                   </span>
                   
                   {/* Suitcase Baggage Badge */}
-                  <span className="bg-[#DF1B24] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider flex items-center gap-1">
+                  <span className="bg-[#D60D26] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider flex items-center gap-1">
                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a3 3 0 00-6 0v2" />
@@ -265,9 +265,9 @@ export function FlightResults({
                     {/* Radio circle selector */}
                     <div className="flex justify-center items-center">
                       <div 
-                        className={cn("w-5 h-5 rounded-full border flex items-center justify-center transition-colors", currentSelectedId === flight.id ? "border-[#DE0A26]" : "border-slate-300")}
+                        className={cn("w-5 h-5 rounded-full border flex items-center justify-center transition-colors", currentSelectedId === flight.id ? "border-[#D60D26]" : "border-slate-300")}
                       >
-                        <div className={cn("w-2.5 h-2.5 rounded-full transition-colors", currentSelectedId === flight.id ? "bg-[#DE0A26]" : "bg-transparent")}></div>
+                        <div className={cn("w-2.5 h-2.5 rounded-full transition-colors", currentSelectedId === flight.id ? "bg-[#D60D26]" : "bg-transparent")}></div>
                       </div>
                     </div>
 
@@ -298,7 +298,7 @@ export function FlightResults({
                     {/* Seats Left */}
                     <div className="flex flex-col min-w-[60px]">
                       <span className="text-[15px] font-[900] text-slate-800">{seg.seatsCode}</span>
-                      <span className="text-[12px] font-bold text-[#FF6B00] mt-0.5">Seats Left</span>
+                      <span className="text-[12px] font-bold text-[#D60D26] mt-0.5">Seats Left</span>
                     </div>
 
                     {/* Amenities block */}
@@ -315,34 +315,34 @@ export function FlightResults({
 
               {/* Action Bar when selected */}
               {currentSelectedId === flight.id && isB2bRoute && (
-                <div className="bg-[#FBEBEF] px-6 py-4 flex flex-wrap items-center gap-4 border-t border-[#f4d9df] animate-in slide-in-from-top-1 fade-in duration-200">
+                <div className="bg-[#F2FBFF] px-6 py-4 flex flex-wrap items-center gap-4 border-t border-[#F2FBFF] animate-in slide-in-from-top-1 fade-in duration-200">
                   <button 
                     onClick={() => window.location.href = '/b2b/book'} 
-                    className="bg-[#DE0A26] hover:bg-[#C1161E] text-white rounded-[100px] px-8 h-[40px] font-bold text-[14px] flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95"
+                    className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-8 h-[40px] font-bold text-[14px] flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95"
                   >
                     Book Now <ArrowUpRight className="w-4 h-4" strokeWidth={3} />
                   </button>
                   <button 
                     onClick={() => setQuoteModalOpen(true)} 
-                    className="min-w-[120px] border border-[#102A4A] bg-transparent text-[#102A4A] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
+                    className="min-w-[120px] border border-[#0C2342] bg-transparent text-[#0C2342] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
                   >
                     Quote
                   </button>
                   <button 
                     onClick={() => setFareTypeModalOpen(true)} 
-                    className="min-w-[120px] border border-[#102A4A] bg-transparent text-[#102A4A] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
+                    className="min-w-[120px] border border-[#0C2342] bg-transparent text-[#0C2342] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
                   >
                     Fare Type
                   </button>
                   <button 
                     onClick={() => setAddOnModalOpen(true)} 
-                    className="min-w-[120px] border border-[#102A4A] bg-transparent text-[#102A4A] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
+                    className="min-w-[120px] border border-[#0C2342] bg-transparent text-[#0C2342] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
                   >
                     Add On
                   </button>
                   <button 
                     onClick={() => setRulesModalOpen(true)} 
-                    className="min-w-[120px] border border-[#102A4A] bg-transparent text-[#102A4A] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
+                    className="min-w-[120px] border border-[#0C2342] bg-transparent text-[#0C2342] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
                   >
                     Rules
                   </button>
@@ -363,7 +363,7 @@ export function FlightResults({
       <aside className="w-full lg:w-[285px] shrink-0">
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col sticky top-24">
           
-          <div className="flex items-center gap-2 text-[17px] font-[900] text-[#0B132B] pb-4 border-b border-slate-100 mb-2">
+          <div className="flex items-center gap-2 text-[17px] font-[900] text-[#121121] pb-4 border-b border-slate-100 mb-2">
             <SlidersHorizontal className="w-4.5 h-4.5 text-primary stroke-[2.5px]" />
             <span>Filters :</span>
           </div>
@@ -374,7 +374,7 @@ export function FlightResults({
             <div className="border-b border-slate-100 py-3">
               <button 
                 onClick={() => toggleFilter('general')}
-                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
                 <span>General</span>
                 {filtersOpen.general ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -398,7 +398,7 @@ export function FlightResults({
             <div className="border-b border-slate-100 py-3">
               <button 
                 onClick={() => toggleFilter('baggage')}
-                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
                 <span>Baggage</span>
                 {filtersOpen.baggage ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -417,7 +417,7 @@ export function FlightResults({
             <div className="border-b border-slate-100 py-3">
               <button 
                 onClick={() => toggleFilter('fareType')}
-                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
                 <span>Fare type</span>
                 {filtersOpen.fareType ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -452,7 +452,7 @@ export function FlightResults({
             <div className="border-b border-slate-100 py-3">
               <button 
                 onClick={() => toggleFilter('ticketLimit')}
-                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
                 <span>Ticket time limit</span>
                 {filtersOpen.ticketLimit ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -468,7 +468,7 @@ export function FlightResults({
             <div className="border-b border-slate-100 py-3">
               <button 
                 onClick={() => toggleFilter('maxTime')}
-                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
                 <span>Max. time travel</span>
                 {filtersOpen.maxTime ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -484,7 +484,7 @@ export function FlightResults({
             <div className="border-b border-slate-100 py-3">
               <button 
                 onClick={() => toggleFilter('price')}
-                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
                 <span>Price</span>
                 {filtersOpen.price ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -511,7 +511,7 @@ export function FlightResults({
             <div className="border-b border-slate-100 py-3">
               <button 
                 onClick={() => toggleFilter('stops')}
-                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
                 <span>No. of stops</span>
                 {filtersOpen.stops ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -553,7 +553,7 @@ export function FlightResults({
             <div className="border-b border-slate-100 py-3">
               <button 
                 onClick={() => toggleFilter('equipment')}
-                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
                 <span>Equipment</span>
                 {filtersOpen.equipment ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -569,7 +569,7 @@ export function FlightResults({
             <div className="py-3">
               <button 
                 onClick={() => toggleFilter('times')}
-                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#0B132B] py-1"
+                className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
                 <span>Departure & arrival time</span>
                 {filtersOpen.times ? <ChevronUp className="w-4.5 h-4.5 text-slate-400" /> : <ChevronDown className="w-4.5 h-4.5 text-slate-400" />}
@@ -600,7 +600,7 @@ export function FlightResults({
               onClick={() => setSortOpen(!sortOpen)}
               className="flex items-center gap-1.5 text-[15px] font-[750] text-slate-700 bg-white border border-slate-200 rounded-xl px-4 py-2 hover:bg-slate-50 transition shadow-sm"
             >
-              <span>Sort by: <span className="text-[#0B132B] font-[900]">{activeSort}</span></span>
+              <span>Sort by: <span className="text-[#121121] font-[900]">{activeSort}</span></span>
               <ChevronDown className="w-4 h-4 text-slate-400" />
             </button>
             {sortOpen && (

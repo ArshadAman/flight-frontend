@@ -197,8 +197,8 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
         row: "flex w-full mt-2",
         cell: "text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
         day: cn("h-11 w-11 p-0 font-bold hover:bg-slate-100 rounded-xl transition-all text-[15px]"),
-        day_selected: "bg-[#2196F3] text-white hover:bg-[#2196F3] rounded-xl shadow-md",
-        day_today: "text-[#2196F3] border border-[#2196F3]",
+        day_selected: "bg-[#888] text-white hover:bg-[#888] rounded-xl shadow-md",
+        day_today: "text-[#888] border border-[#888]",
         day_outside: "text-slate-300 opacity-50",
         day_disabled: "text-slate-300 opacity-50",
     };
@@ -208,9 +208,9 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
             {/* Header / Trip Type Logic */}
             <div className="flex items-center justify-between bg-white h-14 rounded-t-[1.5rem] relative">
                 <div className="absolute bottom-0 w-full h-[1.5px] bg-slate-200" />
-                <div className="flex items-center px-8 h-full bg-white text-[#E11D48] border-b-[3px] border-[#E11D48] relative z-10 min-w-[150px]">
+                <div className="flex items-center px-8 h-full bg-white text-[#D60D26] border-b-[3px] border-[#D60D26] relative z-10 min-w-[150px]">
                     <div className="flex items-center gap-2 font-bold text-[15px] md:text-[16px]">
-                        <PlaneTakeoff className="w-5 h-5 text-[#E11D48]" strokeWidth={2.5} />
+                        <PlaneTakeoff className="w-5 h-5 text-[#D60D26]" strokeWidth={2.5} />
                         <span className="tracking-tight">Flights</span>
                     </div>
                 </div>
@@ -261,9 +261,9 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                         <label key={type} className="flex items-center space-x-2 cursor-pointer group" onClick={() => setTripType(type)}>
                             <div className={cn(
                                 "w-[16px] h-[16px] rounded-full border-[1.5px] flex items-center justify-center transition-colors",
-                                tripType === type ? "border-[#E11D48]" : "border-slate-300"
+                                tripType === type ? "border-[#D60D26]" : "border-slate-300"
                             )}>
-                                {tripType === type && <div className="w-2 h-2 rounded-full bg-[#E11D48]" />}
+                                {tripType === type && <div className="w-2 h-2 rounded-full bg-[#D60D26]" />}
                             </div>
                             <span className={cn(
                                 "text-[14px] leading-none pt-[1px]",
@@ -291,7 +291,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                             </div>
 
                             {/* Red Arrow Circle */}
-                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#E11D48] text-[#E11D48] items-center justify-center relative mt-3 mx-2">
+                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
                                 <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
                             </div>
 
@@ -347,7 +347,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                                 key={days}
                                                 className={cn(
                                                     "w-full text-left px-4 py-2.5 rounded-lg font-bold text-[15px] transition-colors",
-                                                    dayVariance === days ? "bg-[#E11D48] text-white" : "text-slate-700 hover:bg-slate-100"
+                                                    dayVariance === days ? "bg-[#D60D26] text-white" : "text-slate-700 hover:bg-slate-100"
                                                 )}
                                                 onClick={() => {
                                                     setDayVariance(days);
@@ -363,7 +363,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
 
                             {/* Search Button */}
                             <div className="flex items-center justify-end h-[70px] shrink-0 mt-3">
-                                <Button onClick={handleSearch} className="bg-[#DF1B24] hover:bg-[#C1161E] text-white rounded-full px-6 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
+                                <Button onClick={handleSearch} className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
                                     Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
                                 </Button>
                             </div>
@@ -380,7 +380,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                             </div>
 
                             {/* Red Arrow Circle */}
-                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#E11D48] text-[#E11D48] items-center justify-center relative mt-3 mx-2">
+                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
                                 <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
                             </div>
 
@@ -425,7 +425,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                                 key={days}
                                                 className={cn(
                                                     "w-full text-left px-4 py-2.5 rounded-lg font-bold text-[15px] transition-colors",
-                                                    dayVariance2 === days ? "bg-[#E11D48] text-white" : "text-slate-700 hover:bg-slate-100"
+                                                    dayVariance2 === days ? "bg-[#D60D26] text-white" : "text-slate-700 hover:bg-slate-100"
                                                 )}
                                                 onClick={() => {
                                                     setDayVariance2(days);
@@ -441,7 +441,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
 
                             {/* Add City Button Area */}
                             <div className="flex items-center justify-start h-[70px] shrink-0 min-w-[120px] mt-3 lg:pl-6">
-                                <button className="text-[#E11D48] font-bold text-[15px] hover:underline flex items-center gap-1">
+                                <button className="text-[#D60D26] font-bold text-[15px] hover:underline flex items-center gap-1">
                                     <Plus className="w-4 h-4" strokeWidth={3} /> Add City
                                 </button>
                             </div>
@@ -454,7 +454,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                     <div className="flex flex-col lg:flex-row items-center justify-between w-full mt-2 lg:gap-2 xl:gap-4 relative" ref={searchRef}>
                         {/* Origin Input */}
                         <div className="flex flex-col flex-[1.2] min-w-[150px] group relative h-[80px] w-full lg:w-auto">
-                            <label className="text-[13px] font-semibold text-[#88909c] mb-1 block">Departure From</label>
+                            <label className="text-[13px] font-semibold text-[#888] mb-1 block">Departure From</label>
                             <input
                                 type="text"
                                 className="bg-transparent border-none outline-none font-black text-slate-900 tracking-tight text-[22px] p-0 placeholder:text-slate-300 leading-none h-[28px] w-full"
@@ -466,7 +466,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                 onFocus={() => setActiveDropdown('origin')}
                                 placeholder="City or Airport"
                             />
-                            <p className="text-[12px] text-[#88909c] mt-1 truncate font-medium">
+                            <p className="text-[12px] text-[#888] mt-1 truncate font-medium">
                                 {GLOBAL_CITIES.find(c => c.name.toLowerCase() === origin.toLowerCase() || c.code.toLowerCase() === origin.toLowerCase())?.name || origin || "Anywhere"}
                             </p>
                             <div className="absolute bottom-0 left-0 w-full lg:w-[90%] h-[1.5px] bg-slate-200 group-hover:bg-slate-300 hidden lg:block" />
@@ -508,7 +508,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                             )}
 
                             {/* Swap Button */}
-                            <div className="hidden lg:flex absolute right-[-18px] xl:right-[-22px] top-[40%] -translate-y-1/2 z-10 w-[32px] h-[32px] rounded-full border border-[#E11D48] bg-white text-[#E11D48] items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-all cursor-pointer group/swap"
+                            <div className="hidden lg:flex absolute right-[-18px] xl:right-[-22px] top-[40%] -translate-y-1/2 z-10 w-[32px] h-[32px] rounded-full border border-[#D60D26] bg-white text-[#D60D26] items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-all cursor-pointer group/swap"
                                 onClick={() => {
                                     const tempOrigin = origin;
                                     const tempOriginSearch = originSearch;
@@ -525,7 +525,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
 
                         {/* Destination Input */}
                         <div className="flex flex-col flex-[1.2] min-w-[150px] group relative h-[80px] w-full lg:w-auto lg:pl-6">
-                            <label className="text-[13px] font-semibold text-[#88909c] mb-1 block">Going To</label>
+                            <label className="text-[13px] font-semibold text-[#888] mb-1 block">Going To</label>
                             <input
                                 type="text"
                                 className="bg-transparent border-none outline-none font-black text-slate-900 tracking-tight text-[22px] p-0 placeholder:text-slate-300 leading-none h-[28px] w-full"
@@ -537,7 +537,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                 onFocus={() => setActiveDropdown('destination')}
                                 placeholder="City or Airport"
                             />
-                            <p className="text-[12px] text-[#88909c] mt-1 truncate font-medium">
+                            <p className="text-[12px] text-[#888] mt-1 truncate font-medium">
                                 {GLOBAL_CITIES.find(c => c.name.toLowerCase() === destination.toLowerCase() || c.code.toLowerCase() === destination.toLowerCase())?.name || destination || "Anywhere"}
                             </p>
                             <div className="absolute bottom-0 left-0 lg:left-6 w-full lg:w-[90%] h-[1.5px] bg-slate-200 group-hover:bg-slate-300 hidden lg:block" />
@@ -583,9 +583,9 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                         <Popover open={isDepOpen} onOpenChange={setIsDepOpen}>
                             <PopoverTrigger asChild>
                                 <div className="flex flex-col flex-1 min-w-[130px] group cursor-pointer relative h-[80px]">
-                                    <label className="text-[13px] font-semibold text-[#88909c] mb-1 flex items-center gap-1">Departure Date <ChevronDown className="w-3.5 h-3.5" /></label>
+                                    <label className="text-[13px] font-semibold text-[#888] mb-1 flex items-center gap-1">Departure Date <ChevronDown className="w-3.5 h-3.5" /></label>
                                     <div className="font-black text-slate-900 tracking-tight text-[22px] leading-none h-[28px] flex items-center">{date ? format(date, "dd MMM' yy") : "Select Date"}</div>
-                                    <p className="text-[12px] text-[#88909c] mt-1 font-medium">{date ? format(date, "EEEE") : ""}</p>
+                                    <p className="text-[12px] text-[#888] mt-1 font-medium">{date ? format(date, "EEEE") : ""}</p>
                                     <div className="absolute bottom-0 left-0 w-full lg:w-[90%] h-[1.5px] bg-slate-200 group-hover:bg-slate-300" />
                                 </div>
                             </PopoverTrigger>
@@ -626,15 +626,15 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                         }
                                     }}
                                 >
-                                    <label className="text-[13px] font-semibold text-[#88909c] mb-1 block">Return Date</label>
+                                    <label className="text-[13px] font-semibold text-[#888] mb-1 block">Return Date</label>
                                     <div className="h-[44px] flex items-start pt-[1px]">
                                         {returnDate && tripType !== 'one-way' ? (
                                             <div className="font-black text-slate-900 tracking-tight text-[22px] leading-none">
                                                 {format(returnDate, "dd MMM' yy")}
-                                                <p className="text-[12px] text-[#88909c] mt-1 font-medium">{format(returnDate, "EEEE")}</p>
+                                                <p className="text-[12px] text-[#888] mt-1 font-medium">{format(returnDate, "EEEE")}</p>
                                             </div>
                                         ) : (
-                                            <span className="text-[#3b82f6] text-[13px] font-semibold leading-tight tracking-tight">
+                                            <span className="text-[#888] text-[13px] font-semibold leading-tight tracking-tight">
                                                 Book Round Trip<br />To Save Extra
                                             </span>
                                         )}
@@ -661,11 +661,11 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                         <Popover open={isTravellerOpen} onOpenChange={setIsTravellerOpen}>
                             <PopoverTrigger asChild>
                                 <div className="flex flex-col flex-1 min-w-[140px] group cursor-pointer relative h-[80px]">
-                                    <label className="text-[13px] font-semibold text-[#88909c] mb-1 flex items-center gap-1 whitespace-nowrap">Traveller $ Class <ChevronDown className="w-3.5 h-3.5" /></label>
+                                    <label className="text-[13px] font-semibold text-[#888] mb-1 flex items-center gap-1 whitespace-nowrap">Traveller $ Class <ChevronDown className="w-3.5 h-3.5" /></label>
                                     <div className="font-black text-slate-900 tracking-tight text-[22px] leading-none h-[28px] flex items-center truncate">
                                         {travellers.adults + travellers.children + travellers.infants} Traveller
                                     </div>
-                                    <p className="text-[12px] text-[#88909c] mt-1 font-medium">{cabinClass}</p>
+                                    <p className="text-[12px] text-[#888] mt-1 font-medium">{cabinClass}</p>
                                     <div className="absolute bottom-0 left-0 w-full lg:w-[90%] h-[1.5px] bg-slate-200 group-hover:bg-slate-300" />
                                 </div>
                             </PopoverTrigger>
@@ -692,15 +692,15 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                     <div className="space-y-2.5">
                                         {['Economy', 'Prem. Economy', 'Business', 'First'].map((cabin) => (
                                             <label key={cabin} className="flex items-center gap-3 cursor-pointer group" onClick={() => setCabinClass(cabin)}>
-                                                <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", cabinClass === cabin ? "border-[#3b82f6]" : "border-slate-300")}>
-                                                    {cabinClass === cabin && <div className="w-2.5 h-2.5 rounded-full bg-[#3b82f6]" />}
+                                                <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", cabinClass === cabin ? "border-[#888]" : "border-slate-300")}>
+                                                    {cabinClass === cabin && <div className="w-2.5 h-2.5 rounded-full bg-[#888]" />}
                                                 </div>
                                                 <span className="text-[14px] font-semibold text-slate-700">{cabin}</span>
                                             </label>
                                         ))}
                                     </div>
                                     {/* Done Button Logic: Closes the Popover */}
-                                    <Button className="w-full mt-2 py-5 bg-white border-2 border-[#3b82f6] text-[#3b82f6] hover:bg-blue-50 font-bold text-[16px] rounded-xl shadow-none" onClick={() => setIsTravellerOpen(false)}>Done</Button>
+                                    <Button className="w-full mt-2 py-5 bg-white border-2 border-[#888] text-[#888] hover:bg-blue-50 font-bold text-[16px] rounded-xl shadow-none" onClick={() => setIsTravellerOpen(false)}>Done</Button>
                                 </div>
                             </PopoverContent>
                         </Popover>
@@ -709,9 +709,9 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                         <Popover open={isDayVarianceOpen} onOpenChange={setIsDayVarianceOpen}>
                             <PopoverTrigger asChild>
                                 <div className="flex flex-col min-w-[65px] flex-[0.5] group relative h-[80px] w-full lg:w-auto cursor-pointer pr-4">
-                                    <label className="text-[13px] font-semibold text-[#88909c] mb-1 flex items-center gap-0.5 whitespace-nowrap">+/- Day <ChevronDown className="w-3.5 h-3.5" /></label>
+                                    <label className="text-[13px] font-semibold text-[#888] mb-1 flex items-center gap-0.5 whitespace-nowrap">+/- Day <ChevronDown className="w-3.5 h-3.5" /></label>
                                     <div className="font-black text-slate-900 tracking-tight text-[22px] leading-none h-[28px] flex items-center">+/- 0{dayVariance}</div>
-                                    <p className="text-[12px] text-[#88909c] mt-1 font-medium">Day{dayVariance !== 1 ? 's' : ''}</p>
+                                    <p className="text-[12px] text-[#888] mt-1 font-medium">Day{dayVariance !== 1 ? 's' : ''}</p>
                                     <div className="absolute bottom-0 left-0 w-full lg:w-[90%] h-[1.5px] bg-slate-200 group-hover:bg-slate-300" />
                                 </div>
                             </PopoverTrigger>
@@ -722,7 +722,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                             key={days}
                                             className={cn(
                                                 "w-full text-left px-4 py-2.5 rounded-lg font-bold text-[15px] transition-colors",
-                                                dayVariance === days ? "bg-[#E11D48] text-white" : "text-slate-700 hover:bg-slate-100"
+                                                dayVariance === days ? "bg-[#D60D26] text-white" : "text-slate-700 hover:bg-slate-100"
                                             )}
                                             onClick={() => {
                                                 setDayVariance(days);
@@ -737,7 +737,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                         </Popover>
 
                         <div className="flex items-center justify-center lg:justify-end h-auto pb-4 lg:pb-0 lg:pl-1 w-full lg:w-auto mt-2 lg:mt-0 flex-shrink-0">
-                            <Button onClick={handleSearch} className="w-full lg:w-auto bg-[#E11D48] hover:bg-[#c61a3d] text-white rounded-full px-6 h-[44px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
+                            <Button onClick={handleSearch} className="w-full lg:w-auto bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 h-[44px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
                                 Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
                             </Button>
                         </div>
@@ -747,7 +747,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                 {/* Checkboxes Row */}
                 <div className="flex items-center space-x-6 pt-2">
                     <div className="flex items-center space-x-2.5">
-                        <button id="baggageFares" onClick={() => setBaggageFares(!baggageFares)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", baggageFares ? "bg-[#E11D48] border-[#E11D48]" : "border-[#E11D48] bg-white")}>
+                        <button id="baggageFares" onClick={() => setBaggageFares(!baggageFares)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", baggageFares ? "bg-[#D60D26] border-[#D60D26]" : "border-[#D60D26] bg-white")}>
                             {baggageFares && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                         </button>
                         <label htmlFor="baggageFares" className="text-[13px] font-medium text-slate-500 cursor-pointer select-none" onClick={() => setBaggageFares(!baggageFares)}>Baggage Fares Only</label>
@@ -757,7 +757,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                     <div className="hidden sm:block w-[1.5px] h-4 bg-slate-200" />
 
                     <div className="flex items-center space-x-2.5">
-                        <button id="nonStop" onClick={() => setNonStop(!nonStop)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", nonStop ? "bg-[#E11D48] border-[#E11D48]" : "border-[#E11D48] bg-white")}>
+                        <button id="nonStop" onClick={() => setNonStop(!nonStop)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", nonStop ? "bg-[#D60D26] border-[#D60D26]" : "border-[#D60D26] bg-white")}>
                             {nonStop && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                         </button>
                         <label htmlFor="nonStop" className="text-[13px] font-medium text-slate-500 cursor-pointer select-none" onClick={() => setNonStop(!nonStop)}>Non- Stops Flights</label>

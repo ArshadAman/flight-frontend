@@ -9,7 +9,7 @@ export default function CustomerSupportPage() {
             <Navbar />
 
             {/* Top Banner with Breadcrumbs */}
-            <div className="w-full bg-gradient-to-r from-primary to-[#0B132B] py-14 sm:py-16">
+            <div className="w-full bg-gradient-to-r from-primary to-[#121121] py-14 sm:py-16">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-12 flex flex-col">
                     <h1 className="text-[32px] md:text-[38px] font-[700] text-white tracking-tight mb-3">
                         Customer support
@@ -29,63 +29,63 @@ export default function CustomerSupportPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
                     {/* Chat */}
                     <button className="bg-white border border-gray-100 rounded-[12px] p-6 shadow-sm hover:shadow-md hover:border-red-100 transition-all flex items-center justify-center gap-3 w-full h-[80px]">
-                        <MessageSquare className="w-[22px] h-[22px] text-[#DE0A26] stroke-[2px]" />
+                        <MessageSquare className="w-[22px] h-[22px] text-[#D60D26] stroke-[2px]" />
                         <span className="text-[17px] font-[600] text-gray-600">Chat</span>
                     </button>
 
                     {/* Call Us */}
                     <button className="bg-white border border-gray-100 rounded-[12px] p-6 shadow-sm hover:shadow-md hover:border-red-100 transition-all flex items-center justify-center gap-3 w-full h-[80px]">
-                        <PhoneCall className="w-[22px] h-[22px] text-[#DE0A26] stroke-[2px]" />
+                        <PhoneCall className="w-[22px] h-[22px] text-[#D60D26] stroke-[2px]" />
                         <span className="text-[17px] font-[600] text-gray-600">Call Us</span>
                     </button>
 
                     {/* FAQs */}
                     <button className="bg-white border border-gray-100 rounded-[12px] p-6 shadow-sm hover:shadow-md hover:border-red-100 transition-all flex items-center justify-center gap-3 w-full h-[80px]">
-                        <Info className="w-[22px] h-[22px] text-[#DE0A26] stroke-[2px]" />
+                        <Info className="w-[22px] h-[22px] text-[#D60D26] stroke-[2px]" />
                         <span className="text-[17px] font-[600] text-gray-600">FAQs</span>
                     </button>
 
                     {/* Write Us */}
                     <button className="bg-white border border-gray-100 rounded-[12px] p-6 shadow-sm hover:shadow-md hover:border-red-100 transition-all flex items-center justify-center gap-3 w-full h-[80px]">
-                        <FileText className="w-[22px] h-[22px] text-[#DE0A26] stroke-[2px]" />
+                        <FileText className="w-[22px] h-[22px] text-[#D60D26] stroke-[2px]" />
                         <span className="text-[17px] font-[600] text-gray-600">Write Us</span>
                     </button>
                 </div>
 
                 {/* FAQ Section */}
                 <div className="w-full mb-10">
-                    <h2 className="text-[26px] md:text-[32px] font-[750] text-[#1e2329] mb-10 tracking-tight">
+                    <h2 className="text-[26px] md:text-[32px] font-[750] text-[#121121] mb-10 tracking-tight">
                         Frequently Asked Questions:
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                         {/* FAQ 1 */}
-                        <div className="bg-[#f3f4f6] hover:bg-[#eceef1] cursor-pointer transition-colors rounded-[16px] px-8 py-[26px] flex justify-between items-center group">
-                            <span className="text-[16px] font-[600] text-[#6b7280] group-hover:text-[#4b5563] tracking-wide">
+                        <div className="bg-[#F2FBFF] hover:bg-[#F2FBFF] cursor-pointer transition-colors rounded-[16px] px-8 py-[26px] flex justify-between items-center group">
+                            <span className="text-[16px] font-[600] text-[#888] group-hover:text-[#0C2342] tracking-wide">
                                 Are there any flight ticket promotions going on?
                             </span>
                             <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-gray-600 flex-shrink-0 ml-4" strokeWidth={2} />
                         </div>
 
                         {/* FAQ 2 */}
-                        <div className="bg-[#f3f4f6] hover:bg-[#eceef1] cursor-pointer transition-colors rounded-[16px] px-8 py-[26px] flex justify-between items-center group">
-                            <span className="text-[16px] font-[600] text-[#6b7280] group-hover:text-[#4b5563] tracking-wide">
+                        <div className="bg-[#F2FBFF] hover:bg-[#F2FBFF] cursor-pointer transition-colors rounded-[16px] px-8 py-[26px] flex justify-between items-center group">
+                            <span className="text-[16px] font-[600] text-[#888] group-hover:text-[#0C2342] tracking-wide">
                                 How do i change my tickets?
                             </span>
                             <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-gray-600 flex-shrink-0 ml-4" strokeWidth={2} />
                         </div>
 
                         {/* FAQ 3 */}
-                        <div className="bg-[#f3f4f6] hover:bg-[#eceef1] cursor-pointer transition-colors rounded-[16px] px-8 py-[26px] flex justify-between items-center group">
-                            <span className="text-[16px] font-[600] text-[#6b7280] group-hover:text-[#4b5563] tracking-wide">
+                        <div className="bg-[#F2FBFF] hover:bg-[#F2FBFF] cursor-pointer transition-colors rounded-[16px] px-8 py-[26px] flex justify-between items-center group">
+                            <span className="text-[16px] font-[600] text-[#888] group-hover:text-[#0C2342] tracking-wide">
                                 How can i cancel my flight ticket?
                             </span>
                             <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-gray-600 flex-shrink-0 ml-4" strokeWidth={2} />
                         </div>
 
                         {/* FAQ 4 */}
-                        <div className="bg-[#f3f4f6] hover:bg-[#eceef1] cursor-pointer transition-colors rounded-[16px] px-8 py-[26px] flex justify-between items-center group relative overflow-hidden">
-                            <span className="text-[16px] font-[600] text-[#6b7280] group-hover:text-[#4b5563] tracking-wide z-10 relative pr-16">
+                        <div className="bg-[#F2FBFF] hover:bg-[#F2FBFF] cursor-pointer transition-colors rounded-[16px] px-8 py-[26px] flex justify-between items-center group relative overflow-hidden">
+                            <span className="text-[16px] font-[600] text-[#888] group-hover:text-[#0C2342] tracking-wide z-10 relative pr-16">
                                 Have a different question? Chat with us now.
                             </span>
 
@@ -121,7 +121,7 @@ export default function CustomerSupportPage() {
                                         viewBox="0 0 400 20"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
-                                        className="w-full h-auto text-[#E11D48] drop-shadow-[0_2px_2px_rgba(225,29,72,0.3)]"
+                                        className="w-full h-auto text-[#D60D26] drop-shadow-[0_2px_2px_rgba(225,29,72,0.3)]"
                                     >
                                         <path
                                             d="M0 30C100 5 300 -5 400 18L398 18C300 10 10 15 5 35L0 30Z"

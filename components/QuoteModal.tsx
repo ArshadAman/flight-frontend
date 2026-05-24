@@ -15,8 +15,8 @@ export function QuoteModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl w-full max-w-[550px] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="bg-[#FBEBEF] px-6 py-4 flex items-center justify-between">
-          <h2 className="text-[#DF1B24] text-[20px] font-bold tracking-tight">Quote</h2>
+        <div className="bg-[#F2FBFF] px-6 py-4 flex items-center justify-between">
+          <h2 className="text-[#D60D26] text-[20px] font-bold tracking-tight">Quote</h2>
           <button onClick={onClose} className="text-slate-800 hover:bg-white/50 p-1 rounded-md transition-colors">
             <X className="w-5 h-5" strokeWidth={3} />
           </button>
@@ -38,7 +38,7 @@ export function QuoteModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
           <div className="flex flex-col">
             <textarea 
               placeholder="Free Text"
-              className="w-full border border-slate-200 rounded-lg p-4 min-h-[110px] text-[15px] font-medium resize-none outline-none focus:border-[#DF1B24]/30 focus:ring-4 focus:ring-[#DF1B24]/10 transition-all placeholder:text-slate-500"
+              className="w-full border border-slate-200 rounded-lg p-4 min-h-[110px] text-[15px] font-medium resize-none outline-none focus:border-[#D60D26]/30 focus:ring-4 focus:ring-[#D60D26]/10 transition-all placeholder:text-slate-500"
             ></textarea>
             <p className="text-[12px] text-slate-500 italic mt-2 font-medium">Text will be displayed above the offers details</p>
           </div>
@@ -51,7 +51,7 @@ export function QuoteModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               <span className="text-[15px] font-semibold text-slate-500 w-[140px]">Include price :</span>
               <button 
                 onClick={() => setIncludePrice(!includePrice)}
-                className={`w-[44px] h-[24px] rounded-full relative transition-colors ${includePrice ? 'bg-[#DF1B24]' : 'bg-slate-300'}`}
+                className={`w-[44px] h-[24px] rounded-full relative transition-colors ${includePrice ? 'bg-[#D60D26]' : 'bg-slate-300'}`}
               >
                 <div className={`w-[18px] h-[18px] bg-white rounded-full absolute top-[3px] transition-all shadow-sm ${includePrice ? 'left-[23px]' : 'left-[3px]'}`} />
               </button>
@@ -62,14 +62,14 @@ export function QuoteModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               <span className="text-[15px] font-semibold text-slate-500 w-[140px]">Agency fee :</span>
               <div className="flex gap-8">
                 <label className="flex items-center gap-2.5 cursor-pointer group" onClick={() => setAgencyFee("included")}>
-                  <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${agencyFee === "included" ? 'border-[#DF1B24]' : 'border-slate-300 group-hover:border-[#DF1B24]'}`}>
-                    {agencyFee === "included" && <div className="w-2.5 h-2.5 rounded-full bg-[#DF1B24]" />}
+                  <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${agencyFee === "included" ? 'border-[#D60D26]' : 'border-slate-300 group-hover:border-[#D60D26]'}`}>
+                    {agencyFee === "included" && <div className="w-2.5 h-2.5 rounded-full bg-[#D60D26]" />}
                   </div>
                   <span className="text-[14px] font-bold text-slate-800">Included in fare</span>
                 </label>
                 <label className="flex items-center gap-2.5 cursor-pointer group" onClick={() => setAgencyFee("separate")}>
-                  <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${agencyFee === "separate" ? 'border-[#DF1B24]' : 'border-slate-300 group-hover:border-[#DF1B24]'}`}>
-                    {agencyFee === "separate" && <div className="w-2.5 h-2.5 rounded-full bg-[#DF1B24]" />}
+                  <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${agencyFee === "separate" ? 'border-[#D60D26]' : 'border-slate-300 group-hover:border-[#D60D26]'}`}>
+                    {agencyFee === "separate" && <div className="w-2.5 h-2.5 rounded-full bg-[#D60D26]" />}
                   </div>
                   <span className="text-[14px] font-bold text-slate-800">Listed seperately</span>
                 </label>
@@ -81,14 +81,14 @@ export function QuoteModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               <span className="text-[15px] font-semibold text-slate-500 w-[140px]">Flight options :</span>
               <div className="flex gap-8">
                 <label className="flex items-center gap-2.5 cursor-pointer group" onClick={() => setFlightOptions("selected")}>
-                  <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${flightOptions === "selected" ? 'border-[#DF1B24]' : 'border-slate-300 group-hover:border-[#DF1B24]'}`}>
-                    {flightOptions === "selected" && <div className="w-2.5 h-2.5 rounded-full bg-[#DF1B24]" />}
+                  <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${flightOptions === "selected" ? 'border-[#D60D26]' : 'border-slate-300 group-hover:border-[#D60D26]'}`}>
+                    {flightOptions === "selected" && <div className="w-2.5 h-2.5 rounded-full bg-[#D60D26]" />}
                   </div>
                   <span className="text-[14px] font-bold text-slate-800">Selected option only</span>
                 </label>
                 <label className="flex items-center gap-2.5 cursor-pointer group" onClick={() => setFlightOptions("all")}>
-                  <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${flightOptions === "all" ? 'border-[#DF1B24]' : 'border-slate-300 group-hover:border-[#DF1B24]'}`}>
-                    {flightOptions === "all" && <div className="w-2.5 h-2.5 rounded-full bg-[#DF1B24]" />}
+                  <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${flightOptions === "all" ? 'border-[#D60D26]' : 'border-slate-300 group-hover:border-[#D60D26]'}`}>
+                    {flightOptions === "all" && <div className="w-2.5 h-2.5 rounded-full bg-[#D60D26]" />}
                   </div>
                   <span className="text-[14px] font-bold text-slate-800">All flight options</span>
                 </label>
@@ -105,7 +105,7 @@ export function QuoteModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             <Button variant="outline" className="flex-1 rounded-[100px] border-slate-300 text-slate-900 font-bold h-12 text-[14px] hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all active:scale-95">
               Copy To Email
             </Button>
-            <Button className="flex-1 rounded-[100px] bg-[#DF1B24] hover:bg-[#C1161E] text-white font-bold h-12 text-[15px] shadow-md transition-all active:scale-95">
+            <Button className="flex-1 rounded-[100px] bg-[#D60D26] hover:bg-[#D60D26] text-white font-bold h-12 text-[15px] shadow-md transition-all active:scale-95">
               Get PDF
             </Button>
           </div>

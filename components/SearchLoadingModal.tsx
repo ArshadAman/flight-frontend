@@ -72,7 +72,7 @@ export function SearchLoadingModal({ isOpen }: SearchLoadingModalProps) {
                 </div>
 
                 {/* Figma style red pulsing loading text */}
-                <h3 className="text-[#DE0A26] font-bold text-[18px] tracking-wide text-center uppercase animate-pulse select-none">
+                <h3 className="text-[#D60D26] font-bold text-[18px] tracking-wide text-center uppercase animate-pulse select-none">
                     Looking for Flights
                 </h3>
             </div>

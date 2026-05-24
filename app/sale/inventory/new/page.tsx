@@ -124,23 +124,23 @@ export default function AddPNRPage() {
     // Calendar mock
     const renderCalendar = (title: string, month: string) => (
         <div className="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden w-[320px] flex flex-col pointer-events-auto shrink-0 mb-10">
-            <div className="bg-[#4b4347] text-white text-center py-2.5 text-[12px] font-bold tracking-widest uppercase">
+            <div className="bg-[#0C2342] text-white text-center py-2.5 text-[12px] font-bold tracking-widest uppercase">
                 {title}
             </div>
-            <div className="bg-[#fdeaea] text-slate-800 flex items-center justify-between px-5 py-3 font-extrabold text-[15px]">
+            <div className="bg-[#F2FBFF] text-slate-800 flex items-center justify-between px-5 py-3 font-extrabold text-[15px]">
                 <ChevronLeft className="w-5 h-5 cursor-pointer text-slate-600 hover:text-black" />
                 {month}
                 <ChevronRight className="w-5 h-5 cursor-pointer text-slate-600 hover:text-black" />
             </div>
             <div className="p-5 bg-white">
                 <div className="grid grid-cols-7 text-center text-[13px] font-bold mb-4">
-                    <div className="text-[#C1161E]">S</div>
+                    <div className="text-[#D60D26]">S</div>
                     <div className="text-slate-600">M</div>
                     <div className="text-slate-600">T</div>
                     <div className="text-slate-600">W</div>
                     <div className="text-slate-600">T</div>
                     <div className="text-slate-600">F</div>
-                    <div className="text-[#C1161E]">S</div>
+                    <div className="text-[#D60D26]">S</div>
                 </div>
                 <div className="grid grid-cols-7 text-center text-[14px] gap-y-4 font-bold text-slate-700">
                     <div className="text-slate-300 font-medium">26</div><div className="text-slate-300 font-medium">27</div><div className="text-slate-300 font-medium">28</div><div className="text-slate-300 font-medium">29</div><div className="text-slate-300 font-medium">30</div><div className="text-slate-300 font-medium">31</div>
@@ -149,7 +149,7 @@ export default function AddPNRPage() {
                             key={i} 
                             onClick={() => setSelectedDate(i + 1)}
                             className={`rounded-full cursor-pointer w-8 h-8 flex items-center justify-center mx-auto transition-colors ${
-                                selectedDate === i + 1 ? 'bg-[#C1161E] text-white' : 'hover:bg-slate-100 text-slate-700'
+                                selectedDate === i + 1 ? 'bg-[#D60D26] text-white' : 'hover:bg-slate-100 text-slate-700'
                             }`}
                         >
                             {i + 1}
@@ -162,9 +162,9 @@ export default function AddPNRPage() {
     );
 
     return (
-        <div className="w-full h-screen flex flex-col bg-[#a3ccce] overflow-hidden font-sans relative">
+        <div className="w-full h-screen flex flex-col bg-[#FFA8B3] overflow-hidden font-sans relative">
             {/* Header */}
-            <div className="w-full h-16 bg-gradient-to-r from-[#C1161E] to-[#2b1723] text-white flex items-center justify-between px-6 z-20 shrink-0 shadow-md">
+            <div className="w-full h-16 bg-gradient-to-r from-[#D60D26] to-[#121121] text-white flex items-center justify-between px-6 z-20 shrink-0 shadow-md">
                 <button onClick={() => router.back()} className="flex items-center gap-2 font-bold text-[15px] hover:text-white/80 transition-colors">
                     <ArrowLeft className="w-5 h-5" /> Add PNR
                 </button>
@@ -199,11 +199,11 @@ export default function AddPNRPage() {
                 >
                     {step > 0 && origin && destination && (
                         <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none">
-                            <path d="M 450 350 Q 750 200 1050 400" fill="none" stroke="#333" strokeWidth="2.5" strokeDasharray="8 8" />
-                            <circle cx="450" cy="350" r="8" fill="#C1161E" stroke="white" strokeWidth="2" />
-                            <circle cx="1050" cy="400" r="8" fill="#1e73be" stroke="white" strokeWidth="2" />
+                            <path d="M 450 350 Q 750 200 1050 400" fill="none" stroke="#0C2342" strokeWidth="2.5" strokeDasharray="8 8" />
+                            <circle cx="450" cy="350" r="8" fill="#D60D26" stroke="white" strokeWidth="2" />
+                            <circle cx="1050" cy="400" r="8" fill="#888" stroke="white" strokeWidth="2" />
                             <g transform="translate(550, 260) rotate(18)">
-                                <Plane className="w-10 h-10 text-[#C1161E] fill-white drop-shadow-md" />
+                                <Plane className="w-10 h-10 text-[#D60D26] fill-white drop-shadow-md" />
                             </g>
                         </svg>
                     )}
@@ -215,7 +215,7 @@ export default function AddPNRPage() {
                 <div className="relative z-20 flex-1 overflow-y-auto flex flex-col items-center pt-10 pb-20 px-4 pointer-events-none w-full">
                     <div className="bg-white rounded-[24px] shadow-2xl p-4 flex flex-col sm:flex-row items-center gap-4 w-full max-w-[800px] pointer-events-auto transition-transform hover:scale-[1.01] relative shrink-0 z-30">
                         <div 
-                            className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "origin" ? "bg-slate-50 ring-2 ring-[#C1161E]/20" : "hover:bg-slate-50"}`}
+                            className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "origin" ? "bg-slate-50 ring-2 ring-[#D60D26]/20" : "hover:bg-slate-50"}`}
                             onClick={() => setActiveInput("origin")}
                         >
                             <div className="text-[12px] text-slate-400 font-bold uppercase tracking-wider mb-1">Origin</div>
@@ -235,12 +235,12 @@ export default function AddPNRPage() {
                             )}
                         </div>
                         
-                        <div className="w-12 h-12 rounded-full border border-[#C1161E] text-[#C1161E] flex items-center justify-center shrink-0 bg-white z-10">
+                        <div className="w-12 h-12 rounded-full border border-[#D60D26] text-[#D60D26] flex items-center justify-center shrink-0 bg-white z-10">
                             <ArrowRight className="w-5 h-5" />
                         </div>
 
                         <div 
-                            className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "destination" ? "bg-slate-50 ring-2 ring-[#C1161E]/20" : "hover:bg-slate-50"}`}
+                            className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "destination" ? "bg-slate-50 ring-2 ring-[#D60D26]/20" : "hover:bg-slate-50"}`}
                             onClick={() => setActiveInput("destination")}
                         >
                             <div className="text-[12px] text-slate-400 font-bold uppercase tracking-wider mb-1">Destination</div>
@@ -274,7 +274,7 @@ export default function AddPNRPage() {
                                             </div>
                                             <div>
                                                 <div className="font-bold text-slate-700 text-[16px]">
-                                                    {airport.city} <span className="text-[#C1161E]">({airport.code})</span>
+                                                    {airport.city} <span className="text-[#D60D26]">({airport.code})</span>
                                                 </div>
                                                 <div className="text-[13px] text-slate-500 font-medium">
                                                     {airport.country} — {airport.name}
@@ -307,13 +307,13 @@ export default function AddPNRPage() {
 
             {/* Step 3 View: Schedule Screen */}
             {step === 3 && (
-                <div className="flex-1 bg-[#f8f9fc] flex flex-col items-center w-full relative z-30 overflow-y-auto">
+                <div className="flex-1 bg-[#F2FBFF] flex flex-col items-center w-full relative z-30 overflow-y-auto">
                     {/* Header route text */}
                     <div className="w-full bg-white pt-6 px-10">
                         <div className="font-extrabold text-slate-800 flex items-center gap-3 text-[18px]">
                             {origin?.city || "New Delhi"} <span className="text-slate-400">({origin?.code || "DEL"})</span>
-                            <div className="w-6 h-6 rounded-full border border-[#C1161E] flex items-center justify-center">
-                                <ArrowRight className="w-3 h-3 text-[#C1161E]" />
+                            <div className="w-6 h-6 rounded-full border border-[#D60D26] flex items-center justify-center">
+                                <ArrowRight className="w-3 h-3 text-[#D60D26]" />
                             </div>
                             {destination?.city || "Bangkok"} <span className="text-slate-400">({destination?.code || "BKK"})</span>
                         </div>
@@ -321,7 +321,7 @@ export default function AddPNRPage() {
 
                     {/* Header Tabs */}
                     <div className="w-full bg-white px-6 sm:px-10 flex items-center gap-8 sm:gap-12 border-b border-slate-200 mt-6 shrink-0 overflow-x-auto whitespace-nowrap no-scrollbar">
-                        <div className="font-bold text-[#C1161E] border-b-4 border-[#C1161E] py-4 cursor-pointer">Sundays</div>
+                        <div className="font-bold text-[#D60D26] border-b-4 border-[#D60D26] py-4 cursor-pointer">Sundays</div>
                         <div className="font-bold text-slate-300 py-4 cursor-pointer hover:text-slate-500">Mondays</div>
                         <div className="font-bold text-slate-800 py-4 cursor-pointer">Tuesdays</div>
                         <div className="font-bold text-slate-300 py-4 cursor-pointer hover:text-slate-500">Wednesdays</div>
@@ -335,17 +335,17 @@ export default function AddPNRPage() {
                         <div className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 mb-6">
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-4 py-2 font-bold text-slate-700 text-[14px]">
-                                    {origin?.code || "DEL"} <ArrowRight className="w-4 h-4 text-[#C1161E]" /> {destination?.code || "BKK"}
+                                    {origin?.code || "DEL"} <ArrowRight className="w-4 h-4 text-[#D60D26]" /> {destination?.code || "BKK"}
                                 </div>
-                                <div className="flex items-center border border-[#C1161E] rounded-xl overflow-hidden font-bold">
-                                    <div className="bg-[#C1161E] text-white px-3 py-2 text-[14px]">OCT</div>
-                                    <div className="bg-white text-[#C1161E] px-3 py-2 text-[14px]">{selectedDate?.toString().padStart(2, '0') || "05"}</div>
+                                <div className="flex items-center border border-[#D60D26] rounded-xl overflow-hidden font-bold">
+                                    <div className="bg-[#D60D26] text-white px-3 py-2 text-[14px]">OCT</div>
+                                    <div className="bg-white text-[#D60D26] px-3 py-2 text-[14px]">{selectedDate?.toString().padStart(2, '0') || "05"}</div>
                                 </div>
                             </div>
 
                             <div 
                                 onClick={() => setIsModalOpen(true)}
-                                className="w-full bg-[#1b4379] rounded-[12px] p-5 flex items-center justify-between text-white cursor-pointer hover:bg-[#15345e] transition-colors border-2 border-[#102a4c]"
+                                className="w-full bg-[#0C2342] rounded-[12px] p-5 flex items-center justify-between text-white cursor-pointer hover:bg-[#0C2342] transition-colors border-2 border-[#0C2342]"
                             >
                                 <div className="flex items-center gap-4">
                                     <Plane className="w-10 h-10 fill-white" />
@@ -357,7 +357,7 @@ export default function AddPNRPage() {
 
                             {hasScheduledFlight && (
                                 <div className="mt-4 flex items-stretch justify-between bg-white border border-slate-200 rounded-xl shadow-sm relative overflow-x-auto sm:overflow-hidden h-[70px] animate-in slide-in-from-top-2 duration-300">
-                                    <div className="w-24 bg-[#C1161E] shrink-0"></div>
+                                    <div className="w-24 bg-[#D60D26] shrink-0"></div>
                                     <div className="flex-1 flex items-center px-4 sm:px-8 font-bold text-slate-600 text-[14px] justify-between min-w-[500px]">
                                         <div className="w-[180px]">AI 121(+1) / AI 242</div>
                                         <div className="w-[150px] text-center">AIR INDIA</div>
@@ -373,7 +373,7 @@ export default function AddPNRPage() {
                             )}
                         </div>
 
-                        <div className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 flex items-center justify-center gap-3 text-[#C1161E] font-bold text-[16px]">
+                        <div className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 flex items-center justify-center gap-3 text-[#D60D26] font-bold text-[16px]">
                             <ArrowRightLeft className="w-5 h-5" /> No return flight
                         </div>
                     </div>
@@ -431,7 +431,7 @@ export default function AddPNRPage() {
                         <div className="flex items-center gap-6">
                             {step > 0 && (
                                 <>
-                                    <button className="flex items-center gap-2 text-[#C1161E] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors text-[15px]">
+                                    <button className="flex items-center gap-2 text-[#D60D26] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors text-[15px]">
                                         <X className="w-4 h-4" /> Add flight series
                                     </button>
                                     <div className="w-px h-6 bg-slate-300"></div>
@@ -443,7 +443,7 @@ export default function AddPNRPage() {
                         </div>
                         <div className="flex items-center gap-4">
                             {step === 1 && (
-                                <button onClick={() => setStep(2)} className="border border-[#C1161E] text-[#C1161E] hover:bg-rose-50 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[13px] sm:text-[15px] flex items-center gap-2 transition-colors">
+                                <button onClick={() => setStep(2)} className="border border-[#D60D26] text-[#D60D26] hover:bg-rose-50 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[13px] sm:text-[15px] flex items-center gap-2 transition-colors">
                                     <ArrowRightLeft className="w-4 h-4" /> Add return flight
                                 </button>
                             )}
@@ -451,8 +451,8 @@ export default function AddPNRPage() {
                                 onClick={handleAddFlightDetails}
                                 className={`rounded-full px-4 sm:px-10 py-3.5 font-bold text-[13px] sm:text-[15px] flex items-center gap-2 transition-colors ${
                                     step > 0 && selectedDate 
-                                        ? 'bg-[#C1161E] hover:bg-[#a01219] text-white shadow-md cursor-pointer' 
-                                        : 'bg-[#f4a7a9] text-white cursor-not-allowed'
+                                        ? 'bg-[#D60D26] hover:bg-[#D60D26] text-white shadow-md cursor-pointer' 
+                                        : 'bg-[#FFA8B3] text-white cursor-not-allowed'
                                 }`}
                             >
                                 Add Flights Details <ArrowRight className="w-5 h-5" />
@@ -468,13 +468,13 @@ export default function AddPNRPage() {
                             <button 
                                 onClick={() => { if (hasScheduledFlight) setStep(4); }}
                                 className={`px-4 sm:px-10 py-3.5 rounded-full font-bold text-[13px] sm:text-[15px] transition-colors flex items-center gap-2 ${
-                                    hasScheduledFlight ? 'bg-[#C1161E] text-white hover:bg-[#a01219] shadow-md' : 'bg-[#f4a7a9] text-white cursor-not-allowed'
+                                    hasScheduledFlight ? 'bg-[#D60D26] text-white hover:bg-[#D60D26] shadow-md' : 'bg-[#FFA8B3] text-white cursor-not-allowed'
                                 }`}
                             >
                                 Check And Confirm <ArrowRight className="w-5 h-5" />
                             </button>
                         ) : (
-                            <button className="bg-[#C1161E] text-white hover:bg-[#a01219] shadow-md px-10 py-3.5 rounded-full font-bold text-[15px] transition-colors flex items-center gap-2">
+                            <button className="bg-[#D60D26] text-white hover:bg-[#D60D26] shadow-md px-10 py-3.5 rounded-full font-bold text-[15px] transition-colors flex items-center gap-2">
                                 Create Flight 01 <ArrowRight className="w-4 h-4" />
                             </button>
                         )}
@@ -495,7 +495,7 @@ export default function AddPNRPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 pointer-events-auto animate-in fade-in duration-200 p-4">
                     <div className="bg-white rounded-3xl w-full max-w-[900px] max-h-[90vh] shadow-2xl overflow-hidden flex flex-col">
                         {/* Modal Header */}
-                        <div className="bg-gradient-to-r from-[#C1161E] to-[#2b1723] text-white p-6 relative shrink-0">
+                        <div className="bg-gradient-to-r from-[#D60D26] to-[#121121] text-white p-6 relative shrink-0">
                             <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 hover:bg-white/20 p-1 rounded-full transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
@@ -515,7 +515,7 @@ export default function AddPNRPage() {
                                 <button 
                                     key={tab}
                                     onClick={() => setModalTab(tab)}
-                                    className={`pb-4 px-2 transition-colors ${modalTab === tab ? "text-[#C1161E] border-b-2 border-[#C1161E]" : "text-slate-400 hover:text-slate-600"}`}
+                                    className={`pb-4 px-2 transition-colors ${modalTab === tab ? "text-[#D60D26] border-b-2 border-[#D60D26]" : "text-slate-400 hover:text-slate-600"}`}
                                 >
                                     {tab}. {["Flight detail", "Baggages", "Seats", "Dates", "Policies"][tab - 1]}
                                 </button>
@@ -537,8 +537,8 @@ export default function AddPNRPage() {
                                                     
                                                     {index === segments.length - 1 && (
                                                         <div className="relative z-10 flex flex-col items-center">
-                                                            <div className="w-7 h-7 bg-white border border-[#C1161E] text-[#C1161E] rounded-full flex items-center justify-center cursor-pointer mb-1 text-[20px] shadow-sm hover:bg-rose-50">+</div>
-                                                            <span className="text-[#C1161E] font-bold text-[12px] absolute top-8 w-[100px] text-center underline underline-offset-2">Add a stop over</span>
+                                                            <div className="w-7 h-7 bg-white border border-[#D60D26] text-[#D60D26] rounded-full flex items-center justify-center cursor-pointer mb-1 text-[20px] shadow-sm hover:bg-rose-50">+</div>
+                                                            <span className="text-[#D60D26] font-bold text-[12px] absolute top-8 w-[100px] text-center underline underline-offset-2">Add a stop over</span>
                                                         </div>
                                                     )}
                                                     
@@ -601,7 +601,7 @@ export default function AddPNRPage() {
                                                                     <input type="text" className="w-full font-bold text-slate-700 outline-none bg-transparent" value={seg.toTime} onChange={(e) => updateSegment(seg.id, 'toTime', e.target.value)} />
                                                                 </div>
                                                                 <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                                                                    <div className={`w-4 h-4 rounded flex items-center justify-center transition-colors ${isSegmentConfirmed ? 'bg-[#C1161E]' : 'border border-slate-300 bg-white'}`}>
+                                                                    <div className={`w-4 h-4 rounded flex items-center justify-center transition-colors ${isSegmentConfirmed ? 'bg-[#D60D26]' : 'border border-slate-300 bg-white'}`}>
                                                                         {isSegmentConfirmed && <Check className="w-3 h-3 text-white" />}
                                                                     </div>
                                                                     <span className="text-[12px] font-bold text-slate-600">+1 day</span>
@@ -667,7 +667,7 @@ export default function AddPNRPage() {
                                                             </div>
                                                             
                                                             <div className="flex flex-col items-center justify-start flex-1 px-2">
-                                                                <div className="w-8 h-8 bg-[#C1161E] rounded mb-2 flex items-center justify-center">
+                                                                <div className="w-8 h-8 bg-[#D60D26] rounded mb-2 flex items-center justify-center">
                                                                     <div className="w-4 h-4 border-t-2 border-r-2 border-white rounded-tr-full transform -rotate-45 mt-1 mr-1"></div>
                                                                 </div>
                                                                 <div className="text-[11px] text-slate-600 font-bold whitespace-nowrap">{seg.airline}</div>
@@ -697,7 +697,7 @@ export default function AddPNRPage() {
                                                         <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5">
                                                             <Clock className="w-4 h-4" /> Layover 02 h 15 min
                                                         </div>
-                                                        <button className="text-[12px] font-bold text-slate-600 flex items-center gap-1 hover:text-[#C1161E] transition-colors">
+                                                        <button className="text-[12px] font-bold text-slate-600 flex items-center gap-1 hover:text-[#D60D26] transition-colors">
                                                             <Trash2 className="w-4 h-4" /> Delete stop
                                                         </button>
                                                     </div>
@@ -755,7 +755,7 @@ export default function AddPNRPage() {
                                                     type="checkbox" 
                                                     checked={isFreeBaggage}
                                                     onChange={(e) => setIsFreeBaggage(e.target.checked)}
-                                                    className="w-5 h-5 rounded border-slate-300 text-[#C1161E] focus:ring-[#C1161E] cursor-pointer"
+                                                    className="w-5 h-5 rounded border-slate-300 text-[#D60D26] focus:ring-[#D60D26] cursor-pointer"
                                                 />
                                                 <span className="text-[14px] font-bold text-slate-600 select-none">Free checked baggage</span>
                                             </label>
@@ -816,22 +816,22 @@ export default function AddPNRPage() {
                                             Operating dates
                                         </div>
                                         <div className="flex flex-col">
-                                            <div className="bg-[#eef5fc] px-6 py-2.5 text-[13px] font-bold text-slate-600">October 2025</div>
+                                            <div className="bg-[#F2FBFF] px-6 py-2.5 text-[13px] font-bold text-slate-600">October 2025</div>
                                             <div className="p-6 flex gap-4">
                                                 {[9, 16, 23, 30].map(day => (
                                                     <div key={day} className="bg-rose-50 rounded-lg p-3 flex flex-col items-center gap-2.5 cursor-pointer border border-rose-100 w-16 hover:bg-rose-100 transition-colors">
                                                         <span className="text-[12px] font-bold text-slate-800">Sun {day}</span>
-                                                        <div className="w-[22px] h-[22px] bg-[#C1161E] rounded shadow-sm flex items-center justify-center">
+                                                        <div className="w-[22px] h-[22px] bg-[#D60D26] rounded shadow-sm flex items-center justify-center">
                                                             <Check className="w-3.5 h-3.5 text-white" />
                                                         </div>
                                                     </div>
                                                 ))}
                                             </div>
-                                            <div className="bg-[#eef5fc] px-6 py-2.5 text-[13px] font-bold text-slate-600">November 2025</div>
+                                            <div className="bg-[#F2FBFF] px-6 py-2.5 text-[13px] font-bold text-slate-600">November 2025</div>
                                             <div className="p-6 flex gap-4">
                                                 <div className="bg-rose-50 rounded-lg p-3 flex flex-col items-center gap-2.5 cursor-pointer border border-rose-100 w-16 hover:bg-rose-100 transition-colors">
                                                     <span className="text-[12px] font-bold text-slate-800">Sun 2</span>
-                                                    <div className="w-[22px] h-[22px] bg-[#C1161E] rounded shadow-sm flex items-center justify-center">
+                                                    <div className="w-[22px] h-[22px] bg-[#D60D26] rounded shadow-sm flex items-center justify-center">
                                                         <Check className="w-3.5 h-3.5 text-white" />
                                                     </div>
                                                 </div>
@@ -855,21 +855,21 @@ export default function AddPNRPage() {
                                                     </div>
                                                     Cancellation policy
                                                 </div>
-                                                <button className="text-[#C1161E] font-bold text-[13px] flex items-center gap-1 hover:text-[#a01219]"><div className="w-4 h-4 bg-[#C1161E] text-white rounded-full flex items-center justify-center text-[16px] leading-none pb-0.5">+</div> Add</button>
+                                                <button className="text-[#D60D26] font-bold text-[13px] flex items-center gap-1 hover:text-[#D60D26]"><div className="w-4 h-4 bg-[#D60D26] text-white rounded-full flex items-center justify-center text-[16px] leading-none pb-0.5">+</div> Add</button>
                                             </div>
                                             <div className="flex items-center justify-between border-l-4 border-slate-800 bg-slate-50 p-4 rounded-r-lg shadow-sm">
                                                 <div className="flex items-center gap-3 font-bold text-[14px] text-slate-700">
                                                     <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                                                     Change policy
                                                 </div>
-                                                <button className="text-[#C1161E] font-bold text-[13px] flex items-center gap-1 hover:text-[#a01219]"><div className="w-4 h-4 bg-[#C1161E] text-white rounded-full flex items-center justify-center text-[16px] leading-none pb-0.5">+</div> Add</button>
+                                                <button className="text-[#D60D26] font-bold text-[13px] flex items-center gap-1 hover:text-[#D60D26]"><div className="w-4 h-4 bg-[#D60D26] text-white rounded-full flex items-center justify-center text-[16px] leading-none pb-0.5">+</div> Add</button>
                                             </div>
                                             <div className="flex items-center justify-between border-l-4 border-slate-800 bg-slate-50 p-4 rounded-r-lg shadow-sm">
                                                 <div className="flex items-center gap-3 font-bold text-[14px] text-slate-700">
                                                     <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                                     Refund policy
                                                 </div>
-                                                <button className="text-[#C1161E] font-bold text-[13px] flex items-center gap-1 hover:text-[#a01219]"><div className="w-4 h-4 bg-[#C1161E] text-white rounded-full flex items-center justify-center text-[16px] leading-none pb-0.5">+</div> Add</button>
+                                                <button className="text-[#D60D26] font-bold text-[13px] flex items-center gap-1 hover:text-[#D60D26]"><div className="w-4 h-4 bg-[#D60D26] text-white rounded-full flex items-center justify-center text-[16px] leading-none pb-0.5">+</div> Add</button>
                                             </div>
                                         </div>
                                     </div>
@@ -894,7 +894,7 @@ export default function AddPNRPage() {
                                         setIsConfirmModalOpen(true);
                                     }
                                 }}
-                                className={`flex-1 text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm bg-[#C1161E] hover:bg-[#a01219]`}
+                                className={`flex-1 text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm bg-[#D60D26] hover:bg-[#D60D26]`}
                             >
                                 {modalTab === 5 ? "Finish" : "Next Step"} {modalTab < 5 && <ArrowRight className="w-4 h-4" />}
                             </button>
@@ -911,7 +911,7 @@ export default function AddPNRPage() {
                             Confirm this flight
                         </div>
                         <div className="p-8 pb-12 flex items-start gap-4">
-                            <div className="w-6 h-6 bg-[#C1161E] rounded flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                            <div className="w-6 h-6 bg-[#D60D26] rounded flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
                                 <Check className="w-4 h-4 text-white" />
                             </div>
                             <div>
@@ -932,7 +932,7 @@ export default function AddPNRPage() {
                                     setIsModalOpen(false);
                                     setHasScheduledFlight(true);
                                 }} 
-                                className="flex-1 bg-[#C1161E] text-white font-bold py-3.5 rounded-xl hover:bg-[#a01219] transition-colors flex items-center justify-center gap-2 shadow-sm"
+                                className="flex-1 bg-[#D60D26] text-white font-bold py-3.5 rounded-xl hover:bg-[#D60D26] transition-colors flex items-center justify-center gap-2 shadow-sm"
                             >
                                 Confirm Flight <ArrowRight className="w-4 h-4" />
                             </button>

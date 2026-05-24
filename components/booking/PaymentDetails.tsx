@@ -1,8 +1,8 @@
 export function PaymentDetails({ isB2B = false }: { isB2B?: boolean }) {
   return (
     <>
-      <div className="w-full bg-[#f4f5f7] px-8 py-3.5 border-y border-gray-200">
-        <h3 className="text-[17px] font-[750] text-[#333] tracking-tight">Payments</h3>
+      <div className="w-full bg-[#F2FBFF] px-8 py-3.5 border-y border-gray-200">
+        <h3 className="text-[17px] font-[750] text-[#0C2342] tracking-tight">Payments</h3>
       </div>
       <div className="w-full overflow-x-auto p-4 pb-8">
         <table className="w-full text-left min-w-[800px]">
@@ -43,23 +43,23 @@ export function PaymentDetails({ isB2B = false }: { isB2B?: boolean }) {
 export function BookingActions({ isB2B = false }: { isB2B?: boolean }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 w-full mb-10 px-2 lg:px-8">
-      <button className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-[#DE0A26] hover:text-white hover:border-[#DE0A26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight">
+      <button className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#121121] hover:bg-[#D60D26] hover:text-white hover:border-[#D60D26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight">
         Cancel Booking
       </button>
-      <button className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-[#DE0A26] hover:text-white hover:border-[#DE0A26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight">
+      <button className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#121121] hover:bg-[#D60D26] hover:text-white hover:border-[#D60D26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight">
         Add Baggage
       </button>
       {isB2B && (
-        <button className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-[#DE0A26] hover:text-white hover:border-[#DE0A26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight">
+        <button className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#121121] hover:bg-[#D60D26] hover:text-white hover:border-[#D60D26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight">
           Check Refund
         </button>
       )}
       {isB2B && (
-        <button className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-[#DE0A26] hover:text-white hover:border-[#DE0A26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight">
+        <button className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#121121] hover:bg-[#D60D26] hover:text-white hover:border-[#D60D26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight">
           Modification
         </button>
       )}
-      <button className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-[#DE0A26] hover:text-white hover:border-[#DE0A26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight">
+      <button className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#121121] hover:bg-[#D60D26] hover:text-white hover:border-[#D60D26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight">
         Print
       </button>
     </div>

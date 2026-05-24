@@ -13,7 +13,7 @@ export default function SaleReportsPage() {
             <SaleNavbar />
 
             {/* Gradient Top Banner */}
-            <div className="w-full bg-gradient-to-r from-primary to-[#0B132B] py-14">
+            <div className="w-full bg-gradient-to-r from-primary to-[#121121] py-14">
                 <div className="container mx-auto px-6 lg:px-12 text-center text-white">
                     <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-2">
                         Sale Reports / Business Analytics
@@ -67,7 +67,7 @@ export default function SaleReportsPage() {
                                 onClick={() => setActiveSubTab(tab)}
                                 className={`px-8 py-5 text-sm font-extrabold uppercase tracking-wider border-b-2 transition-colors ${
                                     activeSubTab === tab
-                                        ? "border-[#DF1B24] text-primary"
+                                        ? "border-[#D60D26] text-primary"
                                         : "border-transparent text-slate-400 hover:text-slate-600"
                                 }`}
                             >
@@ -82,7 +82,7 @@ export default function SaleReportsPage() {
                             <div className="animate-in fade-in duration-200">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-xl font-bold text-slate-800">Recent Transactions</h3>
-                                    <button className="text-[#DF1B24] hover:underline font-bold text-sm flex items-center gap-1">
+                                    <button className="text-[#D60D26] hover:underline font-bold text-sm flex items-center gap-1">
                                         Export Ledger <ArrowUpRight className="w-4 h-4" />
                                     </button>
                                 </div>

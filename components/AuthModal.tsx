@@ -51,7 +51,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         onClick={() => setActiveTab("login")}
                         className={`flex-1 py-[16px] text-center text-[25px] transition-colors relative font-[700] ${activeTab === "login"
                             ? "text-primary border-b-[3px] border-primary"
-                            : "text-[#8C959F] border-b-[3px] border-[#1e2329]"
+                            : "text-[#888] border-b-[3px] border-[#121121]"
                             }`}
                     >
                         Login
@@ -62,7 +62,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         onClick={() => setActiveTab("signup")}
                         className={`flex-1 py-[16px] text-center text-[25px] transition-colors relative font-[700] ${activeTab === "signup"
                             ? "text-primary border-b-[3px] border-primary"
-                            : "text-[#8C959F] border-b-[3px] border-[#1e2329]"
+                            : "text-[#888] border-b-[3px] border-[#121121]"
                             }`}
                     >
                         Signup
@@ -73,10 +73,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <div className="px-6 pt-6 pb-6 w-full flex flex-col items-center">
                     {/* Header section */}
                     <div className="text-center w-full mb-5">
-                        <h2 className="text-[17px] font-[500] text-[#57606a] tracking-tight flex items-center justify-center gap-1.5">
-                            Welcome to <span className="font-[800] text-[#1e2329] text-[25px]">My Travel Deal!</span>
+                        <h2 className="text-[17px] font-[500] text-[#0C2342] tracking-tight flex items-center justify-center gap-1.5">
+                            Welcome to <span className="font-[800] text-[#121121] text-[25px]">My Travel Deal!</span>
                         </h2>
-                        <p className="text-[15px] sm:text-[20px] font-[600] text-[#8C959F] mt-1 tracking-tight">
+                        <p className="text-[15px] sm:text-[20px] font-[600] text-[#888] mt-1 tracking-tight">
                             Please {activeTab === "login" ? "Login" : "Signup"} Using Your Email/Mobile To Continue
                         </p>
                     </div>
@@ -87,7 +87,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                             {/* B2B Signup Redirect (Only for B2B routes) */}
                             {activeTab === "signup" && isB2bRoute ? (
                                 <div className="flex flex-col items-center justify-center py-2 gap-4">
-                                    <p className="text-[15px] font-[600] text-center text-[#1e2329]">
+                                    <p className="text-[15px] font-[600] text-center text-[#121121]">
                                         To register as a B2B Travel Agent, please fill out our comprehensive registration form.
                                     </p>
                                     <Button
@@ -95,7 +95,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                             onClose();
                                             router.push("/b2b/register");
                                         }}
-                                        className="w-full rounded-[100px] bg-primary hover:bg-[#c60823] text-white h-[50px] text-[18px] font-[700] shadow-none"
+                                        className="w-full rounded-[100px] bg-primary hover:bg-[#D60D26] text-white h-[50px] text-[18px] font-[700] shadow-none"
                                     >
                                         Go To Registration Form
                                     </Button>
@@ -107,7 +107,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                         <div className="flex flex-col">
                                             <label
                                                 htmlFor="name"
-                                                className="text-[20px] font-[700] text-[#1e2329] mb-1"
+                                                className="text-[20px] font-[700] text-[#121121] mb-1"
                                             >
                                                 Full Name
                                             </label>
@@ -116,7 +116,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                                 id="name"
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
-                                                className="w-full border-0 border-b border-[#d1d5db] bg-transparent py-1.5 px-0 text-[14px] font-[600] text-[#1e2329] focus:border-primary focus:outline-none focus:ring-0"
+                                                className="w-full border-0 border-b border-[#F2FBFF] bg-transparent py-1.5 px-0 text-[14px] font-[600] text-[#121121] focus:border-primary focus:outline-none focus:ring-0"
                                             />
                                         </div>
                                     )}
@@ -125,7 +125,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     <div className="flex flex-col">
                                         <label
                                             htmlFor="identifier"
-                                            className="text-[20px] font-[700] text-[#1e2329] mb-1"
+                                            className="text-[20px] font-[700] text-[#121121] mb-1"
                                         >
                                             Email Id / Mobile Number
                                         </label>
@@ -134,7 +134,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                             id="identifier"
                                             value={identifier}
                                             onChange={(e) => setIdentifier(e.target.value)}
-                                            className="w-full border-0 border-b border-[#d1d5db] bg-transparent py-1.5 px-0 text-[14px] font-[600] text-[#1e2329] focus:border-primary focus:outline-none focus:ring-0"
+                                            className="w-full border-0 border-b border-[#F2FBFF] bg-transparent py-1.5 px-0 text-[14px] font-[600] text-[#121121] focus:border-primary focus:outline-none focus:ring-0"
                                         />
                                     </div>
 
@@ -142,7 +142,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     <div className="flex flex-col relative">
                                         <label
                                             htmlFor="password"
-                                            className="text-[20px] font-[700] text-[#1e2329] mb-1"
+                                            className="text-[20px] font-[700] text-[#121121] mb-1"
                                         >
                                             Password
                                         </label>
@@ -151,7 +151,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                             id="password"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full border-0 border-b border-[#d1d5db] bg-transparent py-1.5 px-0 text-[14px] font-[600] text-[#1e2329] focus:border-primary focus:outline-none focus:ring-0"
+                                            className="w-full border-0 border-b border-[#F2FBFF] bg-transparent py-1.5 px-0 text-[14px] font-[600] text-[#121121] focus:border-primary focus:outline-none focus:ring-0"
                                         />
                                     </div>
 
@@ -182,7 +182,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                         });
                                         onClose();
                                     }}
-                                    className="w-full sm:w-[90%] md:w-[85%] rounded-[100px] bg-primary hover:bg-[#c60823] text-white h-[50px] text-[22px] font-[700] tracking-wide shadow-none transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                                    className="w-full sm:w-[90%] md:w-[85%] rounded-[100px] bg-primary hover:bg-[#D60D26] text-white h-[50px] text-[22px] font-[700] tracking-wide shadow-none transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                                 >
                                     {activeTab === "login" ? "Login" : "Signup"}
                                     <ArrowUpRight className="w-[18px] h-[18px] stroke-[2.5px]" />

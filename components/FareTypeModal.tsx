@@ -21,8 +21,8 @@ export function FareTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
       <div className="bg-white rounded-xl w-full max-w-[800px] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="bg-[#FBEBEF] px-6 py-4 flex items-center justify-between">
-          <h2 className="text-[#DF1B24] text-[18px] font-bold tracking-tight">Fare Type</h2>
+        <div className="bg-[#F2FBFF] px-6 py-4 flex items-center justify-between">
+          <h2 className="text-[#D60D26] text-[18px] font-bold tracking-tight">Fare Type</h2>
           <button onClick={onClose} className="text-slate-800 hover:bg-white/50 p-1 rounded-md transition-colors">
             <X className="w-5 h-5" strokeWidth={3} />
           </button>
@@ -40,11 +40,11 @@ export function FareTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     onClick={() => setSelectedFare(opt.id)}
                     className={cn(
                       "border border-slate-200 p-4 min-w-[120px] cursor-pointer transition-colors hover:bg-slate-50",
-                      selectedFare === opt.id ? "bg-[#FBEBEF] hover:bg-[#FBEBEF]" : "bg-white"
+                      selectedFare === opt.id ? "bg-[#F2FBFF] hover:bg-[#F2FBFF]" : "bg-white"
                     )}
                   >
                     <div className="flex flex-col text-center">
-                      <span className={cn("font-bold text-[15px]", selectedFare === opt.id ? "text-[#DF1B24]" : "text-slate-800")}>{opt.title}</span>
+                      <span className={cn("font-bold text-[15px]", selectedFare === opt.id ? "text-[#D60D26]" : "text-slate-800")}>{opt.title}</span>
                       <span className={cn("font-medium text-[13px]", selectedFare === opt.id ? "text-slate-600" : "text-slate-500")}>{opt.subtitle}</span>
                     </div>
                   </th>
@@ -62,7 +62,7 @@ export function FareTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     onClick={() => setSelectedFare(opt.id)}
                     className={cn(
                       "border border-slate-200 p-4 font-semibold cursor-pointer transition-colors hover:bg-slate-50",
-                      selectedFare === opt.id ? "bg-[#FBEBEF] text-slate-800 hover:bg-[#FBEBEF]" : "text-slate-500 bg-white"
+                      selectedFare === opt.id ? "bg-[#F2FBFF] text-slate-800 hover:bg-[#F2FBFF]" : "text-slate-500 bg-white"
                     )}
                   >
                     {opt.title}
@@ -79,7 +79,7 @@ export function FareTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     onClick={() => setSelectedFare(opt.id)}
                     className={cn(
                       "border border-slate-200 p-4 font-bold text-slate-800 cursor-pointer transition-colors hover:bg-slate-50",
-                      selectedFare === opt.id ? "bg-[#FBEBEF] hover:bg-[#FBEBEF]" : "bg-white"
+                      selectedFare === opt.id ? "bg-[#F2FBFF] hover:bg-[#F2FBFF]" : "bg-white"
                     )}
                   >
                     {opt.diff}
@@ -96,13 +96,13 @@ export function FareTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     onClick={() => setSelectedFare(opt.id)}
                     className={cn(
                       "border border-slate-200 p-4 cursor-pointer transition-colors hover:bg-slate-50",
-                      selectedFare === opt.id ? "bg-[#FBEBEF] hover:bg-[#FBEBEF]" : "bg-white"
+                      selectedFare === opt.id ? "bg-[#F2FBFF] hover:bg-[#F2FBFF]" : "bg-white"
                     )}
                   >
-                    <div className="mx-auto w-10 h-8 border-2 border-[#DF1B24] rounded-md flex items-center justify-center font-bold text-[#DF1B24] text-[12px] relative mt-1">
+                    <div className="mx-auto w-10 h-8 border-2 border-[#D60D26] rounded-md flex items-center justify-center font-bold text-[#D60D26] text-[12px] relative mt-1">
                       <div className={cn(
-                        "absolute top-[-6px] w-3 h-2 border-2 border-b-0 border-[#DF1B24] rounded-t-sm transition-colors",
-                        selectedFare === opt.id ? "bg-[#FBEBEF]" : "bg-white group-hover:bg-slate-50"
+                        "absolute top-[-6px] w-3 h-2 border-2 border-b-0 border-[#D60D26] rounded-t-sm transition-colors",
+                        selectedFare === opt.id ? "bg-[#F2FBFF]" : "bg-white group-hover:bg-slate-50"
                       )}></div>
                       {opt.bag}
                     </div>
@@ -118,7 +118,7 @@ export function FareTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     key={`info-${opt.id}`}
                     className={cn(
                       "border border-slate-200 p-4 transition-colors",
-                      selectedFare === opt.id ? "bg-[#FBEBEF]" : "bg-white"
+                      selectedFare === opt.id ? "bg-[#F2FBFF]" : "bg-white"
                     )}
                   >
                     <a href="#" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="text-blue-600 font-bold hover:underline">Info</a>
@@ -135,15 +135,15 @@ export function FareTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     onClick={() => setSelectedFare(opt.id)}
                     className={cn(
                       "border border-slate-200 p-4 cursor-pointer transition-colors hover:bg-slate-50",
-                      selectedFare === opt.id ? "bg-[#FBEBEF] hover:bg-[#FBEBEF]" : "bg-white"
+                      selectedFare === opt.id ? "bg-[#F2FBFF] hover:bg-[#F2FBFF]" : "bg-white"
                     )}
                   >
                     <div className={cn(
                       "w-[18px] h-[18px] rounded-full border-2 mx-auto flex items-center justify-center transition-all",
-                      selectedFare === opt.id ? "border-[#DF1B24]" : "border-slate-300"
+                      selectedFare === opt.id ? "border-[#D60D26]" : "border-slate-300"
                     )}>
                       {selectedFare === opt.id && (
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#DF1B24] animate-in zoom-in-50 duration-200"></div>
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#D60D26] animate-in zoom-in-50 duration-200"></div>
                       )}
                     </div>
                   </td>
@@ -158,7 +158,7 @@ export function FareTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
         <div className="px-6 py-4 border-t border-slate-100 flex justify-end bg-slate-50">
           <button 
             onClick={onClose}
-            className="bg-[#DF1B24] text-white font-bold py-2 px-8 rounded-lg hover:bg-[#C1161E] transition-colors"
+            className="bg-[#D60D26] text-white font-bold py-2 px-8 rounded-lg hover:bg-[#D60D26] transition-colors"
           >
             Confirm Selection
           </button>

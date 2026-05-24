@@ -12,12 +12,12 @@ export function B2BRegistrationForm() {
       <div className={`relative border border-gray-200 rounded-lg h-12 bg-white flex items-center shadow-sm ${className}`}>
         {!val && (
           <div className="absolute left-4 text-[13px] text-gray-500 pointer-events-none">
-            {placeholder} {required && <span className="text-[#e21937]">*</span>}
+            {placeholder} {required && <span className="text-[#D60D26]">*</span>}
           </div>
         )}
         <input 
           type="text" 
-          className="w-full h-full px-4 bg-transparent outline-none text-[13px] text-gray-800 focus:ring-2 focus:ring-[#faeaee] rounded-lg transition-all" 
+          className="w-full h-full px-4 bg-transparent outline-none text-[13px] text-gray-800 focus:ring-2 focus:ring-[#F2FBFF] rounded-lg transition-all" 
           value={val}
           onChange={(e) => setVal(e.target.value)}
         />
@@ -31,11 +31,11 @@ export function B2BRegistrationForm() {
       <div className={`relative border border-gray-200 rounded-lg h-12 bg-white flex items-center shadow-sm ${className}`}>
         {!val && (
           <div className="absolute left-4 text-[13px] text-gray-500 pointer-events-none">
-            {placeholder} {required && <span className="text-[#e21937]">*</span>}
+            {placeholder} {required && <span className="text-[#D60D26]">*</span>}
           </div>
         )}
         <select 
-          className="w-full h-full px-4 bg-transparent outline-none text-[13px] text-gray-800 appearance-none relative z-10 cursor-pointer focus:ring-2 focus:ring-[#faeaee] rounded-lg transition-all" 
+          className="w-full h-full px-4 bg-transparent outline-none text-[13px] text-gray-800 appearance-none relative z-10 cursor-pointer focus:ring-2 focus:ring-[#F2FBFF] rounded-lg transition-all" 
           value={val}
           onChange={(e) => setVal(e.target.value)}
         >
@@ -54,19 +54,19 @@ export function B2BRegistrationForm() {
   return (
     <div className="w-full bg-white rounded-[24px] overflow-hidden shadow-2xl flex flex-col">
       {/* Top Section - Pink Background */}
-      <div className="bg-[#faeaee] px-6 sm:px-10 py-8 border-b border-[#f3d9df]">
-        <h2 className="text-[#e21937] font-[800] text-lg mb-6 tracking-wide">Registration Form:</h2>
+      <div className="bg-[#F2FBFF] px-6 sm:px-10 py-8 border-b border-[#F2FBFF]">
+        <h2 className="text-[#D60D26] font-[800] text-lg mb-6 tracking-wide">Registration Form:</h2>
         <div className="flex flex-col sm:flex-row gap-6 sm:gap-12">
           <label className="flex items-center gap-3 cursor-pointer group">
-            <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${agentType === 'iata' ? 'border-[#e21937] bg-white' : 'border-gray-400 bg-white'}`}>
-              {agentType === 'iata' && <div className="w-2.5 h-2.5 rounded-full bg-[#e21937]" />}
+            <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${agentType === 'iata' ? 'border-[#D60D26] bg-white' : 'border-gray-400 bg-white'}`}>
+              {agentType === 'iata' && <div className="w-2.5 h-2.5 rounded-full bg-[#D60D26]" />}
             </div>
             <input type="radio" name="agentType" className="hidden" checked={agentType === 'iata'} onChange={() => setAgentType('iata')} />
             <span className="text-gray-800 font-medium text-[14px]">B2B Travel Agent (IATA Accredited)</span>
           </label>
           <label className="flex items-center gap-3 cursor-pointer group">
-            <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${agentType === 'non-iata' ? 'border-[#e21937] bg-white' : 'border-gray-400 bg-white'}`}>
-              {agentType === 'non-iata' && <div className="w-2.5 h-2.5 rounded-full bg-[#e21937]" />}
+            <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${agentType === 'non-iata' ? 'border-[#D60D26] bg-white' : 'border-gray-400 bg-white'}`}>
+              {agentType === 'non-iata' && <div className="w-2.5 h-2.5 rounded-full bg-[#D60D26]" />}
             </div>
             <input type="radio" name="agentType" className="hidden" checked={agentType === 'non-iata'} onChange={() => setAgentType('non-iata')} />
             <span className="text-gray-800 font-medium text-[14px]">B2B Travel Agent ( Non-IATA Accredited)</span>
@@ -76,11 +76,11 @@ export function B2BRegistrationForm() {
 
       <div className="px-6 sm:px-10 py-5">
         <p className="text-[13px] font-bold text-gray-700 flex items-center gap-1.5 italic tracking-wide">
-          <span className="text-[#e21937] text-lg leading-none">*</span> Compulsory to fill
+          <span className="text-[#D60D26] text-lg leading-none">*</span> Compulsory to fill
         </p>
       </div>
 
-      <div className="bg-[#f2f2f2] px-6 sm:px-10 py-4 border-y border-gray-200">
+      <div className="bg-[#F2FBFF] px-6 sm:px-10 py-4 border-y border-gray-200">
         <h3 className="font-bold text-gray-800 text-[14px]">Agency Information</h3>
       </div>
 

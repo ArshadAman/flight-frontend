@@ -28,7 +28,7 @@ export default function SaleAllFlightsPage() {
         <div 
             key={index} 
             onClick={() => { setSelectedFlight(flight); setActiveDrawerTab("Segment"); }}
-            className={`grid grid-cols-7 gap-4 items-center py-4 border-b border-slate-100 text-[13px] font-medium transition-colors px-6 cursor-pointer ${selectedFlight === flight ? 'bg-rose-50 border-l-2 border-l-[#C1161E]' : 'text-slate-700 hover:bg-slate-50'}`}
+            className={`grid grid-cols-7 gap-4 items-center py-4 border-b border-slate-100 text-[13px] font-medium transition-colors px-6 cursor-pointer ${selectedFlight === flight ? 'bg-rose-50 border-l-2 border-l-[#D60D26]' : 'text-slate-700 hover:bg-slate-50'}`}
         >
             <div className="flex items-center gap-2">
                 <span className="font-bold">{flight.route.split(" \u2192 ")[0]}</span>
@@ -60,7 +60,7 @@ export default function SaleAllFlightsPage() {
             <SaleNavbar />
 
             {/* Dark Red/Blue Secondary Navigation */}
-            <div className="w-full bg-gradient-to-r from-[#C1161E] to-[#0F2027] text-white">
+            <div className="w-full bg-gradient-to-r from-[#D60D26] to-[#121121] text-white">
                 <div className="container mx-auto px-6 lg:px-10 flex justify-between items-center h-14">
                     <div className="flex items-center gap-5 sm:gap-8 text-[14px] h-full overflow-x-auto whitespace-nowrap no-scrollbar flex-1">
                         {[
@@ -95,11 +95,11 @@ export default function SaleAllFlightsPage() {
                     
                     {/* Header Controls */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 w-full">
-                        <button className="flex items-center gap-2 text-[#C1161E] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto justify-center border border-rose-100 sm:border-transparent">
+                        <button className="flex items-center gap-2 text-[#D60D26] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto justify-center border border-rose-100 sm:border-transparent">
                             <Filter className="w-5 h-5" /> Filters
                         </button>
                         
-                        <Link href="/sale/flight/new" className="bg-[#C1161E] hover:bg-[#a01219] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
+                        <Link href="/sale/flight/new" className="bg-[#D60D26] hover:bg-[#D60D26] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
                             <Plus className="w-4 h-4" /> New Flight
                         </Link>
                     </div>
@@ -120,7 +120,7 @@ export default function SaleAllFlightsPage() {
                                 </div>
 
                                 {/* July Group */}
-                                <div className="bg-[#f4f9fc] px-6 py-3 font-bold text-slate-700 text-[14px]">
+                                <div className="bg-[#F2FBFF] px-6 py-3 font-bold text-slate-700 text-[14px]">
                                     July, 2025
                                 </div>
                                 <div className="flex flex-col">
@@ -128,7 +128,7 @@ export default function SaleAllFlightsPage() {
                                 </div>
 
                                 {/* August Group */}
-                                <div className="bg-[#f4f9fc] px-6 py-3 font-bold text-slate-700 text-[14px]">
+                                <div className="bg-[#F2FBFF] px-6 py-3 font-bold text-slate-700 text-[14px]">
                                     August, 2025
                                 </div>
                                 <div className="flex flex-col">
@@ -158,7 +158,7 @@ export default function SaleAllFlightsPage() {
                     <div className="p-6 bg-slate-100 border-b border-slate-200 flex items-start justify-between shrink-0">
                         <div>
                             <div className="font-bold text-[16px] text-slate-800 flex items-center gap-2">
-                                New Delhi <ArrowRight className="w-4 h-4 text-[#C1161E]" /> Mumbai
+                                New Delhi <ArrowRight className="w-4 h-4 text-[#D60D26]" /> Mumbai
                             </div>
                             <div className="text-[13px] text-slate-500 mt-1">Saturday, July 26, 2025</div>
                         </div>
@@ -170,7 +170,7 @@ export default function SaleAllFlightsPage() {
                             <button 
                                 key={tab} 
                                 onClick={() => setActiveDrawerTab(tab)} 
-                                className={`flex-1 px-4 py-3.5 font-bold text-[14px] transition-colors whitespace-nowrap ${activeDrawerTab === tab ? 'text-[#C1161E] bg-rose-50 border-b-2 border-[#C1161E]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                className={`flex-1 px-4 py-3.5 font-bold text-[14px] transition-colors whitespace-nowrap ${activeDrawerTab === tab ? 'text-[#D60D26] bg-rose-50 border-b-2 border-[#D60D26]' : 'text-slate-600 hover:bg-slate-50'}`}
                             >
                                 {tab}
                             </button>
@@ -189,16 +189,16 @@ export default function SaleAllFlightsPage() {
                                     <div className="w-3 h-3 rounded-full bg-slate-800 relative z-10 shrink-0 mt-1"></div>
                                     <div className="flex-1">
                                         <div className="text-[13px] text-slate-700 font-bold mb-4">
-                                            16:30 <span className="text-slate-400 font-medium">(UTC +02:00)</span> <span className="text-[#C1161E] mx-1">•</span> DEL <span className="text-[#C1161E] mx-1">•</span> Terminal 1
+                                            16:30 <span className="text-slate-400 font-medium">(UTC +02:00)</span> <span className="text-[#D60D26] mx-1">•</span> DEL <span className="text-[#D60D26] mx-1">•</span> Terminal 1
                                         </div>
                                         
                                         <div className="flex items-center gap-4 py-8">
-                                            <div className="w-8 h-8 bg-[#C1161E] rounded flex items-center justify-center shrink-0 shadow-sm relative -ml-[22px]">
+                                            <div className="w-8 h-8 bg-[#D60D26] rounded flex items-center justify-center shrink-0 shadow-sm relative -ml-[22px]">
                                                 <Plane className="w-4 h-4 text-white -rotate-45" />
                                             </div>
                                             <div className="flex items-center gap-4 text-[13px] font-bold text-blue-600">
                                                 <span>1 stop</span>
-                                                <button className="flex items-center gap-1 text-[#C1161E] underline underline-offset-2">See flight details <ChevronDown className="w-4 h-4" /></button>
+                                                <button className="flex items-center gap-1 text-[#D60D26] underline underline-offset-2">See flight details <ChevronDown className="w-4 h-4" /></button>
                                             </div>
                                         </div>
                                     </div>
@@ -208,7 +208,7 @@ export default function SaleAllFlightsPage() {
                                     <div className="w-3 h-3 rounded-full border-2 border-slate-800 bg-white relative z-10 shrink-0 mt-1"></div>
                                     <div className="flex-1">
                                         <div className="text-[13px] text-slate-700 font-bold">
-                                            12:20(+1) <span className="text-slate-400 font-medium">(UTC +08:00)</span> <span className="text-[#C1161E] mx-1">•</span> MUM <span className="text-[#C1161E] mx-1">•</span> Terminal 2
+                                            12:20(+1) <span className="text-slate-400 font-medium">(UTC +08:00)</span> <span className="text-[#D60D26] mx-1">•</span> MUM <span className="text-[#D60D26] mx-1">•</span> Terminal 2
                                         </div>
                                     </div>
                                 </div>
@@ -249,17 +249,17 @@ export default function SaleAllFlightsPage() {
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between text-[14px]">
                                         <span className="text-slate-500">Total seats</span>
-                                        <span className="font-bold text-[#C1161E]">10</span>
+                                        <span className="font-bold text-[#D60D26]">10</span>
                                     </div>
                                     <div className="w-full h-px bg-slate-100"></div>
                                     <div className="flex items-center justify-between text-[14px]">
                                         <span className="text-slate-500">Sold seats</span>
-                                        <span className="font-bold text-[#C1161E]">04</span>
+                                        <span className="font-bold text-[#D60D26]">04</span>
                                     </div>
                                     <div className="w-full h-px bg-slate-100"></div>
                                     <div className="flex items-center justify-between text-[14px]">
                                         <span className="text-slate-500">Available seats</span>
-                                        <span className="font-bold text-[#C1161E]">04</span>
+                                        <span className="font-bold text-[#D60D26]">04</span>
                                     </div>
                                 </div>
                             </div>
@@ -267,7 +267,7 @@ export default function SaleAllFlightsPage() {
                             {/* Price */}
                             <div>
                                 <div className="font-bold text-[15px] text-slate-800 mb-4">Price</div>
-                                <div className="flex items-center gap-2 text-[#C1161E] font-bold text-[13px] mb-4">
+                                <div className="flex items-center gap-2 text-[#D60D26] font-bold text-[13px] mb-4">
                                     <ArrowRight className="w-4 h-4" /> ONE WAY
                                 </div>
                                 <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Price (INR)</label>
@@ -308,7 +308,7 @@ export default function SaleAllFlightsPage() {
             {selectedBooking && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 p-4">
                     <div className="bg-white rounded-2xl w-full max-w-[550px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="bg-[#e8faef] p-6 relative shrink-0 border-b border-green-100">
+                        <div className="bg-[#F2FBFF] p-6 relative shrink-0 border-b border-green-100">
                             <button onClick={() => setSelectedBooking(null)} className="absolute top-6 right-6 text-slate-500 hover:bg-white/50 p-1 rounded-full"><X className="w-5 h-5" /></button>
                             <div className="flex items-center gap-3 mb-2">
                                 <span className="font-extrabold text-[20px] text-slate-800">{selectedBooking.displayId || selectedBooking.id}</span>
@@ -323,7 +323,7 @@ export default function SaleAllFlightsPage() {
                                 <div className="font-bold text-[15px] text-slate-800 mb-4">General information</div>
                                 <div className="flex items-center justify-between py-2.5 border-b border-slate-100">
                                     <div className="flex items-center gap-2 text-[13px] font-bold text-slate-600">
-                                        <div className="w-3 h-3 bg-[#C1161E] rounded-sm"></div> MTDPNR reference
+                                        <div className="w-3 h-3 bg-[#D60D26] rounded-sm"></div> MTDPNR reference
                                     </div>
                                     <div className="font-bold text-slate-800 text-[13px]">{selectedBooking.displayId || selectedBooking.id}</div>
                                 </div>
