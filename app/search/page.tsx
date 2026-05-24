@@ -26,6 +26,9 @@ function SearchResultsContent() {
   const tripType = searchParams.get("tripType") || "one-way";
   const passengers = searchParams.get("passengers") || "1";
   const cabin = searchParams.get("cabin") || "Economy";
+  const adults = parseInt(searchParams.get("adults") || "1", 10);
+  const children = parseInt(searchParams.get("children") || "0", 10);
+  const infants = parseInt(searchParams.get("infants") || "0", 10);
 
   useEffect(() => {
     if (origin && destination) {
@@ -115,6 +118,9 @@ function SearchResultsContent() {
             returnFlights={returnFlights}
             isRoundTrip={isRoundTrip}
             isLoading={isLoading}
+            adults={adults}
+            children={children}
+            infants={infants}
           />
         ) : !isLoading ? (
           <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-slate-100">

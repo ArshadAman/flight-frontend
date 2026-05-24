@@ -1,4 +1,25 @@
-export function PassengerDetails() {
+export function PassengerDetails({ ticket }: { ticket?: any }) {
+  const hasLivePassengers = ticket && ticket.passengers_data && ticket.passengers_data.length > 0;
+  const displayTicketPnr = ticket?.ticket_number || "XYR9NF";
+  const displayPnr = ticket?.pnr_number || "XYR9NF";
+
+  let passengers = [
+    { no: 1, title: "MR", firstName: "HARSHIT", lastName: "CHIRGANIA", type: "Adult", eticket: "079176412201", airlinePnr: "AYDAE6" },
+    { no: 2, title: "MR", firstName: "VAIBHAV", lastName: "ARORA", type: "Adult", eticket: "079176412201", airlinePnr: "AYDAE6" }
+  ];
+
+  if (hasLivePassengers) {
+    passengers = ticket.passengers_data.map((pax: any, idx: number) => ({
+      no: idx + 1,
+      title: (pax.title || "MR").toUpperCase(),
+      firstName: (pax.first_name || "Guest").toUpperCase(),
+      lastName: (pax.last_name || "User").toUpperCase(),
+      type: pax.pax_type === 0 ? "Adult" : pax.pax_type === 1 ? "Child" : "Infant",
+      eticket: displayTicketPnr,
+      airlinePnr: displayPnr
+    }));
+  }
+
   return (
     <>
       <div className="w-full bg-[#F2FBFF] px-8 py-3.5 border-b border-gray-200">
@@ -18,24 +39,17 @@ export function PassengerDetails() {
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-              <td className="py-5 px-8 text-[16px] font-[700] text-gray-700">1</td>
-              <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">MR</td>
-              <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">HARSHIT</td>
-              <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">CHIRGANIA</td>
-              <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">Adult</td>
-              <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">079176412201</td>
-              <td className="py-5 px-8 text-[16px] font-[700] text-gray-700">AYDAE6</td>
-            </tr>
-            <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-              <td className="py-5 px-8 text-[16px] font-[700] text-gray-700">2</td>
-              <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">MR</td>
-              <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">VAIBHAV</td>
-              <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">ARORA</td>
-              <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">Adult</td>
-              <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">079176412201</td>
-              <td className="py-5 px-8 text-[16px] font-[700] text-gray-700">AYDAE6</td>
-            </tr>
+            {passengers.map((p: any) => (
+              <tr key={p.no} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <td className="py-5 px-8 text-[16px] font-[700] text-gray-700">{p.no}</td>
+                <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">{p.title}</td>
+                <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">{p.firstName}</td>
+                <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">{p.lastName}</td>
+                <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">{p.type}</td>
+                <td className="py-5 px-2 text-[16px] font-[700] text-gray-700">{p.eticket}</td>
+                <td className="py-5 px-8 text-[16px] font-[700] text-gray-700">{p.airlinePnr}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

@@ -1,12 +1,13 @@
 import { Plane, Printer, FileText, Share2, FileDown } from "lucide-react";
 
-export function BookingHeader({ isB2B = false }: { isB2B?: boolean }) {
+export function BookingHeader({ ticket, isB2B = false }: { ticket?: any; isB2B?: boolean }) {
+  const displayPnr = ticket?.pnr_number || "XYR9NF";
   return (
     <div className="bg-[#FFFFFF] px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-rose-100 gap-4">
       <div className="flex items-center gap-2">
         <Plane className="w-6 h-6 text-[#D60D26] rotate-45" strokeWidth={2.5} />
-        <h2 className="text-[24px] font-[800] text-gray-800 ml-2">XYR9NF</h2>
-        <span className="text-[18px] font-[600] text-gray-500 ml-1">(Outbound)</span>
+        <h2 className="text-[24px] font-[800] text-gray-800 ml-2">{displayPnr}</h2>
+        <span className="text-[18px] font-[600] text-gray-500 ml-1">({ticket?.travel_type === 1 ? "Round Trip" : "Outbound"})</span>
       </div>
 
       <div className="flex items-center gap-3">

@@ -1,5 +1,6 @@
 "use client";
 
+import { use, useState, useEffect } from "react";
 import { B2BNavbar } from "@/components/B2BNavbar";
 import { Footer } from "@/components/Footer";
 import { HeroBanner } from "@/components/HeroBanner";
@@ -11,7 +12,98 @@ import { ItineraryDetails } from "@/components/booking/ItineraryDetails";
 import { PassengerMoreDetails } from "@/components/booking/PassengerMoreDetails";
 import { PaymentDetails, BookingActions } from "@/components/booking/PaymentDetails";
 
-export default function B2BBookingDetailsPage() {
+interface PageProps {
+    params: Promise<{ id: string }>;
+}
+
+export default function B2BBookingDetailsPage({ params }: PageProps) {
+    const resolvedParams = use(params);
+    const id = resolvedParams.id;
+    const [ticket, setTicket] = useState<any | null>(null);
+
+    useEffect(() => {
+        const fetchTicketDetails = async () => {
+            const token = localStorage.getItem("access_token") || localStorage.getItem("mock-access-token");
+            if (!id) return;
+            console.log("[B2B BookingDetails Page] Fetching ticket details for ID/PNR:", id);
+            
+            if (id.startsWith("31241")) {
+                console.log("[B2B BookingDetails Page] Target ID is a mockup ID, skipping fetch to render default fallback mockup details.");
+                return; 
+            }
+
+            // Fast path: check offline bookings in localStorage first
+            try {
+                const stored = localStorage.getItem("offline_bookings");
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    const matched = parsed.find((t: any) => 
+                        t.id === id || 
+                        t.pnr_number === id || 
+                        t.ticket_number === id
+                    );
+                    if (matched) {
+                        console.log("[B2B BookingDetails Page] Found matched ticket in local storage offline bookings cache:", matched);
+                        setTicket(matched);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.error("[B2B BookingDetails Page Error] Failed to parse offline bookings cache:", err);
+            }
+
+            if (!token) {
+                console.log("[B2B BookingDetails Page] No authorization token found, skipping live API queries.");
+                return;
+            }
+
+            try {
+                const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+                
+                if (isUuid) {
+                    console.log("[B2B BookingDetails Page] Target ID is a valid UUID, querying tickets by direct endpoint...");
+                    const response = await fetch(`${apiBase}/tickets/${id}/`, {
+                        headers: {
+                            "Authorization": `Bearer ${token}`
+                        }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log("[B2B BookingDetails Page] Direct UUID ticket lookup succeeded:", data);
+                        setTicket(data);
+                        return;
+                    }
+                }
+
+                // Fallback: search all tickets
+                console.log("[B2B BookingDetails Page] Querying ticket lists to find matched PNR/Ticket number...");
+                const listResponse = await fetch(`${apiBase}/tickets/`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                if (listResponse.ok) {
+                    const listData = await listResponse.json();
+                    const tickets = listData.results || listData;
+                    const matched = tickets.find((t: any) => 
+                        t.id === id || 
+                        t.pnr_number === id || 
+                        t.ticket_number === id
+                    );
+                    if (matched) {
+                        console.log("[B2B BookingDetails Page] Found matched ticket in backend list:", matched);
+                        setTicket(matched);
+                    }
+                }
+            } catch (err) {
+                console.warn("[B2B BookingDetails Page Error] Failed to fetch live ticket details, falling back to mockups:", err);
+            }
+        };
+
+        fetchTicketDetails();
+    }, [id]);
+
     return (
         <div className="w-full min-h-screen bg-white flex flex-col font-sans">
             <B2BNavbar />
@@ -36,15 +128,15 @@ export default function B2BBookingDetailsPage() {
 
                 {/* Main Card Container */}
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden mb-12">
-                    <BookingHeader isB2B={true} />
-                    <BookingInfo />
-                    <PassengerDetails />
-                    <ItineraryDetails />
-                    <PassengerMoreDetails />
-                    <PaymentDetails isB2B={true} />
+                    <BookingHeader ticket={ticket} isB2B={true} />
+                    <BookingInfo ticket={ticket} />
+                    <PassengerDetails ticket={ticket} />
+                    <ItineraryDetails ticket={ticket} />
+                    <PassengerMoreDetails ticket={ticket} />
+                    <PaymentDetails ticket={ticket} isB2B={true} />
                 </div>
 
-                <BookingActions isB2B={true} />
+                <BookingActions ticket={ticket} isB2B={true} />
 
             </main>
 
