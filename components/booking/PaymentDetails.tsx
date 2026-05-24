@@ -1,9 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
-export function PaymentDetails({ ticket, isB2B = false }: { ticket?: any; isB2B?: boolean }) {
+type PassengerData = {
+  pax_type?: number;
+  title?: string;
+  first_name?: string;
+  last_name?: string;
+};
+
+type BookingTicket = {
+  id?: string;
+  status?: string;
+  pnr_number?: string;
+  ticket_number?: string;
+  passengers_data?: PassengerData[];
+  basic_amount?: string | number;
+  tax_amount?: string | number;
+  total_amount?: string | number;
+};
+
+type OfflineBooking = BookingTicket & {
+  updated_at?: string;
+  [key: string]: unknown;
+};
+
+export function PaymentDetails({ ticket, isB2B = false }: { ticket?: BookingTicket; isB2B?: boolean }) {
   const hasLivePassengers = ticket && ticket.passengers_data && ticket.passengers_data.length > 0;
   
   let passengers = [
@@ -17,7 +40,7 @@ export function PaymentDetails({ ticket, isB2B = false }: { ticket?: any; isB2B?
     const perPaxTax = parseFloat(ticket.tax_amount || "0") / count;
     const perPaxTotal = parseFloat(ticket.total_amount || "0") / count;
 
-    passengers = ticket.passengers_data.map((pax: any, idx: number) => ({
+    passengers = ticket.passengers_data.map((pax: PassengerData, idx: number) => ({
       no: idx + 1,
       name: `${pax.last_name || ""} ${pax.first_name || ""} ${pax.title || "MR"}`.toUpperCase().trim(),
       price: `₹${perPaxPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
@@ -28,7 +51,7 @@ export function PaymentDetails({ ticket, isB2B = false }: { ticket?: any; isB2B?
 
   return (
     <>
-      <div className="w-full bg-[#f4f5f7] px-8 py-3.5 border-y border-gray-200">
+      <div className="w-full bg-[#f4f5f7] px-8 py-3.5 border-y border-gray-200" data-booking-scope={isB2B ? "b2b" : "b2c"}>
         <h3 className="text-[17px] font-[750] text-[#333] tracking-tight">Payments</h3>
       </div>
       <div className="w-full overflow-x-auto p-4 pb-8">
@@ -46,7 +69,7 @@ export function PaymentDetails({ ticket, isB2B = false }: { ticket?: any; isB2B?
             </tr>
           </thead>
           <tbody>
-            {passengers.map((p: any) => (
+            {passengers.map((p: { no: number; name: string; price: string; tax: string; total: string }) => (
               <tr key={p.no} className="border-b border-gray-50">
                 <td className="py-4 px-8 text-[15px] font-[700] text-gray-700">{p.no}</td>
                 <td className="py-4 px-2 text-[15px] font-[700] text-gray-700">{p.name}</td>
@@ -62,15 +85,58 @@ export function PaymentDetails({ ticket, isB2B = false }: { ticket?: any; isB2B?
   );
 }
 
-export function BookingActions({ ticket, isB2B = false }: { ticket?: any; isB2B?: boolean }) {
+export function BookingActions({ ticket, isB2B = false }: { ticket?: BookingTicket; isB2B?: boolean }) {
   const { logout, openAuthModal } = useAuth();
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelStatus, setCancelStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [localStatus, setLocalStatus] = useState(ticket?.status || "CONFIRMED");
+  const backendTicketIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  useEffect(() => {
+    setLocalStatus(ticket?.status || "CONFIRMED");
+  }, [ticket?.status]);
 
   const isCancelled = localStatus === "CANCELLED";
+
+  const markOfflineBookingCancelled = () => {
+    if (typeof window === "undefined") return false;
+
+    const ticketKey = ticket?.id || ticket?.pnr_number || ticket?.ticket_number;
+    if (!ticketKey) return false;
+
+    try {
+      const stored = localStorage.getItem("offline_bookings");
+      if (!stored) return false;
+
+      const parsed: OfflineBooking[] = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return false;
+
+      let updated = false;
+      const nextBookings = parsed.map((entry: OfflineBooking) => {
+        const entryKey = entry.id || entry.pnr_number || entry.ticket_number;
+        if (entryKey === ticketKey) {
+          updated = true;
+          return {
+            ...entry,
+            status: "CANCELLED",
+            updated_at: new Date().toISOString(),
+          };
+        }
+        return entry;
+      });
+
+      if (updated) {
+        localStorage.setItem("offline_bookings", JSON.stringify(nextBookings));
+      }
+
+      return updated;
+    } catch (error) {
+      console.error("[BookingActions] Failed to cancel offline booking:", error);
+      return false;
+    }
+  };
 
   const handleCancelClick = () => {
     if (isCancelled) return;
@@ -86,7 +152,18 @@ export function BookingActions({ ticket, isB2B = false }: { ticket?: any; isB2B?
       const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
       const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
       const ticketId = ticket?.id;
-      if (!ticketId) throw new Error("No ticket ID");
+      const isBackendTicket = typeof ticketId === "string" && backendTicketIdPattern.test(ticketId);
+
+      if (!ticketId || !isBackendTicket) {
+        const cancelledOffline = markOfflineBookingCancelled();
+        if (!cancelledOffline) {
+          console.warn("[BookingActions] No offline booking record found; applying a local-only cancellation state.");
+        }
+
+        setLocalStatus("CANCELLED");
+        setCancelStatus("success");
+        return;
+      }
 
       const res = await fetch(`${apiBase}/tickets/${ticketId}/cancel/`, {
         method: "POST",
@@ -115,9 +192,10 @@ export function BookingActions({ ticket, isB2B = false }: { ticket?: any; isB2B?
 
       setLocalStatus("CANCELLED");
       setCancelStatus("success");
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("[BookingActions] Cancel failed:", e);
-      setErrorMessage(e.message || "Cancellation failed. Please contact support or try again.");
+      const message = e instanceof Error ? e.message : "Cancellation failed. Please contact support or try again.";
+      setErrorMessage(message);
       setCancelStatus("error");
     } finally {
       setIsCancelling(false);
@@ -125,7 +203,7 @@ export function BookingActions({ ticket, isB2B = false }: { ticket?: any; isB2B?
   };
 
   return (
-    <div className="w-full mb-10 px-2 lg:px-8">
+    <div className="w-full mb-10 px-2 lg:px-8" data-booking-scope={isB2B ? "b2b" : "b2c"}>
       {/* Cancel confirmation dialog */}
       {showConfirm && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[300] flex items-center justify-center p-4">

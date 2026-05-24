@@ -1,9 +1,46 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 
+type BaggageOption = {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  note?: string;
+};
+
 export function AddOnModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+
+  const baggageSections: Array<{ title: string; options: BaggageOption[] }> = [
+    {
+      title: "Cabin Baggage",
+      options: [
+        { id: "cabin-7kg", title: "7kg cabin bag", description: "1 small cabin bag + personal item", price: "$0.00", note: "Included on most fares" },
+        { id: "cabin-10kg", title: "10kg cabin bag", description: "Extra cabin allowance for flexible fares", price: "$8.00" },
+      ],
+    },
+    {
+      title: "Checked Baggage",
+      options: [
+        { id: "checked-15kg", title: "15kg checked bag", description: "Best for short trips and light packing", price: "$0.00", note: "Often bundled with sale fares" },
+        { id: "checked-20kg", title: "20kg checked bag", description: "Balanced baggage allowance", price: "$14.00" },
+        { id: "checked-25kg", title: "25kg checked bag", description: "Extra room for longer stays", price: "$20.00" },
+      ],
+    },
+    {
+      title: "Child & Infant Options",
+      options: [
+        { id: "child-5kg", title: "Child bag allowance", description: "For child passengers traveling with family", price: "$6.00" },
+        { id: "infant-stroller", title: "Infant stroller", description: "Gate-check stroller or pram service", price: "$0.00", note: "Subject to airline policy" },
+      ],
+    },
+  ];
+
+  const selectedOption = baggageSections.flatMap((section) => section.options).find((option) => option.id === selectedOptionId) || null;
+
   if (!isOpen) return null;
 
   return (
@@ -21,7 +58,7 @@ export function AddOnModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         {/* Informational Text */}
         <div className="px-6 pt-5 pb-4">
           <p className="text-[14px] text-slate-600 font-medium leading-relaxed">
-            Please note that this representation for extras is only for informational purpose. Extras can be booked after entering the passenger data.
+            Choose a baggage add-on below. The child/infant options are shown separately so you can match the allowance to the passenger type.
           </p>
         </div>
 
@@ -31,38 +68,62 @@ export function AddOnModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         </div>
 
         {/* List of Add-ons */}
-        <div className="flex flex-col px-6 py-4 gap-4 pb-8">
-          
-          <div className="flex items-center justify-between text-[14px] font-semibold text-slate-600">
-            <div className="w-[140px]">1 bags - 15kg total</div>
-            <div className="w-[50px] text-center">BAG</div>
-            <div className="w-[80px] text-right font-black text-slate-900">$ 0.00</div>
-          </div>
-          
-          <div className="flex items-center justify-between text-[14px] font-semibold text-slate-600">
-            <div className="w-[140px]">1 bags - 18kg total</div>
-            <div className="w-[50px] text-center">BAG</div>
-            <div className="w-[80px] text-right font-black text-slate-900">$ 14.00</div>
-          </div>
-          
-          <div className="flex items-center justify-between text-[14px] font-semibold text-slate-600">
-            <div className="w-[140px]">1 bags - 25kg total</div>
-            <div className="w-[50px] text-center">BAG</div>
-            <div className="w-[80px] text-right font-black text-slate-900">$ 20.00</div>
-          </div>
-          
-          <div className="flex items-center justify-between text-[14px] font-semibold text-slate-600">
-            <div className="w-[140px]">1 bags - 30kg total</div>
-            <div className="w-[50px] text-center">BAG</div>
-            <div className="w-[80px] text-right font-black text-slate-900">$ 25.00</div>
-          </div>
-          
-          <div className="flex items-center justify-between text-[14px] font-semibold text-slate-600">
-            <div className="w-[140px]">1 bags - 35kg total</div>
-            <div className="w-[50px] text-center">BAG</div>
-            <div className="w-[80px] text-right font-black text-slate-900">$ 30.00</div>
-          </div>
+        <div className="flex flex-col px-6 py-4 gap-5 pb-6">
+          {baggageSections.map((section) => (
+            <div key={section.title} className="flex flex-col gap-3">
+              <div className="text-[13px] font-black uppercase tracking-[0.16em] text-slate-500">
+                {section.title}
+              </div>
+              <div className="flex flex-col gap-3">
+                {section.options.map((option) => {
+                  const isSelected = selectedOptionId === option.id;
 
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setSelectedOptionId(option.id)}
+                      className={`w-full text-left rounded-xl border px-4 py-3 transition-colors ${isSelected ? "border-[#D60D26] bg-red-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="text-[15px] font-black text-slate-800">{option.title}</div>
+                          <div className="text-[13px] font-medium text-slate-500 mt-1">{option.description}</div>
+                          {option.note && <div className="text-[12px] font-semibold text-[#D60D26] mt-1">{option.note}</div>}
+                        </div>
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <div className="text-[15px] font-black text-slate-900">{option.price}</div>
+                          <span className={`text-[12px] font-bold uppercase tracking-wider ${isSelected ? "text-[#D60D26]" : "text-slate-400"}`}>
+                            {isSelected ? "Selected" : "Choose"}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {selectedOption && (
+          <div className="px-6 pb-4">
+            <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
+              <div className="text-[12px] font-black uppercase tracking-[0.16em] text-slate-500">Selected add-on</div>
+              <div className="mt-1 text-[15px] font-black text-slate-900">{selectedOption.title}</div>
+              <div className="text-[13px] font-medium text-slate-600 mt-1">{selectedOption.description}</div>
+            </div>
+          </div>
+        )}
+
+        <div className="px-6 pb-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full rounded-full bg-[#D60D26] text-white font-black text-[14px] py-3 hover:bg-[#b00b1d] transition-colors"
+          >
+            Save selection
+          </button>
         </div>
 
       </div>
