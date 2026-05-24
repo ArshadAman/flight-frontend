@@ -187,16 +187,19 @@ export default function AddFlightPage() {
                 <div className="w-[120px]"></div>
             </div>
 
-            {/* Map Background Placeholder (Only for steps 0-2) */}
+            {/* Map Background (Only for steps 0-2) */}
             {step < 3 && (
-                <div className="absolute inset-0 z-0 top-16 bottom-20 opacity-80 pointer-events-none" 
-                     style={{
-                         backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')`,
-                         backgroundSize: 'cover',
-                         backgroundPosition: 'center',
-                         opacity: 0.3
-                     }}
-                >
+                <div className="absolute inset-0 z-0 top-16 bottom-20">
+                    <iframe 
+                        src="https://maps.google.com/maps?q=India&t=p&z=5&ie=UTF8&iwloc=&output=embed" 
+                        width="100%" 
+                        height="100%" 
+                        style={{ border: 0, opacity: 0.8 }} 
+                        allowFullScreen 
+                        loading="lazy" 
+                        className="absolute inset-0 pointer-events-none"
+                    ></iframe>
+                    
                     {step > 0 && origin && destination && (
                         <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none">
                             <path d="M 450 350 Q 750 200 1050 400" fill="none" stroke="#333" strokeWidth="2.5" strokeDasharray="8 8" />
