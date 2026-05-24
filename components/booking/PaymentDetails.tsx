@@ -35,12 +35,12 @@ export function PaymentDetails({ ticket, isB2B = false }: { ticket?: BookingTick
   ];
 
   if (hasLivePassengers) {
-    const count = ticket.passengers_data.length || 1;
-    const perPaxPrice = parseFloat(ticket.basic_amount || "0") / count;
-    const perPaxTax = parseFloat(ticket.tax_amount || "0") / count;
-    const perPaxTotal = parseFloat(ticket.total_amount || "0") / count;
+    const count = (ticket.passengers_data?.length) || 1;
+    const perPaxPrice = parseFloat(String(ticket.basic_amount || "0")) / count;
+    const perPaxTax = parseFloat(String(ticket.tax_amount || "0")) / count;
+    const perPaxTotal = parseFloat(String(ticket.total_amount || "0")) / count;
 
-    passengers = ticket.passengers_data.map((pax: PassengerData, idx: number) => ({
+    passengers = (ticket.passengers_data || []).map((pax: PassengerData, idx: number) => ({
       no: idx + 1,
       name: `${pax.last_name || ""} ${pax.first_name || ""} ${pax.title || "MR"}`.toUpperCase().trim(),
       price: `₹${perPaxPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,

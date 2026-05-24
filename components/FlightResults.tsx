@@ -16,7 +16,7 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import { QuoteModal } from "./QuoteModal";
 import { FareTypeModal } from "./FareTypeModal";
-import { AddOnModal } from "./AddOnModal";
+import AddOnModal, { BaggageOption as AddOnBaggage } from "./AddOnModal";
 import { RulesModal } from "./RulesModal";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -102,7 +102,7 @@ export function FlightResults({
   const [fareTypeModalOpen, setFareTypeModalOpen] = useState(false);
   const [addOnModalOpen, setAddOnModalOpen] = useState(false);
   const [rulesModalOpen, setRulesModalOpen] = useState(false);
-  const [selectedBaggageOption, setSelectedBaggageOption] = useState<BaggageOption | null>(null);
+  const [selectedBaggageOption, setSelectedBaggageOption] = useState<AddOnBaggage | null>(null);
   const [selectedOutboundId, setSelectedOutboundId] = useState<string | null>(null);
   const [selectedReturnId, setSelectedReturnId] = useState<string | null>(null);
 
@@ -359,8 +359,6 @@ export function FlightResults({
             tax_amount: (checkoutFlight?.price || 3500) * 0.15,
             total_amount: checkoutFlight?.price || 3500,
             currency: "INR",
-            baggage_check_in: "15 Kg",
-            baggage_hand: "7 Kg",
             is_refundable: true,
             food_onboard: true,
             ...resolveBaggageDetails(selectedBaggageOption),
@@ -921,7 +919,7 @@ export function FlightResults({
       <AddOnModal
         isOpen={addOnModalOpen}
         onClose={() => setAddOnModalOpen(false)}
-        onApply={(option) => setSelectedBaggageOption(option)}
+        onApply={(option: BaggageOption | null) => setSelectedBaggageOption(option)}
         initialSelectedOptionId={selectedBaggageOption?.id || null}
       />
       <RulesModal isOpen={rulesModalOpen} onClose={() => setRulesModalOpen(false)} />
@@ -1188,7 +1186,7 @@ export function FlightResults({
 
               <div className="flex justify-between">
                 <span className="text-slate-400 font-bold uppercase tracking-wider text-xs">Total Fares Paid</span>
-                <span className="text-[#D60D26] font-black text-[16px] tracking-tight">₹{parseFloat(bookingSuccessData.total_amount).toLocaleString('en-IN')}.00</span>
+                <span className="text-[#D60D26] font-black text-[16px] tracking-tight">₹{parseFloat(String(bookingSuccessData.total_amount)).toLocaleString('en-IN')}.00</span>
               </div>
 
             </div>
