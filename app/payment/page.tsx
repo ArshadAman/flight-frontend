@@ -46,7 +46,7 @@ export default function PaymentPage() {
                     </div>
 
                     {/* Navigation Links */}
-                    <div className="flex flex-wrap items-center gap-6 md:gap-10 text-[14px] md:text-[15px] font-semibold text-white/80">
+                    <div className="flex overflow-x-auto no-scrollbar items-center gap-6 md:gap-10 text-[14px] md:text-[15px] font-semibold text-white/80 w-[100vw] sm:w-auto -ml-4 sm:ml-0 px-4 sm:px-0 pb-2 sm:pb-0 whitespace-nowrap">
                         <div className="flex flex-col items-center justify-center relative cursor-pointer" onClick={() => setTab("online-deposit")}>
                             <span className={activeTab === "online-deposit" ? "text-white font-bold" : "hover:text-white transition-colors"}>Online Payment Deposit</span>
                             {activeTab === "online-deposit" && <div className="absolute -bottom-2 w-1 h-1 bg-white rounded-full" />}
@@ -161,12 +161,12 @@ export default function PaymentPage() {
                                 </div>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 max-w-[900px]">
-                                <button className="flex-1 w-full h-[54px] rounded-full border-[1.5px] border-slate-800 text-slate-900 font-bold text-[16px] flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors active:scale-[0.98]">
-                                    Cancel <ArrowUpRight className="w-5 h-5" strokeWidth={2.5} />
+                            <div className="flex flex-row items-center gap-3 sm:gap-4 mt-8 max-w-[900px]">
+                                <button className="flex-1 w-full h-[48px] sm:h-[54px] rounded-full border-[1.5px] border-slate-800 text-slate-900 font-bold text-[14px] sm:text-[16px] flex items-center justify-center gap-1 sm:gap-2 hover:bg-slate-50 transition-colors active:scale-[0.98]">
+                                    Cancel <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.5} />
                                 </button>
-                                <button className="flex-1 w-full h-[54px] rounded-full bg-[#D60D26] text-white font-bold text-[16px] flex items-center justify-center gap-2 hover:bg-[#D60D26] transition-colors shadow-md active:scale-[0.98]">
-                                    Make A Payment <ArrowUpRight className="w-5 h-5" strokeWidth={2.5} />
+                                <button className="flex-1 w-full h-[48px] sm:h-[54px] rounded-full bg-[#D60D26] text-white font-bold text-[14px] sm:text-[16px] flex items-center justify-center gap-1 sm:gap-2 hover:bg-[#D60D26] transition-colors shadow-md active:scale-[0.98]">
+                                    Make A Payment <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.5} />
                                 </button>
                             </div>
                         </div>
@@ -228,7 +228,7 @@ export default function PaymentPage() {
                             </div>
 
                             {/* Table */}
-                            <div className="w-full overflow-x-auto">
+                            <div className="w-full overflow-x-auto no-scrollbar">
                                 <table className="w-full min-w-[800px] border-collapse">
                                     <thead>
                                         <tr className="border-b-0">
@@ -272,7 +272,7 @@ export default function PaymentPage() {
                             </div>
 
                             {/* Complex Deposit Slip HTML Table */}
-                            <div className="w-full overflow-x-auto border border-slate-800 text-[12px] text-slate-800 font-medium">
+                            <div className="w-full overflow-x-auto no-scrollbar border border-slate-800 text-[12px] text-slate-800 font-medium">
                                 <table className="w-full min-w-[900px] border-collapse border border-slate-800">
                                     <tbody>
                                         <tr>
@@ -353,19 +353,19 @@ export default function PaymentPage() {
             {/* MAKE PAYMENT REQUEST MODAL */}
             {isRequestModalOpen && (
                 <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-[500px] shadow-2xl overflow-hidden animate-in zoom-in-95">
-                        <div className="bg-[#D60D26] px-6 py-4 flex items-center justify-between text-white">
+                    <div className="bg-white rounded-2xl w-full max-w-[500px] max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95">
+                        <div className="bg-[#D60D26] px-6 py-4 flex items-center justify-between text-white shrink-0">
                             <h2 className="font-bold text-[18px]">Make Payment Request</h2>
                             <button onClick={() => setIsRequestModalOpen(false)} className="hover:bg-white/20 p-1 rounded-full transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="p-6">
+                        <div className="p-6 overflow-y-auto no-scrollbar">
                             <div className="bg-red-50 text-[#D60D26] p-3 text-[12px] font-semibold rounded-lg mb-6 leading-relaxed">
                                 Cash deposit more than Rs. 1,99,990 in a day under a single PAN card is accepted only for DMT transactions, this amount cannot be used to purchase any other product. If any travel agent deposits more cash than Rs. 1,99,990 in a day under single PAN for the purchase of any other product, the full amount will be permanently forfeited by TSI-Yatra without any credit to the agent or any person.
                             </div>
                             
-                            <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                            <div className="space-y-4 pr-1">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 gap-2">
                                     <span className="text-slate-500 text-[13px] font-semibold w-[140px]">Payment mode</span>
                                     <select className="flex-1 outline-none text-[14px] text-slate-800 bg-transparent border border-slate-200 rounded px-3 py-2 focus:border-[#D60D26]">

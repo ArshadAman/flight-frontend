@@ -29,31 +29,26 @@ export default function InventoryPage() {
         <div 
             key={index} 
             onClick={() => { setSelectedFlight(flight); setActiveDrawerTab("Segment"); }}
-            className={`relative flex flex-col md:grid md:grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_1fr_1fr_auto] gap-2 md:gap-4 items-start md:items-center py-4 border-b border-slate-100 text-[13px] font-medium transition-colors px-6 cursor-pointer ${selectedFlight === flight ? 'bg-rose-50 border-l-2 border-l-[#D60D26]' : 'text-slate-700 hover:bg-slate-50'}`}
+            className={`grid grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 items-center py-4 border-b border-slate-100 text-[13px] font-medium transition-colors px-6 cursor-pointer ${selectedFlight === flight ? 'bg-rose-50 border-l-2 border-l-[#D60D26]' : 'text-slate-700 hover:bg-slate-50'}`}
         >
-            <div className="font-bold text-slate-800 flex items-center gap-2"><span className="md:hidden text-slate-400 w-20">PNR:</span>{flight.groupPnr}</div>
+            <div className="font-bold text-slate-800">{flight.groupPnr}</div>
             <div className="flex items-center gap-1">
-                <span className="md:hidden text-slate-400 w-20">Route:</span>
                 <span className="font-bold">{flight.route.split(" \u2192 ")[0]}</span>
                 <ArrowRight className="w-3 h-3 text-slate-400" />
                 <span className="font-bold">{flight.route.split(" \u2192 ")[1]}</span>
                 <span className="text-slate-400 text-[12px] font-medium">({flight.stops})</span>
             </div>
-            <div className="flex items-center gap-2"><span className="md:hidden text-slate-400 w-20">Date:</span>{flight.date}</div>
-            <div className="flex items-center gap-2"><span className="md:hidden text-slate-400 w-20">Time:</span>{flight.time}</div>
-            <div className="font-bold text-slate-800 flex items-center gap-2"><span className="md:hidden text-slate-400 w-20">Flight:</span>{flight.flightNo}</div>
-            <div className="flex items-center gap-2 text-[14px]">
-                <span className="md:hidden text-slate-400 w-20">Seats:</span>
-                <div className="flex items-center gap-1 font-bold text-slate-700"><span className="text-slate-400">💺</span> 10</div>
-            </div>
-            <div className="font-bold text-slate-800 flex items-center gap-2"><span className="md:hidden text-slate-400 w-20">Fare:</span>{flight.fare}</div>
-            <div className="flex items-center gap-2">
-                <span className="md:hidden text-slate-400 w-20">Status:</span>
+            <div className="text-slate-800">{flight.date}</div>
+            <div className="text-slate-800">{flight.time}</div>
+            <div className="font-bold text-slate-800">{flight.flightNo}</div>
+            <div className="flex items-center gap-1 font-bold text-slate-700"><span className="text-slate-400">💺</span> 10</div>
+            <div className="font-bold text-slate-800">{flight.fare}</div>
+            <div>
                 <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold border ${flight.status === 'Closed' ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-green-50 text-emerald-600 border-green-200'}`}>
                     {flight.status}
                 </span>
             </div>
-            <div className="absolute right-6 top-6 md:static text-slate-400 hover:text-slate-600 transition-colors">
+            <div className="text-slate-400 hover:text-slate-600 transition-colors flex justify-end">
                 <MoreVertical className="w-5 h-5" />
             </div>
         </div>
@@ -81,10 +76,10 @@ export default function InventoryPage() {
 
                     {/* Flights Table */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-                        <div className="overflow-x-auto">
-                            <div className="w-full">
+                        <div className="overflow-x-auto no-scrollbar">
+                            <div className="w-full min-w-[1000px]">
                                 {/* Table Header */}
-                                <div className="hidden md:grid grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-4 border-b border-slate-100 bg-white text-slate-400 text-[13px] font-bold">
+                                <div className="grid grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-4 border-b border-slate-100 bg-white text-slate-400 text-[13px] font-bold">
                                     <div>Group PNR</div>
                                     <div>Route</div>
                                     <div>Dep. Date</div>
@@ -142,7 +137,7 @@ export default function InventoryPage() {
                         <button onClick={() => setSelectedFlight(null)} className="hover:bg-slate-200 p-1 rounded-full transition-colors"><X className="w-5 h-5 text-slate-700" /></button>
                     </div>
                     
-                    <div className="flex items-center border-b border-slate-200 shrink-0 bg-white px-2 overflow-x-auto">
+                    <div className="flex items-center border-b border-slate-200 shrink-0 bg-white px-2 overflow-x-auto no-scrollbar">
                         {["Segment", "Inventory", "Booking", "PNR Booking"].map(tab => (
                             <button 
                                 key={tab} 

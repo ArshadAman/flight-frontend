@@ -102,20 +102,9 @@ export function B2BNavbar() {
     <>
       <header className="sticky top-0 w-full z-[100] bg-white border-b border-gray-200 shadow-md">
         <div className="container mx-auto px-4 md:px-8 lg:px-10">
-          <div className="flex justify-between items-center h-24 relative">
-            {/* Mobile Menu Toggle (Left) */}
-            <div className="lg:hidden flex items-center absolute left-0 z-10">
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="text-brand p-2 focus:outline-none -ml-2"
-                aria-label="Open Menu"
-              >
-                <Menu size={28} />
-              </button>
-            </div>
-
+          <div className="flex justify-between items-center h-24">
             {/* Logo */}
-            <Link href="/b2b" className="flex flex-col items-center justify-center select-none cursor-pointer absolute left-1/2 -translate-x-1/2 lg:static lg:transform-none lg:left-auto">
+            <Link href="/b2b" className="flex flex-col items-center justify-center select-none cursor-pointer">
               <Logo />
               <div className="flex flex-col items-center mt-1">
                 <h1
@@ -429,14 +418,21 @@ export function B2BNavbar() {
               )}
             </div>
 
-            {/* Mobile Right Icons (Bell) */}
-            <div className="lg:hidden flex items-center absolute right-0 z-10">
+            {/* Mobile Right Icons (Bell & Menu Toggle) */}
+            <div className="lg:hidden flex items-center gap-2">
               <button 
                 onClick={() => setIsNotificationOpen(true)}
-                className="text-slate-600 p-2 relative -mr-2"
+                className="text-slate-600 p-2 relative"
               >
                 <Bell size={24} />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-brand rounded-full border border-white"></span>
+              </button>
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="text-brand p-2 focus:outline-none -mr-2"
+                aria-label="Open Menu"
+              >
+                <Menu size={32} />
               </button>
             </div>
           </div>

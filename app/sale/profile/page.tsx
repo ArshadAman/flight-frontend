@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -30,12 +30,12 @@ import {
   Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { B2BNavbar } from "@/components/B2BNavbar";
+import { SaleNavbar } from "@/components/SaleNavbar";
 import { Footer } from "@/components/Footer";
 
 type TabType = "update-profile" | "manage-user" | "change-logo" | "customer-profile" | "notice-board" | "contact";
 
-export default function B2BMyAccountPage() {
+export default function SaleProfilePage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [activeTab, setActiveTab] = useState<TabType>("update-profile");
@@ -68,7 +68,7 @@ export default function B2BMyAccountPage() {
 
     const setTab = (tab: TabType) => {
         setActiveTab(tab);
-        router.push(`/b2b/my-account?tab=${tab}`);
+        router.push(`/sale/profile?tab=${tab}`);
     };
 
     // --- State & Forms matching screenshots ---
@@ -94,7 +94,7 @@ export default function B2BMyAccountPage() {
         mobile: "46666700",
         altPhone: "",
         username: "sanjay_b2b",
-        password: "••••••••••••",
+        password: "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢",
         markets: "Domestic & International",
         channels: "B2B Agent Network",
         issueAirline: "YES",
@@ -131,13 +131,13 @@ export default function B2BMyAccountPage() {
 
     // Tab 4: Manage Customer Profile Data
     const [customers, setCustomers] = useState([
-        { id: 1, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK → BOM", creationDate: "15SEP/25", type: "Retail" },
-        { id: 2, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK → BOM", creationDate: "15SEP/25", type: "Retail" },
-        { id: 3, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK → BOM", creationDate: "15SEP/25", type: "Corporate" },
-        { id: 4, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK → BOM", creationDate: "15SEP/25", type: "Retail" },
-        { id: 5, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK → BOM", creationDate: "15SEP/25", type: "Retail" },
-        { id: 6, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK → BOM", creationDate: "15SEP/25", type: "Corporate" },
-        { id: 7, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK → BOM", creationDate: "15SEP/25", type: "Retail" },
+        { id: 1, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK â†’ BOM", creationDate: "15SEP/25", type: "Retail" },
+        { id: 2, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK â†’ BOM", creationDate: "15SEP/25", type: "Retail" },
+        { id: 3, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK â†’ BOM", creationDate: "15SEP/25", type: "Corporate" },
+        { id: 4, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK â†’ BOM", creationDate: "15SEP/25", type: "Retail" },
+        { id: 5, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK â†’ BOM", creationDate: "15SEP/25", type: "Retail" },
+        { id: 6, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK â†’ BOM", creationDate: "15SEP/25", type: "Corporate" },
+        { id: 7, title: "Mr", firstName: "Harshit", lastName: "Chirgania", dob: "04/04/96", place: "Bhopal, Madhya Pradesh, INDIA", phone: "46666700", email: "Harshit.Chirgania123@gmail.com", lastBooking: "BKK â†’ BOM", creationDate: "15SEP/25", type: "Retail" },
     ]);
 
     // Customer Profile add form 15-fields state (Screenshot 1)
@@ -229,7 +229,7 @@ export default function B2BMyAccountPage() {
             place: newCustForm.location || "Bhopal, Madhya Pradesh, INDIA",
             phone: newCustForm.mobile || "46666700",
             email: newCustForm.email || "Harshit.Chirgania123@gmail.com",
-            lastBooking: "BKK → BOM",
+            lastBooking: "BKK â†’ BOM",
             creationDate: "15SEP/25",
             type: newCustForm.type
         };
@@ -284,13 +284,13 @@ export default function B2BMyAccountPage() {
 
     return (
         <main className="min-h-screen bg-slate-50 flex flex-col font-sans relative">
-            <B2BNavbar />
+            <SaleNavbar />
             
             {/* Dark Red Gradient Header */}
             <div className="w-full bg-gradient-to-r from-[#D60D26] via-[#30060F] to-[#121121] pt-8 pb-16 px-4 md:px-10 lg:px-20 relative z-0 flex flex-col justify-between items-start">
                 <div className="text-[12px] font-semibold text-white/60 mb-2 flex items-center gap-1">
                     <span>Sanjay</span>
-                    <span>→</span>
+                    <span>â†’</span>
                     <span className="text-white/90">Profile management</span>
                 </div>
                 
@@ -564,7 +564,7 @@ export default function B2BMyAccountPage() {
                         <div className="animate-in fade-in duration-300">
                             {/* Header Section */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                                <h3 className="font-extrabold text-[16px] text-slate-800">Sanjay → Profile management</h3>
+                                <h3 className="font-extrabold text-[16px] text-slate-800">Sanjay â†’ Profile management</h3>
                                 <button 
                                     onClick={() => setIsCreateSubUserOpen(true)}
                                     className="bg-[#D60D26] hover:bg-[#D60D26] text-white font-extrabold text-[13px] px-6 py-2.5 rounded-full flex items-center gap-1 shadow-md active:scale-95 transition-all"
@@ -687,7 +687,7 @@ export default function B2BMyAccountPage() {
                     {/* TAB: CHANGE LOGO */}
                     {activeTab === "change-logo" && (
                         <div className="animate-in fade-in duration-300">
-                            <h3 className="font-extrabold text-[16px] text-slate-800 mb-6">Sanjay → Profile management</h3>
+                            <h3 className="font-extrabold text-[16px] text-slate-800 mb-6">Sanjay â†’ Profile management</h3>
 
                             <form onSubmit={handleLogoUploadSubmit} className="space-y-8">
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -764,7 +764,7 @@ export default function B2BMyAccountPage() {
                         <div className="animate-in fade-in duration-300">
                             {/* Header Section */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                                <h3 className="font-extrabold text-[16px] text-slate-800">Sanjay → Profile management</h3>
+                                <h3 className="font-extrabold text-[16px] text-slate-800">Sanjay â†’ Profile management</h3>
                                 <button 
                                     onClick={() => setIsAddCustOpen(true)}
                                     className="bg-[#D60D26] hover:bg-[#D60D26] text-white font-extrabold text-[13px] px-6 py-2.5 rounded-full flex items-center gap-1 shadow-md active:scale-95 transition-all"

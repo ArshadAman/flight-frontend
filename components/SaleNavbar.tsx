@@ -190,12 +190,12 @@ export function SaleNavbar() {
                             <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
                           </Link>
 
-                          <Link href="/sale/notice-board" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors group">
+                          <Link href="/sale/profile?tab=notice-board" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors group">
                             <CurvedArrowIcon />
                             <span className="font-bold text-slate-800 text-[14px]">Notice Board</span>
                           </Link>
 
-                          <Link href="/sale/contact" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors group">
+                          <Link href="/sale/profile?tab=contact" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors group">
                             <CurvedArrowIcon />
                             <span className="font-bold text-slate-800 text-[14px]">Contact</span>
                           </Link>

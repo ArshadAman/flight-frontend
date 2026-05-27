@@ -21,7 +21,7 @@ export default function OnlineDepositPage() {
                 </div>
 
                 {/* Navigation Links */}
-                <div className="flex flex-wrap items-center gap-6 md:gap-10 text-[14px] md:text-[15px] font-semibold text-white/80">
+                <div className="flex overflow-x-auto no-scrollbar items-center gap-6 md:gap-10 text-[14px] md:text-[15px] font-semibold text-white/80 w-[100vw] sm:w-auto -ml-4 sm:ml-0 px-4 sm:px-0 pb-2 sm:pb-0 whitespace-nowrap">
                     <div className="flex flex-col items-center justify-center relative text-white font-bold cursor-pointer">
                         <span>Online Payment Deposit</span>
                         <div className="absolute -bottom-2 w-1 h-1 bg-white rounded-full" />
@@ -126,12 +126,12 @@ export default function OnlineDepositPage() {
                 </div>
 
                 {/* Footer Action Buttons */}
-                <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 max-w-[900px]">
-                    <button className="flex-1 w-full h-[54px] rounded-full border-[1.5px] border-slate-800 text-slate-900 font-bold text-[16px] flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors active:scale-[0.98]">
-                        Cancel <ArrowUpRight className="w-5 h-5" strokeWidth={2.5} />
+                <div className="flex flex-row items-center gap-3 sm:gap-4 mt-8 max-w-[900px]">
+                    <button className="flex-1 w-full h-[48px] sm:h-[54px] rounded-full border-[1.5px] border-slate-800 text-slate-900 font-bold text-[14px] sm:text-[16px] flex items-center justify-center gap-1 sm:gap-2 hover:bg-slate-50 transition-colors active:scale-[0.98]">
+                        Cancel <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.5} />
                     </button>
-                    <button className="flex-1 w-full h-[54px] rounded-full bg-[#D60D26] text-white font-bold text-[16px] flex items-center justify-center gap-2 hover:bg-[#D60D26] transition-colors shadow-md active:scale-[0.98]">
-                        Make A Payment <ArrowUpRight className="w-5 h-5" strokeWidth={2.5} />
+                    <button className="flex-1 w-full h-[48px] sm:h-[54px] rounded-full bg-[#D60D26] text-white font-bold text-[14px] sm:text-[16px] flex items-center justify-center gap-1 sm:gap-2 hover:bg-[#D60D26] transition-colors shadow-md active:scale-[0.98]">
+                        Make A Payment <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.5} />
                     </button>
                 </div>
             </div>
