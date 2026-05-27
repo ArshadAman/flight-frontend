@@ -433,14 +433,15 @@ export function FlightResults({
     const setCurrentSelectedId = isReturnFlight ? setSelectedReturnId : setSelectedOutboundId;
 
     return (
-      <div className="flex flex-col gap-6">
-        {title && (
-          <h3 className="text-xl font-bold text-[#121121] mb-2 bg-white px-5 py-3.5 rounded-xl border border-slate-100 shadow-sm inline-block self-start">
-            {title}
-          </h3>
-        )}
+      <div className="w-full overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex flex-col gap-6 min-w-[800px] lg:min-w-0">
+          {title && (
+            <h3 className="text-xl font-bold text-[#121121] mb-2 bg-white px-5 py-3.5 rounded-xl border border-slate-100 shadow-sm inline-block self-start sticky left-0 sm:static">
+              {title}
+            </h3>
+          )}
 
-        {flightList.map((flight) => {
+          {flightList.map((flight) => {
           const taxAmount = Math.round(flight.price * 0.15);
           const uniqueKey = flight.flight_key || flight.id;
           
@@ -628,6 +629,7 @@ export function FlightResults({
             </div>
           );
         })}
+        </div>
       </div>
     );
   };

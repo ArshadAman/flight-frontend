@@ -173,7 +173,7 @@ function PaymentSummaryContent() {
 
           {/* --- Request Details --- */}
           <Section title="Request details">
-            <div className="grid grid-cols-3 gap-x-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-6 md:gap-y-0">
               {/* Left: Group details */}
               <div>
                 <ColHeader>Group Details</ColHeader>
@@ -211,6 +211,8 @@ function PaymentSummaryContent() {
 
           {/* ---- Flight Details ---- */}
           <Section title="Flight details">
+            <div className="overflow-x-auto w-full no-scrollbar">
+              <div className="min-w-[800px] xl:min-w-0">
             <table className="w-full text-[14px]">
               <thead>
                 <tr className="text-gray-400 text-left border-b border-gray-100">
@@ -249,10 +251,14 @@ function PaymentSummaryContent() {
                 ))}
               </tbody>
             </table>
+            </div>
+            </div>
           </Section>
 
           {/* ---- Payment Details ---- */}
           <Section title="Payment details">
+            <div className="overflow-x-auto w-full no-scrollbar">
+              <div className="min-w-[800px] xl:min-w-0">
             <table className="w-full text-[14px]">
               <thead>
                 <tr className="text-gray-400 text-left border-b border-gray-100 uppercase text-[12px] tracking-wider">
@@ -284,10 +290,14 @@ function PaymentSummaryContent() {
                 ))}
               </tbody>
             </table>
+            </div>
+            </div>
           </Section>
 
           {/* ---- Make Payment Table ---- */}
           <Section title="Make Payment">
+            <div className="overflow-x-auto w-full no-scrollbar">
+              <div className="min-w-[950px] xl:min-w-0">
             <table className="w-full text-[14px]">
               <thead>
                 <tr className="text-gray-400 text-left border-b border-gray-100">
@@ -327,6 +337,8 @@ function PaymentSummaryContent() {
                 </tr>
               </tbody>
             </table>
+            </div>
+            </div>
           </Section>
 
           {/* ---- Payment Summary Totals ---- */}
@@ -356,7 +368,7 @@ function PaymentSummaryContent() {
           </Section>
 
           {/* ---- Action Buttons ---- */}
-          <div className="flex gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row gap-4 pt-2">
             <button
               onClick={() => router.push("/group-travel/make-payment")}
               className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-300 rounded-full py-3 text-gray-700 font-semibold text-[16px] hover:bg-gray-50 transition-colors"

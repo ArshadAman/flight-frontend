@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Navbar } from "@/components/Navbar";
+import { B2BNavbar } from "@/components/B2BNavbar";
 import { Footer } from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -193,7 +193,7 @@ export default function GroupTravelPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <Navbar />
+      <B2BNavbar />
 
       {/* Red Status Bar */}
       <div className="bg-[#D60D26] text-white px-4 md:px-8 py-2 md:py-3 flex justify-between items-center text-[14px] md:text-[16px]">
@@ -270,14 +270,14 @@ export default function GroupTravelPage() {
               <h3 className="text-[22px] font-bold text-gray-800 mb-5">Group 1:</h3>
 
               {/* Radio Buttons */}
-              <div className="flex gap-6 mb-8">
-                <label className="flex items-center gap-2 text-[16px] text-gray-500 cursor-pointer">
+              <div className="flex flex-wrap gap-4 md:gap-6 mb-8">
+                <label className="flex items-center gap-2 text-[15px] md:text-[16px] text-gray-500 cursor-pointer">
                   <input type="radio" name="trip" className="accent-[#D60D26] w-4 h-4 cursor-pointer" /> One Way
                 </label>
-                <label className="flex items-center gap-2 text-[16px] font-bold text-gray-900 cursor-pointer">
+                <label className="flex items-center gap-2 text-[15px] md:text-[16px] font-bold text-gray-900 cursor-pointer">
                   <input type="radio" name="trip" defaultChecked className="accent-[#D60D26] w-4 h-4 cursor-pointer" /> Round Trip
                 </label>
-                <label className="flex items-center gap-2 text-[16px] text-gray-500 cursor-pointer">
+                <label className="flex items-center gap-2 text-[15px] md:text-[16px] text-gray-500 cursor-pointer">
                   <input type="radio" name="trip" className="accent-[#D60D26] w-4 h-4 cursor-pointer" /> Multi City
                 </label>
               </div>
@@ -322,7 +322,7 @@ export default function GroupTravelPage() {
                         {/* Swap icon */}
                         <div className="flex justify-center shrink-0">
                           <div className="w-9 h-9 rounded-full border border-[#D60D26] text-[#D60D26] flex items-center justify-center cursor-pointer">
-                            <ArrowRightLeft className="w-5 h-5" />
+                            <ArrowRightLeft className="w-5 h-5 transform rotate-90 md:rotate-0" />
                           </div>
                         </div>
 
@@ -369,7 +369,7 @@ export default function GroupTravelPage() {
                       </div>
 
                       <h4 className="text-[16px] font-bold text-gray-800 mb-6 mt-10">Passenger details:</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 gap-y-10 items-end">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 gap-y-8 md:gap-y-10 items-end">
                         
                         {/* No of Passengers */}
                         <div className="relative">
@@ -488,7 +488,7 @@ export default function GroupTravelPage() {
                   {/* Flight Details Block below tabs (based on Figma) */}
                   <div className="mt-12">
                     <h3 className="text-[17px] font-semibold text-gray-900 mb-6">Flight Details:</h3>
-                    <div className="flex flex-col md:flex-row items-center gap-10 md:gap-20">
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-20">
                         
                         <div className="flex flex-col items-center">
                           <div className="flex items-center gap-4 text-[22px] font-bold text-gray-900 mb-2">
@@ -638,19 +638,19 @@ export default function GroupTravelPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="w-full max-w-[1100px] flex flex-col md:flex-row gap-4 mb-20 text-[18px]">
-              <Button variant="outline" className="flex-1 py-7 rounded-full border-gray-900 text-gray-900 font-bold hover:bg-gray-50 flex gap-2 w-full text-[18px]">
+            <div className="w-full max-w-[1100px] flex flex-col sm:flex-row gap-4 mb-20 text-[16px] md:text-[18px]">
+              <Button variant="outline" className="flex-1 py-5 md:py-7 rounded-full border-gray-900 text-gray-900 font-bold hover:bg-gray-50 flex gap-2 w-full text-[16px] md:text-[18px]">
                 Cancel 
-                <span className="transform rotate-45 text-[20px] leading-none mt-[-2px]">⭧</span>
+                <span className="transform rotate-45 text-[18px] md:text-[20px] leading-none mt-[-2px]">⭧</span>
               </Button>
               
-              <Button onClick={handleSubmit(handleFormSubmit)} className="flex-1 py-7 rounded-full bg-[#D60D26] hover:bg-[#D60D26] font-bold text-white flex gap-2 w-full text-[18px]">
+              <Button onClick={handleSubmit(handleFormSubmit)} className="flex-1 py-5 md:py-7 rounded-full bg-[#D60D26] hover:bg-[#D60D26] font-bold text-white flex gap-2 w-full text-[16px] md:text-[18px]">
                 Proceed 
-                <span className="transform rotate-45 text-[20px] leading-none mt-[-2px]">⭧</span>
+                <span className="transform rotate-45 text-[18px] md:text-[20px] leading-none mt-[-2px]">⭧</span>
               </Button>
 
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent className="sm:max-w-md rounded-[20px] p-0 border-0 overflow-hidden outline-none">
+                <DialogContent className="sm:max-w-md rounded-[20px] p-0 border-0 overflow-y-auto max-h-[90vh] no-scrollbar outline-none">
                   <DialogTitle className="sr-only">Booking Details</DialogTitle>
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
@@ -734,9 +734,9 @@ export default function GroupTravelPage() {
                       { label: "Airline", value: "AIRINDIA" },
                       { label: "Remarks", value: "..." },
                     ].map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center py-4 border-b border-slate-50 last:border-0 font-medium">
-                        <span className="text-slate-400">{item.label}</span>
-                        <span className="text-slate-800 font-bold">{item.value}</span>
+                      <div key={idx} className="flex flex-col sm:flex-row justify-start sm:justify-between items-start sm:items-center py-4 border-b border-slate-50 last:border-0 font-medium gap-1 sm:gap-4">
+                        <span className="text-slate-400 text-[14px] sm:text-[15px]">{item.label}</span>
+                        <span className="text-slate-800 font-bold text-[14px] sm:text-[15px] break-all sm:break-normal">{item.value}</span>
                       </div>
                     ))}
                   </div>
@@ -828,7 +828,9 @@ export default function GroupTravelPage() {
 
                   {/* Flight Quotes Table */}
                   <div className="bg-white rounded-b-xl rounded-tr-xl border border-slate-100 overflow-hidden">
-                    {/* Table Header */}
+                    <div className="overflow-x-auto w-full">
+                      <div className="min-w-[900px] xl:min-w-0">
+                        {/* Table Header */}
                     <div className="grid grid-cols-[1.2fr_1.5fr_1.2fr_1.2fr_0.8fr_1fr_1.2fr_0.8fr] gap-4 bg-slate-50/50 px-6 py-4 border-b border-slate-100 text-[13px] font-bold text-slate-400">
                       <span>Route</span>
                       <span>Flight number</span>
@@ -887,7 +889,9 @@ export default function GroupTravelPage() {
                     </div>
                   ))}
                 </div>
-              </div>
+                      </div>
+                    </div>
+                  </div>
                 </>
               ) : (
                 <div className="space-y-6">
@@ -988,7 +992,7 @@ export default function GroupTravelPage() {
             else setIsNegotiateSuccessOpen(true);
           }}
         >
-          <DialogContent className="max-w-md bg-white p-0 overflow-hidden rounded-2xl border-none shadow-2xl">
+          <DialogContent className="max-w-md bg-white p-0 overflow-y-auto max-h-[90vh] no-scrollbar rounded-2xl border-none shadow-2xl">
             <div className="bg-[#F2FBFF] p-6 flex flex-col gap-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">

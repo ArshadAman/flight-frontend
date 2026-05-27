@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Navbar } from "@/components/Navbar";
+import { B2BNavbar } from "@/components/B2BNavbar";
 import { Footer } from "@/components/Footer";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -183,7 +183,7 @@ export default function AddPaxDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col font-sans">
-      <Navbar />
+      <B2BNavbar />
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
@@ -202,7 +202,7 @@ export default function AddPaxDetailsPage() {
 
           {/* --- PNR Details --- */}
           <Section title="Request details">
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
               {/* Group Details */}
               <div>
                 <ColHeader>Group Details</ColHeader>
@@ -243,6 +243,8 @@ export default function AddPaxDetailsPage() {
 
           {/* ---- Booking details ---- */}
           <Section title="Booking details">
+            <div className="overflow-x-auto w-full no-scrollbar">
+              <div className="min-w-[800px] xl:min-w-0">
             <table className="w-full text-[14px]">
               <thead>
                 <tr className="text-gray-400 text-left border-b border-gray-100">
@@ -280,13 +282,15 @@ export default function AddPaxDetailsPage() {
                 ))}
               </tbody>
             </table>
+            </div>
+            </div>
           </Section>
 
           {/* ---- Passenger Details List ---- */}
           <div>
             <h2 className="text-[15px] font-bold text-gray-900 mb-4">Passenger Details List</h2>
 
-            <div className="flex items-center gap-6 text-[13px] mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 text-[13px] mb-6">
               <div className="flex gap-2 text-gray-400">
                 Request ID <span className="text-blue-500 font-medium hover:underline cursor-pointer">{PAX_DATA.stats.requestId}</span>
               </div>
@@ -307,7 +311,7 @@ export default function AddPaxDetailsPage() {
                     {/* Row 1: Passenger details */}
                     <div>
                       <h3 className="text-[14px] font-bold text-gray-800 mb-4">Passenger details:</h3>
-                      <div className="grid grid-cols-5 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 md:gap-6">
                         {/* First Name */}
                         <div className="border-b border-gray-300 pb-1">
                           <input
@@ -368,9 +372,9 @@ export default function AddPaxDetailsPage() {
                     {/* Row 2: Passport details */}
                     <div>
                       <h3 className="text-[14px] font-bold text-gray-800 mb-4">Passenger passport details:</h3>
-                      <div className="grid grid-cols-5 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 md:gap-6">
                         {/* Passport Number */}
-                        <div className="col-span-2 border-b border-gray-300 pb-1">
+                        <div className="md:col-span-2 border-b border-gray-300 pb-1">
                           <input
                             {...register(`passengers.${index}.passportNumber`)}
                             type="text"
@@ -380,7 +384,7 @@ export default function AddPaxDetailsPage() {
                           {errors.passengers?.[index]?.passportNumber && <span className="text-[10px] text-red-500 font-bold block mt-1">{errors.passengers[index].passportNumber.message}</span>}
                         </div>
                         {/* Issuing Country */}
-                        <div className="col-span-2 border-b border-gray-300 pb-1 relative">
+                        <div className="md:col-span-2 border-b border-gray-300 pb-1 relative">
                           <select
                             {...register(`passengers.${index}.issuingCountry`)}
                             className={`w-full text-[14px] text-gray-500 outline-none border-none py-1 appearance-none bg-transparent cursor-pointer pr-6 ${errors.passengers?.[index]?.issuingCountry ? 'text-red-500' : ''}`}
@@ -428,7 +432,7 @@ export default function AddPaxDetailsPage() {
           </div>
 
           {/* ---- Action Buttons ---- */}
-          <div className="flex gap-4 pt-4 mt-8 border-t border-gray-100">
+          <div className="flex flex-col sm:flex-row gap-4 pt-4 mt-8 border-t border-gray-100">
             <button
               onClick={() => router.back()}
               className="flex-1 flex items-center justify-center gap-2 border border-gray-900 rounded-full py-3 text-gray-900 font-semibold text-[15px] hover:bg-gray-50 transition-colors"

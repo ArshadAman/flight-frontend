@@ -168,7 +168,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hidden sm:flex gap-4">
+          <div className="flex gap-4 mt-4 md:mt-0 justify-end w-full sm:w-auto">
             <button
               onClick={scrollLeft}
               aria-label="Scroll left"

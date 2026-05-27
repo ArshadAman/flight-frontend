@@ -59,9 +59,9 @@ export default function HistoryPage() {
                         </div>
 
                         <div className="overflow-x-auto">
-                            <div className="min-w-[800px]">
+                            <div className="w-full">
                                 {/* Table Header */}
-                                <div className="grid grid-cols-[1fr_1fr_1fr_2.5fr_1fr] gap-4 px-6 py-4 border-b border-slate-100 bg-white text-slate-400 text-[13px] font-bold">
+                                <div className="hidden md:grid grid-cols-[1fr_1fr_1fr_2.5fr_1fr] gap-4 px-6 py-4 border-b border-slate-100 bg-white text-slate-400 text-[13px] font-bold">
                                     <div>Date</div>
                                     <div>Time</div>
                                     <div>Action</div>
@@ -75,15 +75,15 @@ export default function HistoryPage() {
                                         <div 
                                             key={i} 
                                             onClick={() => setSelectedEntry(entry)}
-                                            className="grid grid-cols-[1fr_1fr_1fr_2.5fr_1fr] gap-4 items-center py-4 border-b border-slate-50 text-[13px] font-medium transition-colors px-6 cursor-pointer text-slate-700 hover:bg-slate-50"
+                                            className="flex flex-col md:grid md:grid-cols-[1fr_1fr_1fr_2.5fr_1fr] gap-2 md:gap-4 items-start md:items-center py-4 border-b border-slate-50 text-[13px] font-medium transition-colors px-6 cursor-pointer text-slate-700 hover:bg-slate-50"
                                         >
-                                            <div className="text-slate-600 font-bold">{entry.date}</div>
-                                            <div className="text-slate-600 font-bold">{entry.time}</div>
-                                            <div>
+                                            <div className="text-slate-600 font-bold flex items-center gap-2"><span className="md:hidden text-slate-400 w-16">Date:</span>{entry.date}</div>
+                                            <div className="text-slate-600 font-bold flex items-center gap-2"><span className="md:hidden text-slate-400 w-16">Time:</span>{entry.time}</div>
+                                            <div className="hidden md:block">
                                                 <FileText className="w-5 h-5 text-blue-500" />
                                             </div>
-                                            <div className="font-bold text-slate-800">{entry.action}</div>
-                                            <div className="text-slate-600">{entry.agent}</div>
+                                            <div className="font-bold text-slate-800 flex items-center gap-2"><span className="md:hidden text-slate-400 w-16">Action:</span>{entry.action}</div>
+                                            <div className="text-slate-600 flex items-center gap-2"><span className="md:hidden text-slate-400 w-16">Agent:</span>{entry.agent}</div>
                                         </div>
                                     ))}
                                 </div>

@@ -60,8 +60,8 @@ export default function AddOnModal({ isOpen, onClose, onApply, initialSelectedOp
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-xl w-full max-w-[500px] overflow-hidden shadow-2xl flex flex-col">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-white rounded-xl w-full max-w-[500px] shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto">
         <div className="bg-[#F2FBFF] px-6 py-4 flex items-center justify-between">
           <h2 className="text-[#D60D26] text-[18px] font-bold tracking-tight">Add On</h2>
           <button onClick={onClose} className="text-slate-800 p-1 rounded-md">

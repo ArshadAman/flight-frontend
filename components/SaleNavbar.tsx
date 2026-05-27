@@ -156,7 +156,7 @@ export function SaleNavbar() {
                 ]}
               />
               <NavItem name="Booking" hasDropdown={false} linkHref="/my-booking" />
-              <NavItem name="Reports" hasDropdown={false} linkHref="reports" />
+              <NavItem name="Reports" hasDropdown={false} linkHref="/sale/reports" />
               <NavItem name="Inventory" hasDropdown={false} linkHref="/sale/inventory" />
               <NavItem name="History" hasDropdown={false} linkHref="/sale/history" />
             </nav>
@@ -278,8 +278,8 @@ export function SaleNavbar() {
         <nav className="flex flex-col space-y-2 mt-4 px-4 w-full">
           <NavLink href="/" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
           <NavLink href="/sale/flight/all" isMobile onClick={() => setIsMobileMenuOpen(false)}>Flight</NavLink>
-          <NavLink href="/booking" isMobile onClick={() => setIsMobileMenuOpen(false)}>Booking</NavLink>
-          <NavLink href="/reports" isMobile onClick={() => setIsMobileMenuOpen(false)}>Reports</NavLink>
+          <NavLink href="/my-booking" isMobile onClick={() => setIsMobileMenuOpen(false)}>Booking</NavLink>
+          <NavLink href="/sale/reports" isMobile onClick={() => setIsMobileMenuOpen(false)}>Reports</NavLink>
           <NavLink href="/sale/inventory" isMobile onClick={() => setIsMobileMenuOpen(false)}>Inventory</NavLink>
           <NavLink href="/sale/history" isMobile onClick={() => setIsMobileMenuOpen(false)}>History</NavLink>
         </nav>

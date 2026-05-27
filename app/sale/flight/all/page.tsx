@@ -5,12 +5,14 @@ import { SaleNavbar } from "@/components/SaleNavbar";
 import { Footer } from "@/components/Footer";
 import { Bell, Filter, Plus, ArrowRight, X, Plane, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { NotificationModal } from "@/components/NotificationModal";
 
 export default function SaleAllFlightsPage() {
     const [activeTab, setActiveTab] = useState("All booking");
     const [selectedFlight, setSelectedFlight] = useState<any>(null);
     const [activeDrawerTab, setActiveDrawerTab] = useState("Segment");
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
     const flightsJuly = [
         { route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Closed" },
@@ -28,26 +30,58 @@ export default function SaleAllFlightsPage() {
         <div 
             key={index} 
             onClick={() => { setSelectedFlight(flight); setActiveDrawerTab("Segment"); }}
-            className={`grid grid-cols-7 gap-4 items-center py-4 border-b border-slate-100 text-[13px] font-medium transition-colors px-6 cursor-pointer ${selectedFlight === flight ? 'bg-rose-50 border-l-2 border-l-[#D60D26]' : 'text-slate-700 hover:bg-slate-50'}`}
+            className={`flex flex-col md:grid md:grid-cols-7 gap-3 md:gap-4 items-start md:items-center py-5 md:py-4 border-b border-slate-100 text-[13px] font-medium transition-colors px-6 cursor-pointer ${selectedFlight === flight ? 'bg-rose-50 border-l-2 border-l-[#D60D26]' : 'text-slate-700 hover:bg-slate-50'}`}
         >
-            <div className="flex items-center gap-2">
-                <span className="font-bold">{flight.route.split(" \u2192 ")[0]}</span>
-                <ArrowRight className="w-3 h-3 text-slate-400" />
-                <span className="font-bold">{flight.route.split(" \u2192 ")[1]}</span>
-                <span className="text-slate-400 text-[12px]">({flight.stops} Stops)</span>
+            {/* 1. Route */}
+            <div className="flex items-center justify-between w-full md:w-auto mb-1 md:mb-0">
+                <div className="flex items-center gap-2">
+                    <span className="font-bold text-[15px] md:text-[13px]">{flight.route.split(" \u2192 ")[0]}</span>
+                    <ArrowRight className="w-3 h-3 text-slate-400" />
+                    <span className="font-bold text-[15px] md:text-[13px]">{flight.route.split(" \u2192 ")[1]}</span>
+                    <span className="text-slate-400 text-[12px]">({flight.stops} Stops)</span>
+                </div>
+                {/* Mobile Status */}
+                <div className="md:hidden">
+                    <span className={`px-3 py-1 rounded-full text-[11px] font-bold border ${flight.status === 'Closed' ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-green-50 text-emerald-600 border-green-200'}`}>
+                        {flight.status}
+                    </span>
+                </div>
             </div>
-            <div>{flight.date}</div>
-            <div>{flight.time}</div>
-            <div>{flight.flightNo}</div>
-            <div className="flex items-center gap-3 text-[14px]">
+
+            <div className="grid grid-cols-2 md:contents w-full md:w-auto gap-4 md:gap-0 mb-1 md:mb-0">
+                {/* 2. Date */}
+                <div className="flex items-center gap-2"><span className="md:hidden text-slate-400 text-[12px]">Date:</span>{flight.date}</div>
+                {/* 3. Time */}
+                <div className="flex items-center gap-2"><span className="md:hidden text-slate-400 text-[12px]">Time:</span>{flight.time}</div>
+            </div>
+
+            <div className="grid grid-cols-2 md:contents w-full md:w-auto gap-4 md:gap-0 mb-2 md:mb-0">
+                {/* 4. Flight No */}
+                <div className="flex items-center gap-2"><span className="md:hidden text-slate-400 text-[12px]">Flight:</span>{flight.flightNo}</div>
+                
+                {/* Mobile-only Fare (to keep grid balanced on mobile) */}
+                <div className="md:hidden font-bold flex items-center gap-2 text-[#D60D26]">
+                    <span className="text-slate-400 text-[12px] font-medium">Fare:</span>{flight.fare}
+                </div>
+            </div>
+
+            {/* 5. Seats */}
+            <div className="flex items-center gap-3 text-[14px] w-full md:w-auto py-2 md:py-0 border-y border-slate-50 md:border-0">
+                <span className="md:hidden text-slate-400 text-[12px]">Seats:</span>
                 <div className="flex items-center gap-1"><span className="text-slate-400">💺</span> 10</div>
                 <div className="w-1 h-1 bg-slate-300 rounded-full"></div>
                 <div className="flex items-center gap-1"><span className="text-blue-500">💺</span> 8</div>
                 <div className="w-1 h-1 bg-slate-300 rounded-full"></div>
                 <div className="flex items-center gap-1"><span className="text-slate-400">♿</span> 2</div>
             </div>
-            <div className="font-bold">{flight.fare}</div>
-            <div>
+
+            {/* 6. Desktop-only Fare */}
+            <div className="hidden md:flex font-bold items-center gap-2 text-slate-800">
+                {flight.fare}
+            </div>
+
+            {/* 7. Desktop-only Status */}
+            <div className="hidden md:flex items-center gap-2">
                 <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold border ${flight.status === 'Closed' ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-green-50 text-emerald-600 border-green-200'}`}>
                     {flight.status}
                 </span>
@@ -82,7 +116,10 @@ export default function SaleAllFlightsPage() {
                             </button>
                         ))}
                     </div>
-                    <button className="flex items-center gap-2 text-white/90 hover:text-white transition-colors text-[14px]">
+                    <button 
+                        onClick={() => setIsNotificationOpen(true)}
+                        className="flex items-center gap-2 text-white/90 hover:text-white transition-colors text-[14px]"
+                    >
                         <Bell className="w-4 h-4" /> Notification(0)
                     </button>
                 </div>
@@ -107,9 +144,9 @@ export default function SaleAllFlightsPage() {
                     {/* Flights Table */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
                         <div className="overflow-x-auto">
-                            <div className="min-w-[1000px]">
+                            <div className="w-full">
                                 {/* Table Header */}
-                                <div className="grid grid-cols-7 gap-4 px-6 py-4 border-b border-slate-100 bg-white text-slate-400 text-[13px] font-bold">
+                                <div className="hidden md:grid grid-cols-7 gap-4 px-6 py-4 border-b border-slate-100 bg-white text-slate-400 text-[13px] font-bold">
                                     <div>Route</div>
                                     <div>Date</div>
                                     <div>Dep. & Arr. Time</div>
@@ -374,6 +411,9 @@ export default function SaleAllFlightsPage() {
                     </div>
                 </div>
             )}
+
+            {/* Notification Modal Portal */}
+            <NotificationModal isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />
 
             <Footer />
         </div>

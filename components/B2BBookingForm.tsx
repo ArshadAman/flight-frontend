@@ -17,19 +17,19 @@ export function B2BBookingForm() {
   return (
     <div className="w-full flex flex-col min-h-screen bg-[#FFFFFF]">
       {/* Top Split Header */}
-      <div className="flex w-full h-[60px] select-none">
-        <div className="flex-1 bg-[#D60D26] text-white flex flex-col justify-center pl-10">
-            <div className="flex items-center gap-2 font-bold text-[15px]">
+      <div className="flex flex-col md:flex-row w-full h-auto md:h-[60px] select-none">
+        <div className="w-full md:flex-1 bg-[#D60D26] text-white flex flex-col justify-center px-4 md:pl-10 py-3 md:py-0">
+            <div className="flex items-center gap-2 font-bold text-[14px] md:text-[15px]">
                 New Delhi <ArrowRight className="w-4 h-4" /> Mumbai
             </div>
             <div className="text-[12px] opacity-90 mt-0.5 tracking-wide">
                 01 Oct • 1 passenger • Economy
             </div>
         </div>
-        <div className="flex-1 bg-[#121121] flex items-center justify-end pr-10">
+        <div className="w-full md:flex-1 bg-[#121121] flex items-center justify-start md:justify-end px-4 md:pr-10 py-3 md:py-0 border-t border-white/10 md:border-t-0">
             <Button 
                 onClick={() => router.push('/b2b')}
-                className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-6 h-[34px] font-bold text-[12px] shadow-sm flex items-center gap-1.5 transition-transform active:scale-95"
+                className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-6 h-[34px] font-bold text-[12px] shadow-sm flex items-center justify-center gap-1.5 transition-transform active:scale-95 w-full md:w-auto"
             >
                 Search Again <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={3} />
             </Button>
@@ -98,8 +98,8 @@ export function B2BBookingForm() {
                             <div className="bg-[#F2FBFF] px-6 py-3 border-b border-slate-100">
                                 <h3 className="text-slate-800 font-bold text-[14px]">Price details:</h3>
                             </div>
-                            <div className="px-6 py-4 overflow-x-auto">
-                                <table className="w-full text-[13px]">
+                            <div className="px-6 py-4 overflow-x-auto no-scrollbar">
+                                <table className="w-full text-[13px] min-w-[800px]">
                                     <thead>
                                         <tr className="text-slate-400 font-medium text-left border-b border-slate-100">
                                             <th className="pb-3 pr-4 font-semibold">No.</th>
@@ -136,7 +136,7 @@ export function B2BBookingForm() {
                             
                             <div className="p-6">
                                 {/* Name row */}
-                                <div className="grid grid-cols-2 md:grid-cols-6 gap-5 mb-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-5 mb-8">
                                     <select className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[13px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
                                         <option>Salutation</option>
                                         <option>Mr.</option>
@@ -156,7 +156,7 @@ export function B2BBookingForm() {
                                 </div>
 
                                 {/* Tabs */}
-                                <div className="flex items-center gap-1 mb-0 border-b border-slate-100 px-2">
+                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1 sm:gap-2 mb-0 border-b border-slate-100 px-2">
                                     <button 
                                         onClick={() => setActiveTab('APIS')}
                                         className={cn("px-5 py-3 text-[12px] font-bold rounded-t-lg transition-colors border-b-2", activeTab === 'APIS' ? "bg-[#F2FBFF] text-[#D60D26] border-[#D60D26]" : "text-slate-500 hover:bg-slate-50 border-transparent")}
@@ -192,7 +192,7 @@ export function B2BBookingForm() {
                                                       <input type="date" placeholder="Date Of Birth" className="w-full border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white" />
                                                     </div>
                                                 </div>
-                                                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                                                     <select className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
                                                         <option>Document Type</option>
                                                         <option>Passport</option>
@@ -238,7 +238,7 @@ export function B2BBookingForm() {
                                                     <input type="text" placeholder="ZIP / Costal Code" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                                     <input type="text" placeholder="City" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                                 </div>
-                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                                     <input type="text" placeholder="State" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                                     <select className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
                                                         <option value="">Country</option>
@@ -248,8 +248,8 @@ export function B2BBookingForm() {
                                             </div>
 
                                             {/* Tab Actions */}
-                                            <div className="flex items-center gap-3 mt-4">
-                                                <Button className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-8 h-[38px] font-bold text-[13px] shadow-sm transition-transform active:scale-95">
+                                            <div className="flex flex-col sm:flex-row items-center gap-3 mt-4">
+                                                <Button className="w-full sm:w-auto bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-8 h-[38px] font-bold text-[13px] shadow-sm transition-transform active:scale-95">
                                                     Confirm
                                                 </Button>
                                                 <Button variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-[100px] px-6 h-[38px] font-bold text-[13px] shadow-sm transition-transform active:scale-95">
@@ -352,7 +352,7 @@ export function B2BBookingForm() {
                             <h3 className="text-slate-800 font-bold text-[14px]">Form of payment:</h3>
                             
                             {/* Radios */}
-                            <div className="flex items-center gap-6">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
                                 {(['Card', 'Net Banking', 'Wallet'] as const).map(method => (
                                     <label key={method} className="flex items-center gap-2 cursor-pointer group" onClick={() => setPaymentMethod(method)}>
                                         <div className={cn("w-[14px] h-[14px] rounded-full border-2 flex items-center justify-center transition-all", paymentMethod === method ? "border-[#D60D26]" : "border-slate-300 group-hover:border-[#D60D26]")}>
@@ -365,13 +365,13 @@ export function B2BBookingForm() {
 
                             {/* Card Details */}
                             {paymentMethod === 'Card' && (
-                                <div className="flex items-center gap-4 w-full">
-                                    <input type="text" placeholder="Card Number" className="flex-[1.5] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
-                                    <input type="text" placeholder="Month" className="flex-[0.8] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
-                                    <input type="text" placeholder="Year" className="flex-[0.8] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
-                                    <input type="text" placeholder="CVV" className="flex-[0.8] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
-                                    <input type="text" placeholder="Full Name As On Card" className="flex-[1.5] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
-                                    <Button className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-8 h-[38px] font-bold text-[13px] shadow-sm transition-transform active:scale-95 shrink-0">
+                                <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+                                    <input type="text" placeholder="Card Number" className="w-full md:flex-[1.5] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
+                                    <input type="text" placeholder="Month" className="w-full md:flex-[0.8] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
+                                    <input type="text" placeholder="Year" className="w-full md:flex-[0.8] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
+                                    <input type="text" placeholder="CVV" className="w-full md:flex-[0.8] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
+                                    <input type="text" placeholder="Full Name As On Card" className="w-full md:flex-[1.5] border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
+                                    <Button className="w-full md:w-auto bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-8 h-[38px] font-bold text-[13px] shadow-sm transition-transform active:scale-95 shrink-0">
                                         Save
                                     </Button>
                                 </div>
@@ -388,8 +388,8 @@ export function B2BBookingForm() {
                             <div className="bg-[#F2FBFF] px-6 py-3 border-b border-slate-100">
                                 <h3 className="text-slate-800 font-bold text-[14px]">Price details:</h3>
                             </div>
-                            <div className="px-6 py-4 overflow-x-auto">
-                                <table className="w-full text-[13px]">
+                            <div className="px-6 py-4 overflow-x-auto no-scrollbar">
+                                <table className="w-full text-[13px] min-w-[800px]">
                                     <thead>
                                         <tr className="text-slate-400 font-medium text-left border-b border-slate-100">
                                             <th className="pb-3 pr-4 font-semibold w-1/4">Pax</th>
@@ -419,7 +419,7 @@ export function B2BBookingForm() {
                         {/* Invoicing Address */}
                         <div className="flex flex-col border-b border-slate-100 px-6 py-6 gap-5">
                             <h3 className="text-slate-800 font-bold text-[14px]">Invoicing address :</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                                 <select className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium text-slate-600 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white">
                                     <option value="">Nationality</option>
                                     {COUNTRIES.map(country => <option key={country} value={country}>{country}</option>)}
@@ -429,7 +429,7 @@ export function B2BBookingForm() {
                                 <input type="email" placeholder="Email Address" className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                 <input type="text" placeholder="Mobile Number" className="border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <input type="text" placeholder="Address Details" className="col-span-1 md:col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                 <input type="text" placeholder="ZIP / Costal Code" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
                                 <input type="text" placeholder="City" className="col-span-1 border border-slate-200 rounded-md px-3 py-2.5 text-[12px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 placeholder:text-slate-400 bg-white" />
@@ -450,7 +450,7 @@ export function B2BBookingForm() {
                         </div>
 
                         {/* Bottom Buttons */}
-                        <div className="p-6 pt-0 mt-4 flex items-center justify-between gap-4 w-full">
+                        <div className="p-6 pt-0 mt-4 flex flex-col md:flex-row items-center justify-between gap-4 w-full">
                             <Button 
                                 onClick={() => router.push('/b2b/booking/XYR9NF')}
                                 className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] h-[52px] font-bold text-[16px] shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"

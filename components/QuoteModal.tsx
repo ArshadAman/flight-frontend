@@ -12,8 +12,8 @@ export function QuoteModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl w-full max-w-[550px] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto">
+      <div className="bg-white rounded-2xl w-full max-w-[550px] shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="bg-[#F2FBFF] px-6 py-4 flex items-center justify-between">
           <h2 className="text-[#D60D26] text-[20px] font-bold tracking-tight">Quote</h2>
@@ -58,9 +58,9 @@ export function QuoteModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             </div>
 
             {/* Agency fee */}
-            <div className="flex items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
               <span className="text-[15px] font-semibold text-slate-500 w-[140px]">Agency fee :</span>
-              <div className="flex gap-8">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-8">
                 <label className="flex items-center gap-2.5 cursor-pointer group" onClick={() => setAgencyFee("included")}>
                   <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${agencyFee === "included" ? 'border-[#D60D26]' : 'border-slate-300 group-hover:border-[#D60D26]'}`}>
                     {agencyFee === "included" && <div className="w-2.5 h-2.5 rounded-full bg-[#D60D26]" />}
@@ -77,9 +77,9 @@ export function QuoteModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             </div>
 
             {/* Flight options */}
-            <div className="flex items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 mt-2 sm:mt-0">
               <span className="text-[15px] font-semibold text-slate-500 w-[140px]">Flight options :</span>
-              <div className="flex gap-8">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-8">
                 <label className="flex items-center gap-2.5 cursor-pointer group" onClick={() => setFlightOptions("selected")}>
                   <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${flightOptions === "selected" ? 'border-[#D60D26]' : 'border-slate-300 group-hover:border-[#D60D26]'}`}>
                     {flightOptions === "selected" && <div className="w-2.5 h-2.5 rounded-full bg-[#D60D26]" />}
@@ -98,14 +98,14 @@ export function QuoteModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-between gap-4 mt-6 pt-2">
-            <Button variant="outline" className="flex-1 rounded-[100px] border-slate-300 text-slate-900 font-bold h-12 text-[14px] hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all active:scale-95">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 mt-6 pt-2">
+            <Button variant="outline" className="w-full sm:flex-1 rounded-[100px] border-slate-300 text-slate-900 font-bold h-12 text-[14px] hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all active:scale-95">
               Copy To Clipboard
             </Button>
-            <Button variant="outline" className="flex-1 rounded-[100px] border-slate-300 text-slate-900 font-bold h-12 text-[14px] hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all active:scale-95">
+            <Button variant="outline" className="w-full sm:flex-1 rounded-[100px] border-slate-300 text-slate-900 font-bold h-12 text-[14px] hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all active:scale-95">
               Copy To Email
             </Button>
-            <Button className="flex-1 rounded-[100px] bg-[#D60D26] hover:bg-[#D60D26] text-white font-bold h-12 text-[15px] shadow-md transition-all active:scale-95">
+            <Button className="w-full sm:flex-1 rounded-[100px] bg-[#D60D26] hover:bg-[#D60D26] text-white font-bold h-12 text-[15px] shadow-md transition-all active:scale-95">
               Get PDF
             </Button>
           </div>

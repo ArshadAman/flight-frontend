@@ -41,7 +41,7 @@ export default function ViewBookingPage() {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex gap-8 relative mt-2">
+          <div className="flex gap-8 relative mt-2 overflow-x-auto whitespace-nowrap no-scrollbar">
             {tabs.map((tab) => (
               <button
                 key={tab}
@@ -115,7 +115,7 @@ export default function ViewBookingPage() {
             </div>
 
             {/* Request end date & Actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mt-2 md:mt-0">
               <div className="border-b border-gray-300 pb-1 relative flex-1">
                 <input
                   type="text"
@@ -127,12 +127,14 @@ export default function ViewBookingPage() {
                 <CalendarIcon className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
               </div>
 
-              <Button className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-2 h-auto font-bold text-base shadow-sm whitespace-nowrap">
-                Apply Filters
-              </Button>
-              <button className="text-[#D60D26] font-bold text-base hover:underline whitespace-nowrap px-2">
-                Reset
-              </button>
+              <div className="flex items-center justify-between sm:justify-start gap-4">
+                <Button className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-2 h-auto font-bold text-base shadow-sm whitespace-nowrap">
+                  Apply Filters
+                </Button>
+                <button className="text-[#D60D26] font-bold text-base hover:underline whitespace-nowrap px-2">
+                  Reset
+                </button>
+              </div>
             </div>
           </div>
 
@@ -155,87 +157,92 @@ export default function ViewBookingPage() {
             </div>
           </div>
 
-          {/* Table Header */}
-          <div className="grid grid-cols-[1.2fr_1.8fr_1fr_1.4fr_0.6fr_1.6fr] gap-4 px-4 mb-3 text-sm font-semibold text-gray-400 uppercase tracking-wide">
-            <div>Group Details</div>
-            <div>Flight details</div>
-            <div>Airline</div>
-            <div>Request details</div>
-            <div>PNR</div>
-            <div>Status</div>
-          </div>
+          {/* Table Container */}
+          <div className="overflow-x-auto w-full no-scrollbar pb-4">
+            <div className="min-w-[1000px] xl:min-w-0">
+              {/* Table Header */}
+              <div className="grid grid-cols-[1.2fr_1.8fr_1fr_1.4fr_0.6fr_1.6fr] gap-4 px-4 mb-3 text-sm font-semibold text-gray-400 uppercase tracking-wide">
+                <div>Group Details</div>
+                <div>Flight details</div>
+                <div>Airline</div>
+                <div>Request details</div>
+                <div>PNR</div>
+                <div>Status</div>
+              </div>
 
-          {/* Data Rows */}
-          <div className="space-y-3">
-            {paidPayments.length === 0 ? (
-               <div className="text-center py-16 text-gray-400 text-base">
-                 No &quot;Paid&quot; bookings found.
-               </div>
-            ) : (
-               paidPayments.map((req, index) => (
-                 <div
-                   key={req.id || index}
-                   className="bg-white border border-gray-200 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.05)] grid grid-cols-[1.2fr_1.8fr_1fr_1.4fr_0.6fr_1.6fr] gap-4 items-center px-4 py-4"
-                 >
-                   {/* Group Details */}
-                   <div className="flex flex-col">
-                     <span className="text-gray-900 font-bold text-[16px] truncate pr-2">{req.groupName}</span>
-                     <span className="text-gray-500 text-[14px] truncate pr-2">{req.requestId}</span>
+              {/* Data Rows */}
+              <div className="space-y-3">
+                {paidPayments.length === 0 ? (
+                   <div className="text-center py-16 text-gray-400 text-base">
+                     No &quot;Paid&quot; bookings found.
                    </div>
-
-                   {/* Flight Details */}
-                   <div className="flex items-center gap-5">
-                     <div className="flex flex-col items-start min-w-[70px]">
-                       <div className="flex items-center gap-1 font-bold text-gray-900 text-[15px]">
-                         {req.origin} <span className="text-[#D60D26] text-xs">✈</span> {req.destination}
-                       </div>
-                       <div className="text-gray-400 text-[13px] whitespace-nowrap">{req.departureDate}</div>
-                     </div>
-                     <div className="flex flex-col items-start min-w-[70px]">
-                       <div className="flex items-center gap-1 font-bold text-gray-900 text-[15px]">
-                         {req.destination} <span className="text-[#D60D26] text-xs" style={{display:'inline-block',transform:'scaleX(-1)'}}>✈</span> {req.origin}
-                       </div>
-                       <div className="text-gray-400 text-[13px] whitespace-nowrap">{req.returnDate}</div>
-                     </div>
-                   </div>
-
-                   {/* Airline */}
-                   <div className="pr-2">
-                     <span className="text-[#D60D26] font-bold text-[15px] tracking-wide uppercase leading-tight truncate">
-                       {req.airline}<sup className="text-[8px]">✈</sup>
-                     </span>
-                   </div>
-
-                   {/* Request Details */}
-                   <div className="flex flex-col text-[14px] pr-2">
-                     <span className="text-gray-700 font-medium truncate">
-                       {req.adults + req.children} pax({req.adults + req.children}A)
-                     </span>
-                     <span className="text-[#D60D26] truncate">Request Date: {req.requestDate}</span>
-                   </div>
-
-                   {/* PNR */}
-                   <div className="text-gray-500 text-[15px] font-medium">—</div>
-
-                   {/* Status + View Details */}
-                   <div className="flex items-center justify-between pl-1">
-                     <div className="flex flex-col items-start gap-0.5">
-                       <span className="font-bold text-[15px] text-green-600">Payment Complete</span>
-                       {req.validTill && (
-                         <span className="text-[12px] text-gray-500 whitespace-nowrap">
-                           Valid till: {req.validTill}
-                         </span>
-                       )}
-                     </div>
-                     <button
-                       className="text-gray-400 cursor-not-allowed text-[15px] font-medium border-l border-gray-200 pl-3 ml-2 whitespace-nowrap"
+                ) : (
+                   paidPayments.map((req, index) => (
+                     <div
+                       key={req.id || index}
+                       className="bg-white border border-gray-200 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.05)] grid grid-cols-[1.2fr_1.8fr_1fr_1.4fr_0.6fr_1.6fr] gap-4 items-center px-4 py-4"
                      >
-                       View Details
-                     </button>
-                   </div>
-                 </div>
-               ))
-            )}
+                       {/* Group Details */}
+                       <div className="flex flex-col">
+                         <span className="text-gray-900 font-bold text-[16px] truncate pr-2">{req.groupName}</span>
+                         <span className="text-gray-500 text-[14px] truncate pr-2">{req.requestId}</span>
+                       </div>
+
+                       {/* Flight Details */}
+                       <div className="flex items-center gap-5">
+                         <div className="flex flex-col items-start min-w-[70px]">
+                           <div className="flex items-center gap-1 font-bold text-gray-900 text-[15px]">
+                             {req.origin} <span className="text-[#D60D26] text-xs">✈</span> {req.destination}
+                           </div>
+                           <div className="text-gray-400 text-[13px] whitespace-nowrap">{req.departureDate}</div>
+                         </div>
+                         <div className="flex flex-col items-start min-w-[70px]">
+                           <div className="flex items-center gap-1 font-bold text-gray-900 text-[15px]">
+                             {req.destination} <span className="text-[#D60D26] text-xs" style={{display:'inline-block',transform:'scaleX(-1)'}}>✈</span> {req.origin}
+                           </div>
+                           <div className="text-gray-400 text-[13px] whitespace-nowrap">{req.returnDate}</div>
+                         </div>
+                       </div>
+
+                       {/* Airline */}
+                       <div className="pr-2">
+                         <span className="text-[#D60D26] font-bold text-[15px] tracking-wide uppercase leading-tight truncate">
+                           {req.airline}<sup className="text-[8px]">✈</sup>
+                         </span>
+                       </div>
+
+                       {/* Request Details */}
+                       <div className="flex flex-col text-[14px] pr-2">
+                         <span className="text-gray-700 font-medium truncate">
+                           {req.adults + req.children} pax({req.adults + req.children}A)
+                         </span>
+                         <span className="text-[#D60D26] truncate">Request Date: {req.requestDate}</span>
+                       </div>
+
+                       {/* PNR */}
+                       <div className="text-gray-500 text-[15px] font-medium">—</div>
+
+                       {/* Status + View Details */}
+                       <div className="flex items-center justify-between pl-1">
+                         <div className="flex flex-col items-start gap-0.5">
+                           <span className="font-bold text-[15px] text-green-600 whitespace-nowrap">Payment Complete</span>
+                           {req.validTill && (
+                             <span className="text-[12px] text-gray-500 whitespace-nowrap">
+                               Valid till: {req.validTill}
+                             </span>
+                           )}
+                         </div>
+                         <button
+                           className="text-gray-400 cursor-not-allowed text-[15px] font-medium border-l border-gray-200 pl-3 ml-2 whitespace-nowrap"
+                         >
+                           View Details
+                         </button>
+                       </div>
+                     </div>
+                   ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </main>

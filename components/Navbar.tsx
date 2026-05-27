@@ -221,13 +221,7 @@ export function Navbar() {
 
             {/* Mobile Menu Toggle */}
             <div className="lg:hidden flex items-center">
-              <button
-                onClick={() => setIsNotificationOpen(true)}
-                className="text-slate-600 p-2 mr-1 relative"
-              >
-                <Bell size={24} />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-brand rounded-full border border-white"></span>
-              </button>
+
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="text-brand p-2 focus:outline-none -mr-2"
@@ -259,17 +253,36 @@ export function Navbar() {
           </button>
         </div>
 
-        <nav className="flex flex-col space-y-2 mt-4 px-4 w-full">
+        <nav className="flex flex-col space-y-1 mt-6 px-4 w-full">
           <NavLink href="/" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
 
-          <div className="flex flex-col pl-4 py-2 border-l-2 border-slate-100 gap-2">
-            <span className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wider pl-2">Group Travel</span>
-            <div className="pl-2 flex flex-col gap-2">
-              <div className="pl-4 flex flex-col gap-2 border-l border-slate-200">
-                <Link href="/group-travel/new" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">New Booking</Link>
-                <Link href="/group-travel/view-request" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">Request</Link>
-                <Link href="/group-travel/add-passenger" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">Modified Request</Link>
-              </div>
+          <div className="flex flex-col w-full my-4 bg-slate-50/50 rounded-2xl border border-slate-100 p-2">
+            <div className="flex items-center gap-2 px-4 py-3 mb-1">
+              <div className="w-1.5 h-1.5 bg-[#D60D26] rounded-full"></div>
+              <span className="text-[13px] font-[900] text-slate-800 uppercase tracking-widest">Group Travel</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Link href="/group-travel/new" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3.5 px-4 text-[15px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-slate-400">
+                  <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M15 13L18 16L15 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                New Booking
+              </Link>
+              <Link href="/group-travel/view-request" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3.5 px-4 text-[15px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-slate-400">
+                  <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M15 13L18 16L15 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Request
+              </Link>
+              <Link href="/group-travel/add-passenger" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3.5 px-4 text-[15px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-slate-400">
+                  <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M15 13L18 16L15 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Modified Request
+              </Link>
             </div>
           </div>
 

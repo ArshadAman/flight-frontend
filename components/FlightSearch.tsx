@@ -406,7 +406,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
 
                             {/* Origin Autocomplete Dropdown */}
                             {activeDropdown === 'origin' && debouncedOriginSearch.length >= 2 && (
-                                <div className="absolute top-[100%] left-0 w-[120%] bg-white rounded-2xl shadow-2xl z-[100] mt-2 border border-slate-100 max-h-[300px] overflow-y-auto">
+                                <div className="absolute top-[100%] left-0 w-full lg:w-[120%] bg-white rounded-2xl shadow-2xl z-[100] mt-2 border border-slate-100 max-h-[300px] overflow-y-auto">
                                     <ul className="py-2">
                                         {GLOBAL_CITIES.filter(c =>
                                             c.name.toLowerCase().includes(debouncedOriginSearch.toLowerCase()) ||
@@ -442,7 +442,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                         </div>
 
                         {/* Swap Button */}
-                        <div className="hidden lg:flex absolute left-[18%] top-[35%] -translate-x-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-brand text-white items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer group/swap"
+                        <div className="flex absolute right-6 top-[90px] lg:right-auto lg:left-[18%] lg:top-[35%] lg:-translate-x-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-brand text-white items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer group/swap rotate-90 lg:rotate-0"
                             onClick={() => {
                                 const tempOrigin = origin;
                                 const tempOriginSearch = originSearch;
@@ -476,7 +476,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
 
                             {/* Destination Autocomplete Dropdown */}
                             {activeDropdown === 'destination' && debouncedDestinationSearch.length >= 2 && (
-                                <div className="absolute top-[100%] left-0 lg:left-10 w-[120%] lg:w-[110%] bg-white rounded-2xl shadow-2xl z-[100] mt-2 border border-slate-100 max-h-[300px] overflow-y-auto">
+                                <div className="absolute top-[100%] left-0 lg:left-10 w-full lg:w-[110%] bg-white rounded-2xl shadow-2xl z-[100] mt-2 border border-slate-100 max-h-[300px] overflow-y-auto">
                                     <ul className="py-2">
                                         {GLOBAL_CITIES.filter(c =>
                                             c.name.toLowerCase().includes(debouncedDestinationSearch.toLowerCase()) ||

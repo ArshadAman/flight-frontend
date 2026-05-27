@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { B2BNavbar as Navbar } from '@/components/B2BNavbar';
+import { B2BNavbar } from "@/components/B2BNavbar";
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Bell, ChevronDown, CalendarIcon, AlertCircle, Minus, Plus, User } from 'lucide-react';
@@ -89,7 +89,7 @@ export default function ViewRequestPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      <Navbar />
+      <B2BNavbar />
 
       <main className="flex-1 w-full max-w-[1440px] mx-auto bg-white shadow-sm mt-4 mb-10 overflow-hidden relative pb-20">
         
@@ -109,7 +109,7 @@ export default function ViewRequestPage() {
            </div>
 
            {/* Navigation Tabs */}
-           <div className="flex gap-8 relative mt-2">
+           <div className="flex gap-8 relative mt-2 overflow-x-auto whitespace-nowrap no-scrollbar">
               {tabs.map((tab) => (
                 <button
                   key={tab}
@@ -187,7 +187,7 @@ export default function ViewRequestPage() {
               </div>
 
               {/* Request end date & Actions */}
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mt-2 md:mt-0">
                  <div className="border-b border-gray-300 pb-1 relative flex-1">
                    <input 
                      type="text" 
@@ -199,12 +199,14 @@ export default function ViewRequestPage() {
                    <CalendarIcon className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
                  </div>
                  
-                 <Button className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-2 h-auto font-bold text-base shadow-sm whitespace-nowrap">
-                   Apply Filters
-                 </Button>
-                 <button className="text-[#D60D26] font-bold text-base hover:underline whitespace-nowrap px-2">
-                   Reset
-                 </button>
+                 <div className="flex items-center justify-between sm:justify-start gap-4">
+                   <Button className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-2 h-auto font-bold text-base shadow-sm whitespace-nowrap">
+                     Apply Filters
+                   </Button>
+                   <button className="text-[#D60D26] font-bold text-base hover:underline whitespace-nowrap px-2">
+                     Reset
+                   </button>
+                 </div>
               </div>
 
            </div>
@@ -229,88 +231,92 @@ export default function ViewRequestPage() {
            </div>
 
            {/* 7-Column Data Table Header */}
-           <div className="grid grid-cols-[1.2fr_2fr_1fr_1.5fr_0.5fr_1.5fr_0.8fr] gap-3 px-6 mb-4 text-sm font-semibold text-gray-400">
-              <div>Group Details</div>
-              <div>Flight details</div>
-              <div>Airline</div>
-              <div>Request details</div>
-              <div>PNR</div>
-              <div>Status</div>
-              <div className="text-right pr-4">Action</div>
-           </div>
-
-           <div className="space-y-3">
-             {filteredRequests.length === 0 ? (
-               <div className="text-center py-16 text-gray-400 text-base">
-                 No &quot;Payment pending&quot; requests found.
+           <div className="overflow-x-auto w-full no-scrollbar pb-4">
+             <div className="min-w-[1000px] xl:min-w-0">
+               <div className="grid grid-cols-[1.2fr_2fr_1fr_1.5fr_0.5fr_1.5fr_0.8fr] gap-3 px-6 mb-4 text-sm font-semibold text-gray-400">
+                  <div>Group Details</div>
+                  <div>Flight details</div>
+                  <div>Airline</div>
+                  <div>Request details</div>
+                  <div>PNR</div>
+                  <div>Status</div>
+                  <div className="text-right pr-4">Action</div>
                </div>
-             ) : (
-               filteredRequests.map((req, index) => (
-                  <div key={req.id || index} className="bg-white border text-left border-gray-100 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] grid grid-cols-[1.2fr_2fr_1fr_1.5fr_0.5fr_1.5fr_0.8fr] gap-3 items-center px-6 py-5">
-                     
-                     {/* Col 1: Group Details */}
-                     <div>
-                        <div className="text-gray-900 font-bold text-[17px] truncate pr-2">{req.groupName}</div>
-                        <div className="text-gray-400 text-[14px] mt-0.5 truncate pr-2">{req.requestId}</div>
-                     </div>
 
-                     {/* Col 2: Flight details */}
-                     <div className="flex items-center gap-4">
-                        {/* Departure */}
-                        <div className="flex flex-col items-start min-w-[100px]">
-                           <div className="flex items-center gap-1.5 font-bold text-gray-900 text-[14px]">
-                              {req.origin} <span className="text-[#D60D26] text-xs">✈</span> {req.destination}
-                           </div>
-                           <div className="text-gray-400 text-[12px] mt-0.5 whitespace-nowrap">{req.departureDate}</div>
-                        </div>
-                        
-                        {/* Return */}
-                        <div className="flex flex-col items-start min-w-[100px]">
-                           <div className="flex items-center gap-1.5 font-bold text-gray-900 text-[14px]">
-                              {req.destination} <span className="text-[#D60D26] text-xs transform rotate-180">✈</span> {req.origin}
-                           </div>
-                           <div className="text-gray-400 text-[12px] mt-0.5 whitespace-nowrap">{req.returnDate}</div>
-                        </div>
-                     </div>
+               <div className="space-y-3">
+                 {filteredRequests.length === 0 ? (
+                   <div className="text-center py-16 text-gray-400 text-base">
+                     No &quot;Payment pending&quot; requests found.
+                   </div>
+                 ) : (
+                   filteredRequests.map((req, index) => (
+                      <div key={req.id || index} className="bg-white border text-left border-gray-100 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] grid grid-cols-[1.2fr_2fr_1fr_1.5fr_0.5fr_1.5fr_0.8fr] gap-3 items-center px-6 py-5">
+                         
+                         {/* Col 1: Group Details */}
+                         <div>
+                            <div className="text-gray-900 font-bold text-[17px] truncate pr-2">{req.groupName}</div>
+                            <div className="text-gray-400 text-[14px] mt-0.5 truncate pr-2">{req.requestId}</div>
+                         </div>
 
-                     {/* Col 3: Airline */}
-                     <div className="text-[#D60D26] font-bold text-[14px] tracking-wide uppercase truncate pr-2">
-                        {req.airline}
-                     </div>
+                         {/* Col 2: Flight details */}
+                         <div className="flex items-center gap-4">
+                            {/* Departure */}
+                            <div className="flex flex-col items-start min-w-[100px]">
+                               <div className="flex items-center gap-1.5 font-bold text-gray-900 text-[14px]">
+                                  {req.origin} <span className="text-[#D60D26] text-xs">✈</span> {req.destination}
+                               </div>
+                               <div className="text-gray-400 text-[12px] mt-0.5 whitespace-nowrap">{req.departureDate}</div>
+                            </div>
+                            
+                            {/* Return */}
+                            <div className="flex flex-col items-start min-w-[100px]">
+                               <div className="flex items-center gap-1.5 font-bold text-gray-900 text-[14px]">
+                                  {req.destination} <span className="text-[#D60D26] text-xs transform rotate-180">✈</span> {req.origin}
+                               </div>
+                               <div className="text-gray-400 text-[12px] mt-0.5 whitespace-nowrap">{req.returnDate}</div>
+                            </div>
+                         </div>
 
-                     {/* Col 4: Request details */}
-                     <div className="flex flex-col text-[13px]">
-                        <span className="text-gray-700 font-medium truncate pr-2">
-                           {req.adults + req.children} pax({req.adults + req.children}A)
-                        </span>
-                        <span className="text-[#D60D26] truncate pr-2">Request Date: {req.requestDate}</span>
-                     </div>
+                         {/* Col 3: Airline */}
+                         <div className="text-[#D60D26] font-bold text-[14px] tracking-wide uppercase truncate pr-2">
+                            {req.airline}
+                         </div>
 
-                     {/* Col 5: PNR */}
-                     <div className="text-gray-400 text-[15px]">—</div>
+                         {/* Col 4: Request details */}
+                         <div className="flex flex-col text-[13px]">
+                            <span className="text-gray-700 font-medium truncate pr-2">
+                               {req.adults + req.children} pax({req.adults + req.children}A)
+                            </span>
+                            <span className="text-[#D60D26] truncate pr-2">Request Date: {req.requestDate}</span>
+                         </div>
 
-                     {/* Col 6: Status */}
-                     <div className="flex flex-col items-start gap-0.5 pr-2">
-                         <span className={`font-bold text-[14px] ${getStatusColor(req.status)} whitespace-nowrap`}>
-                            {req.status}
-                         </span>
-                         {req.validTill && (
-                            <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">Valid till: {req.validTill}</span>
-                         )}
-                     </div>
-                     
-                     {/* Col 7: Action */}
-                     <div className="flex justify-end pr-2 border-l border-gray-100 h-full items-center">
-                        <button
-                          onClick={() => handleViewDetails(req)}
-                          className="text-blue-600 hover:text-blue-700 hover:underline text-[14px] font-semibold whitespace-nowrap"
-                        >
-                          View Details
-                        </button>
-                     </div>
-                  </div>
-               ))
-             )}
+                         {/* Col 5: PNR */}
+                         <div className="text-gray-400 text-[15px]">—</div>
+
+                         {/* Col 6: Status */}
+                         <div className="flex flex-col items-start gap-0.5 pr-2">
+                             <span className={`font-bold text-[14px] ${getStatusColor(req.status)} whitespace-nowrap`}>
+                                {req.status}
+                             </span>
+                             {req.validTill && (
+                                <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">Valid till: {req.validTill}</span>
+                             )}
+                         </div>
+                         
+                         {/* Col 7: Action */}
+                         <div className="flex justify-end pr-2 border-l border-gray-100 h-full items-center">
+                            <button
+                              onClick={() => handleViewDetails(req)}
+                              className="text-blue-600 hover:text-blue-700 hover:underline text-[14px] font-semibold whitespace-nowrap"
+                            >
+                              View Details
+                            </button>
+                         </div>
+                      </div>
+                   ))
+                 )}
+               </div>
+             </div>
            </div>
            
         </div>
@@ -319,7 +325,7 @@ export default function ViewRequestPage() {
 
       {/* ---- Task 3: Payment Pending Detail Modal ---- */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="sm:max-w-2xl rounded-[16px] p-0 border-0 overflow-hidden outline-none" showCloseButton={true}>
+        <DialogContent className="sm:max-w-2xl rounded-[16px] p-0 border-0 overflow-y-auto max-h-[90vh] no-scrollbar outline-none" showCloseButton={true}>
           <DialogHeader className="px-6 pt-5 pb-3 border-b border-gray-100">
             <DialogTitle className="text-[18px] font-bold text-gray-900">
               Make Payment Details

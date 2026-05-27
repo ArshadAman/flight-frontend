@@ -102,9 +102,20 @@ export function B2BNavbar() {
     <>
       <header className="sticky top-0 w-full z-[100] bg-white border-b border-gray-200 shadow-md">
         <div className="container mx-auto px-4 md:px-8 lg:px-10">
-          <div className="flex justify-between items-center h-24">
+          <div className="flex justify-between items-center h-24 relative">
+            {/* Mobile Menu Toggle (Left) */}
+            <div className="lg:hidden flex items-center absolute left-0 z-10">
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="text-brand p-2 focus:outline-none -ml-2"
+                aria-label="Open Menu"
+              >
+                <Menu size={28} />
+              </button>
+            </div>
+
             {/* Logo */}
-            <Link href="/b2b" className="flex flex-col items-center justify-center select-none cursor-pointer">
+            <Link href="/b2b" className="flex flex-col items-center justify-center select-none cursor-pointer absolute left-1/2 -translate-x-1/2 lg:static lg:transform-none lg:left-auto">
               <Logo />
               <div className="flex flex-col items-center mt-1">
                 <h1
@@ -418,21 +429,14 @@ export function B2BNavbar() {
               )}
             </div>
 
-            {/* Mobile Menu Toggle */}
-            <div className="lg:hidden flex items-center">
+            {/* Mobile Right Icons (Bell) */}
+            <div className="lg:hidden flex items-center absolute right-0 z-10">
               <button 
                 onClick={() => setIsNotificationOpen(true)}
-                className="text-slate-600 p-2 mr-1 relative"
+                className="text-slate-600 p-2 relative -mr-2"
               >
                 <Bell size={24} />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-brand rounded-full border border-white"></span>
-              </button>
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="text-brand p-2 focus:outline-none -mr-2"
-                aria-label="Open Menu"
-              >
-                <Menu size={32} />
               </button>
             </div>
           </div>
@@ -461,32 +465,100 @@ export function B2BNavbar() {
         <nav className="flex flex-col space-y-2 mt-4 px-4 w-full">
           <NavLink href="/b2b" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
           
-          <div className="flex flex-col pl-4 py-2 border-l-2 border-slate-100 gap-2">
-            <span className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wider pl-2">Group Travel</span>
-            <div className="pl-2 flex flex-col gap-2">
-              <div className="pl-4 flex flex-col gap-2 border-l border-slate-200">
-                <Link href="/b2b/group-travel/new" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">New Booking</Link>
-                <Link href="/b2b/group-travel/view-request" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">Request</Link>
-                <Link href="/b2b/group-travel/add-passenger" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">Modified Request</Link>
-              </div>
+          <div className="flex flex-col w-full my-3 bg-slate-50/50 rounded-2xl border border-slate-100 p-2">
+            <div className="flex items-center gap-2 px-3 py-2 mb-1">
+              <div className="w-1.5 h-1.5 bg-[#D60D26] rounded-full"></div>
+              <span className="text-[12px] font-[900] text-slate-800 uppercase tracking-widest">Group Travel</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Link href="/b2b/group-travel/new" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3 px-4 text-[14px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-slate-400"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                New Booking
+              </Link>
+              <Link href="/b2b/group-travel/view-request" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3 px-4 text-[14px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-slate-400"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                Request
+              </Link>
+              <Link href="/b2b/group-travel/add-passenger" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3 px-4 text-[14px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-slate-400"><path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 13L18 16L15 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                Modified Request
+              </Link>
             </div>
           </div>
 
           <NavLink href="/b2b/my-booking" isMobile onClick={() => setIsMobileMenuOpen(false)}>My Booking</NavLink>
 
-          {/* Mobile My Account Nested Panel */}
-          <div className="flex flex-col pl-4 py-2 border-l-2 border-slate-100 gap-2">
-            <span className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wider pl-2">My Account</span>
-            <div className="pl-2 flex flex-col gap-2">
-              <span className="text-[14px] font-extrabold text-slate-700">Payment</span>
-              <div className="pl-4 flex flex-col gap-2 border-l border-slate-200">
-                <Link href="/b2b/payment?tab=online-deposit" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">Online Payment Deposit</Link>
-                <Link href="/b2b/payment?tab=payment-request" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">Payment Request</Link>
-                <Link href="/b2b/payment?tab=deposit-slip" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">Deposit Slip</Link>
-                <Link href="/b2b/payment?tab=payment-due" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold text-slate-500 hover:text-primary">Payment Due</Link>
+          <div className="flex flex-col w-full my-3 bg-slate-50/50 rounded-2xl border border-slate-100 p-2">
+            <div className="flex items-center gap-2 px-3 py-2 mb-1">
+              <div className="w-1.5 h-1.5 bg-[#D60D26] rounded-full"></div>
+              <span className="text-[12px] font-[900] text-slate-800 uppercase tracking-widest">My Account</span>
+            </div>
+            
+            <div className="flex flex-col gap-1">
+              <div className="flex flex-col w-full">
+                <button
+                  onClick={() => setIsPaymentExpanded(!isPaymentExpanded)}
+                  className="flex items-center justify-between gap-3 w-full py-3 px-4 text-[14px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 6v6a3 3 0 003 3h11" />
+                      <path d="M14 11l4 4-4 4" />
+                    </svg>
+                    Payment
+                  </div>
+                  <ChevronDown size={16} className={`transition-transform text-slate-400 ${isPaymentExpanded ? 'rotate-180' : '-rotate-90'}`} />
+                </button>
+                
+                {isPaymentExpanded && (
+                  <div className="flex flex-col pl-4 w-full mt-1">
+                    {[
+                      { label: "Online Payment Deposit", href: "/b2b/payment?tab=online-deposit" },
+                      { label: "Payment Request", href: "/b2b/payment?tab=payment-request" },
+                      { label: "Deposit Slip", href: "/b2b/payment?tab=deposit-slip" },
+                      { label: "Payment Due", href: "/b2b/payment?tab=payment-due", isLast: true },
+                    ].map((sub, idx) => (
+                      <Link
+                        key={idx}
+                        href={sub.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center group/sub text-slate-600 hover:text-[#D60D26] transition-colors text-[13px] font-bold py-2"
+                      >
+                        {sub.isLast ? (
+                          <svg className="w-6 h-5 text-slate-300 group-hover/sub:text-[#D60D26] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="10" y1="0" x2="10" y2="12" />
+                            <line x1="10" y1="12" x2="26" y2="12" />
+                            <path d="M22 8l4 4-4 4" />
+                          </svg>
+                        ) : (
+                          <svg className="w-6 h-5 text-slate-300 group-hover/sub:text-[#D60D26] shrink-0 transition-colors" viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="10" y1="0" x2="10" y2="24" />
+                            <line x1="10" y1="12" x2="26" y2="12" />
+                            <path d="M22 8l4 4-4 4" />
+                          </svg>
+                        )}
+                        <span className="pl-2">{sub.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
-              <Link href="/b2b/reports" onClick={() => setIsMobileMenuOpen(false)} className="text-[14px] font-extrabold text-slate-700 hover:text-primary mt-1">Reports</Link>
-              <Link href="/b2b/manage-commission" onClick={() => setIsMobileMenuOpen(false)} className="text-[14px] font-extrabold text-slate-700 hover:text-primary">Manage Commission</Link>
+
+              <Link href="/b2b/reports" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3 px-4 text-[14px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+                <svg className="w-5 h-5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 6v6a3 3 0 003 3h11" />
+                  <path d="M14 11l4 4-4 4" />
+                </svg>
+                Reports
+              </Link>
+              
+              <Link href="/b2b/manage-commission" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3 px-4 text-[14px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+                <svg className="w-5 h-5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 6v6a3 3 0 003 3h11" />
+                  <path d="M14 11l4 4-4 4" />
+                </svg>
+                Manage Commission
+              </Link>
             </div>
           </div>
 

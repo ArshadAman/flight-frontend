@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Navbar } from "@/components/Navbar";
+import { B2BNavbar } from "@/components/B2BNavbar";
 import { Footer } from "@/components/Footer";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -79,7 +79,7 @@ function PaymentPortalContent() {
 
   return (
     <div className="min-h-screen bg-[#F2FBFF] flex flex-col font-sans">
-      <Navbar />
+      <B2BNavbar />
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
       <main className="flex-1 w-full max-w-[1000px] mx-auto px-4 py-8 pb-20">

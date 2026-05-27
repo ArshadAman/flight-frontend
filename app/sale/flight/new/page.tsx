@@ -167,18 +167,18 @@ export default function AddFlightPage() {
     return (
         <div className="w-full h-screen flex flex-col bg-[#F2FBFF] overflow-hidden font-sans relative">
             {/* Header */}
-            <div className="w-full h-16 bg-gradient-to-r from-[#D60D26] to-[#30060F] text-white flex items-center justify-between px-6 z-20 shrink-0 shadow-md">
-                <button onClick={() => router.back()} className="flex items-center gap-2 font-bold text-[15px] hover:text-white/80 transition-colors">
-                    <ArrowLeft className="w-5 h-5" /> Add flights
+            <div className="w-full h-16 bg-gradient-to-r from-[#D60D26] to-[#30060F] text-white flex items-center justify-between px-4 sm:px-6 z-20 shrink-0 shadow-md overflow-x-auto no-scrollbar">
+                <button onClick={() => router.back()} className="flex items-center gap-1 sm:gap-2 font-bold text-[14px] sm:text-[15px] hover:text-white/80 transition-colors shrink-0">
+                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Add flights</span><span className="sm:hidden">Back</span>
                 </button>
-                <div className="flex items-center gap-3 text-[14px]">
+                <div className="flex items-center gap-1.5 sm:gap-3 text-[11px] sm:text-[14px] shrink-0 mx-auto px-4">
                     <div className="flex flex-col items-center relative">
                         <span className="font-bold">Route</span>
                         <div className="w-1.5 h-1.5 bg-white rounded-full absolute -bottom-1"></div>
                     </div>
                     <ArrowRight className="w-3 h-3 text-white/50" />
                     <div className="flex flex-col items-center relative">
-                        <span className={step === 3 ? "text-white font-bold" : "text-white/70 font-medium"}>Flights</span>
+                        <span className={step >= 3 ? "text-white font-bold" : "text-white/70 font-medium"}>Flights</span>
                         {step === 3 && <div className="w-1.5 h-1.5 bg-white rounded-full absolute -bottom-1"></div>}
                     </div>
                     <ArrowRight className="w-3 h-3 text-white/50" />
@@ -187,7 +187,7 @@ export default function AddFlightPage() {
                         {step === 4 && <div className="w-1.5 h-1.5 bg-white rounded-full absolute -bottom-1"></div>}
                     </div>
                 </div>
-                <div className="w-[120px]"></div>
+                <div className="hidden md:block w-[120px] shrink-0"></div>
             </div>
 
             {/* Map Background (Only for steps 0-2) */}
@@ -381,8 +381,8 @@ export default function AddFlightPage() {
                 <div className="flex-1 bg-white flex flex-col w-full relative z-30 overflow-y-auto pt-10 px-4 sm:px-10 pb-20">
                     <div className="w-full max-w-[1400px] mx-auto">
                         <div className="overflow-x-auto">
-                            <div className="min-w-[1000px]">
-                                <div className="grid grid-cols-8 gap-4 text-[13px] font-bold text-slate-400 mb-4 px-4">
+                        <div className="w-full">
+                                <div className="hidden md:grid grid-cols-8 gap-4 text-[13px] font-bold text-slate-400 mb-4 px-4">
                             <div className="col-span-2">Route</div>
                             <div>Date</div>
                             <div>Time</div>
@@ -397,20 +397,23 @@ export default function AddFlightPage() {
                             October, 2025
                         </div>
                         
-                        <div className="border-b border-slate-200 grid grid-cols-8 gap-4 items-center py-6 px-4 text-[13px] font-bold text-slate-700">
-                            <div className="flex flex-col col-span-2">
+                        <div className="border-b border-slate-200 flex flex-col md:grid md:grid-cols-8 gap-2 md:gap-4 items-start md:items-center py-6 px-4 text-[13px] font-bold text-slate-700">
+                            <div className="flex flex-col md:col-span-2 w-full">
+                                <span className="md:hidden text-slate-400 font-medium mb-1">Route:</span>
                                 <span>DEL → MUM <span className="text-slate-400 font-medium">• (1 Stops)</span></span>
                             </div>
-                            <div>Wed, 26 Jul 25</div>
-                            <div>16:30 - 12:20(+1)</div>
-                            <div>AIRINDIA</div>
-                            <div>AI121 • AI242</div>
-                            <div className="flex items-center gap-1.5">
-                                <svg className="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M4 18v3h2v-3h12v3h2v-3H4zm2-10h12v6H6V8zm0-4h12v2H6V4z"/></svg>
+                            <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Date:</span>Wed, 26 Jul 25</div>
+                            <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Time:</span>16:30 - 12:20(+1)</div>
+                            <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Airlines:</span>AIRINDIA</div>
+                            <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Flight No:</span>AI121 • AI242</div>
+                            <div className="flex items-center gap-1.5 w-full">
+                                <span className="md:hidden text-slate-400 font-medium w-20">Seats:</span>
+                                <svg className="w-4 h-4 text-slate-400 hidden md:block" fill="currentColor" viewBox="0 0 24 24"><path d="M4 18v3h2v-3h12v3h2v-3H4zm2-10h12v6H6V8zm0-4h12v2H6V4z"/></svg>
                                 10
                             </div>
-                            <div className="text-[14px]">$150.00</div>
-                            <div>
+                            <div className="text-[14px] flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20 text-[13px]">Fare:</span>$150.00</div>
+                            <div className="flex items-center gap-2 w-full">
+                                <span className="md:hidden text-slate-400 font-medium w-20">APIS:</span>
                                 <span className="border border-green-300 text-green-500 bg-green-50 rounded-full px-5 py-1.5 text-[12px] font-bold">Need</span>
                             </div>
                         </div>
@@ -424,28 +427,28 @@ export default function AddFlightPage() {
             <div className="w-full min-h-[88px] py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between px-4 sm:px-10 z-30 shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
                 {step < 3 ? (
                     <>
-                        <div className="flex items-center gap-6">
+                        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
                             {step > 0 && (
                                 <>
-                                    <button className="flex items-center gap-2 text-[#D60D26] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors text-[15px]">
+                                    <button className="w-full sm:w-auto flex items-center justify-center gap-2 text-[#D60D26] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors text-[15px]">
                                         <X className="w-4 h-4" /> Add flight series
                                     </button>
-                                    <div className="w-px h-6 bg-slate-300"></div>
-                                    <button className="text-slate-500 font-bold hover:text-slate-700 underline underline-offset-4 text-[15px] decoration-2">
+                                    <div className="hidden sm:block w-px h-6 bg-slate-300"></div>
+                                    <button className="w-full sm:w-auto text-slate-500 font-bold hover:text-slate-700 underline underline-offset-4 text-[15px] decoration-2">
                                         How flight series work
                                     </button>
                                 </>
                             )}
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto mt-2 sm:mt-0">
                             {step === 1 && (
-                                <button onClick={() => setStep(2)} className="border border-[#D60D26] text-[#D60D26] hover:bg-rose-50 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[13px] sm:text-[15px] flex items-center gap-2 transition-colors">
+                                <button onClick={() => setStep(2)} className="w-full sm:w-auto justify-center border border-[#D60D26] text-[#D60D26] hover:bg-rose-50 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[14px] sm:text-[15px] flex items-center gap-2 transition-colors">
                                     <ArrowRightLeft className="w-4 h-4" /> Add return flight
                                 </button>
                             )}
                             <button 
                                 onClick={handleAddFlightDetails}
-                                className={`rounded-full px-4 sm:px-10 py-3.5 font-bold text-[13px] sm:text-[15px] flex items-center gap-2 transition-colors ${
+                                className={`w-full sm:w-auto justify-center rounded-full px-4 sm:px-10 py-3.5 font-bold text-[14px] sm:text-[15px] flex items-center gap-2 transition-colors ${
                                     step > 0 && selectedDate 
                                         ? 'bg-[#D60D26] hover:bg-[#30060F] text-white shadow-md cursor-pointer' 
                                         : 'bg-[#FFA8B3] text-white cursor-not-allowed'
@@ -457,20 +460,20 @@ export default function AddFlightPage() {
                     </>
                 ) : (
                     <>
-                        <button onClick={() => setStep(step - 1)} className="border border-slate-300 text-slate-600 font-bold hover:bg-slate-50 px-4 sm:px-8 py-3.5 rounded-full transition-colors text-[13px] sm:text-[15px]">
+                        <button onClick={() => setStep(step - 1)} className="w-full sm:w-auto justify-center border border-slate-300 text-slate-600 font-bold hover:bg-slate-50 px-4 sm:px-8 py-3.5 rounded-full transition-colors text-[14px] sm:text-[15px]">
                             Change The Route
                         </button>
                         {step === 3 ? (
                             <button 
                                 onClick={() => { if (hasScheduledFlight) setStep(4); }}
-                                className={`px-4 sm:px-10 py-3.5 rounded-full font-bold text-[13px] sm:text-[15px] transition-colors flex items-center gap-2 ${
+                                className={`w-full sm:w-auto justify-center px-4 sm:px-10 py-3.5 rounded-full font-bold text-[14px] sm:text-[15px] transition-colors flex items-center gap-2 ${
                                     hasScheduledFlight ? 'bg-[#D60D26] text-white hover:bg-[#30060F] shadow-md' : 'bg-[#FFA8B3] text-white cursor-not-allowed'
                                 }`}
                             >
                                 Check And Confirm <ArrowRight className="w-5 h-5" />
                             </button>
                         ) : (
-                            <button className="bg-[#D60D26] text-white hover:bg-[#30060F] shadow-md px-10 py-3.5 rounded-full font-bold text-[15px] transition-colors flex items-center gap-2">
+                            <button className="w-full sm:w-auto justify-center bg-[#D60D26] text-white hover:bg-[#30060F] shadow-md px-10 py-3.5 rounded-full font-bold text-[15px] transition-colors flex items-center gap-2">
                                 Create Flight 01 <ArrowRight className="w-4 h-4" />
                             </button>
                         )}
@@ -524,7 +527,7 @@ export default function AddFlightPage() {
                                 <div className="flex gap-6 overflow-x-auto pb-4">
                                     {segments.map((seg, index) => (
                                         seg.isEditing ? (
-                                            <div key={seg.id} className="min-w-[700px] flex-1 animate-in fade-in zoom-in-95 duration-300">
+                                            <div key={seg.id} className="w-full xl:min-w-[700px] shrink-0 animate-in fade-in zoom-in-95 duration-300">
                                                 {/* Timeline Graphic for editing */}
                                                 <div className="flex items-center justify-between relative mb-10 w-full">
                                                     <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-slate-300"></div>
@@ -544,7 +547,7 @@ export default function AddFlightPage() {
                                                     </div>
                                                 </div>
 
-                                                <div className="flex gap-8">
+                                                <div className="flex flex-col md:flex-row gap-6 md:gap-8">
                                                     {/* Left Form */}
                                                     <div className="flex-1 space-y-6">
                                                         <div className="flex gap-4">
@@ -718,7 +721,7 @@ export default function AddFlightPage() {
                                             Checked Baggage
                                         </div>
                                         <div className="p-6">
-                                            <div className="flex gap-4 mb-5">
+                                            <div className="flex flex-col sm:flex-row gap-4 mb-5">
                                                 <div className="flex-1">
                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Maximum weight (Kg)</label>
                                                     <select 
@@ -770,7 +773,7 @@ export default function AddFlightPage() {
                                             <div className="text-blue-600 font-bold text-[13px] mb-6 leading-relaxed">
                                                 By default for all flights - can be changed flights per flights after
                                             </div>
-                                            <div className="flex gap-4">
+                                            <div className="flex flex-col sm:flex-row gap-4">
                                                 <div className="flex-1">
                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Available seats</label>
                                                     <div className="relative">
@@ -813,7 +816,7 @@ export default function AddFlightPage() {
                                         </div>
                                         <div className="flex flex-col">
                                             <div className="bg-[#F2FBFF] px-6 py-2.5 text-[13px] font-bold text-slate-600">October 2025</div>
-                                            <div className="p-6 flex gap-4">
+                                            <div className="p-6 flex flex-wrap gap-4">
                                                 {[9, 16, 23, 30].map(day => (
                                                     <div key={day} className="bg-rose-50 rounded-lg p-3 flex flex-col items-center gap-2.5 cursor-pointer border border-rose-100 w-16 hover:bg-rose-100 transition-colors">
                                                         <span className="text-[12px] font-bold text-slate-800">Sun {day}</span>
@@ -824,7 +827,7 @@ export default function AddFlightPage() {
                                                 ))}
                                             </div>
                                             <div className="bg-[#F2FBFF] px-6 py-2.5 text-[13px] font-bold text-slate-600">November 2025</div>
-                                            <div className="p-6 flex gap-4">
+                                            <div className="p-6 flex flex-wrap gap-4">
                                                 <div className="bg-rose-50 rounded-lg p-3 flex flex-col items-center gap-2.5 cursor-pointer border border-rose-100 w-16 hover:bg-rose-100 transition-colors">
                                                     <span className="text-[12px] font-bold text-slate-800">Sun 2</span>
                                                     <div className="w-[22px] h-[22px] bg-[#D60D26] rounded shadow-sm flex items-center justify-center">
@@ -873,12 +876,11 @@ export default function AddFlightPage() {
                             )}
                         </div>
 
-                        {/* Modal Footer */}
-                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+                        <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-100 flex flex-row items-center justify-between gap-3 sm:gap-4 shrink-0">
                             <button 
                                 onClick={() => setModalTab(Math.max(1, modalTab - 1))}
                                 disabled={modalTab === 1}
-                                className={`flex-1 border-2 font-bold py-3.5 rounded-xl transition-colors ${modalTab === 1 ? 'border-slate-100 text-slate-300 cursor-not-allowed' : 'border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                className={`flex-1 w-full border-2 font-bold py-3.5 sm:py-4 text-[14px] sm:text-[16px] rounded-xl transition-colors ${modalTab === 1 ? 'border-slate-100 text-slate-300 cursor-not-allowed' : 'border-slate-200 text-slate-500 hover:bg-slate-200 hover:text-slate-800 shadow-sm'}`}
                             >
                                 Back Step
                             </button>
@@ -890,9 +892,9 @@ export default function AddFlightPage() {
                                         setIsConfirmModalOpen(true);
                                     }
                                 }}
-                                className={`flex-1 text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm bg-[#D60D26] hover:bg-[#30060F]`}
+                                className={`flex-1 w-full text-white font-bold py-3.5 sm:py-4 text-[14px] sm:text-[16px] rounded-xl transition-colors flex items-center justify-center gap-1 sm:gap-2 shadow-md bg-[#D60D26] hover:bg-[#30060F]`}
                             >
-                                {modalTab === 5 ? "Finish" : "Next Step"} {modalTab < 5 && <ArrowRight className="w-4 h-4" />}
+                                {modalTab === 5 ? "Finish" : "Next Step"} {modalTab < 5 && <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />}
                             </button>
                         </div>
                     </div>

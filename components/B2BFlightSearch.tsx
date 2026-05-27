@@ -206,15 +206,16 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
     return (
         <div className="h-auto w-full max-w-[1200px] mx-auto bg-white rounded-[1.5rem] flex flex-col relative z-10 font-sans shadow-xl border border-slate-100 overflow-visible">
             {/* Header / Trip Type Logic */}
-            <div className="flex items-center justify-between bg-white h-14 rounded-t-[1.5rem] relative">
-                <div className="absolute bottom-0 w-full h-[1.5px] bg-slate-200" />
-                <div className="flex items-center px-8 h-full bg-white text-[#D60D26] border-b-[3px] border-[#D60D26] relative z-10 min-w-[150px]">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white h-auto sm:h-14 rounded-t-[1.5rem] relative overflow-hidden">
+                <div className="hidden sm:block absolute bottom-0 w-full h-[1.5px] bg-slate-200" />
+                <div className="flex items-center px-8 h-14 bg-white text-[#D60D26] sm:border-b-[3px] border-[#D60D26] relative z-10 min-w-[150px] w-full sm:w-auto">
                     <div className="flex items-center gap-2 font-bold text-[15px] md:text-[16px]">
                         <PlaneTakeoff className="w-5 h-5 text-[#D60D26]" strokeWidth={2.5} />
                         <span className="tracking-tight">Flights</span>
                     </div>
                 </div>
-                <div className="hidden sm:flex items-center text-[15px] font-semibold h-full">
+                <div className="flex sm:hidden w-full h-[1.5px] bg-slate-200" />
+                <div className="flex items-center text-[15px] font-semibold h-14 w-full sm:w-auto overflow-x-auto no-scrollbar">
                     <Popover open={isLastSearchesOpen} onOpenChange={setIsLastSearchesOpen}>
                         <PopoverTrigger asChild>
                             <div className="flex items-center gap-1.5 px-6 h-full cursor-pointer text-slate-400 hover:text-slate-600 transition-colors">
@@ -453,11 +454,11 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                     /* --------------------------------- */
                     <div className="flex flex-col lg:flex-row items-center justify-between w-full mt-2 lg:gap-2 xl:gap-4 relative" ref={searchRef}>
                         {/* Origin Input */}
-                        <div className="flex flex-col flex-[1.2] min-w-[150px] group relative h-[80px] w-full lg:w-auto">
-                            <label className="text-[13px] font-semibold text-[#888] mb-1 block">Departure From</label>
+                        <div className="flex flex-col flex-1 min-w-[190px] group relative h-[90px] w-full lg:w-auto">
+                            <label className="text-[14px] font-bold text-slate-400 mb-1.5 block">Departure From</label>
                             <input
                                 type="text"
-                                className="bg-transparent border-none outline-none font-black text-slate-900 tracking-tight text-[22px] p-0 placeholder:text-slate-300 leading-none h-[28px] w-full"
+                                className="bg-transparent border-none outline-none font-extrabold text-slate-900 tracking-tight text-[24px] p-0 placeholder:text-slate-300 leading-none h-[30px] w-full"
                                 value={originSearch}
                                 onChange={(e) => {
                                     setOriginSearch(e.target.value);
@@ -506,9 +507,8 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                     </ul>
                                 </div>
                             )}
-
                             {/* Swap Button */}
-                            <div className="hidden lg:flex absolute right-[-18px] xl:right-[-22px] top-[40%] -translate-y-1/2 z-10 w-[32px] h-[32px] rounded-full border border-[#D60D26] bg-white text-[#D60D26] items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-all cursor-pointer group/swap"
+                            <div className="flex absolute right-6 top-[90px] lg:right-auto lg:left-[19%] lg:top-[35%] lg:-translate-x-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-[#D60D26] text-white items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer group/swap rotate-90 lg:rotate-0"
                                 onClick={() => {
                                     const tempOrigin = origin;
                                     const tempOriginSearch = originSearch;
@@ -518,17 +518,16 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                     setDestinationSearch(tempOriginSearch);
                                     setActiveDropdown(null);
                                 }}>
-                                <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+                                <ArrowRight className="w-4 h-4 text-white" strokeWidth={3} />
                             </div>
                         </div>
 
-
                         {/* Destination Input */}
-                        <div className="flex flex-col flex-[1.2] min-w-[150px] group relative h-[80px] w-full lg:w-auto lg:pl-6">
-                            <label className="text-[13px] font-semibold text-[#888] mb-1 block">Going To</label>
+                        <div className="flex flex-col flex-1 min-w-[190px] group relative h-[90px] w-full lg:w-auto lg:pl-10">
+                            <label className="text-[14px] font-bold text-slate-400 mb-1.5 block">Going To</label>
                             <input
                                 type="text"
-                                className="bg-transparent border-none outline-none font-black text-slate-900 tracking-tight text-[22px] p-0 placeholder:text-slate-300 leading-none h-[28px] w-full"
+                                className="bg-transparent border-none outline-none font-extrabold text-slate-900 tracking-tight text-[24px] p-0 placeholder:text-slate-300 leading-none h-[30px] w-full"
                                 value={destinationSearch}
                                 onChange={(e) => {
                                     setDestinationSearch(e.target.value);
@@ -582,10 +581,10 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                         {/* Departure Date Calendar (2026) */}
                         <Popover open={isDepOpen} onOpenChange={setIsDepOpen}>
                             <PopoverTrigger asChild>
-                                <div className="flex flex-col flex-1 min-w-[130px] group cursor-pointer relative h-[80px]">
-                                    <label className="text-[13px] font-semibold text-[#888] mb-1 flex items-center gap-1">Departure Date <ChevronDown className="w-3.5 h-3.5" /></label>
-                                    <div className="font-black text-slate-900 tracking-tight text-[22px] leading-none h-[28px] flex items-center">{date ? format(date, "dd MMM' yy") : "Select Date"}</div>
-                                    <p className="text-[12px] text-[#888] mt-1 font-medium">{date ? format(date, "EEEE") : ""}</p>
+                                <div className="flex flex-col w-full lg:w-[150px] xl:w-[170px] group cursor-pointer relative h-[90px]">
+                                    <label className="text-[14px] font-bold text-slate-400 mb-1.5 flex items-center gap-1">Departure Date <ChevronDown className="w-4 h-4" /></label>
+                                    <div className="font-extrabold text-slate-900 tracking-tight text-[24px] leading-none h-[30px] flex items-center">{date ? format(date, "dd MMM' yy") : "Select Date"}</div>
+                                    <p className="text-[13px] text-slate-500 mt-1.5 font-semibold">{date ? format(date, "EEEE") : ""}</p>
                                     <div className="absolute bottom-0 left-0 w-full lg:w-[90%] h-[1.5px] bg-slate-200 group-hover:bg-slate-300" />
                                 </div>
                             </PopoverTrigger>
@@ -617,7 +616,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                             <PopoverTrigger asChild>
                                 <div
                                     className={cn(
-                                        "flex flex-col flex-1 min-w-[130px] group cursor-pointer relative h-[80px]",
+                                        "flex flex-col w-full lg:w-[150px] xl:w-[170px] group cursor-pointer relative h-[90px]",
                                         tripType === 'one-way' ? "opacity-60 hover:opacity-100 transition-opacity" : ""
                                     )}
                                     onClick={() => {
@@ -626,15 +625,15 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                         }
                                     }}
                                 >
-                                    <label className="text-[13px] font-semibold text-[#888] mb-1 block">Return Date</label>
-                                    <div className="h-[44px] flex items-start pt-[1px]">
+                                    <label className="text-[14px] font-bold text-slate-400 mb-1.5 block">Return Date</label>
+                                    <div className="h-[46px] flex items-start pt-[2px]">
                                         {returnDate && tripType !== 'one-way' ? (
-                                            <div className="font-black text-slate-900 tracking-tight text-[22px] leading-none">
+                                            <div className="font-extrabold text-slate-900 tracking-tight text-[24px] leading-none">
                                                 {format(returnDate, "dd MMM' yy")}
-                                                <p className="text-[12px] text-[#888] mt-1 font-medium">{format(returnDate, "EEEE")}</p>
+                                                <p className="text-[13px] text-slate-500 mt-1.5 font-semibold">{format(returnDate, "EEEE")}</p>
                                             </div>
                                         ) : (
-                                            <span className="text-[#888] text-[13px] font-semibold leading-tight tracking-tight">
+                                            <span className="text-[#888] text-[14px] font-bold leading-tight tracking-tight hover:underline">
                                                 Book Round Trip<br />To Save Extra
                                             </span>
                                         )}
@@ -660,12 +659,12 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                         {/* Travellers & Cabin Class with Working DONE button */}
                         <Popover open={isTravellerOpen} onOpenChange={setIsTravellerOpen}>
                             <PopoverTrigger asChild>
-                                <div className="flex flex-col flex-1 min-w-[140px] group cursor-pointer relative h-[80px]">
-                                    <label className="text-[13px] font-semibold text-[#888] mb-1 flex items-center gap-1 whitespace-nowrap">Traveller $ Class <ChevronDown className="w-3.5 h-3.5" /></label>
-                                    <div className="font-black text-slate-900 tracking-tight text-[22px] leading-none h-[28px] flex items-center truncate">
+                                <div className="flex flex-col w-full lg:w-[150px] xl:w-[170px] group cursor-pointer relative h-[90px]">
+                                    <label className="text-[14px] font-bold text-slate-400 mb-1.5 flex items-center gap-1">Travellers & Class <ChevronDown className="w-4 h-4" /></label>
+                                    <div className="font-extrabold text-slate-900 tracking-tight text-[24px] leading-none h-[30px] flex items-center truncate">
                                         {travellers.adults + travellers.children + travellers.infants} Traveller
                                     </div>
-                                    <p className="text-[12px] text-[#888] mt-1 font-medium">{cabinClass}</p>
+                                    <p className="text-[13px] text-slate-500 mt-1.5 font-semibold">{cabinClass}</p>
                                     <div className="absolute bottom-0 left-0 w-full lg:w-[90%] h-[1.5px] bg-slate-200 group-hover:bg-slate-300" />
                                 </div>
                             </PopoverTrigger>
@@ -708,10 +707,10 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                         {/* +/- Day Dropdown Popover */}
                         <Popover open={isDayVarianceOpen} onOpenChange={setIsDayVarianceOpen}>
                             <PopoverTrigger asChild>
-                                <div className="flex flex-col min-w-[65px] flex-[0.5] group relative h-[80px] w-full lg:w-auto cursor-pointer pr-4">
-                                    <label className="text-[13px] font-semibold text-[#888] mb-1 flex items-center gap-0.5 whitespace-nowrap">+/- Day <ChevronDown className="w-3.5 h-3.5" /></label>
-                                    <div className="font-black text-slate-900 tracking-tight text-[22px] leading-none h-[28px] flex items-center">+/- 0{dayVariance}</div>
-                                    <p className="text-[12px] text-[#888] mt-1 font-medium">Day{dayVariance !== 1 ? 's' : ''}</p>
+                                <div className="flex flex-col w-full lg:w-[100px] xl:w-[120px] group relative h-[90px] cursor-pointer pr-4">
+                                    <label className="text-[14px] font-bold text-slate-400 mb-1.5 flex items-center gap-1 whitespace-nowrap">+/- Day <ChevronDown className="w-4 h-4" /></label>
+                                    <div className="font-extrabold text-slate-900 tracking-tight text-[24px] leading-none h-[30px] flex items-center">+/- 0{dayVariance}</div>
+                                    <p className="text-[13px] text-slate-500 mt-1.5 font-semibold">Day{dayVariance !== 1 ? 's' : ''}</p>
                                     <div className="absolute bottom-0 left-0 w-full lg:w-[90%] h-[1.5px] bg-slate-200 group-hover:bg-slate-300" />
                                 </div>
                             </PopoverTrigger>
@@ -736,8 +735,8 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                             </PopoverContent>
                         </Popover>
 
-                        <div className="flex items-center justify-center lg:justify-end h-auto pb-4 lg:pb-0 lg:pl-1 w-full lg:w-auto mt-2 lg:mt-0 flex-shrink-0">
-                            <Button onClick={handleSearch} className="w-full lg:w-auto bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 h-[44px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
+                        <div className="flex items-center justify-center lg:justify-end h-auto pb-4 lg:pb-0 lg:pl-1 w-full lg:w-auto mt-4 lg:mt-0 flex-shrink-0">
+                            <Button onClick={handleSearch} className="w-full lg:w-auto bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-8 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
                                 Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
                             </Button>
                         </div>
