@@ -13,16 +13,16 @@ export default function InventoryPage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const flightsJuly = [
-        { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Closed" },
-        { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Closed" },
-        { groupPnr: "UYS12435", route: "MUM \u2192 DEL", stops: 1, date: "Wed, 28 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Closed" },
-        { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Open" },
+        { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "INR 150.00", status: "Closed" },
+        { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "INR 150.00", status: "Closed" },
+        { groupPnr: "UYS12435", route: "MUM \u2192 DEL", stops: 1, date: "Wed, 28 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "INR 150.00", status: "Closed" },
+        { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "INR 150.00", status: "Open" },
     ];
 
     const flightsAugust = [
-        { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Open" },
-        { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Open" },
-        { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Open" },
+        { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "INR 150.00", status: "Open" },
+        { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "INR 150.00", status: "Open" },
+        { groupPnr: "UYS12435", route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "INR 150.00", status: "Open" },
     ];
 
     const renderFlightRow = (flight: any, index: number) => (

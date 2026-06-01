@@ -411,7 +411,7 @@ export default function AddFlightPage() {
                                 <svg className="w-4 h-4 text-slate-400 hidden md:block" fill="currentColor" viewBox="0 0 24 24"><path d="M4 18v3h2v-3h12v3h2v-3H4zm2-10h12v6H6V8zm0-4h12v2H6V4z"/></svg>
                                 10
                             </div>
-                            <div className="text-[14px] flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20 text-[13px]">Fare:</span>$150.00</div>
+                            <div className="text-[14px] flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20 text-[13px]">Fare:</span>INR 150.00</div>
                             <div className="flex items-center gap-2 w-full">
                                 <span className="md:hidden text-slate-400 font-medium w-20">APIS:</span>
                                 <span className="border border-green-300 text-green-500 bg-green-50 rounded-full px-5 py-1.5 text-[12px] font-bold">Need</span>
