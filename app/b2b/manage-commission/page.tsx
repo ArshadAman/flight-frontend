@@ -91,7 +91,7 @@ export default function B2BManageCommissionPage() {
                                 <span className="text-slate-600 font-medium text-lg sm:w-40">Your Markup:</span>
                                 <input 
                                     type="text" 
-                                    defaultValue="Rs 20.00" 
+                                    defaultValue="INR 20.00" 
                                     className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 outline-none focus:border-[#888]"
                                 />
                             </div>
@@ -112,15 +112,15 @@ export default function B2BManageCommissionPage() {
                             <div className="bg-[#F2FBFF] rounded-3xl p-6 sm:p-8 space-y-6">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6">
                                     <span className="text-slate-600 font-medium text-lg sm:w-48">Domestic & IATA EU:</span>
-                                    <input type="text" defaultValue="Rs 20.00" disabled className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 bg-white" />
+                                    <input type="text" defaultValue="INR 20.00" disabled className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 bg-white" />
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6">
                                     <span className="text-slate-600 font-medium text-lg sm:w-48">Worldwide:</span>
-                                    <input type="text" defaultValue="Rs 20.00" disabled className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 bg-white" />
+                                    <input type="text" defaultValue="INR 20.00" disabled className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 bg-white" />
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6">
                                     <span className="text-slate-600 font-medium text-lg sm:w-48">LOW /DIR / CHA:</span>
-                                    <input type="text" defaultValue="Rs 20.00" disabled className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 bg-white" />
+                                    <input type="text" defaultValue="INR 20.00" disabled className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 bg-white" />
                                 </div>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-4">
@@ -139,15 +139,15 @@ export default function B2BManageCommissionPage() {
                             <div className="bg-[#F2FBFF] rounded-3xl p-6 sm:p-8 space-y-6">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6">
                                     <span className="text-slate-600 font-medium text-lg sm:w-48">Domestic & IATA EU:</span>
-                                    <input type="text" defaultValue="Rs 20.00" className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 outline-none focus:border-[#888] bg-white" />
+                                    <input type="text" defaultValue="INR 20.00" className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 outline-none focus:border-[#888] bg-white" />
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6">
                                     <span className="text-slate-600 font-medium text-lg sm:w-48">Worldwide:</span>
-                                    <input type="text" defaultValue="Rs 20.00" className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 outline-none focus:border-[#888] bg-white" />
+                                    <input type="text" defaultValue="INR 20.00" className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 outline-none focus:border-[#888] bg-white" />
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6">
                                     <span className="text-slate-600 font-medium text-lg sm:w-48">LOW /DIR / CHA:</span>
-                                    <input type="text" defaultValue="Rs 20.00" className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 outline-none focus:border-[#888] bg-white" />
+                                    <input type="text" defaultValue="INR 20.00" className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 outline-none focus:border-[#888] bg-white" />
                                 </div>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-4">
