@@ -20,12 +20,19 @@ export function B2BNavbar() {
   const [isMyAccountOpen, setIsMyAccountOpen] = useState(false);
   const [isPaymentExpanded, setIsPaymentExpanded] = useState(true); // Starts expanded just like in the screenshot
   const [isProfileManagementExpanded, setIsProfileManagementExpanded] = useState(true); // Starts expanded just like in the screenshot
+  
+  // For Sale multi-level dropdown states
+  const [isForSaleOpen, setIsForSaleOpen] = useState(false);
+  const [isFlightExpanded, setIsFlightExpanded] = useState(false);
+  const [isBookingExpanded, setIsBookingExpanded] = useState(false);
+
   const [balanceHidden, setBalanceHidden] = useState(true);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const myAccountRef = useRef<HTMLDivElement>(null);
+  const forSaleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -45,14 +52,17 @@ export function B2BNavbar() {
       if (myAccountRef.current && !myAccountRef.current.contains(event.target as Node)) {
         setIsMyAccountOpen(false);
       }
+      if (forSaleRef.current && !forSaleRef.current.contains(event.target as Node)) {
+        setIsForSaleOpen(false);
+      }
     }
-    if (openDropdown || isUserDropdownOpen || isMyAccountOpen) {
+    if (openDropdown || isUserDropdownOpen || isMyAccountOpen || isForSaleOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [openDropdown, isUserDropdownOpen, isMyAccountOpen]);
+  }, [openDropdown, isUserDropdownOpen, isMyAccountOpen, isForSaleOpen]);
 
   const toggleDropdown = (name: string) => {
     setOpenDropdown(openDropdown === name ? null : name);
@@ -70,12 +80,12 @@ export function B2BNavbar() {
         onClick={() => hasDropdown ? toggleDropdown(name) : undefined}
         className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${openDropdown === name || (name === "Group Travel" && pathname.startsWith('/b2b/group-travel'))
           ? 'font-[700] text-primary'
-          : 'font-[500] text-[#888] hover:text-[#0C2342]'
+          : 'font-[600] text-[#8A92A6] hover:text-[#0C2342]'
           }`}
       >
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {name}
-          {hasDropdown && <ChevronDown size={16} className={`transition-transform duration-200 ${openDropdown === name ? 'rotate-180' : ''}`} />}
+          {hasDropdown && <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className={`transition-transform duration-200 ${openDropdown === name ? 'rotate-180' : ''}`}><path d="M5 6L0 0H10L5 6Z" /></svg>}
         </div>
       </button>
       {hasDropdown && openDropdown === name && options.length > 0 && (
@@ -148,26 +158,31 @@ export function B2BNavbar() {
                   }
                 ]}
               />
-              <Link
-                href="/b2b/my-booking"
-                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${pathname.startsWith('/b2b/my-booking') ? 'font-[700] text-primary' : 'font-[500] text-[#888] hover:text-[#0C2342]'
-                  }`}
-              >
-                My Booking
-              </Link>
+              <NavItem
+                name="My Booking"
+                options={[
+                  { label: "All Booking", href: "/b2b/my-booking/all", icon: <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg> },
+                  { label: "Re-Booking", href: "/b2b/my-booking/re-booking", icon: <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg> },
+                  { label: "Refund", href: "/b2b/my-booking/refund", icon: <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg> },
+                  { label: "Ticket Download", href: "/b2b/my-booking/download", icon: <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg> },
+                  { label: "Ticket Prints/Shares", href: "/b2b/my-booking/prints", icon: <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg> },
+                  { label: "Import PNR", href: "/b2b/my-booking/import-pnr", icon: <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg> },
+                  { label: "Trips(Recent/Upcoming)", href: "/b2b/my-booking/trips", icon: <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg> },
+                ]}
+              />
 
               {/* Custom High-Fidelity My Account Dropdown */}
               <div className="relative flex items-center h-full" ref={myAccountRef}>
                 <button
                   onClick={() => setIsMyAccountOpen(!isMyAccountOpen)}
                   className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${isMyAccountOpen || pathname.startsWith('/b2b/my-account') || pathname.startsWith('/b2b/payment') || pathname.startsWith('/b2b/reports') || pathname.startsWith('/b2b/manage-commission')
-                    ? 'font-[700] text-[#D60D26]'
-                    : 'font-[500] text-[#888] hover:text-[#0C2342]'
+                    ? 'font-[700] text-primary'
+                    : 'font-[600] text-[#8A92A6] hover:text-[#0C2342]'
                     }`}
                 >
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     My Account
-                    <ChevronDown size={16} className={`transition-transform duration-200 ${isMyAccountOpen ? 'rotate-180' : ''}`} />
+                    <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className={`transition-transform duration-200 ${isMyAccountOpen ? 'rotate-180' : ''}`}><path d="M5 6L0 0H10L5 6Z" /></svg>
                   </div>
 
                 </button>
@@ -255,24 +270,132 @@ export function B2BNavbar() {
                 )}
               </div>
 
-              <Link
-                href="/sale"
-                className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${pathname.startsWith('/sale') ? 'font-[700] text-primary' : 'font-[500] text-[#888] hover:text-[#0C2342]'
-                  }`}
-              >
-                For Sale
-              </Link>
+              {/* Custom High-Fidelity For Sale Dropdown */}
+              <div className="relative flex items-center h-full" ref={forSaleRef}>
+                <button
+                  onClick={() => setIsForSaleOpen(!isForSaleOpen)}
+                  className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${isForSaleOpen || pathname.startsWith('/sale')
+                    ? 'font-[700] text-primary'
+                    : 'font-[600] text-[#8A92A6] hover:text-[#0C2342]'
+                    }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    For Sale
+                    <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className={`transition-transform duration-200 ${isForSaleOpen ? 'rotate-180' : ''}`}><path d="M5 6L0 0H10L5 6Z" /></svg>
+                  </div>
+                </button>
+
+                {isForSaleOpen && (
+                  <div className="absolute top-full left-0 mt-5 min-w-[280px] bg-white border-t-[5px] border-[#D60D26] rounded-xl shadow-xl z-50 p-4 animate-in fade-in duration-200">
+                    <div className="flex flex-col gap-3">
+
+                      {/* Flight Nested */}
+                      <div className="flex flex-col">
+                        <button
+                          onClick={() => setIsFlightExpanded(!isFlightExpanded)}
+                          className="flex items-center justify-between w-full hover:bg-slate-50 py-1.5 px-2 rounded transition-colors group"
+                        >
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M4 6v6a3 3 0 003 3h11" />
+                              <path d="M14 11l4 4-4 4" />
+                            </svg>
+                            <span className="font-bold text-slate-800 text-[14px]">Flight</span>
+                          </div>
+                          <ChevronDown size={14} className={`text-slate-400 group-hover:text-slate-600 transition-transform ${isFlightExpanded ? 'rotate-180' : '-rotate-90'}`} />
+                        </button>
+                        {isFlightExpanded && (
+                          <div className="pl-6 mt-1 flex relative">
+                            <div className="absolute left-[15px] top-0 bottom-4 w-[1px] bg-slate-300" />
+                            <div className="flex flex-col gap-2.5 w-full">
+                              {[
+                                { label: "All Booking", tab: "all" },
+                                { label: "Pending", tab: "pending" },
+                                { label: "Bookable", tab: "bookable" },
+                                { label: "Sold Out", tab: "sold-out" },
+                                { label: "Export", tab: "export" },
+                              ].map((sub, idx) => (
+                                <Link
+                                  key={idx}
+                                  href={`/sale/flight/${sub.tab}`}
+                                  onClick={() => setIsForSaleOpen(false)}
+                                  className="flex items-center gap-2 pl-1.5 group/sub text-slate-600 hover:text-[#D60D26] transition-colors text-[13px] font-bold"
+                                >
+                                  <div className="w-3.5 h-3 border-l border-b border-slate-300 relative -top-1 shrink-0" />
+                                  <span>{sub.label}</span>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Booking Nested */}
+                      <div className="flex flex-col">
+                        <button
+                          onClick={() => setIsBookingExpanded(!isBookingExpanded)}
+                          className="flex items-center justify-between w-full hover:bg-slate-50 py-1.5 px-2 rounded transition-colors group"
+                        >
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M4 6v6a3 3 0 003 3h11" />
+                              <path d="M14 11l4 4-4 4" />
+                            </svg>
+                            <span className="font-bold text-slate-800 text-[14px]">Booking</span>
+                          </div>
+                          <ChevronDown size={14} className={`text-slate-400 group-hover:text-slate-600 transition-transform ${isBookingExpanded ? 'rotate-180' : '-rotate-90'}`} />
+                        </button>
+                        {isBookingExpanded && (
+                          <div className="pl-6 mt-1 flex relative">
+                            <div className="absolute left-[15px] top-0 bottom-4 w-[1px] bg-slate-300" />
+                            <div className="flex flex-col gap-2.5 w-full">
+                              {[
+                                { label: "Upcoming", tab: "upcoming" },
+                                { label: "Departed", tab: "departed" },
+                                { label: "Travel", tab: "travel" },
+                              ].map((sub, idx) => (
+                                <Link
+                                  key={idx}
+                                  href={`/sale/booking/${sub.tab}`}
+                                  onClick={() => setIsForSaleOpen(false)}
+                                  className="flex items-center gap-2 pl-1.5 group/sub text-slate-600 hover:text-[#D60D26] transition-colors text-[13px] font-bold"
+                                >
+                                  <div className="w-3.5 h-3 border-l border-b border-slate-300 relative -top-1 shrink-0" />
+                                  <span>{sub.label}</span>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Simple Top-Level Elements */}
+                      <Link href="/sale/inventory" onClick={() => setIsForSaleOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-1.5 px-2 rounded transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold">
+                        <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg>
+                        <span>Inventory</span>
+                      </Link>
+                      
+                      <Link href="/sale/reports" onClick={() => setIsForSaleOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-1.5 px-2 rounded transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold">
+                        <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg>
+                        <span>Reports</span>
+                      </Link>
+
+                      <Link href="/sale/pnr-history" onClick={() => setIsForSaleOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-1.5 px-2 rounded transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold">
+                        <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg>
+                        <span>PNR History</span>
+                      </Link>
+
+                    </div>
+                  </div>
+                )}
+              </div>
             </nav>
 
             {/* Desktop Action Button */}
             <div className="hidden lg:flex items-center gap-4 mt-1">
-              <button 
-                onClick={() => setIsNotificationOpen(true)}
-                className="relative text-slate-600 hover:text-brand transition-colors p-2 rounded-full hover:bg-slate-50"
-              >
-                <Bell size={20} />
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-brand rounded-full border-2 border-white"></span>
-              </button>
+
+
+
 
               {user ? (
                 <div className="flex items-center gap-4" ref={userDropdownRef}>
@@ -293,9 +416,9 @@ export function B2BNavbar() {
                       onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                       className="relative flex flex-col items-center justify-center py-1 transition-colors duration-200 select-none group"
                     >
-                      <div className="flex items-center gap-1 font-[700] text-slate-800 group-hover:text-primary transition-colors text-[15px] xl:text-[17px]">
+                      <div className="flex items-center gap-1.5 font-[600] text-[#8A92A6] group-hover:text-primary transition-colors text-[14px] xl:text-[16px]">
                         <span>{user?.name || "Sanjay"}</span>
-                        <ChevronDown size={16} className={`transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180 text-primary' : 'text-slate-500'}`} />
+                        <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className={`transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180 text-primary' : 'text-[#8A92A6]'}`}><path d="M5 6L0 0H10L5 6Z" /></svg>
                       </div>
                     </button>
 
@@ -420,13 +543,7 @@ export function B2BNavbar() {
 
             {/* Mobile Right Icons (Bell & Menu Toggle) */}
             <div className="lg:hidden flex items-center gap-2">
-              <button 
-                onClick={() => setIsNotificationOpen(true)}
-                className="text-slate-600 p-2 relative"
-              >
-                <Bell size={24} />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-brand rounded-full border border-white"></span>
-              </button>
+
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="text-brand p-2 focus:outline-none -mr-2"
@@ -460,7 +577,7 @@ export function B2BNavbar() {
 
         <nav className="flex flex-col space-y-2 mt-4 px-4 w-full">
           <NavLink href="/b2b" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
-          
+
           <div className="flex flex-col w-full my-3 bg-slate-50/50 rounded-2xl border border-slate-100 p-2">
             <div className="flex items-center gap-2 px-3 py-2 mb-1">
               <div className="w-1.5 h-1.5 bg-[#D60D26] rounded-full"></div>
@@ -489,7 +606,7 @@ export function B2BNavbar() {
               <div className="w-1.5 h-1.5 bg-[#D60D26] rounded-full"></div>
               <span className="text-[12px] font-[900] text-slate-800 uppercase tracking-widest">My Account</span>
             </div>
-            
+
             <div className="flex flex-col gap-1">
               <div className="flex flex-col w-full">
                 <button
@@ -505,7 +622,7 @@ export function B2BNavbar() {
                   </div>
                   <ChevronDown size={16} className={`transition-transform text-slate-400 ${isPaymentExpanded ? 'rotate-180' : '-rotate-90'}`} />
                 </button>
-                
+
                 {isPaymentExpanded && (
                   <div className="flex flex-col pl-4 w-full mt-1">
                     {[
@@ -547,7 +664,7 @@ export function B2BNavbar() {
                 </svg>
                 Reports
               </Link>
-              
+
               <Link href="/b2b/manage-commission" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3 px-4 text-[14px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
                 <svg className="w-5 h-5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 6v6a3 3 0 003 3h11" />

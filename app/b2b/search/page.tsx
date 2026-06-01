@@ -76,16 +76,16 @@ function B2BSearchResultsContent() {
       <B2BNavbar />
       <SearchLoadingModal isOpen={isLoading} />
 
-      {/* Red Route Summary Bar */}
-      <div className="w-full bg-[#D60D26] text-white select-none">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
-          <div className="flex flex-col gap-0.5 w-full sm:w-auto min-w-0">
-            <div className="flex items-center gap-2.5 text-[17px] font-bold tracking-wide">
+      {/* Gradient Route Summary Bar */}
+      <div className="w-full bg-gradient-to-r from-[#D60D26] via-[#30060F] to-[#090001] text-white select-none shadow-md border-b border-black/10">
+        <div className="max-w-[1440px] mx-auto px-6 py-4 sm:py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
+          <div className="flex flex-col gap-1 w-full sm:w-auto min-w-0">
+            <div className="flex items-center gap-2.5 text-[20px] font-bold tracking-wide">
               <span>{origin}</span>
-              <ArrowRight className="w-4 h-4 opacity-80 shrink-0" />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-90 shrink-0"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="m12 8 4 4-4 4"/></svg>
               <span className="truncate">{destination}</span>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-[12px] font-medium opacity-80">
+            <div className="flex flex-wrap items-center gap-2 text-[13px] font-medium opacity-90">
               <span>01 Oct</span>
               <span className="w-[3px] h-[3px] bg-white/60 rounded-full" />
               <span>{passengers} passenger</span>
@@ -95,9 +95,9 @@ function B2BSearchResultsContent() {
           </div>
           <button
             onClick={() => router.push("/b2b")}
-            className="flex items-center gap-2 bg-[#D60D26] hover:bg-[#D60D26] text-white font-bold text-[14px] px-6 py-2.5 rounded-lg transition-colors shadow-sm w-full sm:w-auto justify-center shrink-0"
+            className="flex items-center gap-1.5 bg-[#D60D26] hover:bg-[#b00b1d] text-white font-[800] tracking-wide text-[14px] px-6 py-2.5 rounded-full transition-colors shadow-sm w-full sm:w-auto justify-center shrink-0"
           >
-            Search Again <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+            Search Again <ArrowUpRight className="w-4 h-4" strokeWidth={3} />
           </button>
         </div>
       </div>
