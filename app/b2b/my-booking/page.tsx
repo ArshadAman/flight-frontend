@@ -94,7 +94,7 @@ const BookingCard = ({
             <div className="w-full lg:w-[320px] flex flex-col gap-6 pt-2">
                 <div className="flex justify-between items-center px-1">
                     <span className="text-[16px] font-[600] text-gray-400">Payment:</span>
-                    <span className="text-[22px] font-[800] text-[#121121]">$ {price}</span>
+                    <span className="text-[22px] font-[800] text-[#121121]">INR {price}</span>
                 </div>
                 <div className="bg-[#F2FBFF] rounded-2xl p-6 flex-1">
                     <h4 className="font-[750] text-[#121121] text-[16px] mb-5 tracking-tight">Passengers: {passengers.length < 10 ? `0${passengers.length}` : passengers.length}</h4>

@@ -105,7 +105,7 @@ export function B2BOrderDetails() {
                           </Button>
                       </div>
                       <div className="text-[#D60D26] font-black text-[32px] tracking-tight leading-none mt-1">
-                          $123.89
+                          INR 123.89
                       </div>
                   </div>
               </div>
@@ -301,12 +301,12 @@ export function B2BOrderDetails() {
                           <tr>
                               <td className="pt-4 pr-4 font-bold text-slate-800">1</td>
                               <td className="pt-4 pr-4 font-bold text-slate-800 tracking-wide uppercase">CHIRGANIA / HARSHIT MR.</td>
-                              <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$42.40</td>
-                              <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$0.00</td>
-                              <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$0.00</td>
-                              <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$10.00</td>
-                              <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$0.00</td>
-                              <td className="pt-4 pl-4 font-black text-slate-900 text-center tracking-tight">$52.90</td>
+                              <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 42.40</td>
+                              <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 0.00</td>
+                              <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 0.00</td>
+                              <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 10.00</td>
+                              <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 0.00</td>
+                              <td className="pt-4 pl-4 font-black text-slate-900 text-center tracking-tight">INR 52.90</td>
                           </tr>
                       </tbody>
                   </table>
@@ -352,7 +352,7 @@ export function B2BOrderDetails() {
                               <CheckCircle2 className="w-4 h-4 text-green-500 fill-green-100" />
                               <span className="text-[13px] font-bold text-slate-800">Bank transfer [in progress]</span>
                           </div>
-                          <span className="text-[15px] font-[900] text-slate-900">$ 123.89</span>
+                          <span className="text-[15px] font-[900] text-slate-900">INR 123.89</span>
                       </div>
                   </div>
                   
@@ -384,12 +384,12 @@ export function B2BOrderDetails() {
                               <tr>
                                   <td className="pt-4 pr-4 font-bold text-slate-800">1</td>
                                   <td className="pt-4 pr-4 font-bold text-slate-800 tracking-wide uppercase">CHIRGANIA / HARSHIT MR.</td>
-                                  <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$42.40</td>
-                                  <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$0.00</td>
-                                  <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$0.00</td>
-                                  <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$10.00</td>
-                                  <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$0.00</td>
-                                  <td className="pt-4 pl-4 font-black text-slate-900 text-center tracking-tight">$52.90</td>
+                                  <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 42.40</td>
+                                  <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 0.00</td>
+                                  <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 0.00</td>
+                                  <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 10.00</td>
+                                  <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 0.00</td>
+                                  <td className="pt-4 pl-4 font-black text-slate-900 text-center tracking-tight">INR 52.90</td>
                               </tr>
                           </tbody>
                       </table>

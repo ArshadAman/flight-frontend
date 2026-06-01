@@ -116,12 +116,12 @@ export function B2BBookingForm() {
                                         <tr>
                                             <td className="pt-4 pr-4 font-bold text-slate-800">1</td>
                                             <td className="pt-4 px-4 font-semibold text-slate-600">ADT</td>
-                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$42.40</td>
-                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$0.00</td>
-                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$0.00</td>
-                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$10.00</td>
-                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$0.00</td>
-                                            <td className="pt-4 pl-4 font-black text-slate-900 text-center tracking-tight">$52.90</td>
+                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 42.40</td>
+                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 0.00</td>
+                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 0.00</td>
+                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 10.00</td>
+                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 0.00</td>
+                                            <td className="pt-4 pl-4 font-black text-slate-900 text-center tracking-tight">INR 52.90</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -404,12 +404,12 @@ export function B2BBookingForm() {
                                     <tbody>
                                         <tr>
                                             <td className="pt-4 pr-4 font-bold text-slate-800">Harshit_chirgania (04/04/1996)</td>
-                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$42.40</td>
-                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$0.00</td>
-                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$0.00</td>
-                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$10.00</td>
-                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">$0.00</td>
-                                            <td className="pt-4 pl-4 font-black text-slate-900 text-center tracking-tight">$52.90</td>
+                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 42.40</td>
+                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 0.00</td>
+                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 0.00</td>
+                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 10.00</td>
+                                            <td className="pt-4 px-4 font-semibold text-slate-600 text-center">INR 0.00</td>
+                                            <td className="pt-4 pl-4 font-black text-slate-900 text-center tracking-tight">INR 52.90</td>
                                         </tr>
                                     </tbody>
                                 </table>

@@ -25,7 +25,7 @@ export default function MyAccountPage() {
                     <div className="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="p-6 border border-slate-100 rounded-xl bg-slate-50">
                             <h3 className="font-bold text-slate-700 mb-2">Wallet Balance</h3>
-                            <p className="text-3xl font-extrabold text-primary">$0.00</p>
+                            <p className="text-3xl font-extrabold text-primary">INR 0.00</p>
                         </div>
                         <div className="p-6 border border-slate-100 rounded-xl bg-slate-50">
                             <h3 className="font-bold text-slate-700 mb-2">Saved Travelers</h3>

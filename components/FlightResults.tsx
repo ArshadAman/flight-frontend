@@ -477,7 +477,7 @@ export function FlightResults({
                     ${flight.price}
                   </span>
                   <span className="text-[12px] font-medium text-slate-500 ml-2 mt-1">
-                    <span className="text-slate-400">Incl. </span>${taxAmount}<span className="text-slate-400">tax</span>
+                    <span className="text-slate-400">Incl. </span>INR {taxAmount}<span className="text-slate-400">tax</span>
                   </span>
                 </div>
 
