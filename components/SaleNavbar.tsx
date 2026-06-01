@@ -150,16 +150,23 @@ export function SaleNavbar() {
                 name="Flight"
                 options={[
                   { label: "All Booking", href: "/sale/flight/all", icon: <CurvedArrowIcon /> },
-                  { label: "Pending Booking", href: "/sale/flight/pending", icon: <CurvedArrowIcon /> },
+                  { label: "Pending", href: "/sale/flight/pending", icon: <CurvedArrowIcon /> },
                   { label: "Bookable", href: "/sale/flight/bookable", icon: <CurvedArrowIcon /> },
                   { label: "Sold Out", href: "/sale/flight/sold-out", icon: <CurvedArrowIcon /> },
                   { label: "Export", href: "/sale/flight/export", icon: <CurvedArrowIcon /> },
                 ]}
               />
-              <NavItem name="Booking" hasDropdown={false} linkHref="/my-booking" />
-              <NavItem name="Reports" hasDropdown={false} linkHref="/sale/reports" />
+              <NavItem 
+                name="Booking" 
+                options={[
+                  { label: "Upcoming", href: "/sale/booking/upcoming", icon: <CurvedArrowIcon /> },
+                  { label: "Departed", href: "/sale/booking/departed", icon: <CurvedArrowIcon /> },
+                  { label: "Travel", href: "/sale/booking/travel", icon: <CurvedArrowIcon /> },
+                ]}
+              />
               <NavItem name="Inventory" hasDropdown={false} linkHref="/sale/inventory" />
-              <NavItem name="History" hasDropdown={false} linkHref="/sale/history" />
+              <NavItem name="Reports" hasDropdown={false} linkHref="/sale/reports" />
+              <NavItem name="PNR History" hasDropdown={false} linkHref="/sale/history" />
             </nav>
 
             {/* Desktop Action Button */}
@@ -321,11 +328,47 @@ export function SaleNavbar() {
 
         <nav className="flex flex-col space-y-2 mt-4 px-4 w-full">
           <NavLink href="/" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
-          <NavLink href="/sale/flight/all" isMobile onClick={() => setIsMobileMenuOpen(false)}>Flight</NavLink>
-          <NavLink href="/my-booking" isMobile onClick={() => setIsMobileMenuOpen(false)}>Booking</NavLink>
-          <NavLink href="/sale/reports" isMobile onClick={() => setIsMobileMenuOpen(false)}>Reports</NavLink>
+          <div className="flex flex-col w-full my-3 bg-slate-50/50 rounded-2xl border border-slate-100 p-2">
+            <div className="flex items-center gap-2 px-3 py-2 mb-1">
+              <div className="w-1.5 h-1.5 bg-[#D60D26] rounded-full"></div>
+              <span className="text-[12px] font-[900] text-slate-800 uppercase tracking-widest">Flight</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              {[
+                { label: "All Booking", href: "/sale/flight/all" },
+                { label: "Pending", href: "/sale/flight/pending" },
+                { label: "Bookable", href: "/sale/flight/bookable" },
+                { label: "Sold Out", href: "/sale/flight/sold-out" },
+                { label: "Export", href: "/sale/flight/export" },
+              ].map((opt, idx) => (
+                <Link key={idx} href={opt.href} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3 px-4 text-[14px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+                  <CurvedArrowIcon />
+                  {opt.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col w-full my-3 bg-slate-50/50 rounded-2xl border border-slate-100 p-2">
+            <div className="flex items-center gap-2 px-3 py-2 mb-1">
+              <div className="w-1.5 h-1.5 bg-[#D60D26] rounded-full"></div>
+              <span className="text-[12px] font-[900] text-slate-800 uppercase tracking-widest">Booking</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              {[
+                { label: "Upcoming", href: "/sale/booking/upcoming" },
+                { label: "Departed", href: "/sale/booking/departed" },
+                { label: "Travel", href: "/sale/booking/travel" },
+              ].map((opt, idx) => (
+                <Link key={idx} href={opt.href} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3 px-4 text-[14px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+                  <CurvedArrowIcon />
+                  {opt.label}
+                </Link>
+              ))}
+            </div>
+          </div>
           <NavLink href="/sale/inventory" isMobile onClick={() => setIsMobileMenuOpen(false)}>Inventory</NavLink>
-          <NavLink href="/sale/history" isMobile onClick={() => setIsMobileMenuOpen(false)}>History</NavLink>
+          <NavLink href="/sale/reports" isMobile onClick={() => setIsMobileMenuOpen(false)}>Reports</NavLink>
+          <NavLink href="/sale/history" isMobile onClick={() => setIsMobileMenuOpen(false)}>PNR History</NavLink>
         </nav>
 
         <div className="mt-auto px-6 pt-6 pb-8 w-full border-t border-slate-100">

@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from "react";
-import { 
-  ChevronDown, 
-  ChevronUp, 
-  SlidersHorizontal, 
-  Wifi, 
-  Coffee, 
-  Plug, 
-  Accessibility, 
+import {
+  ChevronDown,
+  ChevronUp,
+  SlidersHorizontal,
+  Wifi,
+  Coffee,
+  Plug,
+  Accessibility,
   ArrowUpRight,
   CheckCircle2,
   X
@@ -72,16 +72,16 @@ type TicketWithBaggage = Record<string, unknown> & {
   total_amount?: string | number;
 };
 
-export function FlightResults({ 
-  flights, 
-  returnFlights = [], 
-  isRoundTrip = false, 
+export function FlightResults({
+  flights,
+  returnFlights = [],
+  isRoundTrip = false,
   isLoading,
   adults = 1,
   children = 0,
   infants = 0,
 }: FlightResultsProps) {
-  
+
   const { user, openAuthModal } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -292,113 +292,113 @@ export function FlightResults({
     const fareId = checkoutFlight?.fare_id || "mock-fare-id";
 
     const payload = {
-        search_key: searchKey,
-        flight_key: flightKey,
-        fare_id: fareId,
-        customer_mobile: contactMobile,
-        passenger_mobile: contactMobile,
-        passenger_email: contactEmail,
-        passengers: passengers.map(pax => ({
-            pax_type: pax.pax_type,
-            title: pax.title,
-            first_name: pax.first_name,
-            last_name: pax.last_name,
-            gender: pax.gender === "Male" ? 0 : 1,
-            dob: pax.dob,
-        }))
+      search_key: searchKey,
+      flight_key: flightKey,
+      fare_id: fareId,
+      customer_mobile: contactMobile,
+      passenger_mobile: contactMobile,
+      passenger_email: contactEmail,
+      passengers: passengers.map(pax => ({
+        pax_type: pax.pax_type,
+        title: pax.title,
+        first_name: pax.first_name,
+        last_name: pax.last_name,
+        gender: pax.gender === "Male" ? 0 : 1,
+        dob: pax.dob,
+      }))
     };
 
     try {
-        console.log("[FlightResults Booking Request] Submitting booking request manifest payload:", payload);
-        const token = localStorage.getItem("access_token");
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-        
-        const response = await fetch(`${apiBase}/tickets/buy/`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-        });
+      console.log("[FlightResults Booking Request] Submitting booking request manifest payload:", payload);
+      const token = localStorage.getItem("access_token");
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
-        if (response.ok) {
-            const confirmedTicket = await response.json();
-            console.log("[FlightResults Booking Response] Live ticketing succeeded. Ticket returned:", confirmedTicket);
-          setBookingSuccessData({
-            ...confirmedTicket,
-            ...resolveBaggageDetails(selectedBaggageOption),
-          } as TicketWithBaggage);
-        } else {
-            const errorText = await response.text();
-            console.warn("[FlightResults Booking Warning] API ticketing failed with response status:", response.status, errorText);
-            throw new Error("Provider ticketing failed, triggering offline fallback simulation.");
-        }
+      const response = await fetch(`${apiBase}/tickets/buy/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const confirmedTicket = await response.json();
+        console.log("[FlightResults Booking Response] Live ticketing succeeded. Ticket returned:", confirmedTicket);
+        setBookingSuccessData({
+          ...confirmedTicket,
+          ...resolveBaggageDetails(selectedBaggageOption),
+        } as TicketWithBaggage);
+      } else {
+        const errorText = await response.text();
+        console.warn("[FlightResults Booking Warning] API ticketing failed with response status:", response.status, errorText);
+        throw new Error("Provider ticketing failed, triggering offline fallback simulation.");
+      }
     } catch (err) {
-        console.warn("[FlightResults Booking Error] Live booking API failed. Initiating simulated premium fallback ticket confirmation...", err);
-        
-        const mockPnr = `PNR${Math.floor(100000 + Math.random() * 900000)}`;
-        const mockTicketNo = `ETKT-${Math.floor(1000000 + Math.random() * 9000000)}`;
-        
-        const simulatedTicket = {
-            id: `ticket-${Math.random().toString(36).substr(2, 9)}`,
-            user_email: user?.email || "",
-            pnr_number: mockPnr,
-            ticket_number: mockTicketNo,
-            status: "CONFIRMED",
-            origin: checkoutFlight?.origin.toUpperCase().substring(0, 3) || "DEL",
-            destination: checkoutFlight?.destination.toUpperCase().substring(0, 3) || "BOM",
+      console.warn("[FlightResults Booking Error] Live booking API failed. Initiating simulated premium fallback ticket confirmation...", err);
+
+      const mockPnr = `PNR${Math.floor(100000 + Math.random() * 900000)}`;
+      const mockTicketNo = `ETKT-${Math.floor(1000000 + Math.random() * 9000000)}`;
+
+      const simulatedTicket = {
+        id: `ticket-${Math.random().toString(36).substr(2, 9)}`,
+        user_email: user?.email || "",
+        pnr_number: mockPnr,
+        ticket_number: mockTicketNo,
+        status: "CONFIRMED",
+        origin: checkoutFlight?.origin.toUpperCase().substring(0, 3) || "DEL",
+        destination: checkoutFlight?.destination.toUpperCase().substring(0, 3) || "BOM",
+        departure_datetime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 16),
+        arrival_datetime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 16),
+        travel_type: 0,
+        airline_code: checkoutFlight?.id?.split('-')[0] || "6E",
+        airline_name: checkoutFlight?.airline || "Indigo",
+        flight_number: checkoutFlight?.id?.split('-')[1] || "2341",
+        cabin_class: "Economy",
+        basic_amount: (checkoutFlight?.price || 3500) * 0.85,
+        tax_amount: (checkoutFlight?.price || 3500) * 0.15,
+        total_amount: checkoutFlight?.price || 3500,
+        currency: "INR",
+        is_refundable: true,
+        food_onboard: true,
+        ...resolveBaggageDetails(selectedBaggageOption),
+        passengers_data: passengers.map(pax => ({
+          pax_type: pax.pax_type,
+          title: pax.title,
+          first_name: pax.first_name,
+          last_name: pax.last_name,
+          gender: pax.gender === "Male" ? 0 : 1,
+          dob: pax.dob
+        })),
+        segments_data: [
+          {
+            airline_name: checkoutFlight?.airline || "Indigo",
+            airline_code: checkoutFlight?.id?.split('-')[0] || "6E",
+            flight_number: checkoutFlight?.id?.split('-')[1] || "2341",
             departure_datetime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 16),
             arrival_datetime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 16),
-            travel_type: 0,
-            airline_code: checkoutFlight?.id?.split('-')[0] || "6E",
-            airline_name: checkoutFlight?.airline || "Indigo",
-            flight_number: checkoutFlight?.id?.split('-')[1] || "2341",
-            cabin_class: "Economy",
-            basic_amount: (checkoutFlight?.price || 3500) * 0.85,
-            tax_amount: (checkoutFlight?.price || 3500) * 0.15,
-            total_amount: checkoutFlight?.price || 3500,
-            currency: "INR",
-            is_refundable: true,
-            food_onboard: true,
-            ...resolveBaggageDetails(selectedBaggageOption),
-            passengers_data: passengers.map(pax => ({
-                pax_type: pax.pax_type,
-                title: pax.title,
-                first_name: pax.first_name,
-                last_name: pax.last_name,
-                gender: pax.gender === "Male" ? 0 : 1,
-                dob: pax.dob
-            })),
-            segments_data: [
-                {
-                    airline_name: checkoutFlight?.airline || "Indigo",
-                    airline_code: checkoutFlight?.id?.split('-')[0] || "6E",
-                    flight_number: checkoutFlight?.id?.split('-')[1] || "2341",
-                    departure_datetime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 16),
-                    arrival_datetime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 16),
-                    origin: checkoutFlight?.origin || "DEL",
-                    destination: checkoutFlight?.destination || "BOM",
-                    duration: checkoutFlight?.duration || "2h 15m"
-                }
-            ],
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        };
+            origin: checkoutFlight?.origin || "DEL",
+            destination: checkoutFlight?.destination || "BOM",
+            duration: checkoutFlight?.duration || "2h 15m"
+          }
+        ],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-        // Save to localStorage so it merges dynamically on My Booking page
-        try {
-            const existing = JSON.parse(localStorage.getItem("offline_bookings") || "[]");
-            existing.push(simulatedTicket);
-            localStorage.setItem("offline_bookings", JSON.stringify(existing));
-            console.log("[FlightResults Booking Fallback] Simulated offline ticket saved in browser local storage cache.");
-        } catch (storageErr) {
-            console.error("[FlightResults Booking Error] Local storage cache write failed:", storageErr);
-        }
+      // Save to localStorage so it merges dynamically on My Booking page
+      try {
+        const existing = JSON.parse(localStorage.getItem("offline_bookings") || "[]");
+        existing.push(simulatedTicket);
+        localStorage.setItem("offline_bookings", JSON.stringify(existing));
+        console.log("[FlightResults Booking Fallback] Simulated offline ticket saved in browser local storage cache.");
+      } catch (storageErr) {
+        console.error("[FlightResults Booking Error] Local storage cache write failed:", storageErr);
+      }
 
-        setBookingSuccessData(simulatedTicket);
+      setBookingSuccessData(simulatedTicket);
     } finally {
-        setIsBookingLoading(false);
+      setIsBookingLoading(false);
     }
   };
 
@@ -442,65 +442,73 @@ export function FlightResults({
           )}
 
           {flightList.map((flight) => {
-          const taxAmount = Math.round(flight.price * 0.15);
-          const uniqueKey = flight.flight_key || flight.id;
-          
-          // Determine mock legs for segments display (if stops > 0, show 2 connected rows!)
-          const segmentsCount = flight.stops > 0 ? 2 : 1;
-          const segments = Array.from({ length: segmentsCount }).map((_, sIdx) => {
-            const isSecondLeg = sIdx === 1;
-            return {
-              code: isSecondLeg ? `AI-${flight.id.split('-').pop() || '102'}` : flight.id,
-              date: "Wed, 01 Oct 25",
-              route: isSecondLeg 
-                ? `${flight.destination.substring(0, 3).toUpperCase()} ➔ ${flight.origin.substring(0, 3).toUpperCase()}`
-                : `${flight.origin.substring(0, 3).toUpperCase()} ➔ ${flight.destination.substring(0, 3).toUpperCase()}`,
-              class: "E1/Economy",
-              timing: isSecondLeg ? "11:30PM - 02:15AM" : `${flight.departureTime} - ${flight.arrivalTime}`,
-              duration: flight.duration,
-              seatsCode: isSecondLeg ? "0/32N" : `${sIdx}/32N`
-            };
-          });
+            const taxAmount = Math.round(flight.price * 0.15);
+            const uniqueKey = flight.flight_key || flight.id;
 
-          return (
-            <div 
-              key={uniqueKey}
-              className="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.02)] overflow-hidden hover:shadow-md transition-shadow duration-300"
-            >
-              
+            // Determine mock legs for segments display (if stops > 0, show 2 connected rows!)
+            const segmentsCount = flight.stops > 0 ? 2 : 1;
+            const segments = Array.from({ length: segmentsCount }).map((_, sIdx) => {
+              const isSecondLeg = sIdx === 1;
+              return {
+                code: isSecondLeg ? `AI-${flight.id.split('-').pop() || '102'}` : flight.id,
+                date: "Wed, 01 Oct 25",
+                route: isSecondLeg
+                  ? `${flight.destination.substring(0, 3).toUpperCase()} ➔ ${flight.origin.substring(0, 3).toUpperCase()}`
+                  : `${flight.origin.substring(0, 3).toUpperCase()} ➔ ${flight.destination.substring(0, 3).toUpperCase()}`,
+                class: "E1/Economy",
+                timing: isSecondLeg ? "11:30PM - 02:15AM" : `${flight.departureTime} - ${flight.arrivalTime}`,
+                duration: flight.duration,
+                seatsCode: isSecondLeg ? "0/32N" : `${sIdx}/32N`
+              };
+            });
+
+            return (
+              <div
+                key={uniqueKey}
+                className="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.02)] overflow-hidden hover:shadow-md transition-shadow duration-300"
+              >
+
               {/* Horizontal Top Header Row (Figma specs: Light blue-grey background) */}
-              <div className="bg-[#F2FBFF] px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 select-none">
+              <div className="bg-[#F4F7FC] flex flex-wrap lg:flex-nowrap items-stretch border-b border-slate-200 select-none rounded-t-2xl">
                 
                 {/* Price block */}
-                <div className="flex items-baseline">
-                  <span className="text-[#121121] font-[900] text-[25px] tracking-tight">
-                    ₹{flight.price.toLocaleString('en-IN')}
+                <div className="flex items-center px-6 py-4 border-r border-slate-200 min-w-[200px]">
+                  <span className="text-[#121121] font-black text-[26px] tracking-tight">
+                    ${flight.price}
                   </span>
-                  <span className="text-[12px] font-[750] text-[#888] ml-2 tracking-wide uppercase">
-                    Incl. ₹{taxAmount.toLocaleString('en-IN')} tax
+                  <span className="text-[12px] font-medium text-slate-500 ml-2 mt-1">
+                    <span className="text-slate-400">Incl. </span>${taxAmount}<span className="text-slate-400">tax</span>
                   </span>
                 </div>
 
                 {/* Airline Name */}
-                <div className="text-primary italic font-[1000] text-[21px] tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(223,27,36,0.15)]">
-                  {flight.airline.toUpperCase()}
+                <div className="flex items-center px-6 py-4 border-r border-slate-200 min-w-[180px] justify-center gap-1.5">
+                  <span className="text-[#D60D26] font-[800] text-[15px] tracking-wider uppercase">
+                    {flight.airline}
+                  </span>
+                  {/* Small swoosh/bird icon placeholder */}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#D60D26" className="opacity-80">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                  </svg>
                 </div>
 
                 {/* Stop Indicator */}
-                <div className="text-slate-600 text-[14px] font-[800] tracking-wide uppercase bg-slate-200/60 px-3 py-1 rounded-md">
-                  {flight.stops === 0 ? "Non-Stop" : `Stops: ${flight.stops}`}
+                <div className="flex items-center px-6 py-4 border-r border-slate-200 min-w-[140px] justify-center">
+                  <span className="text-[#121121] text-[13px] font-[800]">
+                    {flight.stops === 0 ? "Non-Stop" : `Stops: ${flight.stops}`}
+                  </span>
                 </div>
 
                 {/* Right aligned Badges */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center px-6 py-4 gap-2.5 flex-1 justify-end">
                   {/* PUB Badge */}
-                  <span className="bg-[#888] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider">
+                  <span className="bg-[#377BD7] text-white text-[11px] font-bold px-2 py-1 rounded shadow-sm tracking-wide">
                     PUB
                   </span>
                   
                   {/* Suitcase Baggage Badge */}
-                  <span className="bg-[#D60D26] text-white text-[11px] font-[900] px-2.5 py-1 rounded select-none tracking-wider flex items-center gap-1">
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <span className="bg-[#D60D26] text-white text-[11px] font-bold px-2 py-1 rounded shadow-sm tracking-wide flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a3 3 0 00-6 0v2" />
                     </svg>
@@ -508,10 +516,13 @@ export function FlightResults({
                   </span>
 
                   {/* TKT Badge */}
-                  <span className="border border-slate-300 text-slate-500 bg-white text-[11px] font-[800] px-2 py-0.5 rounded select-none">
-                    FARE TYPES
+                  <span className="border border-slate-400 text-slate-700 bg-transparent text-[11px] font-bold px-2 py-1 rounded">
+                    TKT
                   </span>
-                  <span className="border border-slate-300 text-slate-500 bg-white text-[11px] font-[800] px-2 py-0.5 rounded select-none">FEE</span>
+                  {/* FEE Badge */}
+                  <span className="border border-slate-400 text-slate-700 bg-transparent text-[11px] font-bold px-2 py-1 rounded">
+                    FEE
+                  </span>
 
                   {/* Book Now Button for Consumer Flow */}
                   {!isB2bRoute && (
@@ -526,109 +537,108 @@ export function FlightResults({
 
               </div>
 
-              {/* White Body Segment list */}
-              <div className="flex flex-col bg-white">
-                {segments.map((seg, sIdx) => (
-                  <div 
-                    key={sIdx}
-                    onClick={() => {
-                      if (isB2bRoute) {
-                        setCurrentSelectedId(uniqueKey);
-                      }
-                    }}
-                    className="grid grid-cols-[auto_1fr_1.1fr_1.1fr_1fr] md:grid-cols-[40px_1fr_1.5fr_1.8fr_1fr_1.2fr_auto] gap-4 items-center px-6 py-4 border-b border-slate-100 hover:bg-slate-50/60 transition-colors last:border-b-0 cursor-pointer"
-                  >
-                    
-                    {/* Radio circle selector */}
-                    <div className="flex justify-center items-center">
-                      <div 
-                        className={cn("w-5 h-5 rounded-full border flex items-center justify-center transition-colors", currentSelectedId === uniqueKey ? "border-[#D60D26]" : "border-slate-300")}
-                      >
-                        <div className={cn("w-2.5 h-2.5 rounded-full transition-colors", currentSelectedId === uniqueKey ? "bg-[#D60D26]" : "bg-transparent")}></div>
+                {/* White Body Segment list */}
+                <div className="flex flex-col bg-white">
+                  {segments.map((seg, sIdx) => (
+                    <div
+                      key={sIdx}
+                      onClick={() => {
+                        if (isB2bRoute) {
+                          setCurrentSelectedId(uniqueKey);
+                        }
+                      }}
+                      className="grid grid-cols-[auto_1fr_1.2fr_1fr_1fr_1.5fr_1fr_1fr_auto] gap-x-4 gap-y-2 items-center px-6 py-5 border-b border-slate-100 hover:bg-slate-50/60 transition-colors last:border-b-0 cursor-pointer"
+                    >
+
+                      {/* Radio circle selector */}
+                      <div className="flex items-center justify-center pr-2">
+                        <div className={cn("w-[15px] h-[15px] rounded-full border flex items-center justify-center transition-colors", currentSelectedId === uniqueKey ? "border-[#D60D26]" : "border-slate-300")}>
+                          <div className={cn("w-[9px] h-[9px] rounded-full transition-colors", currentSelectedId === uniqueKey ? "bg-[#D60D26]" : "bg-transparent")}></div>
+                        </div>
                       </div>
+
+                      <span className="text-[12px] font-[600] text-slate-600 truncate">{seg.code}</span>
+                      <span className="text-[12px] font-[600] text-[#121121] truncate">{seg.date}</span>
+                      <span className="text-[12px] font-[600] text-[#121121] truncate">{seg.route}</span>
+                      <span className="text-[12px] font-[600] text-[#121121] truncate">{seg.class}</span>
+                      <span className="text-[12px] font-[600] text-[#121121] truncate">{seg.timing}</span>
+                      <span className="text-[12px] font-[600] text-[#121121] truncate">{seg.duration}</span>
+                      <span className="text-[12px] font-[600] text-slate-400 truncate">{seg.seatsCode}</span>
+
+                      {/* Amenities block */}
+                      <div className="flex items-center justify-end gap-3 text-[#8A92A6]">
+                        {/* Passenger Seat */}
+                        <svg className="w-[16px] h-[16px] hover:text-slate-600 cursor-help transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="8" cy="5" r="1.5" fill="currentColor" stroke="none" />
+                          <path d="M8 8v5a1.5 1.5 0 0 0 1.5 1.5h3.5l3 4.5" />
+                          <path d="M5 9l1 6a2 2 0 0 0 2 2h4" />
+                        </svg>
+                        
+                        {/* USB Plug */}
+                        <svg className="w-[16px] h-[16px] hover:text-slate-600 cursor-help transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none" />
+                          <path d="M12 17.5V5" />
+                          <path d="M9 8l3-3 3 3" />
+                          <path d="M12 14h-2a2 2 0 0 1-2-2V9" />
+                          <circle cx="8" cy="7.5" r="1.5" fill="currentColor" stroke="none" />
+                          <path d="M12 12h2a2 2 0 0 0 2-2V8" />
+                          <rect x="14.5" y="5" width="3" height="3" fill="currentColor" stroke="none" />
+                        </svg>
+                        
+                        {/* Food Tray */}
+                        <svg className="w-[16px] h-[16px] hover:text-slate-600 cursor-help transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 11h18" />
+                          <path d="M5 11a7 7 0 0 1 14 0" />
+                          <path d="M12 4v-1.5" />
+                          <path d="M5 11v6a2 2 0 0 0 2 2h5l5-3.5" />
+                          <path d="M9 15h4l2.5-1.5" />
+                          <path d="M8 15v4" />
+                        </svg>
+                      </div>
+
                     </div>
-
-                    {/* Flight identifier */}
-                    <div className="flex flex-col min-w-[70px]">
-                      <span className="text-[15px] font-[900] text-slate-800">{seg.code}</span>
-                      <span className="text-[12px] font-bold text-slate-400 mt-0.5">{seg.date}</span>
-                    </div>
-
-                    {/* Route */}
-                    <div className="flex flex-col min-w-[90px]">
-                      <span className="text-[15px] font-[900] text-slate-800">{seg.route}</span>
-                      <span className="text-[12px] font-bold text-slate-400 mt-0.5">{seg.class}</span>
-                    </div>
-
-                    {/* Times */}
-                    <div className="flex flex-col min-w-[130px]">
-                      <span className="text-[15px] font-[900] text-slate-800 tracking-tight">{seg.timing}</span>
-                      <span className="text-[12px] font-bold text-slate-400 mt-0.5">Dep. Times</span>
-                    </div>
-
-                    {/* Duration */}
-                    <div className="flex flex-col min-w-[70px]">
-                      <span className="text-[15px] font-[900] text-slate-800">{seg.duration}</span>
-                      <span className="text-[12px] font-bold text-slate-400 mt-0.5">Flight Time</span>
-                    </div>
-
-                    {/* Seats Left */}
-                    <div className="flex flex-col min-w-[60px]">
-                      <span className="text-[15px] font-[900] text-slate-800">{seg.seatsCode}</span>
-                      <span className="text-[12px] font-bold text-[#D60D26] mt-0.5">Seats Left</span>
-                    </div>
-
-                    {/* Amenities block */}
-                    <div className="flex items-center gap-2.5 text-slate-400 pl-4 border-l border-slate-100 h-8">
-                      <Accessibility className="w-4 h-4 hover:text-slate-600 cursor-help transition-colors" strokeWidth={2.5} />
-                      <Plug className="w-4 h-4 hover:text-slate-600 cursor-help transition-colors" strokeWidth={2.5} />
-                      <Wifi className="w-4 h-4 hover:text-slate-600 cursor-help transition-colors" strokeWidth={2.5} />
-                      <Coffee className="w-4 h-4 hover:text-slate-600 cursor-help transition-colors" strokeWidth={2.5} />
-                    </div>
-
-                  </div>
-                ))}
-              </div>
-
-              {/* Action Bar when selected */}
-              {currentSelectedId === uniqueKey && isB2bRoute && (
-                <div className="bg-[#F2FBFF] px-6 py-4 flex flex-wrap items-center gap-4 border-t border-[#F2FBFF] animate-in slide-in-from-top-1 fade-in duration-200">
-                  <button 
-                    onClick={() => window.location.href = '/b2b/book'} 
-                    className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-8 h-[40px] font-bold text-[14px] flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95"
-                  >
-                    Book Now <ArrowUpRight className="w-4 h-4" strokeWidth={3} />
-                  </button>
-                  <button 
-                    onClick={() => setQuoteModalOpen(true)} 
-                    className="min-w-[120px] border border-[#0C2342] bg-transparent text-[#0C2342] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
-                  >
-                    Quote
-                  </button>
-                  <button 
-                    onClick={() => setFareTypeModalOpen(true)} 
-                    className="min-w-[120px] border border-[#0C2342] bg-transparent text-[#0C2342] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
-                  >
-                    Fare Type
-                  </button>
-                  <button 
-                    onClick={() => setAddOnModalOpen(true)} 
-                    className="min-w-[120px] border border-[#0C2342] bg-transparent text-[#0C2342] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
-                  >
-                    Add On
-                  </button>
-                  <button 
-                    onClick={() => setRulesModalOpen(true)} 
-                    className="min-w-[120px] border border-[#0C2342] bg-transparent text-[#0C2342] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
-                  >
-                    Rules
-                  </button>
+                  ))}
                 </div>
-              )}
 
-            </div>
-          );
-        })}
+                {/* Action Bar when selected */}
+                {currentSelectedId === uniqueKey && isB2bRoute && (
+                  <div className="bg-[#F2FBFF] px-6 py-4 flex flex-wrap items-center gap-4 border-t border-[#F2FBFF] animate-in slide-in-from-top-1 fade-in duration-200">
+                    <button
+                      onClick={() => window.location.href = '/b2b/book'}
+                      className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-8 h-[40px] font-bold text-[14px] flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95"
+                    >
+                      Book Now <ArrowUpRight className="w-4 h-4" strokeWidth={3} />
+                    </button>
+                    <button
+                      onClick={() => setQuoteModalOpen(true)}
+                      className="min-w-[120px] border border-[#0C2342] bg-transparent text-[#0C2342] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
+                    >
+                      Quote
+                    </button>
+                    <button
+                      onClick={() => setFareTypeModalOpen(true)}
+                      className="min-w-[120px] border border-[#0C2342] bg-transparent text-[#0C2342] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
+                    >
+                      Fare Type
+                    </button>
+                    <button
+                      onClick={() => setAddOnModalOpen(true)}
+                      className="min-w-[120px] border border-[#0C2342] bg-transparent text-[#0C2342] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
+                    >
+                      Add On
+                    </button>
+                    <button
+                      onClick={() => setRulesModalOpen(true)}
+                      className="min-w-[120px] border border-[#0C2342] bg-transparent text-[#0C2342] rounded-[100px] px-6 h-[40px] font-bold text-[14px] hover:bg-white/50 transition-colors shadow-sm"
+                    >
+                      Rules
+                    </button>
+                  </div>
+                )}
+
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -636,21 +646,23 @@ export function FlightResults({
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1440px] mx-auto select-none mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      
+
       {/* Left Column: Accordion Filters Panel */}
       <aside className="w-full lg:w-[285px] shrink-0">
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col sticky top-24">
-          
-          <div className="flex items-center gap-2 text-[17px] font-[900] text-[#121121] pb-4 border-b border-slate-100 mb-2">
-            <SlidersHorizontal className="w-4.5 h-4.5 text-primary stroke-[2.5px]" />
+
+          <div className="flex items-center gap-2.5 text-[15px] font-[800] text-[#121121] pb-4 border-b border-slate-100 mb-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D60D26" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
             <span>Filters :</span>
           </div>
 
           <div className="flex flex-col">
-            
+
             {/* General */}
             <div className="border-b border-slate-100 py-3">
-              <button 
+              <button
                 onClick={() => toggleFilter('general')}
                 className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
@@ -660,11 +672,11 @@ export function FlightResults({
               {filtersOpen.general && (
                 <div className="mt-3 flex flex-col gap-2.5 px-1 animate-in fade-in duration-200">
                   <label className="flex items-center gap-2.5 cursor-pointer text-sm font-semibold text-slate-600 hover:text-slate-800">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={nonStopOnly}
                       onChange={(e) => setNonStopOnly(e.target.checked)}
-                      className="rounded border-slate-300 text-primary focus:ring-primary w-4.5 h-4.5" 
+                      className="rounded border-slate-300 text-primary focus:ring-primary w-4.5 h-4.5"
                     />
                     <span>Non-stop flights only</span>
                   </label>
@@ -674,7 +686,7 @@ export function FlightResults({
 
             {/* Baggage */}
             <div className="border-b border-slate-100 py-3">
-              <button 
+              <button
                 onClick={() => toggleFilter('baggage')}
                 className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
@@ -693,7 +705,7 @@ export function FlightResults({
 
             {/* Fare type */}
             <div className="border-b border-slate-100 py-3">
-              <button 
+              <button
                 onClick={() => toggleFilter('fareType')}
                 className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
@@ -703,22 +715,22 @@ export function FlightResults({
               {filtersOpen.fareType && (
                 <div className="mt-3 flex flex-col gap-2.5 px-1 animate-in fade-in duration-200">
                   <label className="flex items-center gap-2.5 cursor-pointer text-sm font-semibold text-slate-600">
-                    <input 
-                      type="radio" 
-                      name="fareType" 
-                      checked={fareType === "PUB"} 
+                    <input
+                      type="radio"
+                      name="fareType"
+                      checked={fareType === "PUB"}
                       onChange={() => setFareType("PUB")}
-                      className="text-primary focus:ring-primary w-4 h-4" 
+                      className="text-primary focus:ring-primary w-4 h-4"
                     />
                     <span>Public Fare (PUB)</span>
                   </label>
                   <label className="flex items-center gap-2.5 cursor-pointer text-sm font-semibold text-slate-600">
-                    <input 
-                      type="radio" 
-                      name="fareType" 
-                      checked={fareType === "CORP"} 
+                    <input
+                      type="radio"
+                      name="fareType"
+                      checked={fareType === "CORP"}
                       onChange={() => setFareType("CORP")}
-                      className="text-primary focus:ring-primary w-4 h-4" 
+                      className="text-primary focus:ring-primary w-4 h-4"
                     />
                     <span>Corporate Fare</span>
                   </label>
@@ -728,7 +740,7 @@ export function FlightResults({
 
             {/* Ticket time limit */}
             <div className="border-b border-slate-100 py-3">
-              <button 
+              <button
                 onClick={() => toggleFilter('ticketLimit')}
                 className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
@@ -744,7 +756,7 @@ export function FlightResults({
 
             {/* Max. time travel */}
             <div className="border-b border-slate-100 py-3">
-              <button 
+              <button
                 onClick={() => toggleFilter('maxTime')}
                 className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
@@ -760,7 +772,7 @@ export function FlightResults({
 
             {/* Price */}
             <div className="border-b border-slate-100 py-3">
-              <button 
+              <button
                 onClick={() => toggleFilter('price')}
                 className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
@@ -769,13 +781,13 @@ export function FlightResults({
               </button>
               {filtersOpen.price && (
                 <div className="mt-3 flex flex-col px-1 animate-in fade-in duration-200">
-                  <input 
-                    type="range" 
-                    min="3000" 
-                    max="12000" 
-                    value={maxPrice} 
+                  <input
+                    type="range"
+                    min="3000"
+                    max="12000"
+                    value={maxPrice}
                     onChange={(e) => setMaxPrice(parseInt(e.target.value))}
-                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary" 
+                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
                   />
                   <div className="flex justify-between text-xs font-bold text-slate-500 mt-2">
                     <span>₹3,000</span>
@@ -787,7 +799,7 @@ export function FlightResults({
 
             {/* No. of stops */}
             <div className="border-b border-slate-100 py-3">
-              <button 
+              <button
                 onClick={() => toggleFilter('stops')}
                 className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
@@ -797,29 +809,29 @@ export function FlightResults({
               {filtersOpen.stops && (
                 <div className="mt-3 flex flex-col gap-2.5 px-1 animate-in fade-in duration-200">
                   <label className="flex items-center gap-2.5 cursor-pointer text-sm font-semibold text-slate-600">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedStops[0]} 
+                    <input
+                      type="checkbox"
+                      checked={selectedStops[0]}
                       onChange={() => handleStopToggle(0)}
-                      className="rounded border-slate-300 text-primary w-4.5 h-4.5" 
+                      className="rounded border-slate-300 text-primary w-4.5 h-4.5"
                     />
                     <span>Non-Stop</span>
                   </label>
                   <label className="flex items-center gap-2.5 cursor-pointer text-sm font-semibold text-slate-600">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedStops[1]} 
+                    <input
+                      type="checkbox"
+                      checked={selectedStops[1]}
                       onChange={() => handleStopToggle(1)}
-                      className="rounded border-slate-300 text-primary w-4.5 h-4.5" 
+                      className="rounded border-slate-300 text-primary w-4.5 h-4.5"
                     />
                     <span>1 Stop</span>
                   </label>
                   <label className="flex items-center gap-2.5 cursor-pointer text-sm font-semibold text-slate-600">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedStops[2]} 
+                    <input
+                      type="checkbox"
+                      checked={selectedStops[2]}
                       onChange={() => handleStopToggle(2)}
-                      className="rounded border-slate-300 text-primary w-4.5 h-4.5" 
+                      className="rounded border-slate-300 text-primary w-4.5 h-4.5"
                     />
                     <span>2+ Stops</span>
                   </label>
@@ -829,7 +841,7 @@ export function FlightResults({
 
             {/* Equipment */}
             <div className="border-b border-slate-100 py-3">
-              <button 
+              <button
                 onClick={() => toggleFilter('equipment')}
                 className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
@@ -845,7 +857,7 @@ export function FlightResults({
 
             {/* Departure & arrival time */}
             <div className="py-3">
-              <button 
+              <button
                 onClick={() => toggleFilter('times')}
                 className="w-full flex items-center justify-between text-[15px] font-[750] text-[#121121] py-1"
               >
@@ -865,7 +877,7 @@ export function FlightResults({
 
       {/* Right Column: Search Results */}
       <section className="flex-1 flex flex-col">
-        
+
         {/* Results Header */}
         <div className="flex justify-between items-center mb-6">
           <p className="text-[17px] font-[800] text-slate-700">
@@ -874,7 +886,7 @@ export function FlightResults({
 
           {/* Sort Menu */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => setSortOpen(!sortOpen)}
               className="flex items-center gap-1.5 text-[15px] font-[750] text-slate-700 bg-white border border-slate-200 rounded-xl px-4 py-2 hover:bg-slate-50 transition shadow-sm"
             >
@@ -902,7 +914,7 @@ export function FlightResults({
 
         {/* Flight Lists Grid */}
         <div className="flex flex-col gap-8">
-          
+
           {/* Outbound Flights list */}
           {renderFlightCards(filteredOutbound, false, isRoundTrip ? "Outbound Flights" : undefined)}
 
@@ -915,7 +927,7 @@ export function FlightResults({
 
       {/* Render QuoteModal for B2B */}
       <QuoteModal isOpen={quoteModalOpen} onClose={() => setQuoteModalOpen(false)} />
-      
+
       {/* Render Additional Info Modals for B2B */}
       <FareTypeModal isOpen={fareTypeModalOpen} onClose={() => setFareTypeModalOpen(false)} />
       <AddOnModal
@@ -932,7 +944,7 @@ export function FlightResults({
       {isCheckoutOpen && checkoutFlight && (
         <div className="fixed inset-0 bg-black/55 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl w-full max-w-[680px] shadow-2xl relative overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-250 select-none">
-            
+
             {/* Modal Header */}
             <div className="bg-[#F2FBFF] px-8 py-5 border-b border-slate-200 flex items-center justify-between shrink-0">
               <div>
@@ -943,7 +955,7 @@ export function FlightResults({
                   {infants > 0 ? ` · ${infants} Infant${infants !== 1 ? 's' : ''}` : ''}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setIsCheckoutOpen(false)}
                 className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors shadow-sm"
               >
@@ -953,7 +965,7 @@ export function FlightResults({
 
             {/* Checkout Form Content */}
             <div className="p-6 flex-1 overflow-y-auto space-y-5">
-              
+
               {/* Brief Flight Info Card */}
               <div className="p-4 bg-[#F2FBFF] rounded-2xl border border-slate-100 flex items-center justify-between">
                 <div>
@@ -986,7 +998,7 @@ export function FlightResults({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col">
                     <label className="text-[13px] font-[800] text-slate-600 mb-1.5">Mobile <span className="text-[#D60D26]">*</span></label>
-                    <input 
+                    <input
                       type="tel"
                       placeholder="Enter mobile number"
                       value={contactMobile}
@@ -996,7 +1008,7 @@ export function FlightResults({
                   </div>
                   <div className="flex flex-col">
                     <label className="text-[13px] font-[800] text-slate-600 mb-1.5">Email <span className="text-[#D60D26]">*</span></label>
-                    <input 
+                    <input
                       type="email"
                       placeholder="Enter email address"
                       value={contactEmail}
@@ -1011,16 +1023,14 @@ export function FlightResults({
               {passengers.map((pax, idx) => (
                 <div key={idx} className="border border-slate-200 rounded-2xl overflow-hidden">
                   {/* Pax header */}
-                  <div className={`px-5 py-3 flex items-center gap-2 ${
-                    pax.pax_type === 0 ? 'bg-blue-50 border-b border-blue-100' :
+                  <div className={`px-5 py-3 flex items-center gap-2 ${pax.pax_type === 0 ? 'bg-blue-50 border-b border-blue-100' :
                     pax.pax_type === 1 ? 'bg-amber-50 border-b border-amber-100' :
-                    'bg-purple-50 border-b border-purple-100'
-                  }`}>
-                    <span className={`text-[11px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
-                      pax.pax_type === 0 ? 'bg-blue-600 text-white' :
-                      pax.pax_type === 1 ? 'bg-amber-500 text-white' :
-                      'bg-purple-600 text-white'
+                      'bg-purple-50 border-b border-purple-100'
                     }`}>
+                    <span className={`text-[11px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${pax.pax_type === 0 ? 'bg-blue-600 text-white' :
+                      pax.pax_type === 1 ? 'bg-amber-500 text-white' :
+                        'bg-purple-600 text-white'
+                      }`}>
                       {pax.pax_type === 0 ? '12+ yrs' : pax.pax_type === 1 ? '2–11 yrs' : 'Under 2'}
                     </span>
                     <span className="text-[15px] font-[850] text-slate-700">{pax.label}</span>
@@ -1031,7 +1041,7 @@ export function FlightResults({
                     {/* Title */}
                     <div className="flex flex-col">
                       <label className="text-[13px] font-[800] text-slate-600 mb-1.5">Title</label>
-                      <select 
+                      <select
                         value={pax.title}
                         onChange={(e) => updatePassenger(idx, 'title', e.target.value)}
                         className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] font-semibold text-slate-800 outline-none focus:border-[#D60D26] focus:ring-1 focus:ring-[#D60D26] transition bg-white"
@@ -1054,7 +1064,7 @@ export function FlightResults({
                     {/* Gender */}
                     <div className="flex flex-col">
                       <label className="text-[13px] font-[800] text-slate-600 mb-1.5">Gender</label>
-                      <select 
+                      <select
                         value={pax.gender}
                         onChange={(e) => updatePassenger(idx, 'gender', e.target.value)}
                         className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] font-semibold text-slate-800 outline-none focus:border-[#D60D26] focus:ring-1 focus:ring-[#D60D26] transition bg-white"
@@ -1067,7 +1077,7 @@ export function FlightResults({
                     {/* DOB */}
                     <div className="flex flex-col">
                       <label className="text-[13px] font-[800] text-slate-600 mb-1.5">Date of Birth <span className="text-[#D60D26]">*</span></label>
-                      <input 
+                      <input
                         type="date"
                         value={pax.dob}
                         onChange={(e) => updatePassenger(idx, 'dob', e.target.value)}
@@ -1078,7 +1088,7 @@ export function FlightResults({
                     {/* First Name */}
                     <div className="flex flex-col">
                       <label className="text-[13px] font-[800] text-slate-600 mb-1.5">First Name <span className="text-[#D60D26]">*</span></label>
-                      <input 
+                      <input
                         type="text"
                         placeholder="First name"
                         value={pax.first_name}
@@ -1090,7 +1100,7 @@ export function FlightResults({
                     {/* Last Name */}
                     <div className="flex flex-col col-span-2 sm:col-span-2">
                       <label className="text-[13px] font-[800] text-slate-600 mb-1.5">Last Name <span className="text-[#D60D26]">*</span></label>
-                      <input 
+                      <input
                         type="text"
                         placeholder="Last name"
                         value={pax.last_name}
@@ -1106,13 +1116,13 @@ export function FlightResults({
 
             {/* Modal Footer actions */}
             <div className="bg-[#F2FBFF] px-8 py-5 border-t border-slate-200 flex justify-end gap-3 shrink-0">
-              <button 
+              <button
                 onClick={() => setIsCheckoutOpen(false)}
                 className="px-6 h-[46px] rounded-full border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-[14px] shadow-sm transition"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleCheckoutSubmit}
                 disabled={isBookingLoading}
                 className="px-8 h-[46px] rounded-full bg-[#D60D26] hover:bg-[#b00b1d] text-white font-bold text-[14px] shadow-lg shadow-[#D60D26]/20 transition flex items-center justify-center gap-2 active:scale-95 disabled:bg-slate-400 disabled:shadow-none"
@@ -1138,7 +1148,7 @@ export function FlightResults({
       {bookingSuccessData && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[250] flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl w-full max-w-[550px] shadow-2xl p-8 text-center flex flex-col items-center relative overflow-hidden animate-in zoom-in-95 duration-250 select-none">
-            
+
             {/* Confirmed Animation badge */}
             <div className="w-20 h-20 bg-green-50 border border-green-200 text-green-600 rounded-full flex items-center justify-center shadow-inner mb-6">
               <CheckCircle2 className="w-10 h-10" strokeWidth={2.5} />
@@ -1151,7 +1161,7 @@ export function FlightResults({
 
             {/* Detail stats rows */}
             <div className="w-full bg-[#F2FBFF] rounded-2xl border border-slate-100 p-6 my-6 space-y-3.5 text-[14px]">
-              
+
               <div className="flex justify-between border-b border-slate-200/60 pb-2">
                 <span className="text-slate-400 font-bold uppercase tracking-wider text-xs">PNR Number</span>
                 <span className="text-slate-800 font-black tracking-tight text-[15px]">{bookingSuccessData.pnr_number}</span>
@@ -1195,7 +1205,7 @@ export function FlightResults({
 
             {/* Quick Actions */}
             <div className="w-full flex flex-col gap-3">
-              <button 
+              <button
                 onClick={() => {
                   setBookingSuccessData(null);
                   setIsCheckoutOpen(false);
@@ -1205,7 +1215,7 @@ export function FlightResults({
               >
                 View Ticket Details <ArrowUpRight className="w-4.5 h-4.5" strokeWidth={2.5} />
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setBookingSuccessData(null);
                   setIsCheckoutOpen(false);
