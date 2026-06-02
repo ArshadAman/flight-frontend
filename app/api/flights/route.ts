@@ -1,4 +1,10 @@
 import { NextResponse } from "next/server";
+import { cabinToClassCode, parseDurationToMinutes } from "@/lib/flightSearch";
+import {
+    formatBaggageLabel,
+    parseFoodOnboardFromApi,
+    parseMealOptionsFromApi,
+} from "@/lib/flight";
 
 const CITY_TO_IATA: Record<string, string> = {
     "new delhi": "DEL",
@@ -60,44 +66,177 @@ function formatTime12h(date: Date): string {
     return `${hoursStr}:${minutesStr} ${ampm}`;
 }
 
+const MOCK_AIRLINES = [
+    { code: "AI", name: "Air India" },
+    { code: "6E", name: "IndiGo" },
+    { code: "UK", name: "Vistara" },
+    { code: "SG", name: "SpiceJet" },
+    { code: "G8", name: "Go First" },
+];
+
+function normalizeFareType(raw: unknown): string {
+    const s = String(raw || "PUB").toUpperCase();
+    if (s.includes("CORP")) return "CORP";
+    if (s.includes("STU") || s.includes("STUDENT")) return "STU";
+    if (s.includes("DEF") || s.includes("DEFENCE") || s.includes("DEFENSE")) return "DEF";
+    return "PUB";
+}
+
+function mapBackendFlight(flight: any, idx: number, searchKey: string) {
+    const firstSeg = flight.segments?.[0];
+    const lastSeg = flight.segments?.[flight.segments.length - 1];
+    const depDate = firstSeg ? parseUatDateTime(firstSeg.departure_datetime) : new Date();
+    const arrDate = lastSeg ? parseUatDateTime(lastSeg.arrival_datetime) : new Date();
+
+    const primaryFare = flight.fares?.[0] || {};
+    const priceDetails = primaryFare.price_details || {};
+    const totalPrice = priceDetails.total_amount || 3500;
+    const taxAmount = priceDetails.tax_amount || Math.round(totalPrice * 0.15);
+    const baseAmount =
+        priceDetails.basic_amount ??
+        priceDetails.base_amount ??
+        totalPrice - taxAmount;
+    const fareId = primaryFare.fare_id || `fare-${idx}`;
+
+    const airlineCode = firstSeg?.airline_code || flight.airline_code || "FL";
+    const flightNumber = firstSeg?.flight_number || `${100 + idx}`;
+    const shortId = `${airlineCode}-${flightNumber}`.toUpperCase();
+
+    const baggageRaw =
+        primaryFare.baggage_allowance ||
+        primaryFare.check_in_baggage ||
+        primaryFare.baggage ||
+        firstSeg?.baggage_allowance ||
+        "";
+    const baggageStr = formatBaggageLabel(baggageRaw);
+    const hasBaggage = /kg|kilo|bag|\b(5|7|15|20|23|25|30)\b/i.test(baggageStr);
+
+    const fareType =
+        primaryFare.fare_type ||
+        primaryFare.fare_category ||
+        primaryFare.fare_basis_type ||
+        "PUB";
+
+    const equipment =
+        firstSeg?.aircraft_type ||
+        firstSeg?.equipment ||
+        firstSeg?.aircraft ||
+        null;
+
+    const durationStr = firstSeg?.duration || "2h 30m";
+    const cabinClass =
+        firstSeg?.cabin_class ||
+        primaryFare.cabin_class ||
+        primaryFare.class_of_service ||
+        "Economy";
+    const foodRaw =
+        primaryFare.food_onboard ??
+        firstSeg?.food_onboard ??
+        primaryFare.meal_included ??
+        firstSeg?.meal_included;
+    const { meal_available: mealFromFood, food_onboard: foodOnboard, meal_included } =
+        parseFoodOnboardFromApi(foodRaw);
+    const mealOptionsRaw =
+        primaryFare.meal_options ??
+        primaryFare.meals ??
+        primaryFare.ssr_meals ??
+        firstSeg?.meal_options ??
+        [];
+    const mealOptions = parseMealOptionsFromApi(mealOptionsRaw);
+    const hasApiMealList = mealOptions.length > 1;
+    const mealAvailable =
+        mealFromFood || hasApiMealList || Boolean(meal_included);
+
+    return {
+        id: shortId,
+        airline: firstSeg?.airline_name || flight.airline_code || "Airline",
+        airline_code: airlineCode,
+        origin: flight.origin,
+        destination: flight.destination,
+        departureTime: formatTime12h(depDate),
+        arrivalTime: formatTime12h(arrDate),
+        duration: durationStr,
+        duration_minutes: parseDurationToMinutes(durationStr),
+        departure_minutes: depDate.getHours() * 60 + depDate.getMinutes(),
+        arrival_minutes: arrDate.getHours() * 60 + arrDate.getMinutes(),
+        price: totalPrice,
+        tax_amount: taxAmount,
+        base_amount: baseAmount,
+        stops: Math.max(0, (flight.segments?.length || 1) - 1),
+        fare_type: normalizeFareType(fareType),
+        has_baggage: hasBaggage,
+        baggage_label: baggageStr || undefined,
+        equipment: equipment || undefined,
+        cabin_class: cabinClass,
+        ticket_time_limit_hours: primaryFare.ticket_time_limit || primaryFare.ttl_hours || 24,
+        meal_available: mealAvailable,
+        food_onboard: foodOnboard,
+        meal_options: mealAvailable ? mealOptions : undefined,
+        search_key: searchKey,
+        flight_key: flight.flight_key,
+        fare_id: fareId,
+    };
+}
+
 // Fallback mock generator in case the backend is down
 function generateMockFlights(origin: string, destination: string, count: number = 4) {
     if (!origin || !destination) return [];
 
-    const airlines = ["SkyHigh Airlines", "Air Express", "GlobeTrotter", "Vayu Jet", "Cloud Nine Air"];
     const basePrices = [3200, 3800, 4500, 5100, 6200, 7500];
-
+    const equipmentTypes = ["Boeing 737", "Airbus A320", "Boeing 787", "ATR 72"];
     const seed = origin.length + destination.length;
 
     return Array.from({ length: count }).map((_, i) => {
-        const airline = airlines[(seed + i) % airlines.length];
+        const airlineMeta = MOCK_AIRLINES[(seed + i) % MOCK_AIRLINES.length];
         const basePrice = basePrices[(seed + i * 2) % basePrices.length];
-        const stops = i % 3 === 0 ? 1 : 0; 
+        const stops = i % 3 === 0 ? 1 : 0;
 
-        const depHour = 6 + (i * 3); 
+        const depHour = 6 + (i * 3);
         const depPeriod = depHour >= 12 ? "PM" : "AM";
         const displayDepHour = depHour > 12 ? depHour - 12 : depHour;
 
-        const durationHours = 2 + (i % 2); 
+        const durationHours = 2 + (i % 2);
         const durationMins = 15 + (i * 15 % 60);
+        const durationStr = `${durationHours}h ${durationMins}m`;
 
         const arrHour = depHour + durationHours;
         const arrPeriod = arrHour >= 12 && arrHour < 24 ? "PM" : "AM";
         const displayArrHour = arrHour > 12 ? (arrHour === 24 ? 12 : arrHour - 12) : arrHour;
 
         return {
-            id: `FL-${origin.substring(0, 3).toUpperCase()}-${destination.substring(0, 3).toUpperCase()}-${100 + i}`,
-            airline,
-            origin: origin.charAt(0).toUpperCase() + origin.slice(1).toLowerCase(), 
+            id: `${airlineMeta.code}-${100 + i}`,
+            airline: airlineMeta.name,
+            airline_code: airlineMeta.code,
+            origin: origin.charAt(0).toUpperCase() + origin.slice(1).toLowerCase(),
             destination: destination.charAt(0).toUpperCase() + destination.slice(1).toLowerCase(),
-            departureTime: `${displayDepHour.toString().padStart(2, '0')}:${durationMins.toString().padStart(2, '0')} ${depPeriod}`,
-            arrivalTime: `${displayArrHour.toString().padStart(2, '0')}:${((durationMins + 30) % 60).toString().padStart(2, '0')} ${arrPeriod}`,
-            duration: `${durationHours}h ${durationMins}m`,
-            price: basePrice + (stops === 0 ? 500 : 0) + (Math.floor(Math.random() * 500)), 
+            departureTime: `${displayDepHour.toString().padStart(2, "0")}:${durationMins.toString().padStart(2, "0")} ${depPeriod}`,
+            arrivalTime: `${displayArrHour.toString().padStart(2, "0")}:${((durationMins + 30) % 60).toString().padStart(2, "0")} ${arrPeriod}`,
+            duration: durationStr,
+            duration_minutes: durationHours * 60 + durationMins,
+            departure_minutes: depHour * 60 + durationMins,
+            arrival_minutes: arrHour * 60 + ((durationMins + 30) % 60),
+            price: basePrice + (stops === 0 ? 500 : 0) + (Math.floor(Math.random() * 500)),
             stops,
+            fare_type: i % 4 === 0 ? "CORP" : "PUB",
+            has_baggage: i % 2 === 0,
+            baggage_label: i % 2 === 0 ? "15kg" : undefined,
+            equipment: equipmentTypes[i % equipmentTypes.length],
+            ticket_time_limit_hours: i % 2 === 0 ? 12 : 24,
+            cabin_class: "Economy",
+            meal_available: i % 3 !== 0,
+            food_onboard: i % 2 === 0,
+            meal_options:
+                i % 3 !== 0
+                    ? parseMealOptionsFromApi([
+                          { meal_code: "veg", meal_name: "Vegetarian", price: 249 },
+                          { meal_code: "nonveg", meal_name: "Non-veg", price: 299 },
+                      ])
+                    : undefined,
+            tax_amount: Math.round((basePrice + (stops === 0 ? 500 : 0)) * 0.15),
+            base_amount: basePrice,
             search_key: "mock-search-key",
             flight_key: `mock-flight-${i}`,
-            fare_id: `mock-fare-${i}`
+            fare_id: `mock-fare-${i}`,
         };
     });
 }
@@ -114,19 +253,15 @@ export async function GET(request: Request) {
     const children = parseInt(searchParams.get("children") || "0", 10);
     const infants = parseInt(searchParams.get("infants") || "0", 10);
     const cabin = searchParams.get("cabin") || "Economy";
+    const airlineCodeParam = (searchParams.get("airlineCode") || "").trim().toUpperCase();
+    const baggageFaresOnly = searchParams.get("baggageFares") === "true";
+    const studentFareSearch = searchParams.get("studentFare") === "true";
+    const defenceFareSearch = searchParams.get("defenceFare") === "true";
+    const srCitizenSearch = searchParams.get("srCitizen") === "true";
 
     const originIata = getIataCode(originStr);
     const destinationIata = getIataCode(destinationStr);
-
-    // Map cabin strings to backend cabin codes ("0" = Economy, etc.)
-    let cabinCode = "0";
-    if (cabin === "Prem. Economy" || cabin === "Premium Economy" || cabin === "Premium") {
-        cabinCode = "1";
-    } else if (cabin === "Business") {
-        cabinCode = "2";
-    } else if (cabin === "First" || cabin === "First Class") {
-        cabinCode = "3";
-    }
+    const cabinCode = cabinToClassCode(cabin);
 
     const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8000";
 
@@ -163,6 +298,13 @@ export async function GET(request: Request) {
         const rM = String(futureReturn.getMonth() + 1).padStart(2, '0');
         const rD = String(futureReturn.getDate()).padStart(2, '0');
         finalReturnDate = `${rY}-${rM}-${rD}`;
+    } else if (tripType === "round-trip" && !finalReturnDate) {
+        const depDateObj = new Date(finalTravelDate);
+        const futureReturn = new Date(depDateObj.getTime() + 3 * 24 * 60 * 60 * 1000);
+        const rY = futureReturn.getFullYear();
+        const rM = String(futureReturn.getMonth() + 1).padStart(2, '0');
+        const rD = String(futureReturn.getDate()).padStart(2, '0');
+        finalReturnDate = `${rY}-${rM}-${rD}`;
     }
 
     const postPayload = {
@@ -174,7 +316,10 @@ export async function GET(request: Request) {
         child_count: children,
         infant_count: infants,
         class_of_travel: cabinCode,
-        airline_code: ""
+        airline_code: airlineCodeParam,
+        student_fare_search: studentFareSearch,
+        defence_fare_search: defenceFareSearch,
+        sr_citizen_search: srCitizenSearch,
     };
 
     console.log(`BFF Request to backend search URL: ${backendUrl}/api/v1/flights/search/ with payload:`, postPayload);
@@ -224,39 +369,20 @@ export async function GET(request: Request) {
 
         const searchKey = backendResult.data.search_key;
         
-        // Map backend nested format to flat Flight format
-        let outboundMapped = backendResult.data.flights.map((flight: any, idx: number) => {
-            const firstSeg = flight.segments[0];
-            const lastSeg = flight.segments[flight.segments.length - 1];
-            const depDate = firstSeg ? parseUatDateTime(firstSeg.departure_datetime) : new Date();
-            const arrDate = lastSeg ? parseUatDateTime(lastSeg.arrival_datetime) : new Date();
-
-            const primaryFare = flight.fares[0] || {};
-            const totalPrice = primaryFare.price_details?.total_amount || 3500;
-            const fareId = primaryFare.fare_id || `fare-${idx}`;
-
-            const airlineCode = firstSeg?.airline_code || flight.airline_code || "FL";
-            const flightNumber = firstSeg?.flight_number || `${100 + idx}`;
-            const shortId = `${airlineCode}-${flightNumber}`.toUpperCase();
-
-            return {
-                id: shortId,
-                airline: firstSeg?.airline_name || flight.airline_code || "Airline",
-                origin: flight.origin,
-                destination: flight.destination,
-                departureTime: formatTime12h(depDate),
-                arrivalTime: formatTime12h(arrDate),
-                duration: firstSeg?.duration || "2h 30m",
-                price: totalPrice,
-                stops: flight.segments.length - 1,
-                search_key: searchKey,
-                flight_key: flight.flight_key,
-                fare_id: fareId
-            };
-        });
+        let outboundMapped = backendResult.data.flights.map((flight: any, idx: number) =>
+            mapBackendFlight(flight, idx, searchKey)
+        );
 
         if (nonStop) {
             outboundMapped = outboundMapped.filter((f: any) => f.stops === 0);
+        }
+        if (baggageFaresOnly) {
+            outboundMapped = outboundMapped.filter((f: any) => f.has_baggage);
+        }
+        if (airlineCodeParam) {
+            outboundMapped = outboundMapped.filter(
+                (f: any) => f.airline_code?.toUpperCase() === airlineCodeParam
+            );
         }
 
         // For round-trip, we split the backend results. The backend normalization returns return flights mixed in or separate.
@@ -296,15 +422,23 @@ export async function GET(request: Request) {
         console.error("[BFF Flight Search API] Failed to fetch live flights, falling back to mock flights. Error:", error);
         
         let outboundMock = generateMockFlights(originStr, destinationStr, 5);
-        if (nonStop) {
-            outboundMock = outboundMock.filter(f => f.stops === 0);
+        if (nonStop) outboundMock = outboundMock.filter((f) => f.stops === 0);
+        if (baggageFaresOnly) outboundMock = outboundMock.filter((f) => f.has_baggage);
+        if (airlineCodeParam) {
+            outboundMock = outboundMock.filter(
+                (f) => f.airline_code?.toUpperCase() === airlineCodeParam
+            );
         }
 
         let returnMock: any[] = [];
         if (tripType === "round-trip") {
             returnMock = generateMockFlights(destinationStr, originStr, 4);
-            if (nonStop) {
-                returnMock = returnMock.filter(f => f.stops === 0);
+            if (nonStop) returnMock = returnMock.filter((f) => f.stops === 0);
+            if (baggageFaresOnly) returnMock = returnMock.filter((f) => f.has_baggage);
+            if (airlineCodeParam) {
+                returnMock = returnMock.filter(
+                    (f) => f.airline_code?.toUpperCase() === airlineCodeParam
+                );
             }
         }
 

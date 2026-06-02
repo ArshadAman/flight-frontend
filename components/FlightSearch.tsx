@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { PlaneTakeoff, ArrowRightLeft, ArrowUpRight, ArrowRight, ChevronDown, Plus, Minus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { POPULAR_AIRLINES, defaultReturnDate } from "@/lib/flightSearch";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -13,15 +14,24 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 
+export type FlightSearchSubmitData = {
+    origin: string;
+    destination: string;
+    nonStop: boolean;
+    baggageFares: boolean;
+    studentFareSearch: boolean;
+    defenceFareSearch: boolean;
+    srCitizenSearch: boolean;
+    travellers: { adults: number; children: number; infants: number };
+    cabin: string;
+    tripType: "one-way" | "round-trip" | "multi-city";
+    departureDate?: Date;
+    returnDate?: Date;
+    airlineCode?: string;
+};
+
 interface FlightSearchProps {
-    onSearch?: (searchData: {
-        origin: string;
-        destination: string;
-        nonStop: boolean;
-        travellers: any;
-        cabin: string;
-        tripType: string;
-    }) => void;
+    onSearch?: (searchData: FlightSearchSubmitData) => void;
 }
 
 const GLOBAL_CITIES = [
@@ -78,6 +88,10 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
     const [cabinClass, setCabinClass] = React.useState("Economy");
     const [nonStop, setNonStop] = React.useState(false);
     const [baggageFares, setBaggageFares] = React.useState(false);
+    const [studentFareSearch, setStudentFareSearch] = React.useState(false);
+    const [defenceFareSearch, setDefenceFareSearch] = React.useState(false);
+    const [srCitizenSearch, setSrCitizenSearch] = React.useState(false);
+    const [airlineCode, setAirlineCode] = React.useState("");
     const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
     // Multi-city additional state
@@ -141,9 +155,15 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
             setErrorMsg("Origin and Destination cannot be the same.");
             return;
         }
-        if (tripType === 'round-trip' && returnDate && date && returnDate < date) {
-            setErrorMsg("Return Date must be after Departure Date.");
-            return;
+        if (tripType === "round-trip") {
+            if (!returnDate) {
+                setErrorMsg("Please select a Return Date for round-trip.");
+                return;
+            }
+            if (date && returnDate < date) {
+                setErrorMsg("Return Date must be after Departure Date.");
+                return;
+            }
         }
 
         // Save to last searches
@@ -158,7 +178,21 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
         }
 
         if (onSearch) {
-            onSearch({ origin, destination, nonStop, travellers, cabin: cabinClass, tripType });
+            onSearch({
+                origin,
+                destination,
+                nonStop,
+                baggageFares,
+                studentFareSearch,
+                defenceFareSearch,
+                srCitizenSearch,
+                travellers,
+                cabin: cabinClass,
+                tripType,
+                departureDate: date,
+                returnDate: tripType === "round-trip" ? returnDate : undefined,
+                airlineCode: airlineCode || undefined,
+            });
         }
     };
 
@@ -173,6 +207,11 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
         setTravellers({ adults: 1, children: 0, infants: 0 });
         setCabinClass("Economy");
         setNonStop(false);
+        setBaggageFares(false);
+        setStudentFareSearch(false);
+        setDefenceFareSearch(false);
+        setSrCitizenSearch(false);
+        setAirlineCode("");
         setErrorMsg(null);
     };
 
@@ -251,7 +290,12 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                 {/* Trip Type Selector */}
                 <div className="flex items-center flex-wrap gap-4 md:gap-8">
                     {(["one-way", "round-trip", "multi-city"] as const).map((type) => (
-                        <label key={type} className="flex items-center space-x-2 cursor-pointer group" onClick={() => setTripType(type)}>
+                        <label key={type} className="flex items-center space-x-2 cursor-pointer group" onClick={() => {
+                            setTripType(type);
+                            if (type === "round-trip" && date && (!returnDate || returnDate < date)) {
+                                setReturnDate(defaultReturnDate(date));
+                            }
+                        }}>
                             <div className={cn(
                                 "w-[20px] h-[20px] rounded-full border-[1.5px] flex items-center justify-center shadow-sm",
                                 tripType === type ? "border-brand" : "border-slate-300"
@@ -646,7 +690,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                 )}
 
                 {/* Checkboxes Row */}
-                <div className="flex items-center space-x-6 pt-2">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2">
                     <div className="flex items-center space-x-2.5">
                         <button id="baggageFares" onClick={() => setBaggageFares(!baggageFares)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", baggageFares ? "bg-white border-[#D60D26]" : "border-slate-300 bg-white")}>
                             {baggageFares && <svg className="w-3.5 h-3.5 text-[#D60D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
@@ -658,10 +702,43 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                     <div className="hidden sm:block w-[1.5px] h-4 bg-slate-200" />
 
                     <div className="flex items-center space-x-2.5">
+                        <button id="studentFare" type="button" onClick={() => setStudentFareSearch(!studentFareSearch)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", studentFareSearch ? "bg-white border-[#D60D26]" : "border-slate-300 bg-white")}>
+                            {studentFareSearch && <svg className="w-3.5 h-3.5 text-[#D60D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                        </button>
+                        <label htmlFor="studentFare" className="text-[13px] font-bold text-slate-400 cursor-pointer select-none" onClick={() => setStudentFareSearch(!studentFareSearch)}>Student Fare</label>
+                    </div>
+
+                    <div className="flex items-center space-x-2.5">
+                        <button id="defenceFare" type="button" onClick={() => setDefenceFareSearch(!defenceFareSearch)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", defenceFareSearch ? "bg-white border-[#D60D26]" : "border-slate-300 bg-white")}>
+                            {defenceFareSearch && <svg className="w-3.5 h-3.5 text-[#D60D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                        </button>
+                        <label htmlFor="defenceFare" className="text-[13px] font-bold text-slate-400 cursor-pointer select-none" onClick={() => setDefenceFareSearch(!defenceFareSearch)}>Defence Fare</label>
+                    </div>
+
+                    <div className="hidden sm:block w-[1.5px] h-4 bg-slate-200" />
+
+                    <div className="flex items-center space-x-2.5">
                         <button id="nonStop" onClick={() => setNonStop(!nonStop)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", nonStop ? "bg-white border-[#D60D26]" : "border-slate-300 bg-white")}>
                             {nonStop && <svg className="w-3.5 h-3.5 text-[#D60D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                         </button>
                         <label htmlFor="nonStop" className="text-[13px] font-bold text-slate-400 cursor-pointer select-none" onClick={() => setNonStop(!nonStop)}>Non-Stops Flights</label>
+                    </div>
+
+                    <div className="hidden sm:block w-[1.5px] h-4 bg-slate-200" />
+
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="airlinePref" className="text-[13px] font-bold text-slate-400 whitespace-nowrap">Preferred airline</label>
+                        <select
+                            id="airlinePref"
+                            value={airlineCode}
+                            onChange={(e) => setAirlineCode(e.target.value)}
+                            className="text-[13px] font-semibold text-slate-700 border border-slate-200 rounded-lg px-2 py-1 bg-white"
+                        >
+                            <option value="">Any airline</option>
+                            {POPULAR_AIRLINES.map((a) => (
+                                <option key={a.code} value={a.code}>{a.name}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 
