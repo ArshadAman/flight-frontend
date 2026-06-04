@@ -11,6 +11,7 @@ import { PassengerDetails } from "@/components/booking/PassengerDetails";
 import { ItineraryDetails } from "@/components/booking/ItineraryDetails";
 import { PassengerMoreDetails } from "@/components/booking/PassengerMoreDetails";
 import { PaymentDetails, BookingActions } from "@/components/booking/PaymentDetails";
+import SSRSelection from "@/components/booking/SSRSelection";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -20,19 +21,18 @@ export default function BookingDetailsPage({ params }: PageProps) {
     const resolvedParams = use(params);
     const id = resolvedParams.id;
     const [ticket, setTicket] = useState<any | null>(null);
+    const [ssrOpen, setSsrOpen] = useState(false);
+    const [ssrDefaultTab, setSsrDefaultTab] = useState<"seats" | "meals" | "assistance">("seats");
 
-    useEffect(() => {
-        const fetchTicketDetails = async () => {
-            const token = localStorage.getItem("access_token") || localStorage.getItem("mock-access-token");
-            if (!id) return;
-            console.log("[BookingDetails Page] Fetching ticket details for ID/PNR:", id);
+    const fetchTicketDetails = async () => {
+        const token = localStorage.getItem("access_token") || localStorage.getItem("mock-access-token");
+        if (!id) return;
+        console.log("[BookingDetails Page] Fetching ticket details for ID/PNR:", id);
+        
+        if (id.startsWith("31241")) {
+            console.log("[BookingDetails Page] Target ID is a mockup ID, skipping fetch to render default fallback mockup details.");
             
-            if (id.startsWith("31241")) {
-                console.log("[BookingDetails Page] Target ID is a mockup ID, skipping fetch to render default fallback mockup details.");
-                return; 
-            }
-
-            // Fast path: check offline bookings in localStorage first
+            // Try loading from offline cache first even for mockups to display saved SSRs!
             try {
                 const stored = localStorage.getItem("offline_bookings");
                 if (stored) {
@@ -43,7 +43,7 @@ export default function BookingDetailsPage({ params }: PageProps) {
                         t.ticket_number === id
                     );
                     if (matched) {
-                        console.log("[BookingDetails Page] Found matched ticket in local storage offline bookings cache:", matched);
+                        console.log("[BookingDetails Page] Found mockup ticket in cache with potential ssr_data:", matched);
                         setTicket(matched);
                         return;
                     }
@@ -51,66 +51,94 @@ export default function BookingDetailsPage({ params }: PageProps) {
             } catch (err) {
                 console.error("[BookingDetails Page Error] Failed to parse offline bookings cache:", err);
             }
+            return; 
+        }
 
-            if (!token) {
-                console.log("[BookingDetails Page] No authorization token found, skipping live API queries.");
-                return;
-            }
-
-            try {
-                const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-                // If the id is a PNR or ticket number, we first fetch all tickets and filter, 
-                // or try to fetch by direct UUID if valid format.
-                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
-                
-                if (isUuid) {
-                    console.log("[BookingDetails Page] Target ID is a valid UUID pattern, querying tickets by direct endpoint...");
-                    const response = await fetch(`${apiBase}/tickets/${id}/`, {
-                        headers: {
-                            "Authorization": `Bearer ${token}`
-                        }
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log("[BookingDetails Page] Direct UUID ticket lookup succeeded. Ticket data:", data);
-                        setTicket(data);
-                        return;
-                    } else {
-                        console.warn("[BookingDetails Page] Direct UUID ticket lookup failed with status:", response.status);
-                    }
+        // Fast path: check offline bookings in localStorage first
+        try {
+            const stored = localStorage.getItem("offline_bookings");
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                const matched = parsed.find((t: any) => 
+                    t.id === id || 
+                    t.pnr_number === id || 
+                    t.ticket_number === id
+                );
+                if (matched) {
+                    console.log("[BookingDetails Page] Found matched ticket in local storage offline bookings cache:", matched);
+                    setTicket(matched);
+                    return;
                 }
+            }
+        } catch (err) {
+            console.error("[BookingDetails Page Error] Failed to parse offline bookings cache:", err);
+        }
 
-                // Fallback: search all tickets for a matching PNR or ticket number
-                console.log("[BookingDetails Page] Querying ticket lists to find matched PNR/Ticket number...");
-                const listResponse = await fetch(`${apiBase}/tickets/`, {
+        if (!token) {
+            console.log("[BookingDetails Page] No authorization token found, skipping live API queries.");
+            return;
+        }
+
+        try {
+            const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+            // If the id is a PNR or ticket number, we first fetch all tickets and filter, 
+            // or try to fetch by direct UUID if valid format.
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+            
+            if (isUuid) {
+                console.log("[BookingDetails Page] Target ID is a valid UUID pattern, querying tickets by direct endpoint...");
+                const response = await fetch(`${apiBase}/tickets/${id}/`, {
                     headers: {
                         "Authorization": `Bearer ${token}`
                     }
                 });
-                if (listResponse.ok) {
-                    const listData = await listResponse.json();
-                    const tickets = listData.results || listData;
-                    const matched = tickets.find((t: any) => 
-                        t.id === id || 
-                        t.pnr_number === id || 
-                        t.ticket_number === id
-                    );
-                    if (matched) {
-                        console.log("[BookingDetails Page] Found matched ticket in backend list search. Ticket data:", matched);
-                        setTicket(matched);
-                    } else {
-                        console.log("[BookingDetails Page] No matched ticket found in backend list search.");
-                    }
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("[BookingDetails Page] Direct UUID ticket lookup succeeded. Ticket data:", data);
+                    setTicket(data);
+                    return;
                 } else {
-                    console.warn("[BookingDetails Page] Ticket list search failed with status:", listResponse.status);
+                    console.warn("[BookingDetails Page] Direct UUID ticket lookup failed with status:", response.status);
                 }
-            } catch (err) {
-                console.warn("[BookingDetails Page Error] Failed to fetch live ticket details, falling back to mockups:", err);
             }
-        };
 
+            // Fallback: search all tickets for a matching PNR or ticket number
+            console.log("[BookingDetails Page] Querying ticket lists to find matched PNR/Ticket number...");
+            const listResponse = await fetch(`${apiBase}/tickets/`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            if (listResponse.ok) {
+                const listData = await listResponse.json();
+                const tickets = listData.results || listData;
+                const matched = tickets.find((t: any) => 
+                    t.id === id || 
+                    t.pnr_number === id || 
+                    t.ticket_number === id
+                );
+                if (matched) {
+                    console.log("[BookingDetails Page] Found matched ticket in backend list search. Ticket data:", matched);
+                    setTicket(matched);
+                } else {
+                    console.log("[BookingDetails Page] No matched ticket found in backend list search.");
+                }
+            } else {
+                console.warn("[BookingDetails Page] Ticket list search failed with status:", listResponse.status);
+            }
+        } catch (err) {
+            console.warn("[BookingDetails Page Error] Failed to fetch live ticket details, falling back to mockups:", err);
+        }
+    };
+
+    useEffect(() => {
         fetchTicketDetails();
     }, [id]);
+
+    const handleSSRAdded = () => {
+        console.log("[BookingDetails Page] SSR updated, refreshing ticket details...");
+        fetchTicketDetails();
+    };
 
     return (
         <div className="w-full min-h-screen bg-white flex flex-col font-sans">
@@ -144,7 +172,36 @@ export default function BookingDetailsPage({ params }: PageProps) {
                     <PaymentDetails ticket={ticket} />
                 </div>
 
-                <BookingActions ticket={ticket} />
+                {/* SSR Selection Block */}
+                <SSRSelection
+                    ticket={ticket}
+                    id={id}
+                    onSSRAdded={handleSSRAdded}
+                    isOpenExternal={ssrOpen}
+                    setIsOpenExternal={setSsrOpen}
+                    defaultTabExternal={ssrDefaultTab}
+                />
+
+                <BookingActions
+                    ticket={ticket}
+                    onCancelled={fetchTicketDetails}
+                    onAddBaggageClick={() => {
+                        setSsrDefaultTab("assistance");
+                        setSsrOpen(true);
+                        setTimeout(() => {
+                            const el = document.getElementById("ssr-selection-section");
+                            if (el) el.scrollIntoView({ behavior: "smooth" });
+                        }, 100);
+                    }}
+                    onModificationClick={() => {
+                        setSsrDefaultTab("seats");
+                        setSsrOpen(true);
+                        setTimeout(() => {
+                            const el = document.getElementById("ssr-selection-section");
+                            if (el) el.scrollIntoView({ behavior: "smooth" });
+                        }, 100);
+                    }}
+                />
 
             </main>
 

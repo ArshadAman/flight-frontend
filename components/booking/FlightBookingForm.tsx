@@ -17,6 +17,7 @@ import {
 import { mealOptionsForFlight } from "@/lib/flight";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
+import PreBookingSSRSelection, { type SelectionsState } from "./PreBookingSSRSelection";
 
 function ItineraryLeg({
   label,
@@ -82,6 +83,7 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [successPnrs, setSuccessPnrs] = useState<string[]>([]);
+  const [ssrSelections, setSsrSelections] = useState<SelectionsState>({});
 
   useEffect(() => {
     const d = loadBookingDraft();
@@ -94,23 +96,25 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
     setContactEmail(user?.email || "");
   }, [b2b, router, user?.email]);
 
-  const outboundMeals = useMemo(
-    () => mealOptionsForFlight(draft?.outbound),
-    [draft?.outbound]
-  );
-  const returnMeals = useMemo(
-    () => mealOptionsForFlight(draft?.returnFlight),
-    [draft?.returnFlight]
-  );
+
 
   const pricing = useMemo(
     () => (draft ? computeBookingTotal(draft, passengers) : null),
     [draft, passengers]
   );
 
-  const showOutboundMeals = outboundMeals.length > 1;
-  const showReturnMeals =
-    draft?.tripType === "round-trip" && draft.returnFlight && returnMeals.length > 1;
+  const ssrTotalFees = useMemo(() => {
+    let sum = 0;
+    Object.values(ssrSelections).forEach((sel) => {
+      if (sel.seat) sum += parseFloat(String(sel.seat.Total_Amount || 0));
+      if (sel.meal) sum += parseFloat(String(sel.meal.Total_Amount || 0));
+      if (sel.baggage) sum += parseFloat(String(sel.baggage.Total_Amount || 0));
+      if (sel.wheelchair) sum += parseFloat(String(sel.wheelchair.Total_Amount || 0));
+    });
+    return sum;
+  }, [ssrSelections]);
+
+
 
   const updatePax = (id: string, field: keyof BookingPassenger, value: string) => {
     setPassengers((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
@@ -134,15 +138,63 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
       }
     }
 
+    const bookingSSRDetails: any[] = [];
+    Object.entries(ssrSelections).forEach(([key, sel]) => {
+      const [paxIdStr, segmentIdStr] = key.split("-");
+      const paxId = parseInt(paxIdStr);
+      const segmentId = parseInt(segmentIdStr);
+
+      if (sel.seat?.SSR_Key) {
+        bookingSSRDetails.push({ 
+          Pax_Id: paxId, 
+          SSR_Key: sel.seat.SSR_Key,
+          SSR_TypeName: sel.seat.SSR_TypeName,
+          SSR_Type: 3,
+          Segment_Id: segmentId
+        });
+      }
+      if (sel.meal?.SSR_Key) {
+        bookingSSRDetails.push({ 
+          Pax_Id: paxId, 
+          SSR_Key: sel.meal.SSR_Key,
+          SSR_Code: sel.meal.SSR_Code,
+          SSR_TypeDesc: sel.meal.SSR_TypeDesc,
+          SSR_Type: 1,
+          Segment_Id: segmentId
+        });
+      }
+      if (sel.baggage?.SSR_Key) {
+        bookingSSRDetails.push({ 
+          Pax_Id: paxId, 
+          SSR_Key: sel.baggage.SSR_Key,
+          SSR_Code: sel.baggage.SSR_Code,
+          SSR_TypeDesc: sel.baggage.SSR_TypeDesc,
+          SSR_Type: 0,
+          Segment_Id: segmentId
+        });
+      }
+      if (sel.wheelchair?.SSR_Key) {
+        bookingSSRDetails.push({ 
+          Pax_Id: paxId, 
+          SSR_Key: sel.wheelchair.SSR_Key,
+          SSR_Code: sel.wheelchair.SSR_Code,
+          SSR_TypeDesc: sel.wheelchair.SSR_TypeDesc,
+          SSR_Type: 4,
+          Segment_Id: segmentId
+        });
+      }
+    });
+
     setLoading(true);
-    const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem("access_token") || localStorage.getItem("mock-access-token");
 
     const result = await submitFlightBooking(
       draft.outbound,
       draft.returnFlight,
       { mobile: contactMobile, email: contactEmail },
       passengers,
-      token
+      token,
+      bookingSSRDetails
     );
 
     if (result.ok) {
@@ -156,15 +208,17 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
     }
 
     // Offline fallback — save both legs
-    const stored: unknown[] = [];
-    stored.push(
-      buildOfflineTicket(draft, passengers, draft.outbound, "Outbound")
-    );
+    const stored: any[] = [];
+    const outboundTicket = buildOfflineTicket(draft, passengers, draft.outbound, "Outbound") as any;
+    outboundTicket.ssr_data = { BookingSSRDetails: bookingSSRDetails };
+    stored.push(outboundTicket);
+
     if (draft.returnFlight) {
-      stored.push(
-        buildOfflineTicket(draft, passengers, draft.returnFlight, "Return")
-      );
+      const returnTicket = buildOfflineTicket(draft, passengers, draft.returnFlight, "Return") as any;
+      returnTicket.ssr_data = { BookingSSRDetails: bookingSSRDetails };
+      stored.push(returnTicket);
     }
+
     try {
       const existing = JSON.parse(localStorage.getItem("offline_bookings") || "[]");
       localStorage.setItem("offline_bookings", JSON.stringify([...existing, ...stored]));
@@ -259,10 +313,16 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
                 <span className="font-semibold">₹{pricing.meals.toLocaleString("en-IN")}</span>
               </div>
             )}
+            {ssrTotalFees > 0 && (
+              <div className="flex justify-between">
+                <span className="text-slate-500">Seats & Add-ons</span>
+                <span className="font-semibold text-rose-600">₹{ssrTotalFees.toLocaleString("en-IN")}</span>
+              </div>
+            )}
             <div className="flex justify-between pt-3 border-t border-slate-100 text-base">
               <span className="font-bold text-slate-800">Total</span>
               <span className="font-black text-[#D60D26]">
-                ₹{pricing.total.toLocaleString("en-IN")}
+                ₹{(pricing.total + ssrTotalFees).toLocaleString("en-IN")}
               </span>
             </div>
           </div>
@@ -369,56 +429,20 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
                 />
               </div>
 
-              {showOutboundMeals && (
-                <div>
-                  <label className="text-xs font-bold text-slate-600 flex items-center gap-1">
-                    <Utensils className="w-3 h-3" /> Outbound meal
-                    {draft.outbound.meal_options?.length ? (
-                      <span className="text-[10px] font-normal text-green-600 ml-1">(from airline)</span>
-                    ) : null}
-                  </label>
-                  <select
-                    value={pax.outbound_meal}
-                    onChange={(e) => updatePax(pax.id, "outbound_meal", e.target.value)}
-                    className="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm"
-                  >
-                    {outboundMeals.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                        {m.description ? ` — ${m.description}` : ""}
-                        {m.price > 0 ? ` (+₹${m.price})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              {showReturnMeals && (
-                <div>
-                  <label className="text-xs font-bold text-slate-600 flex items-center gap-1">
-                    <Utensils className="w-3 h-3" /> Return meal
-                    {draft.returnFlight?.meal_options?.length ? (
-                      <span className="text-[10px] font-normal text-green-600 ml-1">(from airline)</span>
-                    ) : null}
-                  </label>
-                  <select
-                    value={pax.return_meal}
-                    onChange={(e) => updatePax(pax.id, "return_meal", e.target.value)}
-                    className="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm"
-                  >
-                    {returnMeals.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                        {m.description ? ` — ${m.description}` : ""}
-                        {m.price > 0 ? ` (+₹${m.price})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+
             </div>
           </div>
         ))}
       </section>
+
+      {/* Dynamic Pre-booking SSR Selections */}
+      <PreBookingSSRSelection
+        searchKey={draft.outbound.search_key || "mock-search-key"}
+        outbound={draft.outbound}
+        returnFlight={draft.returnFlight}
+        passengers={passengers}
+        onChange={setSsrSelections}
+      />
 
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-bold">
@@ -431,7 +455,7 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
           <div>
             <p className="text-xs text-slate-500">Total payable</p>
             <p className="text-2xl font-black text-slate-900">
-              ₹{pricing?.total.toLocaleString("en-IN") ?? "—"}
+              ₹{pricing?.total ? (pricing.total + ssrTotalFees).toLocaleString("en-IN") : "—"}
             </p>
           </div>
           <button

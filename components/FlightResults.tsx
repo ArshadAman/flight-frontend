@@ -34,6 +34,7 @@ interface FlightResultsProps {
   infants?: number;
   initialNonStop?: boolean;
   initialBaggageFares?: boolean;
+  initialFareType?: "ALL" | "PUB" | "CORP" | "STU" | "DEF";
   initialAirlineCode?: string;
   searchOrigin?: string;
   searchDestination?: string;
@@ -62,6 +63,7 @@ export function FlightResults({
   initialNonStop = false,
   initialBaggageFares = false,
   initialAirlineCode,
+  initialFareType = "ALL",
   searchOrigin = "",
   searchDestination = "",
   departureDate = "",
@@ -78,9 +80,9 @@ export function FlightResults({
   const allFlights = useMemo(() => [...flights, ...returnFlights], [flights, returnFlights]);
 
   const priceBounds = useMemo(() => {
-    if (!allFlights.length) return { min: 3000, max: 15000 };
     const prices = allFlights.map((f) => f.price);
-    return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) };
+    if (prices.length === 0) return { min: 0, max: 15000 };
+    return { min: Math.min(...prices), max: Math.max(...prices) };
   }, [allFlights]);
 
   const availableAirlines = useMemo(() => {
@@ -101,17 +103,44 @@ export function FlightResults({
   }, [allFlights]);
 
   const maxDurationBound = useMemo(() => {
-    const durations = allFlights.map((f) => f.duration_minutes ?? 600);
+    const durations = allFlights.map((f) => f.duration_minutes ?? 180);
+    if (durations.length === 0) return 480;
     return Math.max(...durations, 180);
   }, [allFlights]);
 
   // Real-time interactive filter states
   const [nonStopOnly, setNonStopOnly] = useState(initialNonStop);
   const [baggageOnly, setBaggageOnly] = useState(initialBaggageFares);
-  const [fareType, setFareType] = useState<"ALL" | "PUB" | "CORP" | "STU" | "DEF">("ALL");
+  const [fareType, setFareType] = useState<"ALL" | "PUB" | "CORP" | "STU" | "DEF">(initialFareType);
   const [maxPrice, setMaxPrice] = useState(priceBounds.max);
   const [minPrice, setMinPrice] = useState(priceBounds.min);
   const [maxDurationMinutes, setMaxDurationMinutes] = useState(maxDurationBound);
+
+  useEffect(() => {
+    if (initialFareType) {
+      setFareType(initialFareType);
+    }
+  }, [initialFareType]);
+
+  const handleFareTypeChange = (newType: "ALL" | "PUB" | "CORP" | "STU" | "DEF") => {
+    setFareType(newType);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      params.delete("studentFare");
+      params.delete("defenceFare");
+      params.delete("corporateFare");
+
+      if (newType === "STU") {
+        params.set("studentFare", "true");
+      } else if (newType === "DEF") {
+        params.set("defenceFare", "true");
+      } else if (newType === "CORP") {
+        params.set("corporateFare", "true");
+      }
+
+      router.push(`${pathname}?${params.toString()}`);
+    }
+  };
   const [maxTicketHours, setMaxTicketHours] = useState(48);
   const [selectedStops, setSelectedStops] = useState<{ [key: number]: boolean }>({
     0: true,
@@ -435,9 +464,9 @@ export function FlightResults({
             </h3>
           )}
 
-          {flightList.map((flight) => {
+          {flightList.map((flight, idx) => {
             const taxAmount = Math.round(flight.price * 0.15);
-            const uniqueKey = flight.flight_key || flight.id;
+            const uniqueKey = `${flight.flight_key || flight.id}-${idx}`;
 
             // Determine mock legs for segments display (if stops > 0, show 2 connected rows!)
             const segmentsCount = flight.stops > 0 ? 2 : 1;
@@ -496,8 +525,14 @@ export function FlightResults({
                 {/* Right aligned Badges */}
                 <div className="flex items-center px-6 py-4 gap-2.5 flex-1 justify-end">
                   {/* PUB Badge */}
-                  <span className="bg-[#377BD7] text-white text-[11px] font-bold px-2 py-1 rounded shadow-sm tracking-wide">
-                    {flight.fare_type || "PUB"}
+                  <span className="bg-[#377BD7] text-white text-[11px] font-bold px-2.5 py-1 rounded shadow-sm tracking-wide">
+                    {flight.fare_type === "STU"
+                      ? "Student Fare"
+                      : flight.fare_type === "DEF"
+                        ? "Defence Fare"
+                        : flight.fare_type === "CORP"
+                          ? "Corporate Fare"
+                          : "Public Fare (PUB)"}
                   </span>
                   
                   {/* Suitcase Baggage Badge */}
@@ -774,7 +809,7 @@ export function FlightResults({
                         type="radio"
                         name="fareType"
                         checked={fareType === type}
-                        onChange={() => setFareType(type)}
+                        onChange={() => handleFareTypeChange(type)}
                         className="text-primary focus:ring-primary w-4 h-4"
                       />
                       <span>

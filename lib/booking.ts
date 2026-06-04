@@ -131,9 +131,10 @@ export async function submitFlightBooking(
   returnLeg: Flight | undefined,
   contact: { mobile: string; email: string },
   passengers: BookingPassenger[],
-  token: string | null
+  token: string | null,
+  bookingSSRDetails: any[] = []
 ): Promise<{ ok: true; tickets: unknown[] } | { ok: false; error: string }> {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
 
   const paxPayload = passengers.map((p) => ({
     pax_type: p.pax_type,
@@ -150,7 +151,7 @@ export async function submitFlightBooking(
       : {}),
   }));
 
-  const body: BuyPayload = {
+  const body: BuyPayload & { booking_ssr_details?: any[] } = {
     search_key: leg.search_key || "mock-search-key",
     flight_key: leg.flight_key || "mock-flight-key",
     fare_id: leg.fare_id || "mock-fare-id",
@@ -158,6 +159,7 @@ export async function submitFlightBooking(
     passenger_mobile: contact.mobile,
     passenger_email: contact.email,
     passengers: paxPayload,
+    booking_ssr_details: bookingSSRDetails
   };
 
   if (returnLeg) {
@@ -176,7 +178,10 @@ export async function submitFlightBooking(
     });
 
     if (res.ok) {
-      const data = await res.json();
+      let data = await res.json();
+      if (data && data.success && data.data !== undefined) {
+        data = data.data;
+      }
       return { ok: true, tickets: Array.isArray(data) ? data : [data] };
     }
   } catch {
@@ -198,7 +203,13 @@ export async function submitFlightBooking(
         return_fare_id: undefined,
       }),
     });
-    if (outRes.ok) tickets.push(await outRes.json());
+    if (outRes.ok) {
+      let data = await outRes.json();
+      if (data && data.success && data.data !== undefined) {
+        data = data.data;
+      }
+      tickets.push(data);
+    }
     else if (returnLeg) throw new Error("Outbound booking failed");
 
     if (returnLeg) {
@@ -218,7 +229,13 @@ export async function submitFlightBooking(
           passengers: paxPayload,
         }),
       });
-      if (retRes.ok) tickets.push(await retRes.json());
+      if (retRes.ok) {
+        let data = await retRes.json();
+        if (data && data.success && data.data !== undefined) {
+          data = data.data;
+        }
+        tickets.push(data);
+      }
       else throw new Error("Return booking failed");
     }
 
@@ -254,6 +271,8 @@ export function buildOfflineTicket(
       title: p.title,
       first_name: p.first_name,
       last_name: p.last_name,
+      outbound_meal: p.outbound_meal,
+      return_meal: p.return_meal,
     })),
     leg_label: legLabel,
     departure_display: leg.departureTime,

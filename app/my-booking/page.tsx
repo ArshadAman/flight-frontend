@@ -8,6 +8,29 @@ import { Plane, Trash2, Clock, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
+const statusConfig: Record<string, { label: string; dot: string; badge: string }> = {
+    CONFIRMED: {
+        label: "Confirmed",
+        dot: "bg-emerald-500",
+        badge: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    },
+    CANCELLED: {
+        label: "Cancelled",
+        dot: "bg-rose-500",
+        badge: "bg-rose-50 text-rose-700 border border-rose-200",
+    },
+    PENDING: {
+        label: "Pending",
+        dot: "bg-amber-400 animate-pulse",
+        badge: "bg-amber-50 text-amber-700 border border-amber-200",
+    },
+    FAILED: {
+        label: "Failed",
+        dot: "bg-gray-400",
+        badge: "bg-gray-100 text-gray-600 border border-gray-200",
+    },
+};
+
 const BookingCard = ({
     bookingNo,
     date,
@@ -18,7 +41,8 @@ const BookingCard = ({
     terminal,
     flight,
     price,
-    passengers
+    passengers,
+    status,
 }: {
     bookingNo: string;
     date: string;
@@ -30,16 +54,24 @@ const BookingCard = ({
     flight: string;
     price: string;
     passengers: Array<{ name: string, age: number }>;
-}) => (
+    status?: string;
+}) => {
+    const cfg = statusConfig[status?.toUpperCase() || "CONFIRMED"] || statusConfig["CONFIRMED"];
+    return (
     <div className="bg-white rounded-[1.5rem] shadow-sm border border-rose-50 overflow-hidden mb-8">
         {/* Card Header */}
         <div className="bg-[#fff5f6] px-8 py-5 flex justify-between items-center border-b border-rose-100">
-            <div className="flex items-center gap-6 text-[15px] font-[600] text-gray-400 tracking-wide">
+            <div className="flex items-center gap-6 text-[15px] font-[600] text-gray-400 tracking-wide flex-wrap">
                 <div className="flex items-center gap-2">
                     <Plane className="w-5 h-5 text-primary rotate-45" />
                     <span>Booking No. <b className="text-gray-700 tracking-tighter ml-1">{bookingNo}</b></span>
                 </div>
                 <span>Booking Date: <b className="text-gray-700 tracking-tighter ml-1">{date}</b></span>
+                {/* Status Badge */}
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-[800] tracking-tight ${cfg.badge}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                    {cfg.label}
+                </span>
             </div>
             <div className="flex items-center gap-3">
                 <Link href={`/my-booking/${bookingNo}`} className="flex items-center gap-1 text-[14px] font-[700] text-primary hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
@@ -107,7 +139,8 @@ const BookingCard = ({
             </div>
         </div>
     </div>
-);
+    );
+};
 
 export default function MyBooking() {
     const { user } = useAuth();
@@ -147,7 +180,7 @@ export default function MyBooking() {
             let apiTickets: any[] = [];
             try {
                 console.log("[MyBooking Page] Initiating live ticket list fetch from backend API...");
-                const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+                const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
                 const response = await fetch(`${apiBase}/tickets/`, {
                     headers: {
                         "Authorization": `Bearer ${token}`
@@ -190,6 +223,13 @@ export default function MyBooking() {
                 return true;
             });
 
+            // Sort newest first
+            uniqueTickets.sort((a: any, b: any) => {
+                const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                return dateB - dateA;
+            });
+
             const mapped = uniqueTickets.map((ticket: any) => {
                 const createdDate = ticket.created_at ? new Date(ticket.created_at) : new Date();
                 const dateFormatted = createdDate.toLocaleDateString("en-US", {
@@ -213,7 +253,8 @@ export default function MyBooking() {
                     terminal: "3",
                     flight: `${ticket.airline_name || "Airline"} (${ticket.airline_code} ${ticket.flight_number})`,
                     price: parseFloat(ticket.total_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 }),
-                    passengers: parsedPassengers.length > 0 ? parsedPassengers : [{ name: "Passenger Details", age: 25 }]
+                    passengers: parsedPassengers.length > 0 ? parsedPassengers : [{ name: "Passenger Details", age: 25 }],
+                    status: ticket.status || "CONFIRMED",
                 };
             });
 
@@ -272,6 +313,7 @@ export default function MyBooking() {
                             flight={b.flight}
                             price={b.price}
                             passengers={b.passengers}
+                            status={(b as any).status}
                         />
                     ))}
                 </div>

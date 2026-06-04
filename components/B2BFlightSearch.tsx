@@ -77,6 +77,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
     const [studentFareSearch, setStudentFareSearch] = React.useState(false);
     const [defenceFareSearch, setDefenceFareSearch] = React.useState(false);
     const [srCitizenSearch, setSrCitizenSearch] = React.useState(false);
+    const [corporateFareSearch, setCorporateFareSearch] = React.useState(false);
     const [airlineCode, setAirlineCode] = React.useState("");
     const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
@@ -177,6 +178,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                 baggageFares,
                 studentFareSearch,
                 defenceFareSearch,
+                corporateFareSearch,
                 srCitizenSearch,
                 travellers,
                 cabin: cabinClass,
@@ -203,6 +205,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
         setStudentFareSearch(false);
         setDefenceFareSearch(false);
         setSrCitizenSearch(false);
+        setCorporateFareSearch(false);
         setAirlineCode("");
         setErrorMsg(null);
     };
@@ -790,6 +793,13 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                             {studentFareSearch && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                         </button>
                         <label htmlFor="studentFare" className="text-[13px] font-medium text-slate-500 cursor-pointer select-none" onClick={() => setStudentFareSearch(!studentFareSearch)}>Student Fare</label>
+                    </div>
+
+                    <div className="flex items-center space-x-2.5">
+                        <button id="corporateFare" type="button" onClick={() => setCorporateFareSearch(!corporateFareSearch)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", corporateFareSearch ? "bg-[#D60D26] border-[#D60D26]" : "border-[#D60D26] bg-white")}>
+                            {corporateFareSearch && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                        </button>
+                        <label htmlFor="corporateFare" className="text-[13px] font-medium text-slate-500 cursor-pointer select-none" onClick={() => setCorporateFareSearch(!corporateFareSearch)}>Corporate Fare</label>
                     </div>
 
                     <div className="flex items-center space-x-2.5">

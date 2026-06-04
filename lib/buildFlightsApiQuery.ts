@@ -15,6 +15,7 @@ export function buildFlightsApiQuery(searchParams: URLSearchParams): string {
     "baggageFares",
     "studentFare",
     "defenceFare",
+    "corporateFare",
     "srCitizen",
     "airlineCode",
   ] as const;

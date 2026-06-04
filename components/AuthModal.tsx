@@ -175,7 +175,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                 <Button
                                     onClick={async () => {
                                         if (!identifier) return;
-                                        const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+                                        const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
 
                                         try {
                                             if (activeTab === "login") {

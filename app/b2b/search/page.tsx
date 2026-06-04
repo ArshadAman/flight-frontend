@@ -25,6 +25,9 @@ function B2BSearchResultsContent() {
   const destination = searchParams.get("destination") || "Mumbai";
   const nonStop = searchParams.get("nonStop") === "true";
   const baggageFares = searchParams.get("baggageFares") === "true";
+  const studentFare = searchParams.get("studentFare") === "true";
+  const defenceFare = searchParams.get("defenceFare") === "true";
+  const corporateFare = searchParams.get("corporateFare") === "true";
   const airlineCode = searchParams.get("airlineCode") || "";
   const tripType = searchParams.get("tripType") || "one-way";
   const passengers = searchParams.get("passengers") || "1";
@@ -154,6 +157,7 @@ function B2BSearchResultsContent() {
             initialNonStop={nonStop}
             initialBaggageFares={baggageFares}
             initialAirlineCode={airlineCode || undefined}
+            initialFareType={studentFare ? "STU" : defenceFare ? "DEF" : corporateFare ? "CORP" : "PUB"}
             searchOrigin={origin}
             searchDestination={destination}
             departureDate={departureDate}

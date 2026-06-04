@@ -14,13 +14,16 @@ export type FlightSearchFormData = {
   studentFareSearch: boolean;
   defenceFareSearch: boolean;
   srCitizenSearch: boolean;
+  corporateFareSearch?: boolean;
   travellers: TravellerCounts;
   cabin: string;
   tripType: "one-way" | "round-trip" | "multi-city";
   departureDate?: Date;
   returnDate?: Date;
   airlineCode?: string;
+  tripSegments?: Array<{ origin: string; destination: string; travelDate: Date }>;
 };
+
 
 export function cabinToClassCode(cabin: string): string {
   if (cabin === "Prem. Economy" || cabin === "Premium Economy" || cabin === "Premium") {
@@ -61,6 +64,7 @@ export function buildFlightSearchQuery(data: FlightSearchFormData): URLSearchPar
   if (data.studentFareSearch) params.set("studentFare", "true");
   if (data.defenceFareSearch) params.set("defenceFare", "true");
   if (data.srCitizenSearch) params.set("srCitizen", "true");
+  if (data.corporateFareSearch) params.set("corporateFare", "true");
 
   const dep = formatDateParam(data.departureDate);
   if (dep) params.set("departureDate", dep);
@@ -70,6 +74,16 @@ export function buildFlightSearchQuery(data: FlightSearchFormData): URLSearchPar
       formatDateParam(data.returnDate) ||
       (data.departureDate ? formatDateParam(defaultReturnDate(data.departureDate)) : undefined);
     if (ret) params.set("returnDate", ret);
+  }
+
+  if (data.tripType === "multi-city" && data.tripSegments && data.tripSegments.length > 0) {
+    data.tripSegments.forEach((seg, idx) => {
+      params.set(`seg_origin_${idx}`, seg.origin);
+      params.set(`seg_dest_${idx}`, seg.destination);
+      const segDate = formatDateParam(seg.travelDate);
+      if (segDate) params.set(`seg_date_${idx}`, segDate);
+    });
+    params.set("segCount", String(data.tripSegments.length));
   }
 
   if (data.airlineCode?.trim()) {
