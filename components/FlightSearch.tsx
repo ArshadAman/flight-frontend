@@ -343,7 +343,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                             {/* Origin */}
                             <div className="flex flex-col flex-1 group relative h-[70px] w-full">
                                 <label className="text-[14px] font-bold text-slate-400 mb-1 block">Departure From</label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{origin2}</div>
+                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{multiCityLegs[1].origin}</div>
                                 <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">DEL, Indira Gandhi...</p>
                                 <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
                             </div>
@@ -356,7 +356,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                             {/* Destination */}
                             <div className="flex flex-col flex-1 group relative h-[70px] w-full">
                                 <label className="text-[14px] font-bold text-slate-400 mb-1 block">Going To</label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{destination2}</div>
+                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{multiCityLegs[1].destination}</div>
                                 <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">BOM, Chhatrapat...</p>
                                 <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
                             </div>
@@ -364,8 +364,8 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                             {/* Departure Date */}
                             <div className="flex flex-col flex-1 group relative h-[70px] w-full">
                                 <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">Departure Date <ChevronDown className="w-3.5 h-3.5" /></label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{format(date2 || new Date(), "dd MMM' yy")}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 font-medium">{format(date2 || new Date(), "EEEE")}</p>
+                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{format(multiCityLegs[1].date || new Date(), "dd MMM' yy")}</div>
+                                <p className="text-[13px] text-slate-500 mt-1 font-medium">{format(multiCityLegs[1].date || new Date(), "EEEE")}</p>
                                 <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
                             </div>
 
@@ -448,7 +448,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                         </div>
 
                         {/* Swap Button */}
-                        <div className="flex absolute right-6 top-[90px] lg:right-auto lg:left-[18%] lg:top-[35%] lg:-translate-x-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-brand text-white items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer group/swap rotate-90 lg:rotate-0"
+                        <div className="flex absolute right-6 top-[90px] lg:relative lg:right-auto lg:left-auto lg:top-auto lg:transform-none lg:-translate-x-0 lg:translate-y-0 -translate-y-1/2 z-10 w-8 h-8 shrink-0 rounded-full bg-brand text-white items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer group/swap rotate-90 lg:rotate-0 lg:-mx-3 xl:-mx-5 lg:mt-0"
                             onClick={() => {
                                 const tempOrigin = origin;
                                 const tempOriginSearch = originSearch;
@@ -462,7 +462,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                         </div>
 
                         {/* Destination Input */}
-                        <div className="flex flex-col flex-1 min-w-[190px] group relative h-[90px] w-full lg:w-auto lg:pl-10">
+                        <div className="flex flex-col flex-1 min-w-[190px] group relative h-[90px] w-full lg:w-auto lg:pl-4">
                             <label className="text-[14px] font-bold text-slate-400 mb-1.5 block">Going To</label>
                             <input
                                 type="text"
