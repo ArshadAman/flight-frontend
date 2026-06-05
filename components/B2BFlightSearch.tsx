@@ -69,8 +69,8 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
     // State Management
-    const [date, setDate] = React.useState<Date | undefined>(new Date(2026, 2, 11));
-    const [returnDate, setReturnDate] = React.useState<Date | undefined>(new Date(2026, 2, 12));
+    const [date, setDate] = React.useState<Date | undefined>(new Date());
+    const [returnDate, setReturnDate] = React.useState<Date | undefined>(new Date());
     const [tripType, setTripType] = React.useState<"one-way" | "round-trip" | "multi-city">("one-way");
     const [origin, setOrigin] = React.useState("New Delhi");
     const [destination, setDestination] = React.useState("Mumbai");
@@ -81,7 +81,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
     const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
     // Multi-city additional state
-    const [date2, setDate2] = React.useState<Date | undefined>(new Date(2026, 9, 24)); // Oct 24
+    const [date2, setDate2] = React.useState<Date | undefined>(new Date());
     const [origin2, setOrigin2] = React.useState("New Delhi");
     const [destination2, setDestination2] = React.useState("Mumbai");
     const [dayVariance2, setDayVariance2] = React.useState<number>(0);

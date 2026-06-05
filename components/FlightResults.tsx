@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { format } from "date-fns";
 import {
   ChevronDown,
   ChevronUp,
@@ -11,9 +12,11 @@ import {
   Accessibility,
   ArrowUpRight,
   CheckCircle2,
-  X
+  X,
+  ArrowRight,
+  PlaneTakeoff,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { QuoteModal } from "./QuoteModal";
 import { FareTypeModal } from "./FareTypeModal";
 import AddOnModal, { BaggageOption as AddOnBaggage } from "./AddOnModal";
@@ -85,7 +88,14 @@ export function FlightResults({
   const { user, openAuthModal } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const isB2bRoute = pathname?.startsWith('/b2b');
+
+  const tripType = searchParams?.get('tripType');
+  const searchOrigin = searchParams?.get('origin');
+  const searchDestination = searchParams?.get('destination');
+  const departureDate = searchParams?.get('date');
+  const returnDate = searchParams?.get('returnDate');
 
   // Real-time interactive filter states
   const [nonStopOnly, setNonStopOnly] = useState(false);
@@ -441,9 +451,11 @@ export function FlightResults({
             </h3>
           )}
 
-          {flightList.map((flight) => {
+          {flightList.map((flight, idx) => {
             const taxAmount = Math.round(flight.price * 0.15);
-            const uniqueKey = flight.flight_key || flight.id;
+            const uniqueKey = `${flight.flight_key || flight.id}-${idx}`;
+            const flightIdentifier = flight.flight_key || flight.id;
+            const isSelected = currentSelectedId === uniqueKey;
 
             // Determine mock legs for segments display (if stops > 0, show 2 connected rows!)
             const segmentsCount = flight.stops > 0 ? 2 : 1;
@@ -468,75 +480,96 @@ export function FlightResults({
                 className="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.02)] overflow-hidden hover:shadow-md transition-shadow duration-300"
               >
 
-              {/* Horizontal Top Header Row (Figma specs: Light blue-grey background) */}
-              <div className="bg-[#F4F7FC] flex flex-wrap lg:flex-nowrap items-stretch border-b border-slate-200 select-none rounded-t-2xl">
-                
-                {/* Price block */}
-                <div className="flex items-center px-6 py-4 border-r border-slate-200 min-w-[200px]">
-                  <span className="text-[#121121] font-black text-[26px] tracking-tight">
-                    ${flight.price}
-                  </span>
-                  <span className="text-[12px] font-medium text-slate-500 ml-2 mt-1">
-                    <span className="text-slate-400">Incl. </span>${taxAmount}<span className="text-slate-400">tax</span>
-                  </span>
+                {/* Horizontal Top Header Row (Figma specs: Light blue-grey background) */}
+                <div className="bg-[#F4F7FC] flex flex-wrap lg:flex-nowrap items-stretch border-b border-slate-200 select-none rounded-t-2xl">
+
+                  {/* Price block */}
+                  <div className="flex items-center px-6 py-4 border-r border-slate-200 min-w-[200px]">
+                    <span className="text-[#121121] font-black text-[26px] tracking-tight">
+                      ₹{flight.price.toLocaleString("en-IN")}
+                    </span>
+                    <span className="text-[12px] font-medium text-slate-500 ml-2 mt-1">
+                      <span className="text-slate-400">Incl. </span>INR {taxAmount}<span className="text-slate-400">tax</span>
+                    </span>
+                  </div>
+
+                  {/* Airline Name and Logo */}
+                  <div className="flex items-center px-6 py-4 border-r border-slate-200 min-w-[180px] justify-center gap-2">
+                    <div className="flex items-center justify-center shrink-0 h-12 w-12">
+                      <img
+                        src={`/airlines/${flight.airline_code || flight.id.split('-')[0]}.png`}
+                        alt={flight.airline}
+                        className="max-h-full max-w-full object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'block';
+                        }}
+                      />
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#D60D26" className="opacity-80 hidden">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                      </svg>
+                    </div>
+                    <span className="text-[#D60D26] font-[800] text-[15px] tracking-wider uppercase">
+                      {flight.airline}
+                    </span>
+                  </div>
+
+                  {/* Stop Indicator */}
+                  <div className="flex items-center px-6 py-4 border-r border-slate-200 min-w-[140px] justify-center">
+                    <span className="text-[#121121] text-[13px] font-[800]">
+                      {flight.stops === 0 ? "Non-Stop" : `Stops: ${flight.stops}`}
+                    </span>
+                  </div>
+
+                  {/* Right aligned Badges */}
+                  <div className="flex items-center px-6 py-4 gap-2.5 flex-1 justify-end">
+                    {/* PUB Badge */}
+                    <span className="bg-[#377BD7] text-white text-[11px] font-bold px-2.5 py-1 rounded shadow-sm tracking-wide">
+                      {flight.fare_type === "STU"
+                        ? "Student Fare"
+                        : flight.fare_type === "DEF"
+                          ? "Defence Fare"
+                          : flight.fare_type === "CORP"
+                            ? "Corporate Fare"
+                            : "Public Fare (PUB)"}
+                    </span>
+
+                    {/* Suitcase Baggage Badge */}
+                    <span className="bg-[#D60D26] text-white text-[11px] font-bold px-2 py-1 rounded shadow-sm tracking-wide flex items-center gap-1">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a3 3 0 00-6 0v2" />
+                      </svg>
+                      25K
+                    </span>
+
+                    {/* TKT Badge */}
+                    <span className="border border-slate-400 text-slate-700 bg-transparent text-[11px] font-bold px-2 py-1 rounded">
+                      TKT
+                    </span>
+                    {/* FEE Badge */}
+                    <span className="border border-slate-400 text-slate-700 bg-transparent text-[11px] font-bold px-2 py-1 rounded">
+                      FEE
+                    </span>
+
+                    {!isB2bRoute && !isRoundTrip && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleQuickBookOneWay(flight);
+                        }}
+                        className="bg-[#D60D26] hover:bg-[#b00b1d] text-white rounded-[8px] px-5 py-2 font-bold text-[14px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-1.5 ml-4"
+                      >
+                        Book Now <ArrowUpRight className="w-4 h-4" strokeWidth={3} />
+                      </button>
+                    )}
+                    {!isB2bRoute && isRoundTrip && (flight.meal_available || flight.food_onboard) && (
+                      <span className="text-[11px] font-bold text-green-700 ml-2">Meals</span>
+                    )}
+                  </div>
+
                 </div>
-
-                {/* Airline Name */}
-                <div className="flex items-center px-6 py-4 border-r border-slate-200 min-w-[180px] justify-center gap-1.5">
-                  <span className="text-[#D60D26] font-[800] text-[15px] tracking-wider uppercase">
-                    {flight.airline}
-                  </span>
-                  {/* Small swoosh/bird icon placeholder */}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#D60D26" className="opacity-80">
-                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                  </svg>
-                </div>
-
-                {/* Stop Indicator */}
-                <div className="flex items-center px-6 py-4 border-r border-slate-200 min-w-[140px] justify-center">
-                  <span className="text-[#121121] text-[13px] font-[800]">
-                    {flight.stops === 0 ? "Non-Stop" : `Stops: ${flight.stops}`}
-                  </span>
-                </div>
-
-                {/* Right aligned Badges */}
-                <div className="flex items-center px-6 py-4 gap-2.5 flex-1 justify-end">
-                  {/* PUB Badge */}
-                  <span className="bg-[#377BD7] text-white text-[11px] font-bold px-2 py-1 rounded shadow-sm tracking-wide">
-                    PUB
-                  </span>
-                  
-                  {/* Suitcase Baggage Badge */}
-                  <span className="bg-[#D60D26] text-white text-[11px] font-bold px-2 py-1 rounded shadow-sm tracking-wide flex items-center gap-1">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a3 3 0 00-6 0v2" />
-                    </svg>
-                    25K
-                  </span>
-
-                  {/* TKT Badge */}
-                  <span className="border border-slate-400 text-slate-700 bg-transparent text-[11px] font-bold px-2 py-1 rounded">
-                    TKT
-                  </span>
-                  {/* FEE Badge */}
-                  <span className="border border-slate-400 text-slate-700 bg-transparent text-[11px] font-bold px-2 py-1 rounded">
-                    FEE
-                  </span>
-
-                  {/* Book Now Button for Consumer Flow */}
-                  {!isB2bRoute && (
-                    <button
-                      onClick={() => handleBookClick(flight)}
-                      className="bg-[#D60D26] hover:bg-[#b00b1d] text-white rounded-[8px] px-5 py-2 font-bold text-[14px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-1.5 ml-4"
-                    >
-                      Book Now <ArrowUpRight className="w-4 h-4" strokeWidth={3} />
-                    </button>
-                  )}
-                </div>
-
-              </div>
-
                 {/* White Body Segment list */}
                 <div className="flex flex-col bg-white">
                   {segments.map((seg, sIdx) => (
@@ -552,8 +585,8 @@ export function FlightResults({
 
                       {/* Radio circle selector */}
                       <div className="flex items-center justify-center pr-2">
-                        <div className={cn("w-[15px] h-[15px] rounded-full border flex items-center justify-center transition-colors", currentSelectedId === uniqueKey ? "border-[#D60D26]" : "border-slate-300")}>
-                          <div className={cn("w-[9px] h-[9px] rounded-full transition-colors", currentSelectedId === uniqueKey ? "bg-[#D60D26]" : "bg-transparent")}></div>
+                        <div className={cn("w-[15px] h-[15px] rounded-full border flex items-center justify-center transition-colors", isSelected ? "border-[#D60D26]" : "border-slate-300")}>
+                          <div className={cn("w-[9px] h-[9px] rounded-full transition-colors", isSelected ? "bg-[#D60D26]" : "bg-transparent")}></div>
                         </div>
                       </div>
 
@@ -573,7 +606,7 @@ export function FlightResults({
                           <path d="M8 8v5a1.5 1.5 0 0 0 1.5 1.5h3.5l3 4.5" />
                           <path d="M5 9l1 6a2 2 0 0 0 2 2h4" />
                         </svg>
-                        
+
                         {/* USB Plug */}
                         <svg className="w-[16px] h-[16px] hover:text-slate-600 cursor-help transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none" />
@@ -584,7 +617,7 @@ export function FlightResults({
                           <path d="M12 12h2a2 2 0 0 0 2-2V8" />
                           <rect x="14.5" y="5" width="3" height="3" fill="currentColor" stroke="none" />
                         </svg>
-                        
+
                         {/* Food Tray */}
                         <svg className="w-[16px] h-[16px] hover:text-slate-600 cursor-help transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M3 11h18" />
@@ -601,7 +634,7 @@ export function FlightResults({
                 </div>
 
                 {/* Action Bar when selected */}
-                {currentSelectedId === uniqueKey && isB2bRoute && (
+                {isSelected && isB2bRoute && (
                   <div className="bg-[#F2FBFF] px-6 py-4 flex flex-wrap items-center gap-4 border-t border-[#F2FBFF] animate-in slide-in-from-top-1 fade-in duration-200">
                     <button
                       onClick={() => window.location.href = '/b2b/book'}
@@ -643,6 +676,104 @@ export function FlightResults({
       </div>
     );
   };
+
+  const renderMultiCityMatrix = () => {
+    const dates1 = Array.from({ length: 5 }).map((_, i) => {
+      const d = new Date(departureDate || Date.now());
+      d.setDate(d.getDate() + i - 2);
+      return d;
+    });
+    
+    const dates2 = Array.from({ length: 5 }).map((_, i) => {
+      const d = new Date(returnDate || Date.now());
+      d.setDate(d.getDate() + i - 2);
+      return d;
+    });
+
+    const oCode = (searchOrigin || "DEL").substring(0, 3).toUpperCase();
+    const dCode = (searchDestination || "BOM").substring(0, 3).toUpperCase();
+    const rCode = "BKK";
+
+    return (
+      <div className="w-full mt-6 mb-12 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="border-[2px] border-[#377BD7] bg-white overflow-hidden w-full overflow-x-auto rounded-sm">
+          <div className="min-w-[800px] flex flex-col">
+            {/* Header Row */}
+            <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr_1fr_1fr] border-b border-[#377BD7]/30">
+              {/* Top Left Cell */}
+              <div className="relative bg-[#F9EDED] flex flex-col p-4 justify-between border-r border-[#377BD7]/30">
+                 <div className="flex items-center gap-1 text-[12px] font-black text-[#121121] self-end z-10">
+                   {oCode} <ArrowRight className="w-3 h-3 text-[#D60D26]" /> {dCode} <PlaneTakeoff className="w-3.5 h-3.5 text-slate-400" />
+                 </div>
+                 <div className="flex items-center gap-1 text-[12px] font-black text-[#121121] self-start mt-8 z-10">
+                   {rCode} <ArrowRight className="w-3 h-3 text-[#D60D26]" /> {oCode} <PlaneTakeoff className="w-3.5 h-3.5 text-slate-400" />
+                 </div>
+                 <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
+                   <line x1="0" y1="0" x2="100%" y2="100%" stroke="#e2e8f0" strokeWidth="1.5" />
+                 </svg>
+              </div>
+
+              {/* Col Headers */}
+              {dates1.map((d, i) => (
+                <div key={i} className="bg-[#F9EDED] flex flex-col items-center justify-center p-3 border-r border-[#377BD7]/30 last:border-r-0">
+                  <span className="text-[15px] font-[900] text-[#121121]">{format(d, "dd MMM, yy")}</span>
+                  <span className="text-[13px] font-medium text-slate-500 mt-0.5">{format(d, "EEEE")}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Rows */}
+            {dates2.map((d2, rIdx) => (
+              <div key={rIdx} className="grid grid-cols-[1.2fr_1fr_1fr_1fr_1fr_1fr] border-b border-[#377BD7]/30 last:border-b-0">
+                {/* Row Header */}
+                <div className="bg-[#F9EDED] flex flex-col items-center justify-center p-3 border-r border-[#377BD7]/30">
+                  <span className="text-[15px] font-[900] text-[#121121]">{format(d2, "dd MMM, yy")}</span>
+                  <span className="text-[13px] font-medium text-slate-500 mt-0.5">{format(d2, "EEEE")}</span>
+                </div>
+
+                {/* Data Cells */}
+                {dates1.map((d1, cIdx) => {
+                  const seed = rIdx * 5 + cIdx;
+                  const isNull = (rIdx === 1 && cIdx === 1) || (rIdx === 1 && cIdx === 3) || 
+                                 (rIdx === 2 && cIdx === 0) || (rIdx === 2 && cIdx === 4) ||
+                                 (rIdx === 3 && cIdx === 1);
+                  
+                  if (isNull || flights.length === 0) {
+                    return (
+                      <div key={cIdx} className="bg-white flex items-center justify-center p-3 border-r border-[#377BD7]/30 last:border-r-0 min-h-[100px]">
+                         <div className="w-5 h-5 rounded-full bg-[#D60D26] text-white font-bold text-[13px] flex items-center justify-center shadow-sm">i</div>
+                      </div>
+                    );
+                  }
+
+                  const flight = flights[seed % flights.length];
+                  const stopsText = flight.stops === 0 ? "Non-Stop" : `0${flight.stops} Stop`;
+
+                  return (
+                    <div key={cIdx} className="bg-white flex flex-col items-center justify-center p-3 border-r border-[#377BD7]/30 last:border-r-0 min-h-[100px] cursor-pointer hover:bg-slate-50 transition-colors">
+                      <span className="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">{flight.airline}</span>
+                      <span className="text-[20px] font-black text-[#121121] tracking-tight">
+                        ₹{flight.price.toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-[10px] font-[800] text-[#D60D26] bg-rose-50 px-2 py-0.5 rounded-full mt-2 border border-rose-100">{stopsText}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (tripType === "multi-city") {
+    return (
+      <div className="w-full max-w-[1440px] mx-auto select-none mt-4 px-4 sm:px-0">
+        {renderMultiCityMatrix()}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1440px] mx-auto select-none mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
