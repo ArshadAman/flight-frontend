@@ -154,16 +154,6 @@ function B2BSearchResultsContent() {
             adults={adults}
             children={children}
             infants={infants}
-            initialNonStop={nonStop}
-            initialBaggageFares={baggageFares}
-            initialAirlineCode={airlineCode || undefined}
-            initialFareType={studentFare ? "STU" : defenceFare ? "DEF" : corporateFare ? "CORP" : "PUB"}
-            searchOrigin={origin}
-            searchDestination={destination}
-            departureDate={departureDate}
-            returnDate={returnDate}
-            cabin={cabin}
-            tripType={tripType}
           />
         ) : !isLoading ? (
           <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-slate-100">

@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { PlaneTakeoff, ArrowRightLeft, ArrowUpRight, ArrowRight, ChevronDown, Plus, Minus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import type { FlightSearchFormData } from "@/lib/flightSearch";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -13,15 +14,10 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 
+export type FlightSearchSubmitData = FlightSearchFormData;
+
 interface FlightSearchProps {
-    onSearch?: (searchData: {
-        origin: string;
-        destination: string;
-        nonStop: boolean;
-        travellers: any;
-        cabin: string;
-        tripType: string;
-    }) => void;
+    onSearch?: (searchData: FlightSearchSubmitData) => void;
 }
 
 const GLOBAL_CITIES = [
@@ -164,7 +160,20 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
         }
 
         if (onSearch) {
-            onSearch({ origin, destination, nonStop, travellers, cabin: cabinClass, tripType });
+            onSearch({
+                origin,
+                destination,
+                nonStop,
+                baggageFares: false,
+                studentFareSearch: false,
+                defenceFareSearch: false,
+                srCitizenSearch: false,
+                travellers,
+                cabin: cabinClass,
+                tripType,
+                departureDate: date,
+                returnDate: tripType === "round-trip" ? returnDate : undefined,
+            });
         }
     };
 

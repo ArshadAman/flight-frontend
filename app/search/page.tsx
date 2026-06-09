@@ -203,16 +203,6 @@ function SearchResultsContent() {
               adults={adults}
               children={children}
               infants={infants}
-              initialNonStop={nonStop}
-              initialBaggageFares={baggageFares}
-              initialAirlineCode={airlineCode || undefined}
-              initialFareType={studentFare ? "STU" : defenceFare ? "DEF" : corporateFare ? "CORP" : "PUB"}
-              searchOrigin={origin}
-              searchDestination={destination}
-              departureDate={departureDate}
-              returnDate={returnDate}
-              cabin={cabin}
-              tripType={tripType}
             />
             <NearbyDatesFlights
               groups={nearbyGroups}
