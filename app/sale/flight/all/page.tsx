@@ -15,15 +15,15 @@ export default function SaleAllFlightsPage() {
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
     const flightsJuly = [
-        { route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Closed" },
-        { route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Closed" },
-        { route: "MUM \u2192 DEL", stops: 0, date: "Wed, 4 Aug 25", time: "16:30 - 12:20(+1)", flightNo: "TUA424 / T1", fare: "$150.00", status: "Closed" },
-        { route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Open" },
+        { route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "INR 150.00", status: "Closed" },
+        { route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "INR 150.00", status: "Closed" },
+        { route: "MUM \u2192 DEL", stops: 0, date: "Wed, 4 Aug 25", time: "16:30 - 12:20(+1)", flightNo: "TUA424 / T1", fare: "INR 150.00", status: "Closed" },
+        { route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "INR 150.00", status: "Open" },
     ];
 
     const flightsAugust = [
-        { route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Open" },
-        { route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "$150.00", status: "Open" },
+        { route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "INR 150.00", status: "Open" },
+        { route: "DEL \u2192 MUM", stops: 1, date: "Wed, 26 Jul 25", time: "16:30 - 12:20(+1)", flightNo: "TUA444 / T1", fare: "INR 150.00", status: "Open" },
     ];
 
     const renderFlightRow = (flight: any, index: number) => (

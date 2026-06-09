@@ -5,10 +5,10 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const FARE_OPTIONS = [
-  { id: 0, title: "PEYCLAS", subtitle: "Prem. Eco", diff: "+/- $0.00", bag: "15k" },
-  { id: 1, title: "PEYFLX", subtitle: "Economy", diff: "+/- $180.00", bag: "25k" },
-  { id: 2, title: "BUSCLAS", subtitle: "Business", diff: "+/- $220.00", bag: "25k" },
-  { id: 3, title: "BUSFLX", subtitle: "Business", diff: "+/- $239.00", bag: "35k" },
+  { id: 0, title: "PEYCLAS", subtitle: "Prem. Eco", diff: "+/- INR 0.00", bag: "15k" },
+  { id: 1, title: "PEYFLX", subtitle: "Economy", diff: "+/- INR 180.00", bag: "25k" },
+  { id: 2, title: "BUSCLAS", subtitle: "Business", diff: "+/- INR 220.00", bag: "25k" },
+  { id: 3, title: "BUSFLX", subtitle: "Business", diff: "+/- INR 239.00", bag: "35k" },
 ];
 
 export function FareTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {

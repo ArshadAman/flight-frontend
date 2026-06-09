@@ -62,7 +62,7 @@ export function PricingGrid() {
                                     {plan.name}
                                 </span>
                                 <div className="flex items-baseline gap-1 mt-4">
-                                    <span className="text-[42px] font-[900] text-[#121121] tracking-tight">${plan.price}</span>
+                                    <span className="text-[42px] font-[900] text-[#121121] tracking-tight">INR {plan.price}</span>
                                     <span className="text-gray-400 font-[600] text-[16px]">/per pax</span>
                                 </div>
                             </div>

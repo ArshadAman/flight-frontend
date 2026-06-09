@@ -365,8 +365,8 @@ export default function B2BFlightsPage() {
                   <div className="mt-3 flex flex-col px-1 animate-in fade-in duration-200">
                     <input type="range" min="100" max="1000" defaultValue="500" className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary" />
                     <div className="flex justify-between text-xs font-bold text-slate-500 mt-2">
-                      <span>$100</span>
-                      <span>$1,000</span>
+                      <span>INR 100</span>
+                      <span>INR 1,000</span>
                     </div>
                   </div>
                 )}

@@ -20,8 +20,20 @@ export function BookingInfo({ ticket }: { ticket?: any }) {
     }).toUpperCase();
   }
 
-  const displayStatus = ticket ? (ticket.status === "CONFIRMED" ? "Confirmed" : ticket.status) : "Booking Confirm";
-  const statusColorClass = ticket ? (ticket.status === "CONFIRMED" ? "text-green-600" : "text-amber-600") : "text-green-600";
+  const displayStatus = ticket
+    ? ticket.status === "CONFIRMED"
+      ? "Confirmed"
+      : ticket.status === "CANCELLED"
+      ? "Cancelled"
+      : ticket.status
+    : "Booking Confirm";
+  const statusColorClass = ticket
+    ? ticket.status === "CONFIRMED"
+      ? "text-green-600"
+      : ticket.status === "CANCELLED"
+      ? "text-rose-600"
+      : "text-amber-600"
+    : "text-green-600";
 
   const displayPrice = ticket 
     ? `₹${parseFloat(ticket.total_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
