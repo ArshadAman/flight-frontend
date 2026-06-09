@@ -34,6 +34,10 @@ export type Flight = {
   duration: string;
   price: number;
   stops: number;
+  airline_code?: string;
+  fare_type?: string;
+  meal_available?: boolean;
+  food_onboard?: boolean;
   search_key?: string;
   flight_key?: string;
   fare_id?: string;
@@ -557,7 +561,7 @@ export function FlightResults({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleQuickBookOneWay(flight);
+                          handleBookClick(flight);
                         }}
                         className="bg-[#D60D26] hover:bg-[#b00b1d] text-white rounded-[8px] px-5 py-2 font-bold text-[14px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-1.5 ml-4"
                       >
