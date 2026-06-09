@@ -1,21 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import "./globals.css";
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "My Travel Deal | Journeys Simple, Safe, And Affordable",
@@ -33,7 +17,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${outfit.variable} ${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden w-full`}
+        className="antialiased overflow-x-hidden w-full"
+        style={{
+          "--font-outfit": "Arial, Helvetica, sans-serif",
+          "--font-geist-sans": "Arial, Helvetica, sans-serif",
+          "--font-geist-mono": '"Courier New", Courier, monospace',
+        } as React.CSSProperties}
       >
         <AuthProvider>
           <GroupTravelProvider>
