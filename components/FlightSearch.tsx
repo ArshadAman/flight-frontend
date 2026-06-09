@@ -164,7 +164,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                 origin,
                 destination,
                 nonStop,
-                baggageFares: false,
+                baggageFares,
                 studentFareSearch: false,
                 defenceFareSearch: false,
                 srCitizenSearch: false,
