@@ -16,14 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className="antialiased overflow-x-hidden w-full"
-        style={{
-          "--font-outfit": "Arial, Helvetica, sans-serif",
-          "--font-geist-sans": "Arial, Helvetica, sans-serif",
-          "--font-geist-mono": '"Courier New", Courier, monospace',
-        } as React.CSSProperties}
-      >
+      <body className="antialiased overflow-x-hidden w-full">
         <AuthProvider>
           <GroupTravelProvider>
             <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-black">
