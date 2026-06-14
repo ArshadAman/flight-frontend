@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { PlaneTakeoff, ArrowRightLeft, ArrowUpRight, ArrowRight, ChevronDown, Plus, Minus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { POPULAR_AIRLINES, defaultReturnDate } from "@/lib/flightSearch";
+import type { FlightSearchFormData } from "@/lib/flightSearch";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -14,23 +14,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 
-export type FlightSearchSubmitData = {
-    origin: string;
-    destination: string;
-    nonStop: boolean;
-    baggageFares: boolean;
-    studentFareSearch: boolean;
-    defenceFareSearch: boolean;
-    srCitizenSearch: boolean;
-    corporateFareSearch?: boolean;
-    travellers: { adults: number; children: number; infants: number };
-    cabin: string;
-    tripType: "one-way" | "round-trip" | "multi-city";
-    departureDate?: Date;
-    returnDate?: Date;
-    airlineCode?: string;
-    tripSegments?: Array<{ origin: string; destination: string; travelDate: Date }>;
-};
+export type FlightSearchSubmitData = FlightSearchFormData;
 
 interface FlightSearchProps {
     onSearch?: (searchData: FlightSearchSubmitData) => void;
@@ -81,8 +65,8 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export function FlightSearch({ onSearch }: FlightSearchProps) {
     // State Management
-    const [date, setDate] = React.useState<Date | undefined>(new Date(2026, 2, 11));
-    const [returnDate, setReturnDate] = React.useState<Date | undefined>(new Date(2026, 2, 12));
+    const [date, setDate] = React.useState<Date | undefined>(new Date());
+    const [returnDate, setReturnDate] = React.useState<Date | undefined>(new Date());
     const [tripType, setTripType] = React.useState<"one-way" | "round-trip" | "multi-city">("one-way");
     const [origin, setOrigin] = React.useState("New Delhi");
     const [destination, setDestination] = React.useState("Mumbai");
@@ -90,17 +74,12 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
     const [cabinClass, setCabinClass] = React.useState("Economy");
     const [nonStop, setNonStop] = React.useState(false);
     const [baggageFares, setBaggageFares] = React.useState(false);
-    const [studentFareSearch, setStudentFareSearch] = React.useState(false);
-    const [defenceFareSearch, setDefenceFareSearch] = React.useState(false);
-    const [srCitizenSearch, setSrCitizenSearch] = React.useState(false);
-    const [corporateFareSearch, setCorporateFareSearch] = React.useState(false);
-    const [airlineCode, setAirlineCode] = React.useState("");
     const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
     // Multi-city legs state
     const defaultLegs = [
-        { origin: "New Delhi", destination: "Mumbai", date: new Date(2026, 5, 20) },
-        { origin: "Mumbai", destination: "Bangalore", date: new Date(2026, 5, 25) },
+        { origin: "New Delhi", destination: "Mumbai", date: new Date() },
+        { origin: "Mumbai", destination: "Bangalore", date: new Date() },
     ];
     const [multiCityLegs, setMultiCityLegs] = React.useState(defaultLegs);
     const [activeLegDropdown, setActiveLegDropdown] = React.useState<{ legIdx: number; field: 'origin' | 'destination' } | null>(null);
@@ -156,43 +135,6 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
 
     const handleSearch = () => {
         setErrorMsg(null);
-        if (tripType === "multi-city") {
-            // Validate each leg
-            for (let i = 0; i < multiCityLegs.length; i++) {
-                const leg = multiCityLegs[i];
-                if (!leg.origin.trim() || !leg.destination.trim()) {
-                    setErrorMsg(`Please fill in Origin and Destination for leg ${i + 1}.`);
-                    return;
-                }
-                if (leg.origin.trim().toLowerCase() === leg.destination.trim().toLowerCase()) {
-                    setErrorMsg(`Leg ${i + 1}: Origin and Destination cannot be the same.`);
-                    return;
-                }
-            }
-            if (onSearch) {
-                onSearch({
-                    origin: multiCityLegs[0].origin,
-                    destination: multiCityLegs[multiCityLegs.length - 1].destination,
-                    nonStop,
-                    baggageFares,
-                    studentFareSearch,
-                    defenceFareSearch,
-                    corporateFareSearch,
-                    srCitizenSearch,
-                    travellers,
-                    cabin: cabinClass,
-                    tripType,
-                    airlineCode: airlineCode || undefined,
-                    tripSegments: multiCityLegs.map(leg => ({
-                        origin: leg.origin,
-                        destination: leg.destination,
-                        travelDate: leg.date,
-                    })),
-                });
-            }
-            return;
-        }
-
         if (!origin.trim() || !destination.trim() || !date) {
             setErrorMsg("Please fill in Origin, Destination, and Departure Date.");
             return;
@@ -201,15 +143,9 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
             setErrorMsg("Origin and Destination cannot be the same.");
             return;
         }
-        if (tripType === "round-trip") {
-            if (!returnDate) {
-                setErrorMsg("Please select a Return Date for round-trip.");
-                return;
-            }
-            if (date && returnDate < date) {
-                setErrorMsg("Return Date must be after Departure Date.");
-                return;
-            }
+        if (tripType === 'round-trip' && returnDate && date && returnDate < date) {
+            setErrorMsg("Return Date must be after Departure Date.");
+            return;
         }
 
         // Save to last searches
@@ -229,16 +165,14 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                 destination,
                 nonStop,
                 baggageFares,
-                studentFareSearch,
-                defenceFareSearch,
-                corporateFareSearch,
-                srCitizenSearch,
+                studentFareSearch: false,
+                defenceFareSearch: false,
+                srCitizenSearch: false,
                 travellers,
                 cabin: cabinClass,
                 tripType,
                 departureDate: date,
                 returnDate: tripType === "round-trip" ? returnDate : undefined,
-                airlineCode: airlineCode || undefined,
             });
         }
     };
@@ -254,12 +188,6 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
         setTravellers({ adults: 1, children: 0, infants: 0 });
         setCabinClass("Economy");
         setNonStop(false);
-        setBaggageFares(false);
-        setStudentFareSearch(false);
-        setDefenceFareSearch(false);
-        setSrCitizenSearch(false);
-        setCorporateFareSearch(false);
-        setAirlineCode("");
         setErrorMsg(null);
     };
 
@@ -338,12 +266,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                 {/* Trip Type Selector */}
                 <div className="flex items-center flex-wrap gap-4 md:gap-8">
                     {(["one-way", "round-trip", "multi-city"] as const).map((type) => (
-                        <label key={type} className="flex items-center space-x-2 cursor-pointer group" onClick={() => {
-                            setTripType(type);
-                            if (type === "round-trip" && date && (!returnDate || returnDate < date)) {
-                                setReturnDate(defaultReturnDate(date));
-                            }
-                        }}>
+                        <label key={type} className="flex items-center space-x-2 cursor-pointer group" onClick={() => setTripType(type)}>
                             <div className={cn(
                                 "w-[20px] h-[20px] rounded-full border-[1.5px] flex items-center justify-center shadow-sm",
                                 tripType === type ? "border-brand" : "border-slate-300"
@@ -364,186 +287,112 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                     /* --------------------------------- */
                     /* MULTI CITY DESIGN START           */
                     /* --------------------------------- */
-                    <div className="flex flex-col gap-4 mt-2 relative" ref={searchRef}>
-                        {multiCityLegs.map((leg, legIdx) => {
-                            const legOriginSearch = legSearchValues[legIdx] ?? leg.origin;
-                            const legDestSearch = legDestSearchValues[legIdx] ?? leg.destination;
-                            const filteredOrigins = GLOBAL_CITIES.filter(c =>
-                                c.name.toLowerCase().includes(legOriginSearch.toLowerCase()) ||
-                                c.code.toLowerCase().includes(legOriginSearch.toLowerCase())
-                            );
-                            const filteredDests = GLOBAL_CITIES.filter(c =>
-                                c.name.toLowerCase().includes(legDestSearch.toLowerCase()) ||
-                                c.code.toLowerCase().includes(legDestSearch.toLowerCase())
-                            );
-                            return (
-                                <div key={legIdx} className="flex flex-col lg:flex-row items-start gap-4 w-full bg-slate-50 rounded-2xl px-5 py-4 border border-slate-100 relative">
-                                    {/* Leg number */}
-                                    <div className="hidden lg:flex w-7 h-7 rounded-full bg-[#D60D26] text-white text-[12px] font-black items-center justify-center mt-5 shrink-0">{legIdx + 1}</div>
+                    <div className="flex flex-col gap-6 mt-2 relative">
+                        {/* ROW 1 */}
+                        <div className="flex flex-col lg:flex-row items-center gap-6 w-full relative">
+                            {/* Origin */}
+                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Departure From</label>
+                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{origin}</div>
+                                <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">DEL, Indira Gandhi...</p>
+                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                            </div>
 
-                                    {/* Origin */}
-                                    <div className="flex flex-col flex-1 relative">
-                                        <label className="text-[12px] font-bold text-slate-400 mb-1 uppercase tracking-wide">From</label>
-                                        <input
-                                            type="text"
-                                            className="bg-transparent border-none outline-none font-extrabold text-slate-900 tracking-tight text-[18px] p-0 leading-none w-full placeholder:text-slate-300"
-                                            value={legOriginSearch}
-                                            placeholder="City or Airport"
-                                            onChange={e => {
-                                                const vals = [...legSearchValues];
-                                                vals[legIdx] = e.target.value;
-                                                setLegSearchValues(vals);
-                                                setActiveLegDropdown({ legIdx, field: 'origin' });
-                                            }}
-                                            onFocus={() => setActiveLegDropdown({ legIdx, field: 'origin' })}
-                                        />
-                                        <p className="text-[12px] text-slate-400 mt-1 font-medium">
-                                            {GLOBAL_CITIES.find(c => c.name === leg.origin)?.country || ''}
-                                        </p>
-                                        {activeLegDropdown?.legIdx === legIdx && activeLegDropdown?.field === 'origin' && legOriginSearch.length >= 2 && (
-                                            <div className="absolute top-[100%] left-0 w-full lg:w-[260px] bg-white rounded-2xl shadow-2xl z-[100] mt-2 border border-slate-100 max-h-[220px] overflow-y-auto">
-                                                <ul className="py-2">
-                                                    {filteredOrigins.map(city => (
-                                                        <li key={city.code} className="px-4 py-2.5 hover:bg-slate-50 cursor-pointer flex items-center justify-between"
-                                                            onClick={() => {
-                                                                const legs = [...multiCityLegs];
-                                                                legs[legIdx] = { ...legs[legIdx], origin: city.name };
-                                                                setMultiCityLegs(legs);
-                                                                const vals = [...legSearchValues];
-                                                                vals[legIdx] = city.name;
-                                                                setLegSearchValues(vals);
-                                                                setActiveLegDropdown(null);
-                                                            }}>
-                                                            <div className="flex flex-col">
-                                                                <span className="font-bold text-slate-800 text-[14px]">{city.name}</span>
-                                                                <span className="text-slate-400 text-[12px]">{city.country}</span>
-                                                            </div>
-                                                            <span className="font-bold text-slate-300 bg-slate-100 px-2 py-0.5 rounded text-[11px]">{city.code}</span>
-                                                        </li>
-                                                    ))}
-                                                    {filteredOrigins.length === 0 && <li className="px-4 py-3 text-slate-400 italic text-center text-[13px]">No cities found</li>}
-                                                </ul>
-                                            </div>
-                                        )}
-                                    </div>
+                            {/* Red Arrow Circle */}
+                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
+                                <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+                            </div>
 
-                                    {/* Arrow */}
-                                    <div className="hidden lg:flex w-7 h-7 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center mt-5 shrink-0">
-                                        <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} />
-                                    </div>
+                            {/* Destination */}
+                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Going To</label>
+                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{destination}</div>
+                                <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">BOM, Chhatrapat...</p>
+                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                            </div>
 
-                                    {/* Destination */}
-                                    <div className="flex flex-col flex-1 relative">
-                                        <label className="text-[12px] font-bold text-slate-400 mb-1 uppercase tracking-wide">To</label>
-                                        <input
-                                            type="text"
-                                            className="bg-transparent border-none outline-none font-extrabold text-slate-900 tracking-tight text-[18px] p-0 leading-none w-full placeholder:text-slate-300"
-                                            value={legDestSearch}
-                                            placeholder="City or Airport"
-                                            onChange={e => {
-                                                const vals = [...legDestSearchValues];
-                                                vals[legIdx] = e.target.value;
-                                                setLegDestSearchValues(vals);
-                                                setActiveLegDropdown({ legIdx, field: 'destination' });
-                                            }}
-                                            onFocus={() => setActiveLegDropdown({ legIdx, field: 'destination' })}
-                                        />
-                                        <p className="text-[12px] text-slate-400 mt-1 font-medium">
-                                            {GLOBAL_CITIES.find(c => c.name === leg.destination)?.country || ''}
-                                        </p>
-                                        {activeLegDropdown?.legIdx === legIdx && activeLegDropdown?.field === 'destination' && legDestSearch.length >= 2 && (
-                                            <div className="absolute top-[100%] left-0 w-full lg:w-[260px] bg-white rounded-2xl shadow-2xl z-[100] mt-2 border border-slate-100 max-h-[220px] overflow-y-auto">
-                                                <ul className="py-2">
-                                                    {filteredDests.map(city => (
-                                                        <li key={city.code} className="px-4 py-2.5 hover:bg-slate-50 cursor-pointer flex items-center justify-between"
-                                                            onClick={() => {
-                                                                const legs = [...multiCityLegs];
-                                                                legs[legIdx] = { ...legs[legIdx], destination: city.name };
-                                                                setMultiCityLegs(legs);
-                                                                const vals = [...legDestSearchValues];
-                                                                vals[legIdx] = city.name;
-                                                                setLegDestSearchValues(vals);
-                                                                setActiveLegDropdown(null);
-                                                            }}>
-                                                            <div className="flex flex-col">
-                                                                <span className="font-bold text-slate-800 text-[14px]">{city.name}</span>
-                                                                <span className="text-slate-400 text-[12px]">{city.country}</span>
-                                                            </div>
-                                                            <span className="font-bold text-slate-300 bg-slate-100 px-2 py-0.5 rounded text-[11px]">{city.code}</span>
-                                                        </li>
-                                                    ))}
-                                                    {filteredDests.length === 0 && <li className="px-4 py-3 text-slate-400 italic text-center text-[13px]">No cities found</li>}
-                                                </ul>
-                                            </div>
-                                        )}
-                                    </div>
+                            {/* Departure Date */}
+                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">Departure Date <ChevronDown className="w-3.5 h-3.5" /></label>
+                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{format(date || new Date(), "dd MMM' yy")}</div>
+                                <p className="text-[13px] text-slate-500 mt-1 font-medium">{format(date || new Date(), "EEEE")}</p>
+                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                            </div>
 
-                                    {/* Date */}
-                                    <Popover open={openLegCalendar === legIdx} onOpenChange={open => setOpenLegCalendar(open ? legIdx : null)}>
-                                        <PopoverTrigger asChild>
-                                            <div className="flex flex-col w-full lg:w-[140px] cursor-pointer">
-                                                <label className="text-[12px] font-bold text-slate-400 mb-1 uppercase tracking-wide flex items-center gap-1">Date <ChevronDown className="w-3 h-3" /></label>
-                                                <div className="font-extrabold text-slate-900 text-[18px] leading-none">{format(leg.date, "dd MMM yy")}</div>
-                                                <p className="text-[12px] text-slate-400 mt-1 font-medium">{format(leg.date, "EEEE")}</p>
-                                            </div>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0 bg-white rounded-3xl shadow-2xl border-none overflow-hidden z-[110]" align="start" side="bottom" sideOffset={8} avoidCollisions={false}>
-                                            <Calendar
-                                                mode="single"
-                                                selected={leg.date}
-                                                onSelect={d => {
-                                                    if (d) {
-                                                        const legs = [...multiCityLegs];
-                                                        legs[legIdx] = { ...legs[legIdx], date: d };
-                                                        setMultiCityLegs(legs);
-                                                        setOpenLegCalendar(null);
-                                                    }
-                                                }}
-                                                defaultMonth={leg.date}
-                                                fromDate={new Date(2026, 0, 1)}
-                                                toDate={new Date(2026, 11, 31)}
-                                                classNames={calendarClassNames}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-
-                                    {/* Remove leg button (only if > 2 legs) */}
-                                    {multiCityLegs.length > 2 && (
-                                        <button
-                                            onClick={() => {
-                                                setMultiCityLegs(prev => prev.filter((_, i) => i !== legIdx));
-                                                setLegSearchValues(prev => prev.filter((_, i) => i !== legIdx));
-                                                setLegDestSearchValues(prev => prev.filter((_, i) => i !== legIdx));
-                                            }}
-                                            className="hidden lg:flex w-7 h-7 rounded-full border border-slate-300 text-slate-400 hover:border-rose-400 hover:text-rose-500 items-center justify-center mt-5 shrink-0 transition-colors"
-                                            title="Remove this leg"
-                                        >
-                                            <Minus className="w-3.5 h-3.5" strokeWidth={2.5} />
-                                        </button>
-                                    )}
+                            {/* Return Date Link */}
+                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Return Date</label>
+                                <div className="h-[46px] flex items-center">
+                                    <span className="text-blue-500 text-[13px] font-semibold leading-tight cursor-pointer hover:underline">
+                                        Book Round Trip<br />To Save Extra
+                                    </span>
                                 </div>
-                            );
-                        })}
+                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                            </div>
 
-                        {/* Bottom row: Add City + Search */}
-                        <div className="flex items-center justify-between pt-2">
-                            <button
-                                onClick={() => {
-                                    if (multiCityLegs.length >= 5) return;
-                                    const lastLeg = multiCityLegs[multiCityLegs.length - 1];
-                                    const newLeg = { origin: lastLeg.destination, destination: "", date: lastLeg.date };
-                                    setMultiCityLegs(prev => [...prev, newLeg]);
-                                    setLegSearchValues(prev => [...prev, newLeg.origin]);
-                                    setLegDestSearchValues(prev => [...prev, ""]);
-                                }}
-                                disabled={multiCityLegs.length >= 5}
-                                className="text-[#D60D26] font-bold text-[15px] hover:underline flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                                <Plus className="w-4 h-4" strokeWidth={3} /> Add City
-                            </button>
-                            <Button onClick={handleSearch} className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-8 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center gap-1 transition-transform active:scale-95">
-                                Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
-                            </Button>
+                            {/* Traveller & Class */}
+                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">Traveller & Class <ChevronDown className="w-3.5 h-3.5" /></label>
+                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">1 Traveller</div>
+                                <p className="text-[13px] text-slate-500 mt-1 font-medium">{cabinClass}</p>
+                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                            </div>
+
+
+                            {/* Search Button */}
+                            <div className="flex items-center justify-end h-[70px] shrink-0 mt-3">
+                                <Button onClick={handleSearch} className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
+                                    Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* ROW 2 */}
+                        <div className="flex flex-col lg:flex-row items-center gap-6 w-full relative">
+                            {/* Origin */}
+                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Departure From</label>
+                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{multiCityLegs[1].origin}</div>
+                                <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">DEL, Indira Gandhi...</p>
+                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                            </div>
+
+                            {/* Red Arrow Circle */}
+                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
+                                <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+                            </div>
+
+                            {/* Destination */}
+                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Going To</label>
+                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{multiCityLegs[1].destination}</div>
+                                <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">BOM, Chhatrapat...</p>
+                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                            </div>
+
+                            {/* Departure Date */}
+                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">Departure Date <ChevronDown className="w-3.5 h-3.5" /></label>
+                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{format(multiCityLegs[1].date || new Date(), "dd MMM' yy")}</div>
+                                <p className="text-[13px] text-slate-500 mt-1 font-medium">{format(multiCityLegs[1].date || new Date(), "EEEE")}</p>
+                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                            </div>
+
+                            {/* Return Date Link (Empty space equivalent in Row 2) */}
+                            <div className="flex flex-col flex-1 h-[70px] w-full hidden lg:flex">
+                            </div>
+
+                            {/* Traveller & Class (Empty space equivalent in Row 2) */}
+                            <div className="flex flex-col flex-1 h-[70px] w-full hidden lg:flex">
+                            </div>
+
+
+                            {/* Add City Button Area */}
+                            <div className="flex items-center justify-start h-[70px] shrink-0 min-w-[120px] mt-3 lg:pl-6">
+                                <button className="text-[#D60D26] font-bold text-[15px] hover:underline flex items-center gap-1">
+                                    <Plus className="w-4 h-4" strokeWidth={3} /> Add City
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ) : (
@@ -608,7 +457,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                         </div>
 
                         {/* Swap Button */}
-                        <div className="flex absolute right-6 top-[90px] lg:right-auto lg:left-[18%] lg:top-[35%] lg:-translate-x-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-brand text-white items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer group/swap rotate-90 lg:rotate-0"
+                        <div className="flex absolute right-6 top-[90px] lg:relative lg:right-auto lg:left-auto lg:top-auto lg:transform-none lg:-translate-x-0 lg:translate-y-0 -translate-y-1/2 z-10 w-8 h-8 shrink-0 rounded-full bg-brand text-white items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer group/swap rotate-90 lg:rotate-0 lg:-mx-3 xl:-mx-5 lg:mt-0"
                             onClick={() => {
                                 const tempOrigin = origin;
                                 const tempOriginSearch = originSearch;
@@ -622,7 +471,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                         </div>
 
                         {/* Destination Input */}
-                        <div className="flex flex-col flex-1 min-w-[190px] group relative h-[90px] w-full lg:w-auto lg:pl-10">
+                        <div className="flex flex-col flex-1 min-w-[190px] group relative h-[90px] w-full lg:w-auto lg:pl-4">
                             <label className="text-[14px] font-bold text-slate-400 mb-1.5 block">Going To</label>
                             <input
                                 type="text"
@@ -812,7 +661,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                 )}
 
                 {/* Checkboxes Row */}
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2">
+                <div className="flex items-center space-x-6 pt-2">
                     <div className="flex items-center space-x-2.5">
                         <button id="baggageFares" onClick={() => setBaggageFares(!baggageFares)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", baggageFares ? "bg-white border-[#D60D26]" : "border-slate-300 bg-white")}>
                             {baggageFares && <svg className="w-3.5 h-3.5 text-[#D60D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
@@ -824,50 +673,10 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                     <div className="hidden sm:block w-[1.5px] h-4 bg-slate-200" />
 
                     <div className="flex items-center space-x-2.5">
-                        <button id="studentFare" type="button" onClick={() => setStudentFareSearch(!studentFareSearch)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", studentFareSearch ? "bg-white border-[#D60D26]" : "border-slate-300 bg-white")}>
-                            {studentFareSearch && <svg className="w-3.5 h-3.5 text-[#D60D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
-                        </button>
-                        <label htmlFor="studentFare" className="text-[13px] font-bold text-slate-400 cursor-pointer select-none" onClick={() => setStudentFareSearch(!studentFareSearch)}>Student Fare</label>
-                    </div>
-
-                    <div className="flex items-center space-x-2.5">
-                        <button id="corporateFare" type="button" onClick={() => setCorporateFareSearch(!corporateFareSearch)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", corporateFareSearch ? "bg-white border-[#D60D26]" : "border-slate-300 bg-white")}>
-                            {corporateFareSearch && <svg className="w-3.5 h-3.5 text-[#D60D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
-                        </button>
-                        <label htmlFor="corporateFare" className="text-[13px] font-bold text-slate-400 cursor-pointer select-none" onClick={() => setCorporateFareSearch(!corporateFareSearch)}>Corporate Fare</label>
-                    </div>
-
-                    <div className="flex items-center space-x-2.5">
-                        <button id="defenceFare" type="button" onClick={() => setDefenceFareSearch(!defenceFareSearch)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", defenceFareSearch ? "bg-white border-[#D60D26]" : "border-slate-300 bg-white")}>
-                            {defenceFareSearch && <svg className="w-3.5 h-3.5 text-[#D60D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
-                        </button>
-                        <label htmlFor="defenceFare" className="text-[13px] font-bold text-slate-400 cursor-pointer select-none" onClick={() => setDefenceFareSearch(!defenceFareSearch)}>Defence Fare</label>
-                    </div>
-
-                    <div className="hidden sm:block w-[1.5px] h-4 bg-slate-200" />
-
-                    <div className="flex items-center space-x-2.5">
                         <button id="nonStop" onClick={() => setNonStop(!nonStop)} className={cn("w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center shadow-sm transition-colors", nonStop ? "bg-white border-[#D60D26]" : "border-slate-300 bg-white")}>
                             {nonStop && <svg className="w-3.5 h-3.5 text-[#D60D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                         </button>
                         <label htmlFor="nonStop" className="text-[13px] font-bold text-slate-400 cursor-pointer select-none" onClick={() => setNonStop(!nonStop)}>Non-Stops Flights</label>
-                    </div>
-
-                    <div className="hidden sm:block w-[1.5px] h-4 bg-slate-200" />
-
-                    <div className="flex items-center gap-2">
-                        <label htmlFor="airlinePref" className="text-[13px] font-bold text-slate-400 whitespace-nowrap">Preferred airline</label>
-                        <select
-                            id="airlinePref"
-                            value={airlineCode}
-                            onChange={(e) => setAirlineCode(e.target.value)}
-                            className="text-[13px] font-semibold text-slate-700 border border-slate-200 rounded-lg px-2 py-1 bg-white"
-                        >
-                            <option value="">Any airline</option>
-                            {POPULAR_AIRLINES.map((a) => (
-                                <option key={a.code} value={a.code}>{a.name}</option>
-                            ))}
-                        </select>
                     </div>
                 </div>
 
