@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
-import React, { useState } from "react";
-import { ArrowLeft, ArrowRight, ArrowRightLeft, X, Plane, ChevronLeft, ChevronRight, Search, Check, Clock, Trash2 } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, ArrowRight, ArrowRightLeft, X, Plane, ChevronLeft, ChevronRight, Check, Clock, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 type Airport = {
     code: string;
@@ -10,6 +11,34 @@ type Airport = {
     country: string;
     name: string;
 };
+
+type Segment = {
+    id: number;
+    fromCode: string;
+    fromCity: string;
+    fromTerminal: string;
+    fromTime: string;
+    toCode: string;
+    toCity: string;
+    toTerminal: string;
+    toTime: string;
+    airlineName: string;
+    airlineCode: string;
+    flightNumber: string;
+    duration: string;
+    plusOneDay: boolean;
+    isEditing: boolean;
+};
+
+type PolicyKey = "cancellation" | "change" | "refund";
+
+const POLICY_FIELDS: { key: PolicyKey; label: string; placeholder: string }[] = [
+    { key: "cancellation", label: "Cancellation policy", placeholder: "Add cancellation policy details..." },
+    { key: "change", label: "Change policy", placeholder: "Add change policy details..." },
+    { key: "refund", label: "Refund policy", placeholder: "Add refund policy details..." },
+];
+
+const TERMINAL_OPTIONS = ["Terminal 1", "Terminal 2", "Terminal 3"];
 
 const AIRPORTS: Airport[] = [
     { code: "DEL", city: "New Delhi", country: "India", name: "Indira Gandhi International Airport" },
@@ -43,22 +72,44 @@ const AIRPORTS: Airport[] = [
     { code: "BKK", city: "Bangkok", country: "Thailand", name: "Suvarnabhumi Airport" },
 ];
 
+function formatDateLabel(dateStr: string, options: Intl.DateTimeFormatOptions) {
+    return new Date(`${dateStr}T00:00:00`).toLocaleDateString("en-US", options);
+}
+
+function getOperatingDateOptions(baseDate: string | null, count = 8) {
+    if (!baseDate) return [];
+
+    const startDate = new Date(`${baseDate}T00:00:00`);
+    const dates: string[] = [];
+
+    for (let i = 0; i < count; i += 1) {
+        const nextDate = new Date(startDate);
+        nextDate.setDate(startDate.getDate() + i * 7);
+        dates.push(nextDate.toISOString().slice(0, 10));
+    }
+
+    return dates;
+}
+
 export default function AddPNRPage() {
     const router = useRouter();
+    const { access } = useAuth();
     const [step, setStep] = useState(0); // 0 = empty, 1 = filled + dep date, 2 = return date, 3 = schedule screen
     
     const [origin, setOrigin] = useState<Airport | null>(null);
     const [destination, setDestination] = useState<Airport | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeInput, setActiveInput] = useState<"origin" | "destination" | null>(null);
-    const [selectedDate, setSelectedDate] = useState<number | null>(null);
+    const [selectedDate, setSelectedDate] = useState<string | null>(null); // ISO string YYYY-MM-DD
+    const [calendarMonth, setCalendarMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
+    const [returnCalendarMonth, setReturnCalendarMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 1); });
+    const [selectedReturnDate, setSelectedReturnDate] = useState<string | null>(null);
     
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [hasScheduledFlight, setHasScheduledFlight] = useState(false);
     const [modalTab, setModalTab] = useState(1);
-    const [isSegmentConfirmed, setIsSegmentConfirmed] = useState(false);
 
     // Baggage State
     const [maxWeight, setMaxWeight] = useState("Weight");
@@ -68,27 +119,340 @@ export default function AddPNRPage() {
     // Seats State
     const [availableSeats, setAvailableSeats] = useState("");
     const [seatPrice, setSeatPrice] = useState("");
+    const [isRefundable, setIsRefundable] = useState(true);
+
+    // Operating Dates State
+    const [selectedOperatingDates, setSelectedOperatingDates] = useState<string[]>([]);
+    const [requiresApis, setRequiresApis] = useState(false);
+    const [policyTexts, setPolicyTexts] = useState<Record<PolicyKey, string>>({
+        cancellation: "",
+        change: "",
+        refund: "",
+    });
+    const [openPolicies, setOpenPolicies] = useState<PolicyKey[]>([]);
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Segments state
-    const [segments, setSegments] = useState([
+    const [segments, setSegments] = useState<Segment[]>([
         {
             id: 1,
             fromCode: "DEL", fromCity: "New Delhi", fromTerminal: "Terminal 3", fromTime: "23:00",
-            toCode: "BOM", toCity: "Bombay", toTerminal: "Terminal 3", toTime: "03:00",
-            airline: "Air India (AI 121)", duration: "4 hr",
-            isEditing: false
-        },
-        {
-            id: 2,
-            fromCode: "BOM", fromCity: "Bombay", fromTerminal: "Terminal 3", fromTime: "05:00",
             toCode: "BKK", toCity: "Bangkok", toTerminal: "Terminal 3", toTime: "11:00",
-            airline: "Air India (AI 121)", duration: "4 hr 30mins",
+            airlineName: "Air India", airlineCode: "AI", flightNumber: "AI-121", duration: "12h 0m",
+            plusOneDay: false,
             isEditing: true
         }
     ]);
 
-    const updateSegment = (id: number, field: string, value: any) => {
+    // Initialize segments when origin and destination are selected
+    useEffect(() => {
+        if (origin && destination) {
+            setSegments([
+                {
+                    id: 1,
+                    fromCode: origin.code,
+                    fromCity: origin.city,
+                    fromTerminal: "Terminal 3",
+                    fromTime: "23:00",
+                    toCode: destination.code,
+                    toCity: destination.city,
+                    toTerminal: "Terminal 3",
+                    toTime: "11:00",
+                    airlineName: "",
+                    airlineCode: "",
+                    flightNumber: "",
+                    duration: "12h 0m",
+                    plusOneDay: false,
+                    isEditing: true
+                }
+            ]);
+        }
+    }, [origin, destination]);
+
+    useEffect(() => {
+        if (!selectedDate) return;
+
+        setSelectedOperatingDates((currentDates) => {
+            if (currentDates.length > 0) return currentDates;
+            return [selectedDate];
+        });
+    }, [selectedDate]);
+
+    useEffect(() => {
+        if (isFreeBaggage) {
+            setBaggagePrice("0");
+        }
+    }, [isFreeBaggage]);
+
+    const operatingDateOptions = useMemo(
+        () => getOperatingDateOptions(selectedDate),
+        [selectedDate]
+    );
+
+    const operatingDateGroups = useMemo(() => {
+        return operatingDateOptions.reduce((groups, dateStr) => {
+            const label = formatDateLabel(dateStr, { month: "long", year: "numeric" });
+            groups[label] = groups[label] || [];
+            groups[label].push(dateStr);
+            return groups;
+        }, {} as Record<string, string[]>);
+    }, [operatingDateOptions]);
+
+    const selectedWeekdayLabels = useMemo(() => {
+        const labels = selectedOperatingDates
+            .slice()
+            .sort()
+            .map((dateStr) => formatDateLabel(dateStr, { weekday: "long" }));
+        return Array.from(new Set(labels));
+    }, [selectedOperatingDates]);
+
+    const hasUnconfirmedSegments = useMemo(
+        () => segments.some((segment) => segment.isEditing),
+        [segments]
+    );
+
+    const updateSegment = (id: number, field: keyof Segment, value: Segment[keyof Segment]) => {
         setSegments(segments.map(seg => seg.id === id ? { ...seg, [field]: value } : seg));
+    };
+
+    const handleAddStopover = () => {
+        if (segments.length === 1 && destination) {
+            const first = segments[0];
+            setSegments([
+                {
+                    id: 1,
+                    fromCode: first.fromCode,
+                    fromCity: first.fromCity,
+                    fromTerminal: "Terminal 3",
+                    fromTime: "23:00",
+                    toCode: destination.code,
+                    toCity: destination.city,
+                    toTerminal: "Terminal 3",
+                    toTime: "03:00",
+                    airlineName: first.airlineName || "",
+                    airlineCode: first.airlineCode || "",
+                    flightNumber: "",
+                    duration: "4h 0m",
+                    plusOneDay: true,
+                    isEditing: false
+                },
+                {
+                    id: 2,
+                    fromCode: destination.code,
+                    fromCity: destination.city,
+                    fromTerminal: "Terminal 3",
+                    fromTime: "05:00",
+                    toCode: first.toCode,
+                    toCity: first.toCity,
+                    toTerminal: "Terminal 3",
+                    toTime: "11:00",
+                    airlineName: "",
+                    airlineCode: "",
+                    flightNumber: "",
+                    duration: "4h 30m",
+                    plusOneDay: false,
+                    isEditing: true
+                }
+            ]);
+        }
+    };
+
+    const handleDeleteStop = () => {
+        if (origin && destination) {
+            const firstSeg = segments[0];
+            setSegments([
+                {
+                    id: 1,
+                    fromCode: origin.code,
+                    fromCity: origin.city,
+                    fromTerminal: "Terminal 3",
+                    fromTime: firstSeg?.fromTime || "23:00",
+                    toCode: destination.code,
+                    toCity: destination.city,
+                    toTerminal: "Terminal 3",
+                    toTime: segments[segments.length - 1]?.toTime || "11:00",
+                    airlineName: firstSeg?.airlineName || "",
+                    airlineCode: firstSeg?.airlineCode || "",
+                    flightNumber: firstSeg?.flightNumber || "",
+                    duration: "12h 0m",
+                    plusOneDay: false,
+                    isEditing: true
+                }
+            ]);
+        }
+    };
+
+    const toggleOperatingDate = (dateStr: string) => {
+        if (selectedOperatingDates.includes(dateStr)) {
+            setSelectedOperatingDates(selectedOperatingDates.filter(d => d !== dateStr));
+        } else {
+            setSelectedOperatingDates([...selectedOperatingDates, dateStr].sort());
+        }
+    };
+
+    const togglePolicyEditor = (policyKey: PolicyKey) => {
+        setOpenPolicies((currentPolicies) =>
+            currentPolicies.includes(policyKey)
+                ? currentPolicies.filter((key) => key !== policyKey)
+                : [...currentPolicies, policyKey]
+        );
+    };
+
+    const handleCreateFlights = async () => {
+        if (!access) {
+            alert("Unauthorized. Please log in as an agent.");
+            return;
+        }
+        if (!origin || !destination) {
+            alert("Origin and destination are required.");
+            return;
+        }
+        if (selectedOperatingDates.length === 0) {
+            alert("Please select at least one operating date.");
+            return;
+        }
+
+        // Validate all segments have required fields
+        for (let i = 0; i < segments.length; i++) {
+            const seg = segments[i];
+            if (!seg.airlineName?.trim()) {
+                alert(`Please enter the airline name for segment ${i + 1}.`);
+                return;
+            }
+            if (!seg.airlineCode?.trim()) {
+                alert(`Please enter the airline code (e.g. 6E) for segment ${i + 1}.`);
+                return;
+            }
+            if (!seg.flightNumber?.trim()) {
+                alert(`Please enter the flight number for segment ${i + 1}.`);
+                return;
+            }
+            if (seg.isEditing) {
+                alert(`Segment ${i + 1} is not confirmed yet. Open Flight detail and click "Confirm segment" first.`);
+                return;
+            }
+        }
+
+        setIsSubmitting(true);
+        try {
+            const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+
+            for (const dateStr of selectedOperatingDates) {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                const depTimeStr = segments[0]?.fromTime || "23:00";
+                const [depHour, depMin] = depTimeStr.split(':').map(Number);
+                
+                // Create local date object
+                const localDepDate = new Date(year, month - 1, day, depHour, depMin);
+                const apiSegments = [];
+
+                let currentDepDate = new Date(localDepDate);
+
+                for (let i = 0; i < segments.length; i++) {
+                    const seg = segments[i];
+                    const [sDepH, sDepM] = seg.fromTime.split(':').map(Number);
+                    
+                    if (i > 0) {
+                        const prevArrStr = apiSegments[i - 1].arrival_datetime;
+                        const prevArrDate = new Date(prevArrStr);
+                        currentDepDate = new Date(prevArrDate);
+                        currentDepDate.setHours(sDepH, sDepM, 0, 0);
+                        if (currentDepDate < prevArrDate) {
+                            currentDepDate.setDate(currentDepDate.getDate() + 1);
+                        }
+                    } else {
+                        currentDepDate.setHours(sDepH, sDepM, 0, 0);
+                    }
+
+                    const [sArrH, sArrM] = seg.toTime.split(':').map(Number);
+                    const currentArrDate = new Date(currentDepDate);
+                    currentArrDate.setHours(sArrH, sArrM, 0, 0);
+                    if (seg.plusOneDay) {
+                        currentArrDate.setDate(currentArrDate.getDate() + 1);
+                    } else if (currentArrDate < currentDepDate) {
+                        currentArrDate.setDate(currentArrDate.getDate() + 1);
+                    }
+
+                    apiSegments.push({
+                        segment_id: i,
+                        airline_code: (seg.airlineCode || "").toUpperCase().trim(),
+                        airline_name: (seg.airlineName || "").trim(),
+                        flight_number: (seg.flightNumber || "").toUpperCase().trim(),
+                        aircraft_type: "Airbus A320",
+                        origin: seg.fromCode,
+                        origin_city: seg.fromCity,
+                        origin_terminal: seg.fromTerminal,
+                        destination: seg.toCode,
+                        destination_city: seg.toCity,
+                        destination_terminal: seg.toTerminal,
+                        departure_datetime: currentDepDate.toISOString(),
+                        arrival_datetime: currentArrDate.toISOString(),
+                        duration: seg.duration,
+                        stop_over: i < segments.length - 1 ? "2h 15m" : null,
+                        return_flight: false
+                    });
+                }
+
+                const firstSegDep = apiSegments[0].departure_datetime;
+                const lastSegArr = apiSegments[apiSegments.length - 1].arrival_datetime;
+                
+                const firstMs = new Date(firstSegDep).getTime();
+                const lastMs = new Date(lastSegArr).getTime();
+                const diffMin = Math.round((lastMs - firstMs) / 60000);
+                const totalDurStr = `${Math.floor(diffMin / 60)}h ${diffMin % 60}m`;
+
+                const mainAirlineCode = apiSegments[0].airline_code;
+                const mainAirlineName = apiSegments[0].airline_name;
+                const mainFlightNumber = apiSegments[0].flight_number;
+                const filledPolicies = Object.fromEntries(
+                    Object.entries(policyTexts).filter(([, value]) => value.trim())
+                );
+
+                const payload = {
+                    airline_code: mainAirlineCode,
+                    airline_name: mainAirlineName,
+                    flight_number: mainFlightNumber,
+                    origin: origin.code,
+                    destination: destination.code,
+                    departure_datetime: firstSegDep,
+                    arrival_datetime: lastSegArr,
+                    price: parseFloat(seatPrice || "150"),
+                    seats_available: parseInt(availableSeats || "10", 10),
+                    cabin_class: "Economy",
+                    duration: totalDurStr,
+                    is_refundable: isRefundable,
+                    baggage_check_in: maxWeight !== "Weight" ? maxWeight : "15 kg",
+                    baggage_hand: "7 kg",
+                    apis_required: requiresApis,
+                    policies: filledPolicies,
+                    segments: apiSegments
+                };
+
+                const res = await fetch(`${apiBase}/flights/inventory/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${access}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`Failed to save date ${dateStr}: ${errText}`);
+                }
+            }
+
+            alert("Successfully created flight inventory!");
+            router.push("/sale/inventory");
+        } catch (error: unknown) {
+            console.error(error);
+            const errorMessage = error instanceof Error ? error.message : "Failed to create flight inventory.";
+            alert(errorMessage);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const filteredAirports = AIRPORTS.filter(airport => 
@@ -115,51 +479,102 @@ export default function AddPNRPage() {
 
     const handleAddFlightDetails = () => {
         if (step > 0 && selectedDate) {
+            setSelectedOperatingDates((currentDates) =>
+                currentDates.length > 0 ? currentDates : [selectedDate]
+            );
             setStep(3);
         } else if (!selectedDate && step > 0) {
             alert("Please select a date from the calendar first.");
         }
     };
 
-    // Calendar mock
-    const renderCalendar = (title: string, month: string) => (
-        <div className="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden w-[320px] flex flex-col pointer-events-auto shrink-0 mb-10">
-            <div className="bg-[#121121] text-white text-center py-2.5 text-[12px] font-bold tracking-widest uppercase">
-                {title}
-            </div>
-            <div className="bg-[#F2FBFF] text-slate-800 flex items-center justify-between px-5 py-3 font-extrabold text-[15px]">
-                <ChevronLeft className="w-5 h-5 cursor-pointer text-slate-600 hover:text-black" />
-                {month}
-                <ChevronRight className="w-5 h-5 cursor-pointer text-slate-600 hover:text-black" />
-            </div>
-            <div className="p-5 bg-white">
-                <div className="grid grid-cols-7 text-center text-[13px] font-bold mb-4">
-                    <div className="text-[#D60D26]">S</div>
-                    <div className="text-slate-600">M</div>
-                    <div className="text-slate-600">T</div>
-                    <div className="text-slate-600">W</div>
-                    <div className="text-slate-600">T</div>
-                    <div className="text-slate-600">F</div>
-                    <div className="text-[#D60D26]">S</div>
+    // Real calendar renderer
+    const renderCalendar = (
+        title: string,
+        viewMonth: Date,
+        onPrev: () => void,
+        onNext: () => void,
+        pickedDate: string | null,
+        onPickDate: (iso: string) => void
+    ) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const year = viewMonth.getFullYear();
+        const month = viewMonth.getMonth();
+        const monthName = viewMonth.toLocaleString('default', { month: 'long' });
+        const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0=Sun
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+        const cells: { day: number; iso: string; type: 'prev' | 'curr' | 'next' }[] = [];
+        for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+            const d = daysInPrevMonth - i;
+            const pm = month === 0 ? 11 : month - 1;
+            const py = month === 0 ? year - 1 : year;
+            cells.push({ day: d, iso: `${py}-${String(pm + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`, type: 'prev' });
+        }
+        for (let d = 1; d <= daysInMonth; d++) {
+            cells.push({ day: d, iso: `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`, type: 'curr' });
+        }
+        const remaining = 42 - cells.length;
+        for (let d = 1; d <= remaining; d++) {
+            const nm = month === 11 ? 0 : month + 1;
+            const ny = month === 11 ? year + 1 : year;
+            cells.push({ day: d, iso: `${ny}-${String(nm + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`, type: 'next' });
+        }
+
+        return (
+            <div className="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden w-[320px] flex flex-col pointer-events-auto shrink-0 mb-10">
+                <div className="bg-[#121121] text-white text-center py-2.5 text-[12px] font-bold tracking-widest uppercase">
+                    {title}
                 </div>
-                <div className="grid grid-cols-7 text-center text-[14px] gap-y-4 font-bold text-slate-700">
-                    <div className="text-slate-300 font-medium">26</div><div className="text-slate-300 font-medium">27</div><div className="text-slate-300 font-medium">28</div><div className="text-slate-300 font-medium">29</div><div className="text-slate-300 font-medium">30</div><div className="text-slate-300 font-medium">31</div>
-                    {[...Array(30)].map((_, i) => (
-                        <div 
-                            key={i} 
-                            onClick={() => setSelectedDate(i + 1)}
-                            className={`rounded-full cursor-pointer w-8 h-8 flex items-center justify-center mx-auto transition-colors ${
-                                selectedDate === i + 1 ? 'bg-[#D60D26] text-white' : 'hover:bg-slate-100 text-slate-700'
-                            }`}
-                        >
-                            {i + 1}
-                        </div>
-                    ))}
-                    <div className="text-slate-300 font-medium">1</div><div className="text-slate-300 font-medium">2</div><div className="text-slate-300 font-medium">3</div><div className="text-slate-300 font-medium">4</div><div className="text-slate-300 font-medium">5</div><div className="text-slate-300 font-medium">6</div>
+                <div className="bg-[#F2FBFF] text-slate-800 flex items-center justify-between px-5 py-3 font-extrabold text-[15px]">
+                    <button onClick={onPrev} className="hover:text-[#D60D26] transition-colors p-1 rounded">
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    {monthName} {year}
+                    <button onClick={onNext} className="hover:text-[#D60D26] transition-colors p-1 rounded">
+                        <ChevronRight className="w-5 h-5" />
+                    </button>
+                </div>
+                <div className="p-5 bg-white">
+                    <div className="grid grid-cols-7 text-center text-[13px] font-bold mb-4">
+                        {['S','M','T','W','T','F','S'].map((d, i) => (
+                            <div key={i} className={i === 0 || i === 6 ? 'text-[#D60D26]' : 'text-slate-600'}>{d}</div>
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-7 text-center text-[14px] gap-y-2">
+                        {cells.map((cell, i) => {
+                            const cellDate = new Date(cell.iso + 'T00:00:00');
+                            const isPast = cellDate < today;
+                            const isSelected = pickedDate === cell.iso;
+                            const isToday = cell.iso === today.toISOString().slice(0, 10);
+                            const isOtherMonth = cell.type !== 'curr';
+                            return (
+                                <div
+                                    key={i}
+                                    onClick={() => !isPast && !isOtherMonth && onPickDate(cell.iso)}
+                                    className={`rounded-full w-8 h-8 flex items-center justify-center mx-auto font-bold transition-colors ${
+                                        isSelected
+                                            ? 'bg-[#D60D26] text-white cursor-pointer'
+                                            : isOtherMonth
+                                            ? 'text-slate-300 font-medium cursor-default'
+                                            : isPast
+                                            ? 'text-slate-300 cursor-not-allowed'
+                                            : isToday
+                                            ? 'ring-2 ring-[#D60D26] text-[#D60D26] cursor-pointer hover:bg-rose-50'
+                                            : 'text-slate-700 cursor-pointer hover:bg-slate-100'
+                                    }`}
+                                >
+                                    {cell.day}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     const mapQuery = origin ? `${origin.city}, ${origin.country}` : "World";
     const mapZoom = origin ? (destination ? 4 : 5) : 2;
@@ -273,7 +688,7 @@ export default function AddPNRPage() {
                                                     {airport.city} <span className="text-[#D60D26]">({airport.code})</span>
                                                 </div>
                                                 <div className="text-[13px] text-slate-500 font-medium">
-                                                    {airport.country} â€” {airport.name}
+                                                    {airport.country} - {airport.name}
                                                 </div>
                                             </div>
                                         </div>
@@ -289,11 +704,32 @@ export default function AddPNRPage() {
 
                     {step > 0 && (
                         <div className="mt-10 flex flex-col md:flex-row gap-6 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-20 items-center">
-                            {step === 1 && renderCalendar("DEPARTURE", "October 2025")}
+                            {step === 1 && renderCalendar(
+                                "DEPARTURE",
+                                calendarMonth,
+                                () => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)),
+                                () => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)),
+                                selectedDate,
+                                (iso) => setSelectedDate(iso)
+                            )}
                             {step === 2 && (
                                 <>
-                                    {renderCalendar("FROM", "October 2025")}
-                                    {renderCalendar("TO", "November 2025")}
+                                    {renderCalendar(
+                                        "FROM",
+                                        calendarMonth,
+                                        () => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)),
+                                        () => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)),
+                                        selectedDate,
+                                        (iso) => setSelectedDate(iso)
+                                    )}
+                                    {renderCalendar(
+                                        "TO",
+                                        returnCalendarMonth,
+                                        () => setReturnCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)),
+                                        () => setReturnCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)),
+                                        selectedReturnDate,
+                                        (iso) => setSelectedReturnDate(iso)
+                                    )}
                                 </>
                             )}
                         </div>
@@ -311,19 +747,20 @@ export default function AddPNRPage() {
                             <div className="w-6 h-6 rounded-full border border-[#D60D26] flex items-center justify-center">
                                 <ArrowRight className="w-3 h-3 text-[#D60D26]" />
                             </div>
-                            {destination?.city || "Bangkok"} <span className="text-slate-400">({destination?.code || "BKK"})</span>
+                            {destination?.city || "Destination"} <span className="text-slate-400">({destination?.code || "---"})</span>
                         </div>
                     </div>
 
                     {/* Header Tabs */}
                     <div className="w-full bg-white px-6 sm:px-10 flex items-center gap-8 sm:gap-12 border-b border-slate-200 mt-6 shrink-0 overflow-x-auto whitespace-nowrap no-scrollbar">
-                        <div className="font-bold text-[#D60D26] border-b-4 border-[#D60D26] py-4 cursor-pointer">Sundays</div>
-                        <div className="font-bold text-slate-300 py-4 cursor-pointer hover:text-slate-500">Mondays</div>
-                        <div className="font-bold text-slate-800 py-4 cursor-pointer">Tuesdays</div>
-                        <div className="font-bold text-slate-300 py-4 cursor-pointer hover:text-slate-500">Wednesdays</div>
-                        <div className="font-bold text-slate-300 py-4 cursor-pointer hover:text-slate-500">Thursdays</div>
-                        <div className="font-bold text-slate-300 py-4 cursor-pointer hover:text-slate-500">Fridays</div>
-                        <div className="font-bold text-slate-300 py-4 cursor-pointer hover:text-slate-500">Saturdays</div>
+                        {(selectedWeekdayLabels.length > 0 ? selectedWeekdayLabels : ["Select operating dates"]).map((label, index) => (
+                            <div
+                                key={label}
+                                className={`font-bold py-4 ${index === 0 ? "text-[#D60D26] border-b-4 border-[#D60D26]" : "text-slate-400"}`}
+                            >
+                                {label}
+                            </div>
+                        ))}
                     </div>
 
                     <div className="w-full max-w-[1100px] px-4 sm:px-10 mt-10 pb-20">
@@ -331,11 +768,15 @@ export default function AddPNRPage() {
                         <div className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 mb-6">
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-4 py-2 font-bold text-slate-700 text-[14px]">
-                                    {origin?.code || "DEL"} <ArrowRight className="w-4 h-4 text-[#D60D26]" /> {destination?.code || "BKK"}
+                                    {origin?.code || "---"} <ArrowRight className="w-4 h-4 text-[#D60D26]" /> {destination?.code || "---"}
                                 </div>
                                 <div className="flex items-center border border-[#D60D26] rounded-xl overflow-hidden font-bold">
-                                    <div className="bg-[#D60D26] text-white px-3 py-2 text-[14px]">OCT</div>
-                                    <div className="bg-white text-[#D60D26] px-3 py-2 text-[14px]">{selectedDate?.toString().padStart(2, '0') || "05"}</div>
+                                    <div className="bg-[#D60D26] text-white px-3 py-2 text-[14px]">
+                                        {selectedDate ? new Date(selectedDate + 'T00:00:00').toLocaleString('default', { month: 'short' }).toUpperCase() : 'DATE'}
+                                    </div>
+                                    <div className="bg-white text-[#D60D26] px-3 py-2 text-[14px]">
+                                        {selectedDate ? String(new Date(selectedDate + 'T00:00:00').getDate()).padStart(2, '0') : '--'}
+                                    </div>
                                 </div>
                             </div>
 
@@ -355,9 +796,15 @@ export default function AddPNRPage() {
                                 <div className="mt-4 flex items-stretch justify-between bg-white border border-slate-200 rounded-xl shadow-sm relative overflow-x-auto sm:overflow-hidden h-[70px] animate-in slide-in-from-top-2 duration-300">
                                     <div className="w-24 bg-[#D60D26] shrink-0"></div>
                                     <div className="flex-1 flex items-center px-4 sm:px-8 font-bold text-slate-600 text-[14px] justify-between min-w-[500px]">
-                                        <div className="w-[180px]">AI 121(+1) / AI 242</div>
-                                        <div className="w-[150px] text-center">AIR INDIA</div>
-                                        <div className="w-[200px] text-right">23:00-03:00 / 05:00-11:00</div>
+                                        <div className="w-[180px]">
+                                            {segments.map((seg) => `${seg.airlineCode || "-"} ${seg.flightNumber || "-"}`).join(" / ")}
+                                        </div>
+                                        <div className="w-[150px] text-center">
+                                            {segments.map((seg) => seg.airlineName || seg.airlineCode || "-").join(" / ")}
+                                        </div>
+                                        <div className="w-[200px] text-right">
+                                            {segments.map((seg) => `${seg.fromTime}-${seg.toTime}${seg.plusOneDay ? "(+1)" : ""}`).join(" / ")}
+                                        </div>
                                     </div>
                                     <button 
                                         onClick={() => setHasScheduledFlight(false)} 
@@ -394,29 +841,43 @@ export default function AddPNRPage() {
                         </div>
                         
                         <div className="bg-slate-100 px-4 py-2 text-[13px] font-bold text-slate-700">
-                            October, 2025
+                            Selected Operating Dates
                         </div>
                         
-                        <div className="border-b border-slate-200 flex flex-col md:grid md:grid-cols-8 gap-2 md:gap-4 items-start md:items-center py-6 px-4 text-[13px] font-bold text-slate-700">
-                            <div className="flex flex-col md:col-span-2 w-full">
-                                <span className="md:hidden text-slate-400 font-medium mb-1">Route:</span>
-                                <span>DEL â†’ MUM <span className="text-slate-400 font-medium">â€¢ (1 Stops)</span></span>
-                            </div>
-                            <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Date:</span>Wed, 26 Jul 25</div>
-                            <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Time:</span>16:30 - 12:20(+1)</div>
-                            <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Airlines:</span>AIRINDIA</div>
-                            <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Flight No:</span>AI121 â€¢ AI242</div>
-                            <div className="flex items-center gap-1.5 w-full">
-                                <span className="md:hidden text-slate-400 font-medium w-20">Seats:</span>
-                                <svg className="w-4 h-4 text-slate-400 hidden md:block" fill="currentColor" viewBox="0 0 24 24"><path d="M4 18v3h2v-3h12v3h2v-3H4zm2-10h12v6H6V8zm0-4h12v2H6V4z"/></svg>
-                                10
-                            </div>
-                            <div className="text-[14px] flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20 text-[13px]">Fare:</span>INR 150.00</div>
-                            <div className="flex items-center gap-2 w-full">
-                                <span className="md:hidden text-slate-400 font-medium w-20">APIS:</span>
-                                <span className="border border-green-300 text-green-500 bg-green-50 rounded-full px-5 py-1.5 text-[12px] font-bold">Need</span>
-                            </div>
-                        </div>
+                        {selectedOperatingDates.map((dateStr, idx) => {
+                            const formattedDate = formatDateLabel(dateStr, { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' });
+                            const depTime = segments[0]?.fromTime || "23:00";
+                            const arrTime = segments[segments.length - 1]?.toTime || "11:00";
+                            const plusOne = segments[segments.length - 1]?.plusOneDay || false;
+                            
+                            const airlineNames = segments.map(seg => seg.airlineName || seg.airlineCode || "-").join(' / ');
+                            const flightNumbers = segments.map(seg => seg.flightNumber || "-").join(' • ');
+
+                            return (
+                                <div key={idx} className="border-b border-slate-200 flex flex-col md:grid md:grid-cols-8 gap-2 md:gap-4 items-start md:items-center py-6 px-4 text-[13px] font-bold text-slate-700">
+                                    <div className="flex flex-col md:col-span-2 w-full">
+                                        <span className="md:hidden text-slate-400 font-medium mb-1">Route:</span>
+                                        <span>{origin?.code} → {destination?.code} <span className="text-slate-400 font-medium">• ({segments.length - 1} Stops)</span></span>
+                                    </div>
+                                    <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Date:</span>{formattedDate}</div>
+                                    <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Time:</span>{depTime} - {arrTime}{plusOne ? "(+1)" : ""}</div>
+                                    <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Airlines:</span>{airlineNames}</div>
+                                    <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Flight No:</span>{flightNumbers}</div>
+                                    <div className="flex items-center gap-1.5 w-full">
+                                        <span className="md:hidden text-slate-400 font-medium w-20">Seats:</span>
+                                        <svg className="w-4 h-4 text-slate-400 hidden md:block" fill="currentColor" viewBox="0 0 24 24"><path d="M4 18v3h2v-3h12v3h2v-3H4zm2-10h12v6H6V8zm0-4h12v2H6V4z"/></svg>
+                                        {availableSeats || "10"}
+                                    </div>
+                                    <div className="text-[14px] flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20 text-[13px]">Fare:</span>INR {seatPrice || "00.00"}</div>
+                                    <div className="flex items-center gap-2 w-full">
+                                        <span className="md:hidden text-slate-400 font-medium w-20">APIS:</span>
+                                        <span className={`rounded-full px-5 py-1.5 text-[12px] font-bold ${requiresApis ? "border border-green-300 text-green-500 bg-green-50" : "border border-slate-300 text-slate-500 bg-slate-50"}`}>
+                                            {requiresApis ? "Required" : "Not required"}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
                             </div>
                         </div>
                     </div>
@@ -473,8 +934,14 @@ export default function AddPNRPage() {
                                 Check And Confirm <ArrowRight className="w-5 h-5" />
                             </button>
                         ) : (
-                            <button className="w-full sm:w-auto justify-center bg-[#D60D26] text-white hover:bg-[#30060F] shadow-md px-10 py-3.5 rounded-full font-bold text-[15px] transition-colors flex items-center gap-2">
-                                Create Flight 01 <ArrowRight className="w-4 h-4" />
+                            <button 
+                                onClick={handleCreateFlights}
+                                disabled={isSubmitting}
+                                className={`w-full sm:w-auto justify-center bg-[#D60D26] text-white hover:bg-[#30060F] shadow-md px-10 py-3.5 rounded-full font-bold text-[15px] transition-colors flex items-center gap-2 ${
+                                    isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                            >
+                                {isSubmitting ? "Creating..." : "Create Flights"} <ArrowRight className="w-4 h-4" />
                             </button>
                         )}
                     </>
@@ -504,7 +971,7 @@ export default function AddPNRPage() {
                                 <div className="w-5 h-5 rounded-full border border-white flex items-center justify-center mx-1">
                                     <ArrowRight className="w-3 h-3 text-white" />
                                 </div> 
-                                {destination?.city || "Bangkok"} ({destination?.code || "BKK"})
+                                {destination?.city || "Destination"} ({destination?.code || "---"})
                             </div>
                         </div>
 
@@ -517,200 +984,218 @@ export default function AddPNRPage() {
                                     className={`pb-4 px-2 transition-colors ${modalTab === tab ? "text-[#D60D26] border-b-2 border-[#D60D26]" : "text-slate-400 hover:text-slate-600"}`}
                                 >
                                     {tab}. {["Flight detail", "Baggages", "Seats", "Dates", "Policies"][tab - 1]}
-                                </button>
+</button>
                             ))}
                         </div>
 
                         {/* Modal Body */}
-                        <div className="flex-1 overflow-y-auto bg-white p-8 relative">
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white p-8">
                             {modalTab === 1 && (
-                                <div className="flex gap-6 overflow-x-auto pb-4">
-                                    {segments.map((seg, index) => (
-                                        seg.isEditing ? (
-                                            <div key={seg.id} className="w-full xl:min-w-[700px] shrink-0 animate-in fade-in zoom-in-95 duration-300">
-                                                {/* Timeline Graphic for editing */}
-                                                <div className="flex items-center justify-between relative mb-10 w-full">
-                                                    <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-slate-300"></div>
-                                                    <div className="relative z-10 w-5 h-5 bg-slate-800 rounded-full"></div>
-                                                    <Plane className="w-6 h-6 text-slate-400 relative z-10 bg-white" />
-                                                    
-                                                    {index === segments.length - 1 && (
-                                                        <div className="relative z-10 flex flex-col items-center">
-                                                            <div className="w-7 h-7 bg-white border border-[#D60D26] text-[#D60D26] rounded-full flex items-center justify-center cursor-pointer mb-1 text-[20px] shadow-sm hover:bg-rose-50">+</div>
-                                                            <span className="text-[#D60D26] font-bold text-[12px] absolute top-8 w-[100px] text-center underline underline-offset-2">Add a stop over</span>
-                                                        </div>
-                                                    )}
-                                                    
-                                                    <Plane className="w-6 h-6 text-slate-400 relative z-10 bg-white" />
-                                                    <div className="relative z-10 flex items-center justify-center w-8 h-8 bg-white border border-slate-300 rounded-full">
-                                                        <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                                    </div>
-                                                </div>
+                                <div className="flex gap-6 overflow-x-auto pb-4 items-start w-full min-w-0 custom-horizontal-scrollbar">
+                                    {segments.map((seg, index) => {
+                                        const nextDayNeeded = (from: string, to: string) => {
+                                            if (!from || !to) return false;
+                                            const [fH, fM] = from.split(':').map(Number);
+                                            const [tH, tM] = to.split(':').map(Number);
+                                            if (tH < fH) return true;
+                                            if (tH === fH && tM < fM) return true;
+                                            return false;
+                                        };
+                                        const getSegDuration = (from: string, to: string, p1: boolean) => {
+                                            if (!from || !to) return "2h 0m";
+                                            const [fH, fM] = from.split(':').map(Number);
+                                            const [tH, tM] = to.split(':').map(Number);
+                                            let diff = (tH * 60 + tM) - (fH * 60 + fM);
+                                            if (p1) diff += 24 * 60;
+                                            else if (diff < 0) diff += 24 * 60;
+                                            return `${Math.floor(diff / 60)}h ${diff % 60}m`;
+                                        };
+                                        const requiresNextDay = nextDayNeeded(seg.fromTime, seg.toTime);
+                                        const isConfirmable = !requiresNextDay || seg.plusOneDay;
+                                        const calculatedDuration = getSegDuration(seg.fromTime, seg.toTime, !!seg.plusOneDay);
 
-                                                <div className="flex flex-col md:flex-row gap-6 md:gap-8">
-                                                    {/* Left Form */}
-                                                    <div className="flex-1 space-y-6">
-                                                        <div className="flex gap-4">
-                                                            <div className="w-32">
-                                                                <label className="text-[12px] font-bold text-slate-500 mb-1 block">{seg.fromCode} local time</label>
-                                                                <div className="border border-slate-200 rounded-lg p-3 flex items-center gap-2 shadow-sm">
-                                                                    <Clock className="w-4 h-4 text-slate-500" />
-                                                                    <input type="text" className="w-full font-bold text-slate-700 outline-none bg-transparent" value={seg.fromTime} onChange={(e) => updateSegment(seg.id, 'fromTime', e.target.value)} />
+                                        if (seg.isEditing) {
+                                            return (
+                                                /* ══ EDITING: open form, no card border, takes remaining width ══ */
+                                                <div key={seg.id} className="flex-1 min-w-[480px] animate-in fade-in duration-300">
+                                                    {/* Timeline */}
+                                                    <div className="flex items-center relative mb-8">
+                                                        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-slate-300 z-0"></div>
+                                                        <div className="w-4 h-4 rounded-full border-[3px] border-slate-800 bg-white relative z-10 shrink-0"></div>
+                                                        <div className="flex-1"></div>
+                                                        <Plane className="w-5 h-5 text-slate-400 relative z-10 bg-white shrink-0" />
+                                                        <div className="flex-1"></div>
+                                                        {segments.length === 1 && (
+                                                            <button className="relative z-10 flex flex-col items-center cursor-pointer group mx-2" onClick={handleAddStopover}>
+                                                                <div className="w-7 h-7 bg-white border-2 border-[#D60D26] text-[#D60D26] rounded-full flex items-center justify-center text-xl leading-none font-bold shadow-sm group-hover:bg-rose-50">+</div>
+                                                                <span className="text-[#D60D26] font-bold text-[11px] mt-1 whitespace-nowrap underline underline-offset-2">Add a stop over</span>
+                                                            </button>
+                                                        )}
+                                                        <div className="flex-1"></div>
+                                                        <Plane className="w-5 h-5 text-slate-400 relative z-10 bg-white shrink-0" />
+                                                        <div className="flex-1"></div>
+                                                        <div className="relative z-10 flex items-center justify-center w-5 h-5 bg-white border-2 border-slate-800 rounded-full shrink-0">
+                                                            <svg className="w-2.5 h-2.5 text-slate-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Two-column form */}
+                                                    <div className="flex gap-8">
+                                                        {/* LEFT: departure */}
+                                                        <div className="flex-1 space-y-5">
+                                                            <div className="flex gap-3">
+                                                                <div className="w-[130px] shrink-0">
+                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">{seg.fromCode} local time</label>
+                                                                    <div className="border border-slate-200 rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-sm">
+                                                                        <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+                                                                        <input type="text" className="w-full font-bold text-slate-700 outline-none bg-transparent text-[14px]" value={seg.fromTime} onChange={(e) => updateSegment(seg.id, 'fromTime', e.target.value)} />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Airport</label>
+                                                                    <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 font-semibold text-slate-500 outline-none shadow-sm text-[14px]" value={`${seg.fromCode} (${seg.fromCity})`} readOnly />
                                                                 </div>
                                                             </div>
-                                                            <div className="flex-1">
-                                                                <label className="text-[12px] font-bold text-slate-500 mb-1 block">Airport</label>
-                                                                <input type="text" className="w-full border border-slate-200 rounded-lg p-3 bg-slate-50 font-bold text-slate-500 outline-none shadow-sm" value={`${seg.fromCode} (${seg.fromCity})`} readOnly />
+                                                            <div className="flex gap-3">
+                                                                <div className="flex-[2]">
+                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Airline</label>
+                                                                    <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]" value={seg.airlineName || ""} onChange={(e) => updateSegment(seg.id, 'airlineName', e.target.value)} placeholder="Airline" />
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Flight code</label>
+                                                                    <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-700 outline-none shadow-sm text-[14px] uppercase" value={seg.airlineCode || ""} onChange={(e) => updateSegment(seg.id, 'airlineCode', e.target.value.toUpperCase())} placeholder="e.g. 6E" />
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-[12px] font-bold text-slate-400 mt-0.5 cursor-pointer hover:text-slate-600">+ add technical stop</div>
+                                                            <div className="flex gap-3">
+                                                                <div className="flex-1">
+                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Flight number</label>
+                                                                    <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-700 outline-none shadow-sm text-[14px] uppercase" value={seg.flightNumber || ""} onChange={(e) => updateSegment(seg.id, 'flightNumber', e.target.value.toUpperCase())} placeholder="– – – –" />
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Terminal</label>
+                                                                    <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 appearance-none bg-white outline-none shadow-sm text-[14px]" value={seg.fromTerminal} onChange={(e) => updateSegment(seg.id, 'fromTerminal', e.target.value)}>
+                                                                        {TERMINAL_OPTIONS.map((terminal) => (
+                                                                            <option key={terminal}>{terminal}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <div>
-                                                            <label className="text-[12px] font-bold text-slate-500 mb-1 block">Airline</label>
-                                                            <select className="w-full border border-slate-200 rounded-lg p-3 font-bold text-slate-400 appearance-none bg-white outline-none shadow-sm">
-                                                                <option>{seg.airline}</option>
-                                                            </select>
-                                                            <div className="text-[12px] font-bold text-slate-400 mt-2 cursor-pointer hover:text-slate-600">+ add technical stop</div>
-                                                        </div>
-                                                        <div className="flex gap-4">
-                                                            <div className="flex-1">
-                                                                <label className="text-[12px] font-bold text-slate-500 mb-1 block">Flight number</label>
-                                                                <input type="text" className="w-full border border-slate-200 rounded-lg p-3 font-bold tracking-widest text-slate-400 outline-none shadow-sm" placeholder="- - - -" />
+
+                                                        {/* RIGHT: arrival */}
+                                                        <div className="flex-1 space-y-5">
+                                                            <div className="flex gap-3">
+                                                                <div className="flex-1">
+                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Airport</label>
+                                                                    <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 font-semibold text-slate-500 outline-none shadow-sm text-[14px]" value={`${seg.toCode} (${seg.toCity})`} readOnly />
+                                                                </div>
+                                                                <div className="w-[130px] shrink-0">
+                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">{seg.toCode} local time</label>
+                                                                    <div className="border border-slate-200 rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-sm">
+                                                                        <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+                                                                        <input type="text" className="w-full font-bold text-slate-700 outline-none bg-transparent text-[14px]" value={seg.toTime} onChange={(e) => updateSegment(seg.id, 'toTime', e.target.value)} />
+                                                                    </div>
+                                                                    <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                                                                        <input type="checkbox" checked={!!seg.plusOneDay} onChange={(e) => updateSegment(seg.id, 'plusOneDay', e.target.checked)} className="w-4 h-4 rounded border-slate-300 accent-[#D60D26] cursor-pointer" />
+                                                                        <span className="text-[12px] font-bold text-slate-600">+1 day</span>
+                                                                    </label>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex-1">
-                                                                <label className="text-[12px] font-bold text-slate-500 mb-1 block">Terminal</label>
-                                                                <select className="w-full border border-slate-200 rounded-lg p-3 font-bold text-slate-700 appearance-none bg-white outline-none shadow-sm" value={seg.fromTerminal} onChange={(e) => updateSegment(seg.id, 'fromTerminal', e.target.value)}>
-                                                                    <option>Terminal 1</option>
-                                                                    <option>Terminal 2</option>
-                                                                    <option>Terminal 3</option>
+                                                            <div>
+                                                                <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Terminal</label>
+                                                                <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 appearance-none bg-white outline-none shadow-sm text-[14px]" value={seg.toTerminal} onChange={(e) => updateSegment(seg.id, 'toTerminal', e.target.value)}>
+                                                                    {TERMINAL_OPTIONS.map((terminal) => (
+                                                                        <option key={terminal}>{terminal}</option>
+                                                                    ))}
                                                                 </select>
                                                             </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Right Form */}
-                                                    <div className="flex-1 space-y-6">
-                                                        <div className="flex gap-4">
-                                                            <div className="flex-1">
-                                                                <label className="text-[12px] font-bold text-slate-500 mb-1 block">Airport</label>
-                                                                <input type="text" className="w-full border border-slate-200 rounded-lg p-3 bg-slate-50 font-bold text-slate-500 outline-none shadow-sm" value={`${seg.toCode} (${seg.toCity})`} readOnly />
+                                                            <div>
+                                                                {isConfirmable ? (
+                                                                    <div className="space-y-2">
+                                                                        <div className="text-[12px] font-bold text-blue-500 flex items-center gap-1.5">
+                                                                            <Clock className="w-3.5 h-3.5" /> Calculated flight duration : <span className="text-blue-600">{calculatedDuration}</span>
+                                                                        </div>
+                                                                        <button onClick={() => setSegments(segments.map(s => s.id === seg.id ? { ...s, isEditing: false, duration: calculatedDuration } : s))} className="w-full bg-green-50 text-green-600 border border-green-100 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-[14px] hover:bg-green-100 transition-colors">
+                                                                            <Check className="w-4 h-4" /> Confirm segment
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="space-y-2">
+                                                                        <div className="text-[12px] font-bold text-amber-500">It seems that the arrival is the day after. Just click on <span className="underline cursor-pointer" onClick={() => updateSegment(seg.id, 'plusOneDay', true)}>+1 day to correct it</span></div>
+                                                                        <button className="w-full bg-slate-100 text-slate-400 font-bold py-3.5 rounded-xl text-[14px] cursor-not-allowed">Confirm segment</button>
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                            <div className="w-32">
-                                                                <label className="text-[12px] font-bold text-slate-500 mb-1 block">{seg.toCode} local time</label>
-                                                                <div className="border border-slate-200 rounded-lg p-3 flex items-center gap-2 shadow-sm">
-                                                                    <Clock className="w-4 h-4 text-slate-500" />
-                                                                    <input type="text" className="w-full font-bold text-slate-700 outline-none bg-transparent" value={seg.toTime} onChange={(e) => updateSegment(seg.id, 'toTime', e.target.value)} />
-                                                                </div>
-                                                                <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                                                                    <div className={`w-4 h-4 rounded flex items-center justify-center transition-colors ${isSegmentConfirmed ? 'bg-[#D60D26]' : 'border border-slate-300 bg-white'}`}>
-                                                                        {isSegmentConfirmed && <Check className="w-3 h-3 text-white" />}
-                                                                    </div>
-                                                                    <span className="text-[12px] font-bold text-slate-600">+1 day</span>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-[12px] font-bold text-slate-500 mb-1 block">Terminal</label>
-                                                            <select className="w-full border border-slate-200 rounded-lg p-3 font-bold text-slate-700 appearance-none bg-white outline-none shadow-sm" value={seg.toTerminal} onChange={(e) => updateSegment(seg.id, 'toTerminal', e.target.value)}>
-                                                                <option>Terminal 1</option>
-                                                                <option>Terminal 2</option>
-                                                                <option>Terminal 3</option>
-                                                                <option>Bangkok main terminal</option>
-                                                            </select>
-                                                        </div>
-                                                        <div className="pt-2">
-                                                            {isSegmentConfirmed ? (
-                                                                <div className="flex flex-col gap-2">
-                                                                    <div className="text-[12px] font-bold text-blue-600 flex items-center gap-1.5">
-                                                                        <Clock className="w-3.5 h-3.5" /> Calculated flight duration : {seg.duration}
-                                                                    </div>
-                                                                    <button onClick={() => updateSegment(seg.id, 'isEditing', false)} className="w-full bg-green-50 text-green-600 border border-green-200 font-bold py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                                                                        <Check className="w-4 h-4" /> Confirm segment
-                                                                    </button>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="flex flex-col gap-2">
-                                                                    <div className="text-[12px] font-bold text-amber-500 flex flex-col leading-tight">
-                                                                        <span>It seems that the arrival is the day after. Just click on</span>
-                                                                        <span className="underline">+ 1 day to correct it</span>
-                                                                    </div>
-                                                                    <button onClick={() => setIsSegmentConfirmed(true)} className="w-full bg-slate-100 text-slate-400 font-bold py-3.5 rounded-lg hover:bg-slate-200 transition-colors">
-                                                                        Confirm segment
-                                                                    </button>
-                                                                </div>
-                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ) : (
-                                            <div key={seg.id} className="flex flex-col shrink-0 animate-in fade-in zoom-in-95 duration-300">
-                                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-[350px] flex flex-col">
-                                                    <div className="p-5 flex-1">
-                                                        <div className="flex items-center justify-between mb-6">
-                                                            <div className="w-4 h-4 rounded-full border-[3px] border-slate-800 bg-white relative z-10"></div>
-                                                            <div className="flex-1 border-t-[2px] border-dashed border-slate-300 mx-2"></div>
-                                                            <Plane className="w-5 h-5 text-slate-400 rotate-45 relative z-10" />
-                                                            <div className="flex-1 border-t-[2px] border-dashed border-slate-300 mx-2"></div>
-                                                            {index === segments.length - 1 ? (
-                                                                <div className="relative z-10 flex items-center justify-center w-5 h-5 bg-white border-2 border-slate-800 rounded-full">
-                                                                    <svg className="w-2.5 h-2.5 text-slate-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="w-4 h-4 rounded-full bg-slate-800 relative z-10"></div>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex justify-between items-start text-center">
-                                                            <div className="flex flex-col items-center flex-1">
-                                                                <div className="font-bold text-slate-800 text-[14px] whitespace-nowrap">{seg.fromCity}, {seg.fromCode}</div>
-                                                                <div className="text-[12px] text-slate-400 mb-2">{seg.fromTerminal}</div>
-                                                                <div className="border border-slate-200 rounded px-2 py-1 text-[13px] font-bold text-slate-700">{seg.fromTime}</div>
-                                                            </div>
-                                                            
-                                                            <div className="flex flex-col items-center justify-start flex-1 px-2">
-                                                                <div className="w-8 h-8 bg-[#D60D26] rounded mb-2 flex items-center justify-center">
-                                                                    <div className="w-4 h-4 border-t-2 border-r-2 border-white rounded-tr-full transform -rotate-45 mt-1 mr-1"></div>
-                                                                </div>
-                                                                <div className="text-[11px] text-slate-600 font-bold whitespace-nowrap">{seg.airline}</div>
-                                                                <div className="text-[12px] text-blue-600 font-bold mt-1 flex items-center gap-1">
-                                                                    <Clock className="w-3 h-3" /> {seg.duration}
-                                                                </div>
-                                                            </div>
+                                            );
+                                        }
 
-                                                            <div className="flex flex-col items-center flex-1">
-                                                                <div className="font-bold text-slate-800 text-[14px] whitespace-nowrap">{seg.toCity}, {seg.toCode}</div>
+                                        /* ══ CONFIRMED: portrait card, fixed 420px ══ */
+                                        return (
+                                            <div key={seg.id} className="w-[420px] shrink-0 flex flex-col animate-in fade-in duration-300">
+                                                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                                    {/* Timeline bar */}
+                                                    <div className="flex items-center px-5 pt-5 pb-2 relative">
+                                                        <div className="absolute left-5 right-5 top-[calc(1.25rem+10px)] border-t-2 border-dashed border-slate-300 z-0"></div>
+                                                        <div className="w-4 h-4 rounded-full border-[3px] border-slate-800 bg-white relative z-10 shrink-0"></div>
+                                                        <div className="flex-1"></div>
+                                                        <Plane className="w-5 h-5 text-slate-400 relative z-10 bg-white shrink-0" />
+                                                        <div className="flex-1"></div>
+                                                        {index === segments.length - 1 ? (
+                                                            <div className="relative z-10 flex items-center justify-center w-5 h-5 bg-white border-2 border-slate-800 rounded-full shrink-0">
+                                                                <svg className="w-2.5 h-2.5 text-slate-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="w-4 h-4 rounded-full bg-slate-800 relative z-10 shrink-0"></div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Card body */}
+                                                    <div className="px-5 pb-3">
+                                                        <div className="flex justify-between items-start">
+                                                            <div>
+                                                                <div className="font-bold text-slate-800 text-[14px]">{seg.fromCity}, {seg.fromCode}</div>
+                                                                <div className="text-[12px] text-slate-400 mb-2">{seg.fromTerminal}</div>
+                                                                <div className="border border-slate-200 rounded-lg px-2.5 py-1 text-[13px] font-bold text-slate-700 inline-block">{seg.fromTime}</div>
+                                                            </div>
+                                                            <div className="flex flex-col items-center px-2 mt-1">
+                                                                <div className="w-9 h-9 bg-[#D60D26] rounded-xl mb-1 flex items-center justify-center shrink-0">
+                                                                    <Plane className="w-5 h-5 text-white" />
+                                                                </div>
+                                                                <div className="text-[11px] text-slate-600 font-bold text-center">{seg.airlineName || "–"} ({seg.airlineCode} {seg.flightNumber})</div>
+                                                                <div className="text-[12px] text-blue-500 font-bold mt-0.5 flex items-center gap-1"><Clock className="w-3 h-3" />{seg.duration}</div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="font-bold text-slate-800 text-[14px]">{seg.toCity}, {seg.toCode}</div>
                                                                 <div className="text-[12px] text-slate-400 mb-2">{seg.toTerminal}</div>
-                                                                <div className="border border-slate-200 rounded px-2 py-1 text-[13px] font-bold text-slate-700">{seg.toTime}</div>
+                                                                <div className="border border-slate-200 rounded-lg px-2.5 py-1 text-[13px] font-bold text-slate-700 inline-block">{seg.toTime}{seg.plusOneDay && <span className="text-[#D60D26] ml-1 text-[11px]">+1</span>}</div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <button 
-                                                        onClick={() => updateSegment(seg.id, 'isEditing', true)}
-                                                        className="w-full bg-slate-100 text-slate-500 text-[13px] font-bold py-2.5 border-t border-slate-200 hover:bg-slate-200 transition-colors rounded-b-xl"
-                                                    >
+
+                                                    <button onClick={() => updateSegment(seg.id, 'isEditing', true)} className="w-full bg-slate-50 text-slate-500 text-[13px] font-bold py-3 border-t border-slate-200 hover:bg-slate-100 transition-colors">
                                                         Edit segment
                                                     </button>
                                                 </div>
 
-                                                {/* Below Card Details */}
-                                                {index === 0 && segments.length > 1 && (
-                                                    <div className="mt-2 bg-rose-50 rounded-lg p-3 flex justify-between items-center w-full">
-                                                        <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5">
-                                                            <Clock className="w-4 h-4" /> Layover 02 h 15 min
-                                                        </div>
-                                                        <button className="text-[12px] font-bold text-slate-600 flex items-center gap-1 hover:text-[#D60D26] transition-colors">
-                                                            <Trash2 className="w-4 h-4" /> Delete stop
-                                                        </button>
+                                                {/* Below-card badges */}
+                                                {index < segments.length - 1 && (
+                                                    <div className="mt-2 bg-rose-50 border border-rose-100 rounded-xl px-4 py-2.5 flex justify-between items-center">
+                                                        <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5"><Clock className="w-4 h-4" /> Layover 02 h 15 min</div>
+                                                        <button onClick={handleDeleteStop} className="text-[12px] font-bold text-slate-500 flex items-center gap-1 hover:text-[#D60D26] transition-colors"><Trash2 className="w-3.5 h-3.5" /> Delete stop</button>
                                                     </div>
                                                 )}
                                                 {index === segments.length - 1 && segments.length > 1 && (
-                                                    <div className="mt-2 bg-rose-50 rounded-lg p-3 flex justify-between items-center w-full">
-                                                        <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5">
-                                                            <Clock className="w-4 h-4" /> Total journey destination 10 h 30 min
-                                                        </div>
+                                                    <div className="mt-2 bg-rose-50 border border-rose-100 rounded-xl px-4 py-2.5">
+                                                        <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5"><Clock className="w-4 h-4" /> Total journey destination {calculatedDuration}</div>
                                                     </div>
                                                 )}
                                             </div>
-                                        )
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
 
@@ -738,13 +1223,14 @@ export default function AddPNRPage() {
                                                 <div className="flex-1">
                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Price (INR)</label>
                                                     <div className="relative">
-                                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium">â‚¹</span>
+                                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium">Rs</span>
                                                         <input 
                                                             type="text" 
                                                             placeholder="00.00"
                                                             value={baggagePrice}
                                                             onChange={(e) => setBaggagePrice(e.target.value)}
-                                                            className="w-full border border-slate-200 rounded-lg p-3.5 pl-8 text-slate-700 font-medium outline-none shadow-sm"
+                                                            disabled={isFreeBaggage}
+                                                            className={`w-full border border-slate-200 rounded-lg p-3.5 pl-8 text-slate-700 font-medium outline-none shadow-sm ${isFreeBaggage ? "bg-slate-100 cursor-not-allowed" : ""}`}
                                                         />
                                                     </div>
                                                 </div>
@@ -792,7 +1278,7 @@ export default function AddPNRPage() {
                                                 <div className="flex-1">
                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Ticket Price (INR)</label>
                                                     <div className="relative">
-                                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium">â‚¹</span>
+                                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium">Rs</span>
                                                         <input 
                                                             type="text" 
                                                             placeholder="00.00"
@@ -803,6 +1289,15 @@ export default function AddPNRPage() {
                                                     </div>
                                                 </div>
                                             </div>
+                                            <label className="mt-5 flex items-center gap-2.5 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isRefundable}
+                                                    onChange={(e) => setIsRefundable(e.target.checked)}
+                                                    className="h-5 w-5 rounded border-slate-300 accent-[#D60D26] cursor-pointer"
+                                                />
+                                                <span className="text-[14px] font-bold text-slate-600 select-none">Fare is refundable</span>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
@@ -815,26 +1310,36 @@ export default function AddPNRPage() {
                                             Operating dates
                                         </div>
                                         <div className="flex flex-col">
-                                            <div className="bg-[#F2FBFF] px-6 py-2.5 text-[13px] font-bold text-slate-600">October 2025</div>
-                                            <div className="p-6 flex flex-wrap gap-4">
-                                                {[9, 16, 23, 30].map(day => (
-                                                    <div key={day} className="bg-rose-50 rounded-lg p-3 flex flex-col items-center gap-2.5 cursor-pointer border border-rose-100 w-16 hover:bg-rose-100 transition-colors">
-                                                        <span className="text-[12px] font-bold text-slate-800">Sun {day}</span>
-                                                        <div className="w-[22px] h-[22px] bg-[#D60D26] rounded shadow-sm flex items-center justify-center">
-                                                            <Check className="w-3.5 h-3.5 text-white" />
+                                            {Object.keys(operatingDateGroups).length === 0 ? (
+                                                <div className="p-6 text-sm font-medium text-slate-500">
+                                                    Pick a departure date first to generate operating dates.
+                                                </div>
+                                            ) : (
+                                                Object.entries(operatingDateGroups).map(([monthLabel, dates]) => (
+                                                    <div key={monthLabel}>
+                                                        <div className="bg-[#F2FBFF] px-6 py-2.5 text-[13px] font-bold text-slate-600">{monthLabel}</div>
+                                                        <div className="p-6 flex flex-wrap gap-4">
+                                                            {dates.map((dateStr) => {
+                                                                const isChecked = selectedOperatingDates.includes(dateStr);
+                                                                return (
+                                                                    <div
+                                                                        key={dateStr}
+                                                                        onClick={() => toggleOperatingDate(dateStr)}
+                                                                        className="bg-rose-50 rounded-lg p-3 flex flex-col items-center gap-2.5 cursor-pointer border border-rose-100 w-20 hover:bg-rose-100 transition-colors"
+                                                                    >
+                                                                        <span className="text-[12px] font-bold text-slate-800">
+                                                                            {formatDateLabel(dateStr, { weekday: "short", day: "numeric" })}
+                                                                        </span>
+                                                                        <div className={`w-[22px] h-[22px] rounded shadow-sm flex items-center justify-center ${isChecked ? "bg-[#D60D26]" : "border border-slate-300 bg-white"}`}>
+                                                                            {isChecked && <Check className="w-3.5 h-3.5 text-white" />}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
                                                         </div>
                                                     </div>
-                                                ))}
-                                            </div>
-                                            <div className="bg-[#F2FBFF] px-6 py-2.5 text-[13px] font-bold text-slate-600">November 2025</div>
-                                            <div className="p-6 flex flex-wrap gap-4">
-                                                <div className="bg-rose-50 rounded-lg p-3 flex flex-col items-center gap-2.5 cursor-pointer border border-rose-100 w-16 hover:bg-rose-100 transition-colors">
-                                                    <span className="text-[12px] font-bold text-slate-800">Sun 2</span>
-                                                    <div className="w-[22px] h-[22px] bg-[#D60D26] rounded shadow-sm flex items-center justify-center">
-                                                        <Check className="w-3.5 h-3.5 text-white" />
-                                                    </div>
-                                                </div>
-                                            </div>
+                                                ))
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -847,29 +1352,46 @@ export default function AddPNRPage() {
                                             Policies / Terms & Conditions
                                         </div>
                                         <div className="p-6 flex flex-col gap-4">
-                                            <div className="flex items-center justify-between border-l-4 border-slate-800 bg-slate-50 p-4 rounded-r-lg shadow-sm">
-                                                <div className="flex items-center gap-3 font-bold text-[14px] text-slate-700">
-                                                    <div className="w-6 h-6 flex items-center justify-center border border-slate-400 rounded">
-                                                        <X className="w-3 h-3 text-slate-600" />
+                                            {POLICY_FIELDS.map((policy) => {
+                                                const hasValue = Boolean(policyTexts[policy.key].trim());
+                                                const isOpen = openPolicies.includes(policy.key);
+
+                                                return (
+                                                    <div key={policy.key} className="border-l-4 border-slate-800 bg-slate-50 p-4 rounded-r-lg shadow-sm">
+                                                        <div className="flex items-center justify-between gap-4">
+                                                            <div className="font-bold text-[14px] text-slate-700">
+                                                                {policy.label}
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => togglePolicyEditor(policy.key)}
+                                                                className="text-[#D60D26] font-bold text-[13px] flex items-center gap-1 hover:text-[#30060F]"
+                                                            >
+                                                                <div className="w-4 h-4 bg-[#D60D26] text-white rounded-full flex items-center justify-center text-[16px] leading-none pb-0.5">
+                                                                    {isOpen ? "-" : "+"}
+                                                                </div>
+                                                                {hasValue ? (isOpen ? "Hide" : "Edit") : "Add"}
+                                                            </button>
+                                                        </div>
+                                                        {isOpen && (
+                                                            <textarea
+                                                                value={policyTexts[policy.key]}
+                                                                onChange={(e) => setPolicyTexts((currentPolicies) => ({
+                                                                    ...currentPolicies,
+                                                                    [policy.key]: e.target.value,
+                                                                }))}
+                                                                placeholder={policy.placeholder}
+                                                                className="mt-3 min-h-[96px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none shadow-sm"
+                                                            />
+                                                        )}
+                                                        {hasValue && !isOpen && (
+                                                            <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+                                                                {policyTexts[policy.key]}
+                                                            </p>
+                                                        )}
                                                     </div>
-                                                    Cancellation policy
-                                                </div>
-                                                <button className="text-[#D60D26] font-bold text-[13px] flex items-center gap-1 hover:text-[#30060F]"><div className="w-4 h-4 bg-[#D60D26] text-white rounded-full flex items-center justify-center text-[16px] leading-none pb-0.5">+</div> Add</button>
-                                            </div>
-                                            <div className="flex items-center justify-between border-l-4 border-slate-800 bg-slate-50 p-4 rounded-r-lg shadow-sm">
-                                                <div className="flex items-center gap-3 font-bold text-[14px] text-slate-700">
-                                                    <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                                                    Change policy
-                                                </div>
-                                                <button className="text-[#D60D26] font-bold text-[13px] flex items-center gap-1 hover:text-[#30060F]"><div className="w-4 h-4 bg-[#D60D26] text-white rounded-full flex items-center justify-center text-[16px] leading-none pb-0.5">+</div> Add</button>
-                                            </div>
-                                            <div className="flex items-center justify-between border-l-4 border-slate-800 bg-slate-50 p-4 rounded-r-lg shadow-sm">
-                                                <div className="flex items-center gap-3 font-bold text-[14px] text-slate-700">
-                                                    <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                    Refund policy
-                                                </div>
-                                                <button className="text-[#D60D26] font-bold text-[13px] flex items-center gap-1 hover:text-[#30060F]"><div className="w-4 h-4 bg-[#D60D26] text-white rounded-full flex items-center justify-center text-[16px] leading-none pb-0.5">+</div> Add</button>
-                                            </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 </div>
@@ -888,15 +1410,25 @@ export default function AddPNRPage() {
                                 onClick={() => {
                                     if (modalTab < 5) {
                                         setModalTab(modalTab + 1);
-                                    } else {
+                                    } else if (!hasUnconfirmedSegments) {
                                         setIsConfirmModalOpen(true);
                                     }
                                 }}
-                                className={`flex-1 w-full text-white font-bold py-3.5 sm:py-4 text-[14px] sm:text-[16px] rounded-xl transition-colors flex items-center justify-center gap-1 sm:gap-2 shadow-md bg-[#D60D26] hover:bg-[#30060F]`}
+                                disabled={modalTab === 5 && hasUnconfirmedSegments}
+                                className={`flex-1 w-full text-white font-bold py-3.5 sm:py-4 text-[14px] sm:text-[16px] rounded-xl transition-colors flex items-center justify-center gap-1 sm:gap-2 shadow-md ${
+                                    modalTab === 5 && hasUnconfirmedSegments
+                                        ? "bg-[#FFA8B3] cursor-not-allowed"
+                                        : "bg-[#D60D26] hover:bg-[#30060F]"
+                                }`}
                             >
                                 {modalTab === 5 ? "Finish" : "Next Step"} {modalTab < 5 && <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />}
                             </button>
                         </div>
+                        {hasUnconfirmedSegments && (
+                            <div className="px-6 pb-5 text-sm font-medium text-amber-600 bg-slate-50">
+                                Confirm the segment in 1. Flight detail before finishing this flight.
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -909,13 +1441,20 @@ export default function AddPNRPage() {
                             Confirm this flight
                         </div>
                         <div className="p-8 pb-12 flex items-start gap-4">
-                            <div className="w-6 h-6 bg-[#D60D26] rounded flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                                <Check className="w-4 h-4 text-white" />
-                            </div>
-                            <div>
-                                <div className="font-bold text-[16px] text-slate-800 mb-1.5">Flight requires APIS</div>
-                                <div className="text-[14px] text-slate-500 font-medium">Passenger information found on the face of a passport</div>
-                            </div>
+                            <label className="flex items-start gap-4 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={requiresApis}
+                                    onChange={(e) => setRequiresApis(e.target.checked)}
+                                    className="mt-1 h-5 w-5 rounded border-slate-300 accent-[#D60D26] cursor-pointer"
+                                />
+                                <div>
+                                    <div className="font-bold text-[16px] text-slate-800 mb-1.5">Flight requires APIS</div>
+                                    <div className="text-[14px] text-slate-500 font-medium">
+                                        Turn this on only if the passenger must provide passport-face information.
+                                    </div>
+                                </div>
+                            </label>
                         </div>
                         <div className="p-6 border-t border-slate-100 flex items-center justify-between gap-4 bg-slate-50/50">
                             <button 

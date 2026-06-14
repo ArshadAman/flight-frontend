@@ -93,9 +93,11 @@ export default function BookingDetailsPage({ params }: PageProps) {
                     }
                 });
                 if (response.ok) {
-                    const data = await response.json();
-                    console.log("[BookingDetails Page] Direct UUID ticket lookup succeeded. Ticket data:", data);
-                    setTicket(data);
+                    const payload = await response.json();
+                    // Unwrap { success, message, data: {...} } envelope
+                    const ticketData = payload?.data && !Array.isArray(payload.data) ? payload.data : payload;
+                    console.log("[BookingDetails Page] Direct UUID ticket lookup succeeded.");
+                    setTicket(ticketData);
                     return;
                 } else {
                     console.warn("[BookingDetails Page] Direct UUID ticket lookup failed with status:", response.status);
@@ -110,15 +112,20 @@ export default function BookingDetailsPage({ params }: PageProps) {
                 }
             });
             if (listResponse.ok) {
-                const listData = await listResponse.json();
-                const tickets = listData.results || listData;
-                const matched = tickets.find((t: any) => 
+                const listPayload = await listResponse.json();
+                // Unwrap { success, message, data: [...] } envelope
+                const ticketList = Array.isArray(listPayload)
+                    ? listPayload
+                    : Array.isArray(listPayload?.data)
+                    ? listPayload.data
+                    : (listPayload?.results ?? []);
+                const matched = ticketList.find((t: any) => 
                     t.id === id || 
                     t.pnr_number === id || 
                     t.ticket_number === id
                 );
                 if (matched) {
-                    console.log("[BookingDetails Page] Found matched ticket in backend list search. Ticket data:", matched);
+                    console.log("[BookingDetails Page] Found matched ticket in backend list search.");
                     setTicket(matched);
                 } else {
                     console.log("[BookingDetails Page] No matched ticket found in backend list search.");

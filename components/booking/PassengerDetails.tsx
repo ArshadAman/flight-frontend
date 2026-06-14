@@ -1,7 +1,7 @@
 export function PassengerDetails({ ticket }: { ticket?: any }) {
   const hasLivePassengers = ticket && ticket.passengers_data && ticket.passengers_data.length > 0;
-  const displayTicketPnr = ticket?.ticket_number || "XYR9NF";
-  const displayPnr = ticket?.pnr_number || "XYR9NF";
+  const displayTicketPnr = ticket?.status === "PENDING" ? "PENDING" : (ticket?.ticket_number || "XYR9NF");
+  const displayPnr = ticket?.status === "PENDING" ? "PENDING" : (ticket?.pnr_number || "XYR9NF");
 
   let passengers = [
     { no: 1, title: "MR", firstName: "HARSHIT", lastName: "CHIRGANIA", type: "Adult", eticket: "079176412201", airlinePnr: "AYDAE6" },

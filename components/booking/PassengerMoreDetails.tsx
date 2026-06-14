@@ -151,7 +151,7 @@ function getMockSSRData(ticket: any, segments: any[]) {
 
 export function PassengerMoreDetails({ ticket }: { ticket?: any }) {
   const hasLivePassengers = ticket && ticket.passengers_data && ticket.passengers_data.length > 0;
-  const displayTicketPnr = ticket?.pnr_number || ticket?.ticket_number || "XYR9NF";
+  const displayTicketPnr = ticket?.status === "PENDING" ? "PENDING" : (ticket?.pnr_number || ticket?.ticket_number || "XYR9NF");
   const checkinBaggage = ticket?.baggage_check_in || "25Kg";
 
   const [ssrDetails, setSsrDetails] = useState<any[]>([]);

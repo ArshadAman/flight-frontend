@@ -130,3 +130,23 @@
     @apply bg-background text-foreground overflow-x-hidden w-full max-w-full;
   }
 }
+
+/* Custom premium scrollbar for horizontal scrolling */
+.custom-horizontal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(214, 13, 38, 0.4) transparent;
+}
+.custom-horizontal-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+.custom-horizontal-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+.custom-horizontal-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(214, 13, 38, 0.3);
+  border-radius: 9999px;
+}
+.custom-horizontal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(214, 13, 38, 0.6);
+}

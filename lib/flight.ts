@@ -143,4 +143,6 @@ export type Flight = {
   fare_id?: string;
   travel_date?: string;
   leg?: "outbound" | "return";
+  is_agent_flight?: boolean;
+  agent_flight_id?: string;
 };

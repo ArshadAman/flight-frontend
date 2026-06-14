@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { HeroBanner } from "@/components/HeroBanner";
-import { Plane, Trash2, Clock, ChevronRight } from "lucide-react";
+import { Plane, Clock, ChevronRight, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { fetchWithAuth } from "@/lib/api";
 
+// ─── Status config ────────────────────────────────────────────────────────────
 const statusConfig: Record<string, { label: string; dot: string; badge: string }> = {
     CONFIRMED: {
         label: "Confirmed",
@@ -31,242 +33,331 @@ const statusConfig: Record<string, { label: string; dot: string; badge: string }
     },
 };
 
-const BookingCard = ({
-    bookingNo,
-    date,
-    from,
-    fromCode,
-    to,
-    toCode,
-    terminal,
-    flight,
-    price,
-    passengers,
-    status,
-}: {
-    bookingNo: string;
-    date: string;
-    from: string;
-    fromCode: string;
-    to: string;
-    toCode: string;
-    terminal: string;
-    flight: string;
-    price: string;
-    passengers: Array<{ name: string, age: number }>;
-    status?: string;
-}) => {
-    const cfg = statusConfig[status?.toUpperCase() || "CONFIRMED"] || statusConfig["CONFIRMED"];
+// ─── API ticket shape (matches backend TicketSerializer) ──────────────────────
+type ApiTicket = {
+    id: string;
+    user: string;
+    pnr_number: string | null;
+    ticket_number: string | null;
+    booking_ref: string | null;
+    flight_id: string | null;
+    status: "CONFIRMED" | "CANCELLED" | "PENDING" | "FAILED";
+    origin: string;
+    destination: string;
+    departure_datetime: string;
+    arrival_datetime: string;
+    travel_type: number;
+    airline_code: string;
+    airline_name: string | null;
+    flight_number: string;
+    cabin_class: string | null;
+    basic_amount: string;
+    tax_amount: string;
+    total_amount: string;
+    currency: string;
+    baggage_check_in: string | null;
+    baggage_hand: string | null;
+    is_refundable: boolean;
+    food_onboard: string | null;
+    segments_data: Array<{
+        origin: string;
+        destination: string;
+        origin_city?: string;
+        destination_city?: string;
+        departure_datetime: string;
+        arrival_datetime: string;
+        duration?: string;
+        airline_name?: string;
+        flight_number?: string;
+        origin_terminal?: string;
+        destination_terminal?: string;
+    }>;
+    passengers_data: Array<{
+        title?: string;
+        first_name?: string;
+        last_name?: string;
+        dob?: string | null;
+        gender?: string;
+    }>;
+    ssr_data: Record<string, unknown>;
+    cancellation_data: Record<string, unknown>;
+    created_at: string;
+    updated_at: string;
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function formatDate(iso: string) {
+    try {
+        return new Date(iso).toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        });
+    } catch {
+        return iso;
+    }
+}
+
+function formatTime(iso: string) {
+    try {
+        return new Date(iso).toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+        });
+    } catch {
+        return "—";
+    }
+}
+
+function formatCurrency(amount: string, currency: string) {
+    const num = parseFloat(amount);
+    if (isNaN(num)) return amount;
+    return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: currency || "INR",
+        maximumFractionDigits: 0,
+    }).format(num);
+}
+
+function calcDuration(dep: string, arr: string) {
+    try {
+        const diff = new Date(arr).getTime() - new Date(dep).getTime();
+        if (diff <= 0) return "";
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        return `${h}h ${m}m`;
+    } catch {
+        return "";
+    }
+}
+
+function passengerAge(dob: string | null | undefined) {
+    if (!dob) return null;
+    try {
+        const diff = Date.now() - new Date(dob).getTime();
+        return Math.floor(diff / (365.25 * 24 * 3600000));
+    } catch {
+        return null;
+    }
+}
+
+// ─── Ticket card ──────────────────────────────────────────────────────────────
+function TicketCard({ ticket }: { ticket: ApiTicket }) {
+    const cfg = statusConfig[ticket.status] || statusConfig["CONFIRMED"];
+    const duration = calcDuration(ticket.departure_datetime, ticket.arrival_datetime);
+    const passengers = ticket.passengers_data ?? [];
+
     return (
-    <div className="bg-white rounded-[1.5rem] shadow-sm border border-rose-50 overflow-hidden mb-8">
-        {/* Card Header */}
-        <div className="bg-[#fff5f6] px-8 py-5 flex justify-between items-center border-b border-rose-100">
-            <div className="flex items-center gap-6 text-[15px] font-[600] text-gray-400 tracking-wide flex-wrap">
-                <div className="flex items-center gap-2">
-                    <Plane className="w-5 h-5 text-primary rotate-45" />
-                    <span>Booking No. <b className="text-gray-700 tracking-tighter ml-1">{bookingNo}</b></span>
+        <div className="bg-white rounded-[1.5rem] shadow-sm border border-rose-50 overflow-hidden mb-8">
+            {/* Header */}
+            <div className="bg-[#fff5f6] px-8 py-5 flex justify-between items-center border-b border-rose-100 flex-wrap gap-3">
+                <div className="flex items-center gap-5 flex-wrap text-[15px] font-[600] text-gray-400 tracking-wide">
+                    <div className="flex items-center gap-2">
+                        <Plane className="w-5 h-5 text-primary rotate-45" />
+                        <span>
+                            Booking Ref:{" "}
+                            <b className="text-gray-700 tracking-tighter ml-1">
+                                {ticket.booking_ref || ticket.ticket_number || ticket.id.slice(0, 8).toUpperCase()}
+                            </b>
+                        </span>
+                    </div>
+                    {ticket.pnr_number && (
+                        <span>
+                            PNR: <b className="text-gray-700 tracking-tighter ml-1">{ticket.pnr_number}</b>
+                        </span>
+                    )}
+                    <span>
+                        Booked:{" "}
+                        <b className="text-gray-700 tracking-tighter ml-1">{formatDate(ticket.created_at)}</b>
+                    </span>
+                    <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-[800] tracking-tight ${cfg.badge}`}
+                    >
+                        <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                        {cfg.label}
+                    </span>
                 </div>
-                <span>Booking Date: <b className="text-gray-700 tracking-tighter ml-1">{date}</b></span>
-                {/* Status Badge */}
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-[800] tracking-tight ${cfg.badge}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                    {cfg.label}
-                </span>
-            </div>
-            <div className="flex items-center gap-3">
-                <Link href={`/my-booking/${bookingNo}`} className="flex items-center gap-1 text-[14px] font-[700] text-primary hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
+                <Link
+                    href={`/my-booking/${ticket.id}`}
+                    className="flex items-center gap-1 text-[14px] font-[700] text-primary hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
+                >
                     <span>View Details</span>
                     <ChevronRight className="w-[16px] h-[16px]" strokeWidth={3} />
                 </Link>
             </div>
-        </div>
 
-        {/* Card Body */}
-        <div className="p-8 flex flex-col lg:flex-row gap-8">
-            {/* Route Info */}
-            <div className="flex-1 bg-[#f8f9fa] rounded-2xl p-10 flex items-center justify-between relative">
-                <div className="text-center w-[120px]">
-                    <h3 className="text-[22px] font-[800] text-[#1e2329] tracking-tight">{from}, {fromCode}</h3>
-                    <p className="text-[14px] font-[600] text-gray-400 mt-1">Terminal {terminal}</p>
-                    <span className="inline-block mt-4 px-3 py-1 bg-white border border-gray-200 rounded text-[13px] font-[800] text-gray-700">{fromCode === "DEL" ? "23:00" : "10:00"}</span>
-                </div>
-
-                {/* Plane Path Line */}
-                <div className="flex-1 px-4 flex flex-col items-center">
-                    <div className="w-full flex items-center gap-0">
-                        <div className="h-2 w-2 bg-white border-[2px] border-gray-300 rounded-full z-10"></div>
-                        <div className="h-[2px] flex-1 border-t-2 border-dashed border-gray-300"></div>
-                        <Plane className="w-6 h-6 text-gray-400 rotate-90 mx-2 flex-shrink-0" />
-                        <div className="h-[2px] flex-1 border-t-2 border-dashed border-gray-300"></div>
-                        <div className="h-2 w-2 bg-gray-800 rounded-full z-10"></div>
+            {/* Body */}
+            <div className="p-8 flex flex-col lg:flex-row gap-8">
+                {/* Route info */}
+                <div className="flex-1 bg-[#f8f9fa] rounded-2xl p-8 flex items-center justify-between relative">
+                    {/* Origin */}
+                    <div className="text-center min-w-[110px]">
+                        <p className="text-[28px] font-[900] text-[#1e2329] tracking-tight leading-none">
+                            {ticket.origin}
+                        </p>
+                        <p className="text-[13px] font-[600] text-gray-400 mt-1">
+                            {ticket.segments_data?.[0]?.origin_city || ticket.origin}
+                        </p>
+                        <span className="inline-block mt-3 px-3 py-1 bg-white border border-gray-200 rounded text-[13px] font-[800] text-gray-700">
+                            {formatTime(ticket.departure_datetime)}
+                        </span>
+                        <p className="text-[12px] text-gray-400 mt-1">{formatDate(ticket.departure_datetime)}</p>
                     </div>
-                    <div className="mt-6 flex flex-col items-center">
-                        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center mb-2 shadow-sm">
-                            <span className="text-white text-[13px] font-[900] tracking-tighter">AI</span>
-                        </div>
-                        <p className="text-[13px] font-[800] text-gray-700 tracking-tight">{flight}</p>
-                        <div className="flex items-center gap-1.5 text-blue-600 text-[13px] font-[700] mt-1 relative">
-                            <Clock className="w-3.5 h-3.5" strokeWidth={2.5} />
-                            <span>4 hr</span>
-                        </div>
-                    </div>
-                </div>
 
-                <div className="text-center w-[120px]">
-                    <h3 className="text-[22px] font-[800] text-[#1e2329] tracking-tight">{to}, {toCode}</h3>
-                    <p className="text-[14px] font-[600] text-gray-400 mt-1">Terminal {terminal}</p>
-                    <span className="inline-block mt-4 px-3 py-1 bg-white border border-gray-200 rounded text-[13px] font-[800] text-gray-700">{toCode === "DEL" ? "23:00" : "03:00"}</span>
-                </div>
-            </div>
-
-            {/* Payment & Passengers */}
-            <div className="w-full lg:w-[320px] flex flex-col gap-6 pt-2">
-                <div className="flex justify-between items-center px-1">
-                    <span className="text-[16px] font-[600] text-gray-400">Payment:</span>
-                    <span className="text-[22px] font-[800] text-[#1e2329]">₹ {price}</span>
-                </div>
-                <div className="bg-[#f0f2f5] rounded-2xl p-6 flex-1">
-                    <h4 className="font-[750] text-[#1e2329] text-[16px] mb-5 tracking-tight">Passengers: {passengers.length < 10 ? `0${passengers.length}` : passengers.length}</h4>
-                    <div className="space-y-4">
-                        {passengers.map((p, i: number) => (
-                            <div key={i} className="flex justify-between text-[15px] font-[600] text-gray-500">
-                                <span>{p.name}</span>
-                                <span>{p.age}yr</span>
+                    {/* Flight line */}
+                    <div className="flex-1 px-4 flex flex-col items-center">
+                        <div className="w-full flex items-center">
+                            <div className="h-2 w-2 bg-white border-[2px] border-gray-300 rounded-full z-10" />
+                            <div className="h-[2px] flex-1 border-t-2 border-dashed border-gray-300" />
+                            <Plane className="w-6 h-6 text-gray-400 rotate-90 mx-2 flex-shrink-0" />
+                            <div className="h-[2px] flex-1 border-t-2 border-dashed border-gray-300" />
+                            <div className="h-2 w-2 bg-gray-800 rounded-full z-10" />
+                        </div>
+                        <div className="mt-5 flex flex-col items-center">
+                            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center mb-2 shadow-sm">
+                                <span className="text-white text-[12px] font-[900] tracking-tighter">
+                                    {ticket.airline_code}
+                                </span>
                             </div>
-                        ))}
+                            <p className="text-[13px] font-[800] text-gray-700 tracking-tight">
+                                {ticket.airline_name || ticket.airline_code} {ticket.flight_number}
+                            </p>
+                            {duration && (
+                                <div className="flex items-center gap-1.5 text-blue-600 text-[13px] font-[700] mt-1">
+                                    <Clock className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                    <span>{duration}</span>
+                                </div>
+                            )}
+                            {ticket.cabin_class && (
+                                <p className="text-[12px] text-gray-400 mt-0.5">{ticket.cabin_class}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Destination */}
+                    <div className="text-center min-w-[110px]">
+                        <p className="text-[28px] font-[900] text-[#1e2329] tracking-tight leading-none">
+                            {ticket.destination}
+                        </p>
+                        <p className="text-[13px] font-[600] text-gray-400 mt-1">
+                            {ticket.segments_data?.[ticket.segments_data.length - 1]?.destination_city ||
+                                ticket.destination}
+                        </p>
+                        <span className="inline-block mt-3 px-3 py-1 bg-white border border-gray-200 rounded text-[13px] font-[800] text-gray-700">
+                            {formatTime(ticket.arrival_datetime)}
+                        </span>
+                        <p className="text-[12px] text-gray-400 mt-1">{formatDate(ticket.arrival_datetime)}</p>
+                    </div>
+                </div>
+
+                {/* Payment & passengers */}
+                <div className="w-full lg:w-[300px] flex flex-col gap-5 pt-1">
+                    {/* Amount */}
+                    <div className="flex justify-between items-center px-1">
+                        <span className="text-[16px] font-[600] text-gray-400">Total Paid:</span>
+                        <span className="text-[22px] font-[800] text-[#1e2329]">
+                            {formatCurrency(ticket.total_amount, ticket.currency)}
+                        </span>
+                    </div>
+
+                    {/* Baggage pills */}
+                    {(ticket.baggage_check_in || ticket.baggage_hand) && (
+                        <div className="flex gap-2 flex-wrap px-1">
+                            {ticket.baggage_check_in && (
+                                <span className="text-[12px] font-[700] bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full">
+                                    ✈ Check-in: {ticket.baggage_check_in}
+                                </span>
+                            )}
+                            {ticket.baggage_hand && (
+                                <span className="text-[12px] font-[700] bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-1 rounded-full">
+                                    👜 Cabin: {ticket.baggage_hand}
+                                </span>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Passengers */}
+                    <div className="bg-[#f0f2f5] rounded-2xl p-5 flex-1">
+                        <h4 className="font-[750] text-[#1e2329] text-[15px] mb-4 tracking-tight">
+                            Passengers:{" "}
+                            {passengers.length < 10 ? `0${passengers.length}` : passengers.length}
+                        </h4>
+                        <div className="space-y-3">
+                            {passengers.map((p, i) => {
+                                const age = passengerAge(p.dob);
+                                return (
+                                    <div
+                                        key={i}
+                                        className="flex justify-between text-[14px] font-[600] text-gray-500"
+                                    >
+                                        <span>
+                                            {p.title ? `${p.title} ` : ""}
+                                            {p.first_name || ""} {p.last_name || ""}
+                                        </span>
+                                        {age !== null && <span>{age}yr</span>}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
     );
-};
+}
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function MyBooking() {
-    const { user } = useAuth();
-    const [liveBookings, setLiveBookings] = useState<any[]>([]);
+    const { access, refreshAccess } = useAuth();
+    const [tickets, setTickets] = useState<ApiTicket[]>([]);
     const [loading, setLoading] = useState(true);
-
-    const fallbackBookings = [
-        {
-            no: "3124123522421",
-            date: "October 12, 2025",
-            from: "New Delhi", fromCode: "DEL",
-            to: "Bangkok", toCode: "BKK",
-            terminal: "3", flight: "Air India (AI 121)",
-            price: "2,063.00",
-            passengers: [{ name: "Harshit chirgania", age: 23 }, { name: "Vaibhav Arora", age: 43 }]
-        },
-        {
-            no: "3124123522421",
-            date: "October 12, 2025",
-            from: "New Delhi", fromCode: "DEL",
-            to: "Bombay", toCode: "BOM",
-            terminal: "3", flight: "Air India (AI 121)",
-            price: "2,063.00",
-            passengers: [{ name: "Harshit chirgania", age: 23 }, { name: "Vaibhav Arora", age: 43 }]
-        }
-    ];
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchLiveTickets = async () => {
-            const token = localStorage.getItem("access_token") || localStorage.getItem("mock-access-token");
-            if (!token) {
-                console.log("[MyBooking Page] No access token or user session found, loading fallback static bookings.");
-                setLoading(false);
-                return;
-            }
-
-            let apiTickets: any[] = [];
-            try {
-                console.log("[MyBooking Page] Initiating live ticket list fetch from backend API...");
-                const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
-                const response = await fetch(`${apiBase}/tickets/`, {
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    apiTickets = data.results || data;
-                    console.log("[MyBooking Page] Live ticket list fetch succeeded. Received records count:", apiTickets.length);
-                } else {
-                    console.warn("[MyBooking Page] Live ticket list fetch failed with status:", response.status);
-                }
-            } catch (err) {
-                console.warn("[MyBooking Page Warning] Failed to fetch live tickets, merging offline tickets only. Error:", err);
-            }
-
-            // Get offline bookings from localStorage
-            let offlineTickets: any[] = [];
-            try {
-                const stored = localStorage.getItem("offline_bookings");
-                if (stored) {
-                    const parsed = JSON.parse(stored);
-                    // Filter offline bookings by user's email if possible to prevent bleed across accounts
-                    offlineTickets = parsed.filter((t: any) => !t.user_email || t.user_email === user?.email);
-                    console.log("[MyBooking Page] Read offline cached tickets from local storage. Found records count:", offlineTickets.length);
-                }
-            } catch (err) {
-                console.error("[MyBooking Page Error] Failed to parse offline bookings:", err);
-            }
-
-            const allTickets = [...apiTickets, ...offlineTickets];
-            
-            // Deduplicate by PNR or ID
-            const seen = new Set();
-            const uniqueTickets = allTickets.filter((t: any) => {
-                const key = t.pnr_number || t.id;
-                if (seen.has(key)) return false;
-                seen.add(key);
-                return true;
-            });
-
-            // Sort newest first
-            uniqueTickets.sort((a: any, b: any) => {
-                const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-                const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-                return dateB - dateA;
-            });
-
-            const mapped = uniqueTickets.map((ticket: any) => {
-                const createdDate = ticket.created_at ? new Date(ticket.created_at) : new Date();
-                const dateFormatted = createdDate.toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric"
-                });
-
-                const parsedPassengers = (ticket.passengers_data || []).map((p: any) => ({
-                    name: `${p.title || "Mr"} ${p.first_name || ""} ${p.last_name || ""}`.trim(),
-                    age: p.pax_type === 0 ? 30 : p.pax_type === 1 ? 8 : 1
-                }));
-
-                return {
-                    no: ticket.pnr_number || ticket.ticket_number || ticket.id.substring(0, 8).toUpperCase(),
-                    date: dateFormatted,
-                    from: ticket.origin === "DEL" ? "New Delhi" : ticket.origin,
-                    fromCode: ticket.origin,
-                    to: ticket.destination === "BKK" ? "Bangkok" : ticket.destination === "BOM" ? "Mumbai" : ticket.destination,
-                    toCode: ticket.destination,
-                    terminal: "3",
-                    flight: `${ticket.airline_name || "Airline"} (${ticket.airline_code} ${ticket.flight_number})`,
-                    price: parseFloat(ticket.total_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 }),
-                    passengers: parsedPassengers.length > 0 ? parsedPassengers : [{ name: "Passenger Details", age: 25 }],
-                    status: ticket.status || "CONFIRMED",
-                };
-            });
-
-            console.log("[MyBooking Page] Final merged, deduplicated, and mapped bookings lists to render:", mapped);
-            setLiveBookings(mapped);
+        if (!access) {
             setLoading(false);
+            return;
+        }
+
+        const fetchTickets = async () => {
+            try {
+                const apiBase = (
+                    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1"
+                ).replace(/\/$/, "");
+
+                const res = await fetchWithAuth(
+                    `${apiBase}/tickets/`,
+                    { method: "GET" },
+                    () => access,
+                    refreshAccess,
+                );
+
+                if (!res.ok) {
+                    console.warn("[MyBooking] tickets fetch failed:", res.status);
+                    setError(`Failed to load bookings (${res.status}).`);
+                    return;
+                }
+
+                const payload = await res.json();
+                // API wraps in { success, message, data: [...] }
+                const raw = Array.isArray(payload)
+                    ? payload
+                    : Array.isArray(payload?.data)
+                    ? payload.data
+                    : payload?.results ?? [];
+
+                setTickets(raw as ApiTicket[]);
+            } catch (err) {
+                console.error("[MyBooking] fetch error:", err);
+                setError("Something went wrong loading your bookings.");
+            } finally {
+                setLoading(false);
+            }
         };
 
-        fetchLiveTickets();
-    }, [user]);
-
-    const bookingsToRender = liveBookings.length > 0 ? liveBookings : fallbackBookings;
+        fetchTickets();
+    }, [access, refreshAccess]);
 
     return (
         <div className="w-full min-h-screen bg-white flex flex-col font-sans">
@@ -279,7 +370,9 @@ export default function MyBooking() {
                         My booking
                     </h1>
                     <div className="flex items-center text-[15px] font-[600] text-gray-500/80 gap-2">
-                        <Link href="/" className="hover:text-red-700 transition-colors">Home</Link>
+                        <Link href="/" className="hover:text-red-700 transition-colors">
+                            Home
+                        </Link>
                         <span>→</span>
                         <span className="text-gray-600/90">My Booking</span>
                     </div>
@@ -289,40 +382,56 @@ export default function MyBooking() {
             <main className="container mx-auto px-4 sm:px-6 lg:px-12 py-16 flex-1 max-w-[1450px]">
                 <div className="flex justify-between items-center mb-10">
                     <span className="font-[800] text-[18px] text-[#1e2329] tracking-tight">
-                        Showing {bookingsToRender.length < 10 ? `0${bookingsToRender.length}` : bookingsToRender.length}
+                        Showing{" "}
+                        {tickets.length < 10 ? `0${tickets.length}` : tickets.length}
                     </span>
                     <div className="flex items-center gap-3 text-[15px]">
                         <span className="text-gray-400 font-[600]">Sort by</span>
                         <span className="font-[750] text-[#1e2329] flex items-center gap-1 cursor-pointer hover:text-red-600 transition-colors">
-                            Recommended <ChevronRight className="w-4 h-4 rotate-90" strokeWidth={3} />
+                            Newest first{" "}
+                            <ChevronRight className="w-4 h-4 rotate-90" strokeWidth={3} />
                         </span>
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-4 mb-16">
-                    {bookingsToRender.map((b, i) => (
-                        <BookingCard
-                            key={i}
-                            bookingNo={b.no}
-                            date={b.date}
-                            from={b.from}
-                            fromCode={b.fromCode}
-                            to={b.to}
-                            toCode={b.toCode}
-                            terminal={b.terminal}
-                            flight={b.flight}
-                            price={b.price}
-                            passengers={b.passengers}
-                            status={(b as any).status}
-                        />
-                    ))}
-                </div>
-
+                {loading ? (
+                    <div className="mb-16 rounded-2xl border border-rose-100 bg-white p-10 text-center text-gray-500">
+                        <div className="flex items-center justify-center gap-3 text-[16px] font-[600]">
+                            <Plane className="w-5 h-5 text-primary animate-bounce rotate-45" />
+                            Loading your bookings…
+                        </div>
+                    </div>
+                ) : error ? (
+                    <div className="mb-16 rounded-2xl border border-rose-100 bg-white p-10 text-center">
+                        <div className="flex items-center justify-center gap-2 text-rose-600 text-[15px] font-[600]">
+                            <AlertCircle className="w-5 h-5" />
+                            {error}
+                        </div>
+                    </div>
+                ) : !access ? (
+                    <div className="mb-16 rounded-2xl border border-rose-100 bg-white p-10 text-center">
+                        <h3 className="text-[20px] font-[800] text-[#1e2329]">Please log in</h3>
+                        <p className="mt-2 text-[15px] text-gray-500">
+                            Sign in to view your flight bookings.
+                        </p>
+                    </div>
+                ) : tickets.length === 0 ? (
+                    <div className="mb-16 rounded-2xl border border-rose-100 bg-white p-10 text-center">
+                        <h3 className="text-[20px] font-[800] text-[#1e2329]">No bookings found</h3>
+                        <p className="mt-2 text-[15px] text-gray-500">
+                            Once you book a flight, it will appear here.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-4 mb-16">
+                        {tickets.map((ticket) => (
+                            <TicketCard key={ticket.id} ticket={ticket} />
+                        ))}
+                    </div>
+                )}
             </main>
 
-            {/* Dark Airplane Banner Section */}
             <HeroBanner />
-
             <Footer />
         </div>
     );

@@ -1,7 +1,9 @@
 import { Plane, Printer, FileText, Share2, FileDown } from "lucide-react";
 
 export function BookingHeader({ ticket, isB2B = false }: { ticket?: any; isB2B?: boolean }) {
-  const displayPnr = ticket?.pnr_number || "XYR9NF";
+  const displayPnr = ticket?.status === "PENDING"
+    ? `Booking Ref: ${ticket?.booking_ref || (ticket?.id ? ticket.id.slice(0, 8).toUpperCase() : "PENDING")}`
+    : (ticket?.pnr_number || "XYR9NF");
   return (
     <div className="bg-[#FFFFFF] px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-rose-100 gap-4">
       <div className="flex items-center gap-2">

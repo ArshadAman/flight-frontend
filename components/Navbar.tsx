@@ -168,10 +168,19 @@ export function Navbar() {
                     <UserIcon size={24} className="hidden xl:block" />
                   </button>
                   {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50">
                       <div className="px-4 py-2 border-b border-gray-100 mb-2">
                         <p className="font-medium text-gray-900">{user.name}</p>
                         <p className="text-sm text-gray-500">{user.email}</p>
+                        {user.role && (
+                          <span className={`inline-block mt-1 text-[11px] font-[700] px-2 py-0.5 rounded-full ${
+                            user.role === 'AGENT' ? 'bg-slate-100 text-slate-700' :
+                            user.role === 'ADMIN' ? 'bg-red-50 text-red-700' :
+                            'bg-emerald-50 text-emerald-700'
+                          }`}>
+                            {user.role}
+                          </span>
+                        )}
                       </div>
 
                       <Link
@@ -183,16 +192,33 @@ export function Navbar() {
                         My Account
                       </Link>
 
-                      <Link
-                        href="/my-booking"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center"
-                      >
-                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        My Bookings
-                      </Link>
+                      {/* Agent-specific links */}
+                      {user.role === 'AGENT' && (
+                        <Link
+                          href="/agent/dashboard"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                          </svg>
+                          Agent Dashboard
+                        </Link>
+                      )}
+
+                      {/* Customer-specific links */}
+                      {user.role !== 'AGENT' && (
+                        <Link
+                          href="/my-booking"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          My Bookings
+                        </Link>
+                      )}
 
                       <button
                         onClick={() => {
@@ -208,14 +234,16 @@ export function Navbar() {
                   )}
                 </div>
               ) : (
-                <Button
-                  onClick={() => openAuthModal()}
-                  className="text-[16px] xl:text-[22px] rounded-full px-4 xl:px-6 py-[20px] xl:py-[24px] font-[700] tracking-wide shadow-none transition-transform hover:scale-105 active:scale-95 bg-brand text-white hover:bg-brand/90"
-                >
-                  Login / Signup
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 xl:hidden"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 hidden xl:block"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg>
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => openAuthModal()}
+                    className="text-[16px] xl:text-[20px] rounded-full px-4 xl:px-6 py-[20px] xl:py-[22px] font-[700] tracking-wide shadow-none transition-transform hover:scale-105 active:scale-95 bg-brand text-white hover:bg-brand/90"
+                  >
+                    Login / Signup
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 xl:hidden"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-1.5 hidden xl:block"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg>
+                  </Button>
+                </div>
               )}
             </div>
 
@@ -299,6 +327,15 @@ export function Navbar() {
               <div className="text-center">
                 <p className="font-[700] text-[20px] text-gray-900">{user.name}</p>
                 <p className="text-gray-500">{user.email}</p>
+                {user.role && (
+                  <span className={`inline-block mt-1 text-[11px] font-[700] px-2 py-0.5 rounded-full ${
+                    user.role === 'AGENT' ? 'bg-slate-100 text-slate-700' :
+                    user.role === 'ADMIN' ? 'bg-red-50 text-red-700' :
+                    'bg-emerald-50 text-emerald-700'
+                  }`}>
+                    {user.role}
+                  </span>
+                )}
               </div>
 
               <div className="w-full flex flex-col gap-2 pt-2 pb-2">
@@ -311,16 +348,29 @@ export function Navbar() {
                   My Account
                 </Link>
 
-                <Link
-                  href="/my-booking"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-center w-full py-3 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-colors"
-                >
-                  <svg className="w-[18px] h-[18px] mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  My Bookings
-                </Link>
+                {user.role === 'AGENT' ? (
+                  <Link
+                    href="/agent/dashboard"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-center w-full py-3 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-colors"
+                  >
+                    <svg className="w-[18px] h-[18px] mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Agent Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    href="/my-booking"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-center w-full py-3 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-colors"
+                  >
+                    <svg className="w-[18px] h-[18px] mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    My Bookings
+                  </Link>
+                )}
               </div>
 
               <Button

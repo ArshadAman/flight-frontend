@@ -92,7 +92,16 @@ export function computeBookingTotal(
   const outboundBase = draft.outbound.price * payingPax;
   const returnBase = draft.returnFlight ? draft.returnFlight.price * payingPax : 0;
   const subtotal = outboundBase + returnBase;
-  const tax = Math.round(subtotal * 0.15);
+
+  let tax = 0;
+  if (draft.outbound.is_agent_flight || (draft.returnFlight && draft.returnFlight.is_agent_flight)) {
+    const cabin = (draft.cabin || "").toLowerCase();
+    const isPremium = cabin.includes("business") || cabin.includes("first") || cabin.includes("premium");
+    const taxRate = isPremium ? 0.12 : 0.05;
+    tax = Math.round(subtotal * taxRate);
+  } else {
+    tax = Math.round(subtotal * 0.15);
+  }
 
   let meals = 0;
   for (const p of passengers) {

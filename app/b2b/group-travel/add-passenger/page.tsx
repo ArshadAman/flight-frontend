@@ -6,6 +6,7 @@ import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Bell, ChevronDown, CalendarIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useGroupTravel } from "@/context/GroupTravelContext";
 import { NotificationModal } from '@/components/NotificationModal';
 
 // Mock data for Add Passenger dashboard
@@ -31,6 +32,10 @@ const ADD_PASSENGER_DATA = [
 
 export default function AddPassengerPage() {
   const [activeTab, setActiveTab] = useState('Add Passenger');
+  const { requests } = useGroupTravel();
+  const displayRequests = requests.filter(r => 
+    ["PAID", "PARTIALLY_PAID", "PNR_CREATED", "NAME_SUBMITTED", "TICKETED", "COMPLETED"].includes(r.status)
+  );
   const [notificationOpen, setNotificationOpen] = useState(false);
 
   const tabs = ['View Request', 'Make Payment', 'Add Passenger', 'View Booking'];
@@ -164,7 +169,7 @@ export default function AddPassengerPage() {
         {/* Data List Section */}
         <div className="px-8 mt-10">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Showing {ADD_PASSENGER_DATA.length}</h2>
+            <h2 className="text-xl font-bold text-gray-900">Showing {displayRequests.length}</h2>
             <div className="flex items-center gap-2">
               <span className="text-gray-500 text-base">Sort by</span>
               <button className="text-gray-900 font-bold text-base flex items-center gap-1">
@@ -188,7 +193,11 @@ export default function AddPassengerPage() {
 
               {/* Data Rows */}
               <div className="space-y-3">
-                {ADD_PASSENGER_DATA.map((req, index) => (
+                {displayRequests.length === 0 ? (
+                  <div className="text-center py-12 text-gray-400 font-medium col-span-full">
+                    No paid bookings ready for passenger manifest details.
+                  </div>
+                ) : displayRequests.map((req, index) => (
                   <div
                     key={index}
                     className="bg-white border border-gray-200 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.05)] grid grid-cols-[1.2fr_1.8fr_1fr_1.4fr_0.6fr_1.6fr] gap-4 items-center px-4 py-4"
@@ -203,13 +212,13 @@ export default function AddPassengerPage() {
                     <div className="flex items-center gap-5">
                       <div className="flex flex-col items-start min-w-[70px]">
                         <div className="flex items-center gap-1 font-bold text-gray-900 text-[15px]">
-                          {req.flightFrom} <span className="text-[#D60D26] text-xs">✈</span> {req.flightTo}
+                          {req.origin} <span className="text-[#D60D26] text-xs">✈</span> {req.destination}
                         </div>
-                        <div className="text-gray-400 text-[13px] whitespace-nowrap">{req.departDate}</div>
+                        <div className="text-gray-400 text-[13px] whitespace-nowrap">{req.departureDate}</div>
                       </div>
                       <div className="flex flex-col items-start min-w-[70px]">
                         <div className="flex items-center gap-1 font-bold text-gray-900 text-[15px]">
-                          {req.returnFrom} <span className="text-[#D60D26] text-xs" style={{display:'inline-block',transform:'scaleX(-1)'}}>✈</span> {req.returnTo}
+                          {req.destination} <span className="text-[#D60D26] text-xs" style={{display:'inline-block',transform:'scaleX(-1)'}}>✈</span> {req.origin}
                         </div>
                         <div className="text-gray-400 text-[13px] whitespace-nowrap">{req.returnDate}</div>
                       </div>
@@ -224,14 +233,14 @@ export default function AddPassengerPage() {
 
                     {/* Request Details */}
                     <div className="flex flex-col text-[14px] pr-2">
-                      <span className="text-gray-700 font-medium truncate">{req.passengers}</span>
+                      <span className="text-gray-700 font-medium truncate">{`${req.adults + req.children} pax(${req.adults}A)`}</span>
                       <span className="text-[#D60D26] truncate">Request Date: {req.requestDate}</span>
                     </div>
 
                     {/* PNR - Updated to show two blue links */}
                     <div className="flex flex-col text-[13px]">
-                      <span className="text-blue-500 hover:underline cursor-pointer border-b border-gray-100 pb-1 mb-1 font-medium">{req.pnrDelBkk}</span>
-                      <span className="text-blue-500 hover:underline cursor-pointer font-medium">{req.pnrBkkDel}</span>
+                      <span className="text-blue-500 hover:underline cursor-pointer border-b border-gray-100 pb-1 mb-1 font-medium">{req.pnrNumber || 'TBD'}</span>
+                      <span className="text-blue-500 hover:underline cursor-pointer font-medium">{req.pnrNumber ? 'Included' : 'TBD'}</span>
                     </div>
 
                     {/* Status + Pax Details Link */}
@@ -239,7 +248,7 @@ export default function AddPassengerPage() {
                       <div className="flex flex-col items-start gap-0.5">
                         <span className="font-bold text-[15px] text-green-500 whitespace-nowrap">{req.status}</span>
                         <span className="text-[13px] text-gray-500 whitespace-nowrap">
-                          Valid till: {req.validTill}
+                          Valid till: {req.validTill || 'N/A'}
                         </span>
                       </div>
                       <Link

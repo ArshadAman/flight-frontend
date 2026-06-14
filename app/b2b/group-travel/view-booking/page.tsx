@@ -15,7 +15,7 @@ export default function ViewBookingPage() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   
   // Filter for completed/paid bookings
-  const paidPayments = requests.filter((req) => req.status === "Paid");
+  const paidPayments = requests.filter((req) => ["PAID", "PNR_CREATED", "NAME_SUBMITTED", "TICKETED", "COMPLETED", "Paid"].includes(req.status === "PAID" ? "Paid" : req.status === "PNR_CREATED" ? "PNR Created" : req.status === "NAME_SUBMITTED" ? "Names Submitted" : req.status === "TICKETED" ? "Ticketed" : req.status === "COMPLETED" ? "Completed" : req.status));
 
   const tabs = ['View Request', 'Make Payment', 'Add Passenger', 'View Booking'];
 

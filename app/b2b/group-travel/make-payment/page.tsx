@@ -16,7 +16,7 @@ export default function MakePaymentPage() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   
   // Filter for pending payments
-  const pendingPayments = requests.filter((req) => req.status === "Payment pending");
+  const pendingPayments = requests.filter((req) => ["PAYMENT_PENDING", "PARTIALLY_PAID", "Payment pending"].includes(req.status === "PAYMENT_PENDING" ? "Payment Pending" : req.status === "PARTIALLY_PAID" ? "Partially Paid" : req.status));
 
   const tabs = ['View Request', 'Make Payment', 'Add Passenger', 'View Booking'];
 

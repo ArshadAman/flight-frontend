@@ -49,6 +49,9 @@ function getIataCode(cityOrCode: string): string {
 
 function parseUatDateTime(dateStr: string): Date {
     if (!dateStr) return new Date();
+    if (dateStr.includes("T") || (dateStr.includes("-") && !dateStr.includes(" "))) {
+        return new Date(dateStr);
+    }
     // Expected format: MM/DD/YYYY HH:MM
     const [datePart, timePart] = dateStr.split(" ");
     if (!datePart || !timePart) return new Date();
@@ -99,8 +102,28 @@ function mapBackendFlight(flight: any, fare: any, idx: number, searchKey: string
         totalPrice - taxAmount;
     const fareId = fare.fare_id || `fare-${idx}`;
 
-    const airlineCode = firstSeg?.airline_code || flight.airline_code || "FL";
-    const flightNumber = firstSeg?.flight_number || `${100 + idx}`;
+    const airlineCode = (firstSeg?.airline_code || flight.airline_code || "FL").toUpperCase();
+    let flightNumber = String(firstSeg?.flight_number || `${100 + idx}`).trim();
+    
+    // Clean up double airline code prefix if present in the flight number (e.g. "6E-2012" -> "2012")
+    const cleanAirline = airlineCode.toUpperCase();
+    const cleanFlight = flightNumber.toUpperCase().replace(/\s+/g, "").replace(/-/g, "");
+    if (cleanFlight.startsWith(cleanAirline)) {
+        const suffix = flightNumber.slice(cleanAirline.length);
+        flightNumber = suffix.startsWith("-") ? suffix.slice(1) : suffix;
+    }
+
+    // Clean up common fare type suffixes if present in the flight number (e.g. "6E-6676-PUB" -> "6676")
+    const fareSuffixes = ["-PUB", "-STU", "-DEF", "-CORP", "PUB", "STU", "DEF", "CORP"];
+    for (const fs of fareSuffixes) {
+        if (flightNumber.toUpperCase().endsWith(fs)) {
+            flightNumber = flightNumber.slice(0, -fs.length);
+            if (flightNumber.endsWith("-")) {
+                flightNumber = flightNumber.slice(0, -1);
+            }
+            break;
+        }
+    }
 
     const baggageRaw =
         fare.baggage_allowance ||
@@ -178,6 +201,9 @@ function mapBackendFlight(flight: any, fare: any, idx: number, searchKey: string
         search_key: searchKey,
         flight_key: flight.flight_key,
         fare_id: fareId,
+        is_agent_flight: flight.is_agent_flight || false,
+        agent_flight_id: flight.agent_flight_id || undefined,
+        travel_date: depDate.toISOString().slice(0, 10),
     };
 }
 
@@ -189,7 +215,8 @@ function generateMockFlights(
     studentFare: boolean = false,
     defenceFare: boolean = false,
     corporateFare: boolean = false,
-    isB2b: boolean = false
+    isB2b: boolean = false,
+    travelDate?: string
 ) {
     if (!origin || !destination) return [];
 
@@ -259,6 +286,7 @@ function generateMockFlights(
             search_key: "mock-search-key",
             flight_key: `mock-flight-${i}`,
             fare_id: `mock-fare-${i}`,
+            travel_date: travelDate || new Date().toISOString().slice(0, 10),
         };
     });
 }
@@ -461,11 +489,13 @@ export async function GET(request: Request) {
             }
         });
 
-        // Deduplicate: per unique flight_key keep lowest-price fare only.
-        // This prevents the same flight appearing 10+ times with different fare buckets.
+        // Deduplicate: per unique flight id (airline + number) + route keep lowest-price fare only.
+        // This prevents the same flight appearing multiple times or GDS/Agent duplicates showing up.
+        // We split f.id (e.g. "6E-2012-PUB") to get the airline and flight number parts, ignoring the fare type suffix.
         const cheapestByFlightKey = new Map<string, any>();
         for (const f of allFaresMapped) {
-            const key = f.flight_key || f.id;
+            const parts = (f.id || "").split("-");
+            const key = `${parts[0]}-${parts[1]}-${f.origin}-${f.destination}`;
             const existing = cheapestByFlightKey.get(key);
             if (!existing || f.price < existing.price) {
                 cheapestByFlightKey.set(key, f);
@@ -481,21 +511,21 @@ export async function GET(request: Request) {
         console.log("[BFF Flight Search API] fare_type counts after dedup:", fareTypeCounts);
 
 
-        // Filter live fares based on search parameters
+        // Filter live fares based on search parameters, allowing local agent flights to bypass GDS fare filters.
         if (studentFareSearch) {
-            outboundMapped = outboundMapped.filter((f: any) => f.fare_type === "STU");
+            outboundMapped = outboundMapped.filter((f: any) => f.is_agent_flight || f.fare_type === "STU");
             console.log("[BFF Flight Search API] filtered by STU, remaining:", outboundMapped.length);
         } else if (defenceFareSearch) {
-            outboundMapped = outboundMapped.filter((f: any) => f.fare_type === "DEF");
+            outboundMapped = outboundMapped.filter((f: any) => f.is_agent_flight || f.fare_type === "DEF");
             console.log("[BFF Flight Search API] filtered by DEF, remaining:", outboundMapped.length);
         } else if (corporateFareSearch) {
-            outboundMapped = outboundMapped.filter((f: any) => f.fare_type === "CORP");
+            outboundMapped = outboundMapped.filter((f: any) => f.is_agent_flight || f.fare_type === "CORP");
             console.log("[BFF Flight Search API] filtered by CORP, remaining:", outboundMapped.length);
         } else if (isB2b) {
-            outboundMapped = outboundMapped.filter((f: any) => f.fare_type === "CORP" || f.fare_type === "PUB");
+            outboundMapped = outboundMapped.filter((f: any) => f.is_agent_flight || f.fare_type === "CORP" || f.fare_type === "PUB");
             console.log("[BFF Flight Search API] filtered by CORP/PUB (B2B), remaining:", outboundMapped.length);
         } else {
-            outboundMapped = outboundMapped.filter((f: any) => f.fare_type === "PUB");
+            outboundMapped = outboundMapped.filter((f: any) => f.is_agent_flight || f.fare_type === "PUB");
             console.log("[BFF Flight Search API] filtered by PUB, remaining:", outboundMapped.length);
         }
 
@@ -535,7 +565,7 @@ export async function GET(request: Request) {
 
         // Fallback: If return flights list is empty but trip type is round-trip, let's auto-generate some mock return flights using search
         if (tripType === "round-trip" && returnFlights.length === 0) {
-            returnFlights = generateMockFlights(destinationStr, originStr, 3, studentFareSearch, defenceFareSearch, corporateFareSearch, isB2b);
+            returnFlights = generateMockFlights(destinationStr, originStr, 3, studentFareSearch, defenceFareSearch, corporateFareSearch, isB2b, finalReturnDate || undefined);
         }
 
         const liveResponse = {
@@ -556,7 +586,7 @@ export async function GET(request: Request) {
     } catch (error) {
         console.error("[BFF Flight Search API] Failed to fetch live flights, falling back to mock flights. Error:", error);
         
-        let outboundMock = generateMockFlights(originStr, destinationStr, 5, studentFareSearch, defenceFareSearch, corporateFareSearch, isB2b);
+        let outboundMock = generateMockFlights(originStr, destinationStr, 5, studentFareSearch, defenceFareSearch, corporateFareSearch, isB2b, finalTravelDate || undefined);
         if (nonStop) outboundMock = outboundMock.filter((f) => f.stops === 0);
         if (baggageFaresOnly) outboundMock = outboundMock.filter((f) => f.has_baggage);
         if (airlineCodeParam) {
@@ -567,7 +597,7 @@ export async function GET(request: Request) {
 
         let returnMock: any[] = [];
         if (tripType === "round-trip") {
-            returnMock = generateMockFlights(destinationStr, originStr, 4, studentFareSearch, defenceFareSearch, corporateFareSearch, isB2b);
+            returnMock = generateMockFlights(destinationStr, originStr, 4, studentFareSearch, defenceFareSearch, corporateFareSearch, isB2b, finalReturnDate || undefined);
             if (nonStop) returnMock = returnMock.filter((f) => f.stops === 0);
             if (baggageFaresOnly) returnMock = returnMock.filter((f) => f.has_baggage);
             if (airlineCodeParam) {

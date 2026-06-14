@@ -297,7 +297,7 @@ export function FlightResults({
       }
 
       if (fareType !== "ALL") {
-        result = result.filter((f) => (f.fare_type || "PUB") === fareType);
+        result = result.filter((f) => f.is_agent_flight || (f.fare_type || "PUB") === fareType);
       }
 
       result = result.filter((f) => f.price >= minPrice && f.price <= maxPrice);
@@ -465,7 +465,7 @@ export function FlightResults({
           )}
 
           {flightList.map((flight, idx) => {
-            const taxAmount = Math.round(flight.price * 0.15);
+            const taxAmount = flight.is_agent_flight ? 0 : Math.round(flight.price * 0.15);
             const uniqueKey = `${flight.flight_key || flight.id}-${idx}`;
 
             // Determine mock legs for segments display (if stops > 0, show 2 connected rows!)
@@ -474,7 +474,9 @@ export function FlightResults({
               const isSecondLeg = sIdx === 1;
               return {
                 code: isSecondLeg ? `AI-${flight.id.split('-').pop() || '102'}` : flight.id,
-                date: "Wed, 01 Oct 25",
+                date: flight.travel_date
+                  ? new Date(`${flight.travel_date}T00:00:00`).toLocaleDateString("en-US", { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' })
+                  : "Wed, 01 Oct 25",
                 route: isSecondLeg
                   ? `${flight.destination.substring(0, 3).toUpperCase()} ➔ ${flight.origin.substring(0, 3).toUpperCase()}`
                   : `${flight.origin.substring(0, 3).toUpperCase()} ➔ ${flight.destination.substring(0, 3).toUpperCase()}`,
@@ -499,9 +501,11 @@ export function FlightResults({
                   <span className="text-[#121121] font-black text-[26px] tracking-tight">
                     ₹{flight.price.toLocaleString("en-IN")}
                   </span>
-                  <span className="text-[12px] font-medium text-slate-500 ml-2 mt-1">
-                    <span className="text-slate-400">Incl. </span>INR {taxAmount}<span className="text-slate-400">tax</span>
-                  </span>
+                  {!flight.is_agent_flight && (
+                    <span className="text-[12px] font-medium text-slate-500 ml-2 mt-1">
+                      <span className="text-slate-400">Incl. </span>INR {taxAmount}<span className="text-slate-400">tax</span>
+                    </span>
+                  )}
                 </div>
 
                 {/* Airline Name */}
@@ -524,6 +528,11 @@ export function FlightResults({
 
                 {/* Right aligned Badges */}
                 <div className="flex items-center px-6 py-4 gap-2.5 flex-1 justify-end">
+                  {flight.is_agent_flight && (
+                    <span className="bg-[#D60D26] text-white text-[11px] font-black px-2.5 py-1 rounded shadow-sm tracking-wide uppercase flex items-center gap-1 animate-pulse">
+                      ★ Exclusive Agent Deal
+                    </span>
+                  )}
                   {/* PUB Badge */}
                   <span className="bg-[#377BD7] text-white text-[11px] font-bold px-2.5 py-1 rounded shadow-sm tracking-wide">
                     {flight.fare_type === "STU"

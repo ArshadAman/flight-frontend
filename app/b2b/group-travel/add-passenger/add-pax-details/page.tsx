@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { B2BNavbar } from "@/components/B2BNavbar";
 import { Footer } from "@/components/Footer";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useGroupTravel } from "@/context/GroupTravelContext";
 import { CalendarIcon, ChevronDown, Plus, CheckCircle2, X } from "lucide-react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -114,8 +115,12 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
   );
 }
 
-export default function AddPaxDetailsPage() {
+function AddPaxDetailsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { requests, uploadPassengers } = useGroupTravel();
+  const requestId = searchParams.get("id") || "";
+  const req = requests.find((r) => r.requestId === requestId || r.id === requestId);
 
   // ---- Toast state ----
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -168,12 +173,23 @@ export default function AddPaxDetailsPage() {
   };
 
   // ---- Submit handler ----
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     console.log("Submitting passengers:", data.passengers);
-    showToast(`${data.passengers.length} passenger(s) saved successfully!`, "success");
-
-    // Navigate back after a short delay
-    setTimeout(() => router.push("/b2b/group-travel/add-passenger"), 1500);
+    const passengersPayload = data.passengers.map((p) => ({
+      first_name: p.firstName,
+      last_name: p.lastName,
+      gender: p.gender.toUpperCase(),
+      date_of_birth: p.dob,
+      passport_number: p.passportNumber
+    }));
+    
+    const success = await uploadPassengers(requestId || req?.id || "", passengersPayload);
+    if (success) {
+      showToast(`${data.passengers.length} passenger(s) saved successfully!`, "success");
+      setTimeout(() => router.push("/b2b/group-travel/add-passenger"), 1500);
+    } else {
+      showToast("Failed to save passenger details on the backend.", "error");
+    }
   };
   
   // Custom error submit handler to show toast for validation failure
@@ -207,10 +223,10 @@ export default function AddPaxDetailsPage() {
               <div>
                 <ColHeader>Group Details</ColHeader>
                 <LabelValue label="Request ID">
-                  <span className="text-blue-600 font-semibold text-[14px]">{PAX_DATA.pnrDetails.requestId}</span>
+                  <span className="text-blue-600 font-semibold text-[14px]">{req?.requestId || PAX_DATA.pnrDetails.requestId}</span>
                 </LabelValue>
                 <LabelValue label="Group name">
-                  <span className="text-gray-900 font-medium text-[14px]">{PAX_DATA.pnrDetails.groupName}</span>
+                  <span className="text-gray-900 font-medium text-[14px]">{req?.groupName || PAX_DATA.pnrDetails.groupName}</span>
                 </LabelValue>
               </div>
 
@@ -218,7 +234,7 @@ export default function AddPaxDetailsPage() {
               <div>
                 <ColHeader>Requested date</ColHeader>
                 <div className="flex flex-col mt-2">
-                  <span className="text-gray-900 font-bold text-[15px]">{PAX_DATA.pnrDetails.requestedDate}</span>
+                  <span className="text-gray-900 font-bold text-[15px]">{req?.requestDate || PAX_DATA.pnrDetails.requestedDate}</span>
                   <span className="text-gray-400 text-[13px]">{PAX_DATA.pnrDetails.requestedTime}</span>
                 </div>
               </div>
@@ -227,7 +243,7 @@ export default function AddPaxDetailsPage() {
               <div>
                 <ColHeader>Requested Status</ColHeader>
                 <div className="mt-2">
-                  <span className="text-green-500 font-bold text-[14px]">{PAX_DATA.pnrDetails.status}</span>
+                  <span className="text-green-500 font-bold text-[14px]">{req?.status || PAX_DATA.pnrDetails.status}</span>
                 </div>
               </div>
 
@@ -257,7 +273,17 @@ export default function AddPaxDetailsPage() {
                 </tr>
               </thead>
               <tbody>
-                {PAX_DATA.flights.map((f, i) => (
+                {(req ? [
+                  {
+                    route: `${req.origin}-${req.destination}`,
+                    airline: req.airline,
+                    flightNo: req.quotes?.find(q => q.is_selected)?.flight_number || "TBD",
+                    pnr: req.pnrNumber || "TBD",
+                    passengers: `${req.adults + req.children} pax`,
+                    submitted: `${req.passengers?.length || 0} pax`,
+                    action: "Update name list"
+                  }
+                ] : PAX_DATA.flights).map((f, i) => (
                   <tr key={i} className="border-b border-gray-50 last:border-0">
                     <td className="py-4 font-bold text-gray-900 text-[15px]">{f.route}</td>
                     <td className="py-4">
@@ -292,10 +318,10 @@ export default function AddPaxDetailsPage() {
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 text-[13px] mb-6">
               <div className="flex gap-2 text-gray-400">
-                Request ID <span className="text-blue-500 font-medium hover:underline cursor-pointer">{PAX_DATA.stats.requestId}</span>
+                Request ID <span className="text-blue-500 font-medium hover:underline cursor-pointer">{req?.requestId || PAX_DATA.stats.requestId}</span>
               </div>
               <div className="flex gap-2 text-gray-400">
-                No of passenger: <span className="text-gray-900 font-bold">{PAX_DATA.stats.totalPax}</span>
+                No of passenger: <span className="text-gray-900 font-bold">{req ? `${req.adults + req.children}A` : PAX_DATA.stats.totalPax}</span>
               </div>
               <div className="flex gap-2 text-gray-400">
                 No of passenger updated: <span className="text-gray-900 font-bold">{fields.length}</span>
@@ -482,5 +508,14 @@ function LabelValue({ label, children }: { label: string; children: React.ReactN
       <span className="text-gray-400 text-[13px] min-w-[80px]">{label}</span>
       <span>{children}</span>
     </div>
+  );
+}
+
+
+export default function AddPaxDetailsPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center p-10 font-bold bg-gray-50">Loading...</div>}>
+      <AddPaxDetailsContent />
+    </React.Suspense>
   );
 }

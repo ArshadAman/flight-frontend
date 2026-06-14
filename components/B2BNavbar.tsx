@@ -13,7 +13,7 @@ import { NotificationModal } from "@/components/NotificationModal";
 
 export function B2BNavbar() {
   const { isAuthModalOpen, openAuthModal, closeAuthModal, user: authUser, logout } = useAuth();
-  const user = authUser || { name: "Sanjay", email: "sanjay@destinyholidays.com" };
+  const user = authUser;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -417,7 +417,14 @@ export function B2BNavbar() {
                       className="relative flex flex-col items-center justify-center py-1 transition-colors duration-200 select-none group"
                     >
                       <div className="flex items-center gap-1.5 font-[600] text-[#8A92A6] group-hover:text-primary transition-colors text-[14px] xl:text-[16px]">
-                        <span>{user?.name || "Sanjay"}</span>
+                        <div className="flex flex-col items-end leading-tight">
+                          <span>{user?.name || "Agent"}</span>
+                          {user?.role && (
+                            <span className={`text-[10px] font-bold uppercase tracking-widest ${
+                              user.role === 'ADMIN' ? 'text-purple-500' : 'text-green-500'
+                            }`}>{user.role}</span>
+                          )}
+                        </div>
                         <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className={`transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180 text-primary' : 'text-[#8A92A6]'}`}><path d="M5 6L0 0H10L5 6Z" /></svg>
                       </div>
                     </button>
@@ -517,6 +524,7 @@ export function B2BNavbar() {
                             onClick={() => {
                               logout();
                               setIsUserDropdownOpen(false);
+                              window.location.href = "/b2b/login";
                             }}
                             className="flex items-center gap-2 hover:bg-slate-50 py-2.5 px-3 rounded-lg transition-colors text-red-600 font-bold text-[14px] w-full text-left"
                           >

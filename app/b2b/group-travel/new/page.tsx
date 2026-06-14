@@ -87,10 +87,10 @@ const flightQuotes = [
 
 const formSchema = z.object({
   groupName: z.string().min(1, "Group Name is required"),
-  origin: z.string().min(1, "Origin is required"),
-  destination: z.string().min(1, "Destination is required"),
-  departureDate: z.string().min(1, "Departure Date is required"),
-  returnDate: z.string().min(1, "Return Date is required"),
+  origin: z.string().optional(),
+  destination: z.string().optional(),
+  departureDate: z.string().optional(),
+  returnDate: z.string().optional(),
   passengersGroup: z.string().min(1, "Please select a passenger group"),
   expectedFare: z.string().min(1, "Expected Fare is required").regex(/^\d+(\.\d{1,2})?$/, "Must be a valid amount"),
   cabin: z.string().min(1, "Please select a cabin"),
@@ -114,6 +114,35 @@ export default function GroupTravelPage() {
   const [isNegotiating, setIsNegotiating] = useState(false);
   const [isNegotiateSuccessOpen, setIsNegotiateSuccessOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [createdRequest, setCreatedRequest] = useState<any>(null);
+
+  // Dynamic travel type state
+  const [tripType, setTripType] = useState<"one-way" | "round-trip" | "multi-city">("round-trip");
+  const [multiCityLegs, setMultiCityLegs] = useState<Array<{ origin: string; destination: string; departureDate: string }>>([
+    { origin: "Delhi(DEL)", destination: "Bangkok(BKK)", departureDate: "19 Aug, 25" },
+    { origin: "Bangkok(BKK)", destination: "Singapore(SIN)", departureDate: "24 Aug, 25" },
+  ]);
+  const [validationError, setValidationError] = useState<string>("");
+
+  const addLeg = () => {
+    if (multiCityLegs.length >= 6) return;
+    const prevLeg = multiCityLegs[multiCityLegs.length - 1];
+    setMultiCityLegs([
+      ...multiCityLegs,
+      { origin: prevLeg ? prevLeg.destination : "", destination: "", departureDate: "" }
+    ]);
+  };
+
+  const removeLeg = (index: number) => {
+    if (multiCityLegs.length <= 2) return;
+    setMultiCityLegs(multiCityLegs.filter((_, idx) => idx !== index));
+  };
+
+  const updateLeg = (index: number, field: "origin" | "destination" | "departureDate", value: string) => {
+    const newLegs = [...multiCityLegs];
+    newLegs[index][field] = value;
+    setMultiCityLegs(newLegs);
+  };
 
   const handleCloseNegotiateModal = () => {
     setIsNegotiateSuccessOpen(false);
@@ -141,7 +170,57 @@ export default function GroupTravelPage() {
 
   const watchedValues = watch();
 
-  const handleFormSubmit = (data: FormValues) => {
+  const handleFormSubmit = async (data: FormValues) => {
+      setValidationError("");
+
+      // Validate manually based on selected tripType
+      if (tripType === "one-way") {
+        if (!data.origin) {
+          setValidationError("Origin is required for One-Way trip");
+          return;
+        }
+        if (!data.destination) {
+          setValidationError("Destination is required for One-Way trip");
+          return;
+        }
+        if (!data.departureDate) {
+          setValidationError("Departure date is required for One-Way trip");
+          return;
+        }
+      } else if (tripType === "round-trip") {
+        if (!data.origin) {
+          setValidationError("Origin is required for Round-Trip");
+          return;
+        }
+        if (!data.destination) {
+          setValidationError("Destination is required for Round-Trip");
+          return;
+        }
+        if (!data.departureDate) {
+          setValidationError("Departure date is required for Round-Trip");
+          return;
+        }
+        if (!data.returnDate) {
+          setValidationError("Return date is required for Round-Trip");
+          return;
+        }
+      } else if (tripType === "multi-city") {
+        for (let i = 0; i < multiCityLegs.length; i++) {
+          const leg = multiCityLegs[i];
+          if (!leg.origin.trim()) {
+            setValidationError(`Origin is required for Leg ${i + 1}`);
+            return;
+          }
+          if (!leg.destination.trim()) {
+            setValidationError(`Destination is required for Leg ${i + 1}`);
+            return;
+          }
+          if (!leg.departureDate.trim()) {
+            setValidationError(`Departure date is required for Leg ${i + 1}`);
+            return;
+          }
+        }
+      }
 
       // Generate request ID and timestamp
       const requestId = `GRP${Date.now().toString().slice(-10)}`;
@@ -165,29 +244,57 @@ export default function GroupTravelPage() {
         "vistara": "VISTARA",
       };
 
-      addRequest({
+      // Formulate params depending on tripType
+      let originVal = "";
+      let destVal = "";
+      let depVal = "";
+      let retVal: string | null = null;
+      let remarksVal = "";
+
+      if (tripType === "multi-city") {
+        originVal = extractCode(multiCityLegs[0].origin);
+        destVal = extractCode(multiCityLegs[multiCityLegs.length - 1].destination);
+        depVal = multiCityLegs[0].departureDate;
+        retVal = null;
+        
+        const sectorsStr = multiCityLegs.map((leg, i) => `Leg ${i+1}: ${leg.origin}➔${leg.destination} (${leg.departureDate})`).join("; ");
+        remarksVal = `Multi-City Request. Sectors: ${sectorsStr}`;
+      } else {
+        originVal = extractCode(data.origin || "");
+        destVal = extractCode(data.destination || "");
+        depVal = data.departureDate || "";
+        retVal = tripType === "round-trip" ? (data.returnDate || null) : null;
+        remarksVal = tripType === "one-way" ? "One-Way Booking" : "Round-Trip Booking";
+      }
+
+      const res = await addRequest({
         id: requestId,
         groupName: data.groupName,
         requestId,
         status: "Payment pending",
+        tripType: tripType === "one-way" ? "ONE_WAY" : (tripType === "multi-city" ? "MULTI_CITY" : "ROUND_TRIP"),
         airline: airlineLabel[data.airlinePreference] || data.airlinePreference.toUpperCase(),
         requestDate,
         validTill,
-        origin: extractCode(data.origin),
-        destination: extractCode(data.destination),
-        departureDate: data.departureDate,
-        returnDate: data.returnDate,
+        origin: originVal,
+        destination: destVal,
+        departureDate: depVal,
+        returnDate: retVal,
         passengersGroup: data.passengersGroup,
         expectedFare: data.expectedFare,
         cabin: data.cabin,
         groupCategory: data.groupCategory,
         timing: data.timing,
         airlinePreference: data.airlinePreference,
+        remarks: remarksVal,
         adults,
         children,
         infants,
       });
 
+      if (res) {
+        setCreatedRequest(res);
+      }
       setIsModalOpen(true);
   };
 
@@ -269,17 +376,20 @@ export default function GroupTravelPage() {
 
               <h3 className="text-[22px] font-bold text-gray-800 mb-5">Group 1:</h3>
 
-              {/* Radio Buttons */}
+              {/* Radio Buttons — MMT-style controlled */}
               <div className="flex flex-wrap gap-4 md:gap-6 mb-8">
-                <label className="flex items-center gap-2 text-[15px] md:text-[16px] text-gray-500 cursor-pointer">
-                  <input type="radio" name="trip" className="accent-[#D60D26] w-4 h-4 cursor-pointer" /> One Way
-                </label>
-                <label className="flex items-center gap-2 text-[15px] md:text-[16px] font-bold text-gray-900 cursor-pointer">
-                  <input type="radio" name="trip" defaultChecked className="accent-[#D60D26] w-4 h-4 cursor-pointer" /> Round Trip
-                </label>
-                <label className="flex items-center gap-2 text-[15px] md:text-[16px] text-gray-500 cursor-pointer">
-                  <input type="radio" name="trip" className="accent-[#D60D26] w-4 h-4 cursor-pointer" /> Multi City
-                </label>
+                {(["one-way", "round-trip", "multi-city"] as const).map((type) => (
+                  <label key={type} className={`flex items-center gap-2 text-[15px] md:text-[16px] cursor-pointer ${
+                    tripType === type ? 'font-bold text-gray-900' : 'text-gray-500'
+                  }`} onClick={() => setTripType(type)}>
+                    <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      tripType === type ? 'border-[#D60D26]' : 'border-gray-300'
+                    }`}>
+                      {tripType === type && <span className="w-2 h-2 rounded-full bg-[#D60D26]" />}
+                    </span>
+                    {type === 'one-way' ? 'One Way' : type === 'round-trip' ? 'Round Trip' : 'Multi City'}
+                  </label>
+                ))}
               </div>
 
               {/* Main Layout Split: Left (Tabs) & Right (Pricing/Passenger Config) */}
@@ -307,66 +417,140 @@ export default function GroupTravelPage() {
                     <TabsContent value="main" className="pt-6 bg-white rounded-xl p-6 md:p-8 shadow-sm border border-gray-100 mt-4 outline-none">
                       
                       <h4 className="text-[16px] font-bold text-gray-800 mb-6">Travel details:</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_1fr_1fr] md:gap-x-6 gap-y-6 items-center">
-                        
-                        {/* Origin */}
-                        <div className="relative">
-                          <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0">Origin</label>
-                          <Input
-                            {...register("origin")}
-                            className={`pb-2 pt-2 px-0 border-0 border-b ${errors.origin ? 'border-red-500' : 'border-gray-200'} rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent`}
-                          />
-                          {errors.origin && <span className="text-red-500 text-[11px] font-semibold mt-1 block"> {errors.origin.message} </span>}
-                        </div>
-                        
-                        {/* Swap icon */}
-                        <div className="flex justify-center shrink-0">
-                          <div className="w-9 h-9 rounded-full border border-[#D60D26] text-[#D60D26] flex items-center justify-center cursor-pointer">
-                            <ArrowRightLeft className="w-5 h-5 transform rotate-90 md:rotate-0" />
-                          </div>
-                        </div>
 
-                        {/* Destination */}
-                        <div className="relative">
-                          <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0">Destination</label>
-                          <Input
-                            {...register("destination")}
-                            className={`pb-2 pt-2 px-0 border-0 border-b ${errors.destination ? 'border-red-500' : 'border-gray-200'} rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent`}
-                          />
-                          {errors.destination && <span className="text-red-500 text-[11px] font-semibold mt-1 block"> {errors.destination.message} </span>}
-                        </div>
+                      {/* ─────────── MULTI-CITY LEGS ─────────── */}
+                      {tripType === "multi-city" ? (
+                        <div className="flex flex-col gap-6">
+                          {multiCityLegs.map((leg, idx) => (
+                            <div key={idx} className="relative bg-slate-50/60 border border-slate-200 rounded-2xl p-5">
+                              <div className="flex items-center justify-between mb-4">
+                                <span className="text-[13px] font-bold text-[#D60D26] uppercase tracking-wider">Leg {idx + 1}</span>
+                                {multiCityLegs.length > 2 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeLeg(idx)}
+                                    className="text-[11px] font-bold text-red-500 hover:text-red-700 border border-red-200 px-2 py-0.5 rounded-full transition"
+                                  >✕ Remove</button>
+                                )}
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_1fr] gap-x-6 gap-y-6 items-center">
+                                <div className="relative">
+                                  <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0">Origin</label>
+                                  <Input
+                                    value={leg.origin}
+                                    onChange={(e) => updateLeg(idx, "origin", e.target.value)}
+                                    placeholder="e.g. Delhi(DEL)"
+                                    className="pb-2 pt-2 px-0 border-0 border-b border-gray-200 rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent"
+                                  />
+                                </div>
+                                <div className="flex justify-center shrink-0">
+                                  <div className="w-8 h-8 rounded-full border border-[#D60D26] text-[#D60D26] flex items-center justify-center">
+                                    <ArrowRightLeft className="w-4 h-4" />
+                                  </div>
+                                </div>
+                                <div className="relative">
+                                  <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0">Destination</label>
+                                  <Input
+                                    value={leg.destination}
+                                    onChange={(e) => updateLeg(idx, "destination", e.target.value)}
+                                    placeholder="e.g. Bangkok(BKK)"
+                                    className="pb-2 pt-2 px-0 border-0 border-b border-gray-200 rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent"
+                                  />
+                                </div>
+                                <div className="relative">
+                                  <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0">Departure Date</label>
+                                  <div className="relative flex items-center">
+                                    <Input
+                                      value={leg.departureDate}
+                                      onChange={(e) => updateLeg(idx, "departureDate", e.target.value)}
+                                      placeholder="e.g. 19 Aug, 25"
+                                      className="pb-2 pt-2 px-0 border-0 border-b border-gray-200 rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent w-full"
+                                    />
+                                    <CalendarIcon className="w-5 h-5 text-gray-400 absolute right-0 bottom-3 pointer-events-none" />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
 
-                        {/* Departure Date */}
-                        <div className="relative">
-                          <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0 hover:text-gray-700 cursor-pointer z-10 w-full flex justify-between">
-                            Departure Date
-                          </label>
-                          <div className="relative flex items-center">
+                          {/* Add City Button — exactly like MMT */}
+                          {multiCityLegs.length < 6 && (
+                            <button
+                              type="button"
+                              onClick={addLeg}
+                              className="self-start flex items-center gap-2 border-2 border-dashed border-[#D60D26]/40 text-[#D60D26] font-bold text-[14px] px-6 py-3 rounded-xl hover:bg-[#D60D26]/5 hover:border-[#D60D26] transition-all"
+                            >
+                              <Plus className="w-4 h-4" strokeWidth={3} /> Add City
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        /* ─────────── ONE-WAY / ROUND-TRIP ─────────── */
+                        <div className={`grid grid-cols-1 gap-y-6 items-center ${
+                          tripType === 'one-way'
+                            ? 'md:grid-cols-[1fr_auto_1fr_1fr] md:gap-x-6'
+                            : 'md:grid-cols-[1fr_auto_1fr_1fr_1fr] md:gap-x-6'
+                        }`}>
+                          {/* Origin */}
+                          <div className="relative">
+                            <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0">Origin</label>
                             <Input
-                              {...register("departureDate")}
-                              className={`pb-2 pt-2 px-0 border-0 border-b ${errors.departureDate ? 'border-red-500' : 'border-gray-200'} rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent w-full`}
+                              {...register("origin")}
+                              className={`pb-2 pt-2 px-0 border-0 border-b ${errors.origin ? 'border-red-500' : 'border-gray-200'} rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent`}
                             />
-                            <CalendarIcon className="w-5 h-5 text-gray-400 absolute right-0 bottom-3 pointer-events-none" />
+                            {errors.origin && <span className="text-red-500 text-[11px] font-semibold mt-1 block"> {errors.origin.message} </span>}
                           </div>
-                          {errors.departureDate && <span className="text-red-500 text-[11px] font-semibold mt-1 block"> {errors.departureDate.message} </span>}
-                        </div>
+                          
+                          {/* Swap icon */}
+                          <div className="flex justify-center shrink-0">
+                            <div className="w-9 h-9 rounded-full border border-[#D60D26] text-[#D60D26] flex items-center justify-center cursor-pointer">
+                              <ArrowRightLeft className="w-5 h-5 transform rotate-90 md:rotate-0" />
+                            </div>
+                          </div>
 
-                        {/* Return Date */}
-                        <div className="relative">
-                          <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0 hover:text-gray-700 cursor-pointer z-10 w-full flex justify-between">
-                            Return Date
-                          </label>
-                          <div className="relative flex items-center">
+                          {/* Destination */}
+                          <div className="relative">
+                            <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0">Destination</label>
                             <Input
-                              {...register("returnDate")}
-                              className={`pb-2 pt-2 px-0 border-0 border-b ${errors.returnDate ? 'border-red-500' : 'border-gray-200'} rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent w-full`}
+                              {...register("destination")}
+                              className={`pb-2 pt-2 px-0 border-0 border-b ${errors.destination ? 'border-red-500' : 'border-gray-200'} rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent`}
                             />
-                            <CalendarIcon className="w-5 h-5 text-gray-400 absolute right-0 bottom-3 pointer-events-none" />
+                            {errors.destination && <span className="text-red-500 text-[11px] font-semibold mt-1 block"> {errors.destination.message} </span>}
                           </div>
-                          {errors.returnDate && <span className="text-red-500 text-[11px] font-semibold mt-1 block"> {errors.returnDate.message} </span>}
-                        </div>
 
-                      </div>
+                          {/* Departure Date */}
+                          <div className="relative">
+                            <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0 hover:text-gray-700 cursor-pointer z-10">
+                              Departure Date
+                            </label>
+                            <div className="relative flex items-center">
+                              <Input
+                                {...register("departureDate")}
+                                className={`pb-2 pt-2 px-0 border-0 border-b ${errors.departureDate ? 'border-red-500' : 'border-gray-200'} rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent w-full`}
+                              />
+                              <CalendarIcon className="w-5 h-5 text-gray-400 absolute right-0 bottom-3 pointer-events-none" />
+                            </div>
+                            {errors.departureDate && <span className="text-red-500 text-[11px] font-semibold mt-1 block"> {errors.departureDate.message} </span>}
+                          </div>
+
+                          {/* Return Date — hidden for one-way */}
+                          {tripType === 'round-trip' && (
+                            <div className="relative">
+                              <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0 hover:text-gray-700 cursor-pointer z-10">
+                                Return Date
+                              </label>
+                              <div className="relative flex items-center">
+                                <Input
+                                  {...register("returnDate")}
+                                  className={`pb-2 pt-2 px-0 border-0 border-b ${errors.returnDate ? 'border-red-500' : 'border-gray-200'} rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent w-full`}
+                                />
+                                <CalendarIcon className="w-5 h-5 text-gray-400 absolute right-0 bottom-3 pointer-events-none" />
+                              </div>
+                              {errors.returnDate && <span className="text-red-500 text-[11px] font-semibold mt-1 block"> {errors.returnDate.message} </span>}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       <h4 className="text-[16px] font-bold text-gray-800 mb-6 mt-10">Passenger details:</h4>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 gap-y-8 md:gap-y-10 items-end">
@@ -485,30 +669,44 @@ export default function GroupTravelPage() {
                     </TabsContent>
                   </Tabs>
                   
-                  {/* Flight Details Block below tabs (based on Figma) */}
+                  {/* Flight Details Preview — dynamic based on tripType */}
                   <div className="mt-12">
-                    <h3 className="text-[17px] font-semibold text-gray-900 mb-6">Flight Details:</h3>
-                    <div className="flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-20">
-                        
+                    <h3 className="text-[17px] font-semibold text-gray-900 mb-4">Flight Details:</h3>
+                    {tripType === 'multi-city' ? (
+                      <div className="flex flex-wrap gap-4">
+                        {multiCityLegs.map((leg, idx) => (
+                          <div key={idx} className="flex flex-col items-center bg-slate-50 border border-slate-200 rounded-xl px-5 py-3">
+                            <div className="flex items-center gap-3 text-[16px] font-bold text-gray-900 mb-1">
+                              <span>{leg.origin || `Origin ${idx+1}`}</span>
+                              <Plane className="w-4 h-4 text-[#D60D26] transform rotate-45" />
+                              <span>{leg.destination || `Dest ${idx+1}`}</span>
+                            </div>
+                            <span className="text-gray-500 text-[13px] font-medium">{leg.departureDate || 'Date'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-20">
                         <div className="flex flex-col items-center">
                           <div className="flex items-center gap-4 text-[22px] font-bold text-gray-900 mb-2">
-                              <span className="text-[18px] md:text-[22px]">{watchedValues.origin || "Origin"}</span>
-                              <Plane className="w-6 h-6 text-[#D60D26] transform rotate-45" />
-                              <span className="text-[18px] md:text-[22px]">{watchedValues.destination || "Destination"}</span>
+                            <span className="text-[18px] md:text-[22px]">{watchedValues.origin || "Origin"}</span>
+                            <Plane className="w-6 h-6 text-[#D60D26] transform rotate-45" />
+                            <span className="text-[18px] md:text-[22px]">{watchedValues.destination || "Destination"}</span>
                           </div>
                           <span className="text-gray-700 text-[16px] font-medium">{watchedValues.departureDate || "Date"}</span>
                         </div>
-
-                        <div className="flex flex-col items-center">
-                          <div className="flex items-center gap-4 text-[22px] font-bold text-gray-900 mb-2">
+                        {tripType === 'round-trip' && (
+                          <div className="flex flex-col items-center">
+                            <div className="flex items-center gap-4 text-[22px] font-bold text-gray-900 mb-2">
                               <span className="text-[18px] md:text-[22px]">{watchedValues.destination || "Destination"}</span>
                               <Plane className="w-6 h-6 text-[#D60D26] transform rotate-45" />
                               <span className="text-[18px] md:text-[22px]">{watchedValues.origin || "Origin"}</span>
+                            </div>
+                            <span className="text-gray-700 text-[16px] font-medium">{watchedValues.returnDate || "Return Date"}</span>
                           </div>
-                          <span className="text-gray-700 text-[16px] font-medium">{watchedValues.returnDate || "Date"}</span>
-                        </div>
-
-                    </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -638,13 +836,20 @@ export default function GroupTravelPage() {
             </div>
 
             {/* Action Buttons */}
+            {validationError && (
+              <div className="w-full max-w-[1100px] mb-4">
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-[14px] font-semibold">
+                  <span className="text-red-500">⚠</span> {validationError}
+                </div>
+              </div>
+            )}
             <div className="w-full max-w-[1100px] flex flex-col sm:flex-row gap-4 mb-20 text-[16px] md:text-[18px]">
-              <Button variant="outline" className="flex-1 py-5 md:py-7 rounded-full border-gray-900 text-gray-900 font-bold hover:bg-gray-50 flex gap-2 w-full text-[16px] md:text-[18px]">
+              <Button type="button" variant="outline" onClick={() => router.back()} className="flex-1 py-5 md:py-7 rounded-full border-gray-900 text-gray-900 font-bold hover:bg-gray-50 flex gap-2 w-full text-[16px] md:text-[18px]">
                 Cancel 
                 <span className="transform rotate-45 text-[18px] md:text-[20px] leading-none mt-[-2px]">⭧</span>
               </Button>
               
-              <Button onClick={handleSubmit(handleFormSubmit)} className="flex-1 py-5 md:py-7 rounded-full bg-[#D60D26] hover:bg-[#D60D26] font-bold text-white flex gap-2 w-full text-[16px] md:text-[18px]">
+              <Button type="button" onClick={handleSubmit(handleFormSubmit)} className="flex-1 py-5 md:py-7 rounded-full bg-[#D60D26] hover:bg-[#D60D26] font-bold text-white flex gap-2 w-full text-[16px] md:text-[18px]">
                 Proceed 
                 <span className="transform rotate-45 text-[18px] md:text-[20px] leading-none mt-[-2px]">⭧</span>
               </Button>
@@ -661,14 +866,14 @@ export default function GroupTravelPage() {
                     </div>
                     
                     <p className="text-gray-500 text-[15px] leading-[1.6] mb-8 font-medium">
-                      We're Processing your request. Reference ID: <span className="text-gray-800 font-bold">GRP1134718273</span>. Expect your auto quote in your inbox shortly. Our Response time is 24-48 hours
+                      We're Processing your request. Reference ID: <span className="text-gray-800 font-bold">{createdRequest?.requestId || createdRequest?.id || "GRP1134718273"}</span>. Expect your auto quote in your inbox shortly. Our Response time is 24-48 hours
                     </p>
 
                     <div className="flex justify-end">
                       <Button 
                         onClick={() => {
                           setIsModalOpen(false);
-                          setActiveStep(2);
+                          router.push("/b2b/group-travel/view-request");
                         }}
                         className="bg-[#D60D26] hover:bg-[#D60D26] text-white px-8 py-2.5 rounded-full font-bold shadow-sm"
                       >

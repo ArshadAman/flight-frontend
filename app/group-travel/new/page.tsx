@@ -114,6 +114,7 @@ export default function GroupTravelPage() {
   const [isNegotiating, setIsNegotiating] = useState(false);
   const [isNegotiateSuccessOpen, setIsNegotiateSuccessOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [createdRequest, setCreatedRequest] = useState<any>(null);
 
   const handleCloseNegotiateModal = () => {
     setIsNegotiateSuccessOpen(false);
@@ -141,7 +142,7 @@ export default function GroupTravelPage() {
 
   const watchedValues = watch();
 
-  const handleFormSubmit = (data: FormValues) => {
+  const handleFormSubmit = async (data: FormValues) => {
 
       // Generate request ID and timestamp
       const requestId = `GRP${Date.now().toString().slice(-10)}`;
@@ -165,7 +166,7 @@ export default function GroupTravelPage() {
         "vistara": "VISTARA",
       };
 
-      addRequest({
+      const res = await addRequest({
         id: requestId,
         groupName: data.groupName,
         requestId,
@@ -188,6 +189,9 @@ export default function GroupTravelPage() {
         infants,
       });
 
+      if (res) {
+        setCreatedRequest(res);
+      }
       setIsModalOpen(true);
   };
 
@@ -661,14 +665,14 @@ export default function GroupTravelPage() {
                     </div>
                     
                     <p className="text-gray-500 text-[15px] leading-[1.6] mb-8 font-medium">
-                      We're Processing your request. Reference ID: <span className="text-gray-800 font-bold">GRP1134718273</span>. Expect your auto quote in your inbox shortly. Our Response time is 24-48 hours
+                      We're Processing your request. Reference ID: <span className="text-gray-800 font-bold">{createdRequest?.requestId || createdRequest?.id || "GRP1134718273"}</span>. Expect your auto quote in your inbox shortly. Our Response time is 24-48 hours
                     </p>
 
                     <div className="flex justify-end">
                       <Button 
                         onClick={() => {
                           setIsModalOpen(false);
-                          setActiveStep(2);
+                          router.push("/group-travel/view-request");
                         }}
                         className="bg-[#D60D26] hover:bg-[#D60D26] text-white px-8 py-2.5 rounded-full font-bold shadow-sm"
                       >

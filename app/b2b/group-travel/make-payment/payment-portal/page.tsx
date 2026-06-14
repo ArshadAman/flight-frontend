@@ -31,7 +31,7 @@ function PaymentPortalContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestId = searchParams.get('id');
-  const { requests, updateRequest } = useGroupTravel();
+  const { requests, recordPayment } = useGroupTravel();
   const req = requests.find((r) => r.requestId === requestId);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -65,11 +65,12 @@ function PaymentPortalContent() {
     }
     setIsUploading(true);
     // Simulate upload
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsUploading(false);
       showToast("Payment screenshot submitted successfully!", "success");
       if (requestId) {
-        updateRequest(requestId, { status: "Paid" });
+        const rawAmount = amountToPay.replace(/,/g, "");
+        await recordPayment(requestId, rawAmount);
       }
       setTimeout(() => {
         router.push(`/b2b/group-travel/make-payment/payment-summary?id=${requestId || 'GRP1134718273'}`);
