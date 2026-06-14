@@ -309,7 +309,7 @@ function TicketCard({ ticket }: { ticket: ApiTicket }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function MyBooking() {
-    const { access, refreshAccess } = useAuth();
+    const { access, refreshAccess, user } = useAuth();
     const [tickets, setTickets] = useState<ApiTicket[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -326,28 +326,59 @@ export default function MyBooking() {
                     process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1"
                 ).replace(/\/$/, "");
 
-                const res = await fetchWithAuth(
-                    `${apiBase}/tickets/`,
-                    { method: "GET" },
-                    () => access,
-                    refreshAccess,
-                );
+                let apiTickets: ApiTicket[] = [];
+                try {
+                    const res = await fetchWithAuth(
+                        `${apiBase}/tickets/`,
+                        { method: "GET" },
+                        () => access,
+                        refreshAccess,
+                    );
 
-                if (!res.ok) {
-                    console.warn("[MyBooking] tickets fetch failed:", res.status);
-                    setError(`Failed to load bookings (${res.status}).`);
-                    return;
+                    if (res.ok) {
+                        const payload = await res.json();
+                        const raw = Array.isArray(payload)
+                            ? payload
+                            : Array.isArray(payload?.data)
+                            ? payload.data
+                            : payload?.results ?? [];
+                        apiTickets = raw as ApiTicket[];
+                    } else {
+                        console.warn("[MyBooking] tickets fetch failed:", res.status);
+                    }
+                } catch (fetchErr) {
+                    console.warn("[MyBooking] Failed to fetch live tickets, using offline bookings only:", fetchErr);
                 }
 
-                const payload = await res.json();
-                // API wraps in { success, message, data: [...] }
-                const raw = Array.isArray(payload)
-                    ? payload
-                    : Array.isArray(payload?.data)
-                    ? payload.data
-                    : payload?.results ?? [];
+                // Get offline bookings from localStorage
+                let offlineTickets: ApiTicket[] = [];
+                try {
+                    const stored = localStorage.getItem("offline_bookings");
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        offlineTickets = parsed.filter((t: any) => !t.user_email || t.user_email === user?.email);
+                    }
+                } catch (storageErr) {
+                    console.error("[MyBooking Page Error] Failed to parse offline bookings:", storageErr);
+                }
 
-                setTickets(raw as ApiTicket[]);
+                const allTickets = [...apiTickets, ...offlineTickets];
+
+                // Deduplicate by PNR or ID
+                const seen = new Set();
+                const uniqueTickets = allTickets.filter((t: ApiTicket) => {
+                    const key = t.pnr_number || t.id;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
+
+                const sorted = uniqueTickets.sort((a, b) => {
+                    const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                    const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                    return dateB - dateA;
+                });
+                setTickets(sorted);
             } catch (err) {
                 console.error("[MyBooking] fetch error:", err);
                 setError("Something went wrong loading your bookings.");
@@ -357,7 +388,7 @@ export default function MyBooking() {
         };
 
         fetchTickets();
-    }, [access, refreshAccess]);
+    }, [access, refreshAccess, user]);
 
     return (
         <div className="w-full min-h-screen bg-white flex flex-col font-sans">

@@ -866,6 +866,7 @@ export default function PreBookingSSRSelection({
 
     return (
       <button
+        key={seat.SSR_Key || colLetter}
         type="button"
         disabled={isOccupied}
         onClick={() => handleSelectSeat(seat)}
