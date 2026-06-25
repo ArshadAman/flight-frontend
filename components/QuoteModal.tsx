@@ -71,7 +71,7 @@ export function QuoteModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                   <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center transition-colors ${agencyFee === "separate" ? 'border-[#D60D26]' : 'border-slate-300 group-hover:border-[#D60D26]'}`}>
                     {agencyFee === "separate" && <div className="w-2.5 h-2.5 rounded-full bg-[#D60D26]" />}
                   </div>
-                  <span className="text-[14px] font-bold text-slate-800">Listed seperately</span>
+                  <span className="text-[14px] font-bold text-slate-800">Listed separately</span>
                 </label>
               </div>
             </div>

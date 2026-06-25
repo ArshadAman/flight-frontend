@@ -73,7 +73,7 @@ export function BookingInfo({ ticket }: { ticket?: any }) {
       </div>
 
       <div className="col-span-1 lg:col-span-2 flex justify-end items-end h-full mt-4 lg:mt-0">
-        <span className="text-[36px] font-[900] text-[#DE0A26] tracking-tighter">{displayPrice}</span>
+        <span className="text-[36px] font-black text-primary tracking-tighter">{displayPrice}</span>
       </div>
     </div>
     {ticket?.status === "CANCELLED" && (ticket?.agent_cancellation_reason || ticket?.cancellation_data?.remarks) && (

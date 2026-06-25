@@ -97,9 +97,9 @@ export function Navbar() {
               <div className="relative flex items-center h-full" ref={groupTravelRef}>
                 <button
                   onClick={() => setIsGroupTravelOpen(!isGroupTravelOpen)}
-                  className={`relative text-[16px] xl:text-[20px] py-1 flex flex-col items-center justify-center transition-colors duration-200 ${isGroupTravelOpen || pathname.startsWith('/group-travel')
-                    ? 'font-[700] text-primary'
-                    : 'font-[500] text-[#888] hover:text-[#0C2342]'
+                  className={`relative text-base xl:text-xl py-1 flex flex-col items-center justify-center transition-colors duration-200 ${isGroupTravelOpen || pathname.startsWith('/group-travel')
+                    ? 'font-bold text-primary'
+                    : 'font-medium text-muted-foreground hover:text-foreground'
                     }`}
                 >
                   <div className="flex items-center gap-1">
@@ -110,7 +110,7 @@ export function Navbar() {
                 </button>
 
                 {isGroupTravelOpen && (
-                  <div className="absolute top-full left-0 mt-5 w-64 bg-white border-t-[5px] border-[#D60D26] rounded-2xl shadow-xl z-50 p-2">
+                  <div className="absolute top-full left-0 mt-5 w-64 bg-white border-t-[5px] border-primary rounded-2xl shadow-xl z-50 p-2">
                     <div className="flex flex-col gap-1">
                       <Link
                         href="/group-travel/new"
@@ -151,7 +151,7 @@ export function Navbar() {
               </div>
 
               <NavLink href="/about">About Us</NavLink>
-              <NavLink href="/sale">For Sale</NavLink>
+              <NavLink href="/sale/inventory">For Sale</NavLink>
             </nav>
 
             {/* Desktop Action Button */}
@@ -168,52 +168,76 @@ export function Navbar() {
                     <UserIcon size={24} className="hidden xl:block" />
                   </button>
                   {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100 mb-2">
-                        <p className="font-medium text-gray-900">{user.name}</p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
+                    <div className="absolute right-0 mt-2 w-[min(calc(100vw-2rem),300px)] min-w-[260px] bg-white rounded-xl shadow-lg border border-border py-2 z-50 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-border">
+                        <p className="font-semibold text-foreground truncate" title={user.name}>
+                          {user.name}
+                        </p>
+                        <p
+                          className="text-sm text-muted-foreground break-all leading-snug mt-1"
+                          title={user.email}
+                        >
+                          {user.email}
+                        </p>
                         {user.role && (
-                          <span className={`inline-block mt-1 text-[11px] font-[700] px-2 py-0.5 rounded-full ${
-                            user.role === 'AGENT' ? 'bg-slate-100 text-slate-700' :
-                            user.role === 'ADMIN' ? 'bg-red-50 text-red-700' :
-                            'bg-emerald-50 text-emerald-700'
-                          }`}>
+                          <span
+                            className={`inline-block mt-2 text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                              user.role === "AGENT"
+                                ? "bg-slate-100 text-slate-700"
+                                : user.role === "ADMIN"
+                                  ? "bg-red-50 text-red-700"
+                                  : "bg-emerald-50 text-emerald-700"
+                            }`}
+                          >
                             {user.role}
                           </span>
                         )}
                       </div>
 
+                      <div className="px-2 py-1.5">
                       <Link
                         href="/my-account"
                         onClick={() => setIsDropdownOpen(false)}
-                        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center"
+                        className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-slate-50"
                       >
-                        <UserIcon size={16} className="mr-2" />
+                        <UserIcon size={16} className="shrink-0 text-muted-foreground" />
                         My Account
                       </Link>
 
                       {/* Agent-specific links */}
-                      {user.role === 'AGENT' && (
+                      {(user.role === "AGENT" || user.role === "ADMIN") && (
+                        <>
+                        <Link
+                          href="/sale/inventory"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-slate-50"
+                        >
+                          <svg className="w-4 h-4 shrink-0 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
+                          Sale Inventory
+                        </Link>
                         <Link
                           href="/agent/dashboard"
                           onClick={() => setIsDropdownOpen(false)}
-                          className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center"
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-slate-50"
                         >
-                          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <svg className="w-4 h-4 shrink-0 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                           </svg>
                           Agent Dashboard
                         </Link>
+                        </>
                       )}
 
                       {/* Customer-specific links */}
-                      {user.role !== 'AGENT' && (
+                      {user.role !== "AGENT" && (
                         <Link
                           href="/my-booking"
                           onClick={() => setIsDropdownOpen(false)}
-                          className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center"
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-slate-50"
                         >
-                          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <svg className="w-4 h-4 shrink-0 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           My Bookings
@@ -225,11 +249,12 @@ export function Navbar() {
                           logout();
                           setIsDropdownOpen(false);
                         }}
-                        className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-50 flex items-center"
+                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
                       >
-                        <LogOut size={16} className="mr-2" />
+                        <LogOut size={16} className="shrink-0" />
                         Logout
                       </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -286,25 +311,25 @@ export function Navbar() {
 
           <div className="flex flex-col w-full my-4 bg-slate-50/50 rounded-2xl border border-slate-100 p-2">
             <div className="flex items-center gap-2 px-4 py-3 mb-1">
-              <div className="w-1.5 h-1.5 bg-[#D60D26] rounded-full"></div>
+              <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
               <span className="text-[13px] font-[900] text-slate-800 uppercase tracking-widest">Group Travel</span>
             </div>
             <div className="flex flex-col gap-1">
-              <Link href="/group-travel/new" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3.5 px-4 text-[15px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+              <Link href="/group-travel/new" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3.5 px-4 text-[15px] font-bold text-slate-600 hover:text-primary hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-slate-400">
                   <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M15 13L18 16L15 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 New Booking
               </Link>
-              <Link href="/group-travel/view-request" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3.5 px-4 text-[15px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+              <Link href="/group-travel/view-request" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3.5 px-4 text-[15px] font-bold text-slate-600 hover:text-primary hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-slate-400">
                   <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M15 13L18 16L15 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 Request
               </Link>
-              <Link href="/group-travel/add-passenger" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3.5 px-4 text-[15px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
+              <Link href="/group-travel/add-passenger" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3.5 px-4 text-[15px] font-bold text-slate-600 hover:text-primary hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-slate-400">
                   <path d="M7 10C7 13.3137 9.68629 16 13 16H18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M15 13L18 16L15 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -315,7 +340,7 @@ export function Navbar() {
           </div>
 
           <NavLink href="/about" isMobile onClick={() => setIsMobileMenuOpen(false)}>About Us</NavLink>
-          <NavLink href="/sale" isMobile onClick={() => setIsMobileMenuOpen(false)}>For Sale</NavLink>
+          <NavLink href="/sale/inventory" isMobile onClick={() => setIsMobileMenuOpen(false)}>For Sale</NavLink>
         </nav>
 
         <div className="mt-auto px-6 pt-6 pb-8 w-full border-t border-slate-100">
@@ -324,9 +349,13 @@ export function Navbar() {
               <div className="bg-brand/10 p-4 rounded-full text-brand">
                 <UserIcon size={32} />
               </div>
-              <div className="text-center">
-                <p className="font-[700] text-[20px] text-gray-900">{user.name}</p>
-                <p className="text-gray-500">{user.email}</p>
+              <div className="text-center w-full px-2">
+                <p className="font-bold text-xl text-foreground truncate w-full" title={user.name}>
+                  {user.name}
+                </p>
+                <p className="text-sm text-muted-foreground break-all leading-snug mt-1" title={user.email}>
+                  {user.email}
+                </p>
                 {user.role && (
                   <span className={`inline-block mt-1 text-[11px] font-[700] px-2 py-0.5 rounded-full ${
                     user.role === 'AGENT' ? 'bg-slate-100 text-slate-700' :
@@ -348,7 +377,15 @@ export function Navbar() {
                   My Account
                 </Link>
 
-                {user.role === 'AGENT' ? (
+                {(user.role === 'AGENT' || user.role === 'ADMIN') ? (
+                  <>
+                  <Link
+                    href="/sale/inventory"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-center w-full py-3 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-colors"
+                  >
+                    Sale Inventory
+                  </Link>
                   <Link
                     href="/agent/dashboard"
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -359,6 +396,7 @@ export function Navbar() {
                     </svg>
                     Agent Dashboard
                   </Link>
+                  </>
                 ) : (
                   <Link
                     href="/my-booking"

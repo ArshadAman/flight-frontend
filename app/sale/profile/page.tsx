@@ -283,7 +283,7 @@ export default function SaleProfilePage() {
     };
 
     return (
-        <main className="min-h-screen bg-slate-50 flex flex-col font-sans relative">
+        <main className="min-h-screen bg-background flex flex-col font-sans relative">
             <SaleNavbar />
             
             {/* Dark Red Gradient Header */}
@@ -541,7 +541,7 @@ export default function SaleProfilePage() {
                                             <button 
                                                 type="button"
                                                 onClick={() => setIsProfileEditing(false)}
-                                                className="border border-slate-350 hover:bg-slate-50 text-slate-700 font-extrabold text-[14px] px-8 py-3 rounded-full transition-all w-full sm:w-auto"
+                                                className="border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-[14px] px-8 py-3 rounded-full transition-all w-full sm:w-auto"
                                             >
                                                 Cancel
                                             </button>
@@ -736,7 +736,7 @@ export default function SaleProfilePage() {
 
                                 {/* Choose File Bar */}
                                 <div className="flex items-center gap-3">
-                                    <label className="border border-slate-350 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-[13px] px-6 py-2 rounded-full cursor-pointer transition-colors shadow-sm">
+                                    <label className="border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-[13px] px-6 py-2 rounded-full cursor-pointer transition-colors shadow-sm">
                                         Choose file
                                         <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
                                     </label>
@@ -751,7 +751,7 @@ export default function SaleProfilePage() {
                                     <button type="button" onClick={() => {
                                         setUploadedLogo(null);
                                         setLogoFileName("No file chosen");
-                                    }} className="border border-slate-350 hover:bg-slate-50 text-slate-700 font-extrabold text-[14px] px-10 py-3 rounded-full transition-all">
+                                    }} className="border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-[14px] px-10 py-3 rounded-full transition-all">
                                         Cancel
                                     </button>
                                 </div>
@@ -1109,7 +1109,7 @@ export default function SaleProfilePage() {
 
                             {/* Buttons footer */}
                             <div className="flex items-center gap-4 pt-6 border-t border-slate-100">
-                                <button type="button" onClick={() => setIsCreateSubUserOpen(false)} className="flex-1 border border-slate-350 hover:bg-slate-50 text-slate-700 font-extrabold text-[13.5px] py-2.5 rounded-full transition-colors active:scale-98">
+                                <button type="button" onClick={() => setIsCreateSubUserOpen(false)} className="flex-1 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-[13.5px] py-2.5 rounded-full transition-colors active:scale-98">
                                     Cancel
                                 </button>
                                 <button type="submit" className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white font-extrabold text-[13.5px] py-2.5 rounded-full transition-colors shadow-md active:scale-98">
@@ -1216,7 +1216,7 @@ export default function SaleProfilePage() {
 
                             {/* Buttons footer */}
                             <div className="flex items-center gap-4 pt-6 border-t border-slate-100">
-                                <button type="button" onClick={() => setIsAddCustOpen(false)} className="flex-1 border border-slate-350 hover:bg-slate-50 text-slate-700 font-extrabold text-[13.5px] py-2.5 rounded-full transition-colors active:scale-98">
+                                <button type="button" onClick={() => setIsAddCustOpen(false)} className="flex-1 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-[13.5px] py-2.5 rounded-full transition-colors active:scale-98">
                                     Cancel
                                 </button>
                                 <button type="submit" className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white font-extrabold text-[13.5px] py-2.5 rounded-full transition-colors shadow-md active:scale-98">

@@ -103,7 +103,7 @@ export default function ViewRequestPage() {
   const tabs = ['View Request', 'Make Payment', 'Add Passenger', 'View Booking'];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-background flex flex-col font-sans">
       <Navbar />
 
       <main className="flex-1 w-full max-w-[1440px] mx-auto bg-white shadow-sm mt-4 mb-10 overflow-hidden relative pb-20">

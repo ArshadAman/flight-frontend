@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBackendApiUrl } from "@/lib/apiConfig";
 
 export const dynamic = "force-dynamic";
 
 async function proxyRequest(request: NextRequest, { params }: { params: Promise<{ path?: string[] }> }) {
   const resolvedParams = await params;
   const path = resolvedParams?.path || [];
-  const backendBaseUrl = process.env.BACKEND_API_URL || "http://localhost:8001";
+  const backendBaseUrl = getBackendApiUrl();
   
   // Construct target URL
   let targetUrl = `${backendBaseUrl}/api/v1/bookings/group-bookings/`;

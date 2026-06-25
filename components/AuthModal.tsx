@@ -58,7 +58,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 const loggedInUser = await login(identifier.trim(), password);
                 onClose();
                 if (loggedInUser && loggedInUser.role === "AGENT") {
-                    router.push("/agent/dashboard");
+                    router.push(pathname?.startsWith("/sale") ? "/sale/inventory" : "/agent/dashboard");
                 }
             } else {
                 const payload = {
@@ -73,7 +73,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 if (portal === "agent") {
                     await registerAgent(payload);
                     onClose();
-                    router.push("/agent/dashboard");
+                    router.push(pathname?.startsWith("/sale") ? "/sale/inventory" : "/agent/dashboard");
                 } else {
                     await register(payload);
                     onClose();

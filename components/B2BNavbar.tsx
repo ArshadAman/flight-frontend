@@ -380,7 +380,7 @@ export function B2BNavbar() {
                         <span>Reports</span>
                       </Link>
 
-                      <Link href="/sale/pnr-history" onClick={() => setIsForSaleOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-1.5 px-2 rounded transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold">
+                      <Link href="/sale/history" onClick={() => setIsForSaleOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-1.5 px-2 rounded transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold">
                         <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg>
                         <span>PNR History</span>
                       </Link>

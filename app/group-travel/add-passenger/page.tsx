@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Bell, ChevronDown, CalendarIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useGroupTravel } from "@/context/GroupTravelContext";
-import { NotificationModal } from '@/components/NotificationModal';
+import { getStatusLabel } from "@/lib/groupTravel";
+import { NotificationModal } from "@/components/NotificationModal";
 
 // Mock data for Add Passenger dashboard
 const ADD_PASSENGER_DATA = [
@@ -41,7 +42,7 @@ export default function AddPassengerPage() {
   const tabs = ['View Request', 'Make Payment', 'Add Passenger', 'View Booking'];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-background flex flex-col font-sans">
       <Navbar />
 
       <main className="flex-1 w-full max-w-[1440px] mx-auto bg-white shadow-sm mt-4 mb-10 overflow-hidden relative pb-20">
@@ -246,7 +247,7 @@ export default function AddPassengerPage() {
                     {/* Status + Pax Details Link */}
                     <div className="flex items-center justify-between pl-1">
                       <div className="flex flex-col items-start gap-0.5">
-                        <span className="font-bold text-[15px] text-green-500 whitespace-nowrap">{req.status}</span>
+                        <span className="font-bold text-[15px] text-green-500 whitespace-nowrap">{getStatusLabel(req.status)}</span>
                         <span className="text-[13px] text-gray-500 whitespace-nowrap">
                           Valid till: {req.validTill || 'N/A'}
                         </span>

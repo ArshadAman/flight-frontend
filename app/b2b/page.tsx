@@ -48,7 +48,7 @@ export default function Home() {
   ];
 
   return (
-    <main id="main-content" className="min-h-screen bg-slate-50 flex flex-col overflow-x-hidden w-full max-w-full">
+    <main id="main-content" className="min-h-screen bg-background flex flex-col overflow-x-hidden w-full max-w-full">
       <B2BNavbar />
       <Hero>
         <B2BFlightSearch onSearch={handleSearch} />
@@ -75,8 +75,8 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
 
           {/* Card 1 */}
-          <div className="flex flex-col sm:flex-row bg-white rounded-[10px] border border-slate-200 overflow-hidden h-full shadow-sm">
-            <div className="w-full sm:w-[125px] h-[100px] sm:h-full bg-[#F2FBFF] flex items-center justify-center shrink-0">
+          <div className="flex flex-col sm:flex-row bg-white rounded-xl border border-border overflow-hidden h-full shadow-sm">
+            <div className="w-full sm:w-[125px] h-[100px] sm:h-full bg-background flex items-center justify-center shrink-0">
               <div className="relative w-20 h-20">
                 <ShieldIcon className="w-full h-full drop-shadow-sm" />
                 <div className="absolute inset-0 flex items-center justify-center top-[-3px]">
@@ -86,15 +86,15 @@ export default function Home() {
             </div>
             <div className="flex-1 px-4 sm:px-6 py-5 sm:py-6 flex flex-col justify-center sm:justify-start bg-white text-center sm:text-left">
               <h4 className="text-[18px] lg:text-[19px] font-bold text-[#0C2342] mb-2 leading-tight tracking-[0.01em]">Best Price Guarantee</h4>
-              <p className="text-[14px] lg:text-[15px] text-[#888] leading-[1.5]">
+              <p className="text-sm lg:text-base text-muted-foreground leading-relaxed">
                 Lorem Ipsum Dolor Sit Amet Cotetur. Tincidunt Curabitur Amet.
               </p>
             </div>
           </div>
 
           {/* Card 2 */}
-          <div className="flex flex-col sm:flex-row bg-white rounded-[10px] border border-slate-200 overflow-hidden h-full shadow-sm">
-            <div className="w-full sm:w-[125px] h-[100px] sm:h-full bg-[#F2FBFF] flex items-center justify-center shrink-0">
+          <div className="flex flex-col sm:flex-row bg-white rounded-xl border border-border overflow-hidden h-full shadow-sm">
+            <div className="w-full sm:w-[125px] h-[100px] sm:h-full bg-background flex items-center justify-center shrink-0">
               <div className="relative w-16 h-16 flex flex-col items-center">
                 <div className="w-16 h-12 bg-[#888] rounded-sm relative flex flex-col overflow-hidden shadow-inner">
                   <div className="h-[20px] w-full bg-[#D60D26] flex items-center justify-around px-2 pt-0.5">
@@ -112,15 +112,15 @@ export default function Home() {
             </div>
             <div className="flex-1 px-4 sm:px-6 py-5 sm:py-6 flex flex-col justify-center sm:justify-start bg-white text-center sm:text-left">
               <h4 className="text-[18px] lg:text-[19px] font-bold text-[#0C2342] mb-2 leading-tight tracking-[0.01em]">Easy &amp; Quick Booking</h4>
-              <p className="text-[14px] lg:text-[15px] text-[#888] leading-[1.5]">
+              <p className="text-sm lg:text-base text-muted-foreground leading-relaxed">
                 Lorem Ipsum Dolor Sit Amet Cotetur. Tincidunt Curabitur Amet.
               </p>
             </div>
           </div>
 
           {/* Card 3 */}
-          <div className="flex flex-col sm:flex-row bg-white rounded-[10px] border border-slate-200 overflow-hidden h-full shadow-sm">
-            <div className="w-full sm:w-[125px] h-[100px] sm:h-full bg-[#F2FBFF] flex items-center justify-center shrink-0">
+          <div className="flex flex-col sm:flex-row bg-white rounded-xl border border-border overflow-hidden h-full shadow-sm">
+            <div className="w-full sm:w-[125px] h-[100px] sm:h-full bg-background flex items-center justify-center shrink-0">
               <div className="relative w-[68px] h-[68px]">
                 <SupportClockIcon className="w-full h-full drop-shadow-sm" />
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -133,7 +133,7 @@ export default function Home() {
             </div>
             <div className="flex-1 px-4 sm:px-6 py-5 sm:py-6 flex flex-col justify-center sm:justify-start bg-white text-center sm:text-left">
               <h4 className="text-[18px] lg:text-[19px] font-bold text-[#0C2342] mb-2 leading-tight tracking-[0.01em]">Customer Care 24/7</h4>
-              <p className="text-[14px] lg:text-[15px] text-[#888] leading-[1.5]">
+              <p className="text-sm lg:text-base text-muted-foreground leading-relaxed">
                 Lorem Ipsum Dolor Sit Amet Cotetur. Tincidunt Curabitur Amet.
               </p>
             </div>

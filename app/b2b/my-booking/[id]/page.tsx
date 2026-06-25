@@ -12,6 +12,7 @@ import { ItineraryDetails } from "@/components/booking/ItineraryDetails";
 import { PassengerMoreDetails } from "@/components/booking/PassengerMoreDetails";
 import { PaymentDetails, BookingActions } from "@/components/booking/PaymentDetails";
 import SSRSelection from "@/components/booking/SSRSelection";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -65,7 +66,7 @@ export default function B2BBookingDetailsPage({ params }: PageProps) {
         }
 
         try {
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+            const apiBase = getPublicApiUrl();
             const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
             
             if (isUuid) {

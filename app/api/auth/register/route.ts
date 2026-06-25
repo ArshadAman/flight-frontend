@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBackendApiUrl } from "@/lib/apiConfig";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const backendBase = process.env.BACKEND_API_URL || "http://localhost:8001";
+    const backendBase = getBackendApiUrl();
 
     // Enforce password confirmation match server-side too
     if (body.password !== body.confirm_password) {

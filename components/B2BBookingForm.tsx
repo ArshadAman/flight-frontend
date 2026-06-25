@@ -48,7 +48,7 @@ export function B2BBookingForm() {
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                   {/* Header */}
                   <div 
-                    className={cn("px-6 py-3.5 flex items-center justify-between cursor-pointer transition-colors", activeStep === 'details' ? "bg-[#888]" : "bg-[#0C2342] hover:bg-[#0C2342]")}
+                    className={cn("px-6 py-3.5 flex items-center justify-between cursor-pointer transition-colors", activeStep === 'details' ? "bg-primary" : "bg-navy hover:bg-navy")}
                     onClick={() => setActiveStep('details')}
                   >
                       <h2 className="text-white font-bold text-[15px]">Details / Passenger Data</h2>
@@ -79,7 +79,7 @@ export function B2BBookingForm() {
 
                             {/* Badges */}
                             <div className="flex items-center gap-3 mt-1 select-none">
-                                <span className="bg-[#888] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider">PUB</span>
+                                <span className="bg-slate-500 text-white text-[11px] font-black px-2.5 py-1 rounded shadow-sm tracking-wider">PUB</span>
                                 <span className="border border-slate-300 text-slate-600 bg-white text-[11px] font-[800] px-2.5 py-1 rounded shadow-sm">FEE</span>
                                 <span className="bg-[#D60D26] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider flex items-center gap-1.5">
                                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -305,7 +305,7 @@ export function B2BBookingForm() {
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm mb-16">
                   {/* Header */}
                   <div 
-                    className={cn("px-6 py-3.5 flex items-center justify-between cursor-pointer transition-colors", activeStep === 'payment' ? "bg-[#888]" : "bg-[#0C2342] hover:bg-[#0C2342]")}
+                    className={cn("px-6 py-3.5 flex items-center justify-between cursor-pointer transition-colors", activeStep === 'payment' ? "bg-primary" : "bg-navy hover:bg-navy")}
                     onClick={() => setActiveStep('payment')}
                   >
                       <h2 className="text-white font-bold text-[15px]">Payment</h2>
@@ -333,7 +333,7 @@ export function B2BBookingForm() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 mt-1 select-none">
-                                <span className="bg-[#888] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider">PUB</span>
+                                <span className="bg-slate-500 text-white text-[11px] font-black px-2.5 py-1 rounded shadow-sm tracking-wider">PUB</span>
                                 <span className="border border-slate-300 text-slate-600 bg-white text-[11px] font-[800] px-2.5 py-1 rounded shadow-sm">FEE</span>
                                 <span className="bg-[#D60D26] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider flex items-center gap-1.5">
                                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>

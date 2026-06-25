@@ -33,6 +33,11 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { NotificationModal } from "@/components/NotificationModal";
+import {
+  GroupTravelDateField,
+  formatGroupTravelDate,
+  parseGroupTravelDate,
+} from "@/components/group-travel/GroupTravelDateField";
 
 const flightQuotes = [
   { 
@@ -119,10 +124,14 @@ export default function GroupTravelPage() {
   // Dynamic travel type state
   const [tripType, setTripType] = useState<"one-way" | "round-trip" | "multi-city">("round-trip");
   const [multiCityLegs, setMultiCityLegs] = useState<Array<{ origin: string; destination: string; departureDate: string }>>([
-    { origin: "Delhi(DEL)", destination: "Bangkok(BKK)", departureDate: "19 Aug, 25" },
-    { origin: "Bangkok(BKK)", destination: "Singapore(SIN)", departureDate: "24 Aug, 25" },
+    { origin: "", destination: "", departureDate: "" },
+    { origin: "", destination: "", departureDate: "" },
   ]);
   const [validationError, setValidationError] = useState<string>("");
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [departureOpen, setDepartureOpen] = useState(false);
+  const [returnOpen, setReturnOpen] = useState(false);
+  const [openLegDate, setOpenLegDate] = useState<number | null>(null);
 
   const addLeg = () => {
     if (multiCityLegs.length >= 6) return;
@@ -149,14 +158,14 @@ export default function GroupTravelPage() {
     setIsNegotiating(false);
   };
   
-  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      groupName: "Harshit786",
-      origin: "Delhi(DEL)",
-      destination: "Bangkok(BKK)",
-      departureDate: "19 Aug, 25",
-      returnDate: "28 Sep, 25",
+      groupName: "",
+      origin: "",
+      destination: "",
+      departureDate: "",
+      returnDate: "",
       passengersGroup: "",
       expectedFare: "",
       cabin: "",
@@ -294,12 +303,14 @@ export default function GroupTravelPage() {
 
       if (res) {
         setCreatedRequest(res);
+        setIsModalOpen(true);
+      } else {
+        setSubmitError("Failed to submit group travel request. Please sign in and try again.");
       }
-      setIsModalOpen(true);
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <main className="min-h-screen bg-background flex flex-col font-sans">
       <B2BNavbar />
 
       {/* Red Status Bar */}
@@ -457,18 +468,13 @@ export default function GroupTravelPage() {
                                     className="pb-2 pt-2 px-0 border-0 border-b border-gray-200 rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent"
                                   />
                                 </div>
-                                <div className="relative">
-                                  <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0">Departure Date</label>
-                                  <div className="relative flex items-center">
-                                    <Input
-                                      value={leg.departureDate}
-                                      onChange={(e) => updateLeg(idx, "departureDate", e.target.value)}
-                                      placeholder="e.g. 19 Aug, 25"
-                                      className="pb-2 pt-2 px-0 border-0 border-b border-gray-200 rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent w-full"
-                                    />
-                                    <CalendarIcon className="w-5 h-5 text-gray-400 absolute right-0 bottom-3 pointer-events-none" />
-                                  </div>
-                                </div>
+                                <GroupTravelDateField
+                                  label="Departure Date"
+                                  value={leg.departureDate}
+                                  onChange={(value) => updateLeg(idx, "departureDate", value)}
+                                  open={openLegDate === idx}
+                                  onOpenChange={(open) => setOpenLegDate(open ? idx : null)}
+                                />
                               </div>
                             </div>
                           ))}
@@ -519,35 +525,46 @@ export default function GroupTravelPage() {
                           </div>
 
                           {/* Departure Date */}
-                          <div className="relative">
-                            <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0 hover:text-gray-700 cursor-pointer z-10">
-                              Departure Date
-                            </label>
-                            <div className="relative flex items-center">
-                              <Input
-                                {...register("departureDate")}
-                                className={`pb-2 pt-2 px-0 border-0 border-b ${errors.departureDate ? 'border-red-500' : 'border-gray-200'} rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent w-full`}
+                          <Controller
+                            name="departureDate"
+                            control={control}
+                            render={({ field }) => (
+                              <GroupTravelDateField
+                                label="Departure Date"
+                                value={field.value || ""}
+                                onChange={(value) => {
+                                  field.onChange(value);
+                                  const returnVal = watch("returnDate");
+                                  const returnParsed = parseGroupTravelDate(returnVal || "");
+                                  const depParsed = parseGroupTravelDate(value);
+                                  if (returnParsed && depParsed && returnParsed < depParsed) {
+                                    setValue("returnDate", value);
+                                  }
+                                }}
+                                error={errors.departureDate?.message}
+                                open={departureOpen}
+                                onOpenChange={setDepartureOpen}
                               />
-                              <CalendarIcon className="w-5 h-5 text-gray-400 absolute right-0 bottom-3 pointer-events-none" />
-                            </div>
-                            {errors.departureDate && <span className="text-red-500 text-[11px] font-semibold mt-1 block"> {errors.departureDate.message} </span>}
-                          </div>
+                            )}
+                          />
 
                           {/* Return Date — hidden for one-way */}
                           {tripType === 'round-trip' && (
-                            <div className="relative">
-                              <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0 hover:text-gray-700 cursor-pointer z-10">
-                                Return Date
-                              </label>
-                              <div className="relative flex items-center">
-                                <Input
-                                  {...register("returnDate")}
-                                  className={`pb-2 pt-2 px-0 border-0 border-b ${errors.returnDate ? 'border-red-500' : 'border-gray-200'} rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent w-full`}
+                            <Controller
+                              name="returnDate"
+                              control={control}
+                              render={({ field }) => (
+                                <GroupTravelDateField
+                                  label="Return Date"
+                                  value={field.value || ""}
+                                  onChange={field.onChange}
+                                  error={errors.returnDate?.message}
+                                  minDate={parseGroupTravelDate(watch("departureDate") || "") || undefined}
+                                  open={returnOpen}
+                                  onOpenChange={setReturnOpen}
                                 />
-                                <CalendarIcon className="w-5 h-5 text-gray-400 absolute right-0 bottom-3 pointer-events-none" />
-                              </div>
-                              {errors.returnDate && <span className="text-red-500 text-[11px] font-semibold mt-1 block"> {errors.returnDate.message} </span>}
-                            </div>
+                              )}
+                            />
                           )}
                         </div>
                       )}
@@ -843,6 +860,13 @@ export default function GroupTravelPage() {
                 </div>
               </div>
             )}
+            {submitError && (
+              <div className="w-full max-w-[1100px] mb-4">
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-[14px] font-semibold">
+                  <span className="text-red-500">⚠</span> {submitError}
+                </div>
+              </div>
+            )}
             <div className="w-full max-w-[1100px] flex flex-col sm:flex-row gap-4 mb-20 text-[16px] md:text-[18px]">
               <Button type="button" variant="outline" onClick={() => router.back()} className="flex-1 py-5 md:py-7 rounded-full border-gray-900 text-gray-900 font-bold hover:bg-gray-50 flex gap-2 w-full text-[16px] md:text-[18px]">
                 Cancel 
@@ -862,7 +886,7 @@ export default function GroupTravelPage() {
                       <div className="bg-green-500 rounded-full flex items-center justify-center w-8 h-8 shrink-0">
                         <CheckCircle2 className="text-white w-5 h-5" />
                       </div>
-                      <h3 className="text-[17px] font-bold text-green-600 tracking-tight">Ticket change request submitted</h3>
+                      <h3 className="text-[17px] font-bold text-green-600 tracking-tight">Group travel request submitted</h3>
                     </div>
                     
                     <p className="text-gray-500 text-[15px] leading-[1.6] mb-8 font-medium">

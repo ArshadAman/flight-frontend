@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cabinToClassCode, parseDurationToMinutes } from "@/lib/flightSearch";
+import { getBackendApiUrl } from "@/lib/apiConfig";
 
 export const dynamic = "force-dynamic";
 import {
@@ -325,7 +326,7 @@ export async function GET(request: Request) {
     const destinationIata = getIataCode(destinationStr);
     const cabinCode = cabinToClassCode(cabin);
 
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8001";
+    const backendUrl = getBackendApiUrl();
 
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -425,39 +426,12 @@ export async function GET(request: Request) {
     console.log(`BFF Request to backend search URL: ${backendUrl}/api/v1/flights/search/ with payload:`, postPayload);
 
     try {
-        let response;
-        if (backendUrl.includes("web")) {
-            // Try calling the Docker network service first, fallback to localhost
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 1000); // 1-second timeout
-
-                response = await fetch(`${backendUrl}/api/v1/flights/search/`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(postPayload),
-                    cache: "no-store",
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-            } catch (dockerErr: any) {
-                console.warn(`Failed to reach web:8000 quickly (Error: ${dockerErr?.message || dockerErr}). Retrying with localhost:8001...`);
-                response = await fetch(`http://localhost:8001/api/v1/flights/search/`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(postPayload),
-                    cache: "no-store"
-                });
-            }
-        } else {
-            // Direct query to local host backend without any timeout/fallback
-            response = await fetch(`${backendUrl}/api/v1/flights/search/`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(postPayload),
-                cache: "no-store"
-            });
-        }
+        const response = await fetch(`${backendUrl}/api/v1/flights/search/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(postPayload),
+            cache: "no-store",
+        });
 
         if (!response.ok) {
             const errorText = await response.text();

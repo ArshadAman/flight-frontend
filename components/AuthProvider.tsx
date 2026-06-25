@@ -35,13 +35,9 @@ type AuthErrorBody = {
   detail?: string
 }
 
-const resolveApiBase = () => {
-  const configured =
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_API_BASE ||
-    (process.env.BACKEND_API_URL ? `${process.env.BACKEND_API_URL.replace(/\/$/, '')}/api/v1` : '')
-  return configured.replace(/\/$/, '')
-}
+import { getPublicApiUrl } from "@/lib/apiConfig";
+
+const resolveApiBase = () => getPublicApiUrl()
 
 const normalizeUser = (user: Partial<User> & { username?: string; first_name?: string; last_name?: string }) => ({
   id: user.id || '',

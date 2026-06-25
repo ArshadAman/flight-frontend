@@ -11,8 +11,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { Button } from "@/components/ui/button";
 
 export function SaleNavbar() {
-  const { isAuthModalOpen, openAuthModal, closeAuthModal, user: authUser, logout } = useAuth();
-  const user = authUser || { name: "Sanjay", email: "sanjay@destinyholidays.com" };
+  const { isAuthModalOpen, openAuthModal, closeAuthModal, user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -149,19 +148,17 @@ export function SaleNavbar() {
               <NavItem
                 name="Flight"
                 options={[
-                  { label: "All Booking", href: "/sale/flight/all", icon: <CurvedArrowIcon /> },
-                  { label: "Pending", href: "/sale/flight/pending", icon: <CurvedArrowIcon /> },
-                  { label: "Bookable", href: "/sale/flight/bookable", icon: <CurvedArrowIcon /> },
-                  { label: "Sold Out", href: "/sale/flight/sold-out", icon: <CurvedArrowIcon /> },
-                  { label: "Export", href: "/sale/flight/export", icon: <CurvedArrowIcon /> },
+                  { label: "All Inventory", href: "/sale/inventory", icon: <CurvedArrowIcon /> },
+                  { label: "Add Flight", href: "/sale/inventory/new", icon: <CurvedArrowIcon /> },
+                  { label: "Reports", href: "/sale/reports", icon: <CurvedArrowIcon /> },
+                  { label: "PNR History", href: "/sale/history", icon: <CurvedArrowIcon /> },
                 ]}
               />
               <NavItem 
                 name="Booking" 
                 options={[
-                  { label: "Upcoming", href: "/sale/booking/upcoming", icon: <CurvedArrowIcon /> },
-                  { label: "Departed", href: "/sale/booking/departed", icon: <CurvedArrowIcon /> },
-                  { label: "Travel", href: "/sale/booking/travel", icon: <CurvedArrowIcon /> },
+                  { label: "Inventory", href: "/sale/inventory", icon: <CurvedArrowIcon /> },
+                  { label: "PNR History", href: "/sale/history", icon: <CurvedArrowIcon /> },
                 ]}
               />
               <NavItem name="Inventory" hasDropdown={false} linkHref="/sale/inventory" />
@@ -181,7 +178,7 @@ export function SaleNavbar() {
                       className="relative flex flex-col items-center justify-center py-1 transition-colors duration-200 select-none group"
                     >
                       <div className="flex items-center gap-1 font-[700] text-slate-800 group-hover:text-primary transition-colors text-[15px] xl:text-[17px]">
-                        <span>{user?.name || "Sanjay"}</span>
+                        <span>{user?.name || user?.email || "Account"}</span>
                         <ChevronDown size={16} className={`transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180 text-primary' : 'text-slate-500'}`} />
                       </div>
                     </button>
@@ -335,11 +332,10 @@ export function SaleNavbar() {
             </div>
             <div className="flex flex-col gap-1">
               {[
-                { label: "All Booking", href: "/sale/flight/all" },
-                { label: "Pending", href: "/sale/flight/pending" },
-                { label: "Bookable", href: "/sale/flight/bookable" },
-                { label: "Sold Out", href: "/sale/flight/sold-out" },
-                { label: "Export", href: "/sale/flight/export" },
+                { label: "All Inventory", href: "/sale/inventory" },
+                { label: "Add Flight", href: "/sale/inventory/new" },
+                { label: "Reports", href: "/sale/reports" },
+                { label: "PNR History", href: "/sale/history" },
               ].map((opt, idx) => (
                 <Link key={idx} href={opt.href} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3 px-4 text-[14px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
                   <CurvedArrowIcon />
@@ -355,9 +351,8 @@ export function SaleNavbar() {
             </div>
             <div className="flex flex-col gap-1">
               {[
-                { label: "Upcoming", href: "/sale/booking/upcoming" },
-                { label: "Departed", href: "/sale/booking/departed" },
-                { label: "Travel", href: "/sale/booking/travel" },
+                { label: "Inventory", href: "/sale/inventory" },
+                { label: "PNR History", href: "/sale/history" },
               ].map((opt, idx) => (
                 <Link key={idx} href={opt.href} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3 px-4 text-[14px] font-bold text-slate-600 hover:text-[#D60D26] hover:bg-white rounded-xl transition-colors shadow-sm bg-slate-50">
                   <CurvedArrowIcon />

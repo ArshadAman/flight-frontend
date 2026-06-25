@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 type PassengerData = {
   pax_type?: number;
@@ -196,7 +197,7 @@ export function BookingActions({
     setErrorMessage(null);
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+      const apiBase = getPublicApiUrl();
       const ticketId = ticket?.id;
       const isBackendTicket = typeof ticketId === "string" && backendTicketIdPattern.test(ticketId);
 
@@ -430,7 +431,7 @@ export function BookingActions({
             className={`flex-1 min-w-[140px] px-4 py-3.5 rounded-full border text-[16px] font-[800] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-center tracking-tight ${
               isCancelling
                 ? "border-gray-300 text-gray-400 bg-white cursor-wait"
-                : "border-gray-300 text-[#1e2329] bg-white hover:bg-[#DE0A26] hover:text-white hover:border-[#DE0A26]"
+                : "border-gray-300 text-[#1e2329] bg-white hover:bg-primary hover:text-white hover:border-primary"
             }`}
           >
             {isCancelling ? "Cancelling..." : "Cancel Booking"}
@@ -442,7 +443,7 @@ export function BookingActions({
           <button
             onClick={onAddBaggageClick}
             title="Add baggage or excess luggage allowance via actual GDS airline updates."
-            className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-[#DE0A26] hover:text-white hover:border-[#DE0A26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight"
+            className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-primary hover:text-white hover:border-primary transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight"
           >
             Add Baggage
           </button>
@@ -451,7 +452,7 @@ export function BookingActions({
         {/* Check Refund */}
         <button
           onClick={() => setShowRefundModal(true)}
-          className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-[#DE0A26] hover:text-white hover:border-[#DE0A26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight"
+          className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-primary hover:text-white hover:border-primary transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight"
         >
           Check Refund
         </button>
@@ -461,7 +462,7 @@ export function BookingActions({
           <button
             onClick={onModificationClick}
             title="Modify seats or meal choices via actual GDS airline updates."
-            className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-[#DE0A26] hover:text-white hover:border-[#DE0A26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight"
+            className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-primary hover:text-white hover:border-primary transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight"
           >
             Modification
           </button>
@@ -470,7 +471,7 @@ export function BookingActions({
         {/* Print */}
         <button
           onClick={() => window.print()}
-          className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-[#DE0A26] hover:text-white hover:border-[#DE0A26] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight"
+          className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-primary hover:text-white hover:border-primary transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight"
         >
           Print
         </button>

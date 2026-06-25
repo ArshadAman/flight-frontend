@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useGroupTravel } from "@/context/GroupTravelContext";
 import { CheckCircle2, AlertCircle, X } from "lucide-react";
 import { PAYMENT_CONFIG } from "@/lib/paymentConfig";
+import { isPaidStatus } from "@/lib/groupTravel";
 
 // ---- Inline Toast ----
 interface Toast { id: number; type: "success" | "error"; message: string; }
@@ -123,7 +124,7 @@ function PaymentSummaryContent() {
      const totalFareInt = parseInt(req.expectedFare || '0') * ((req.adults || 0) + (req.children || 0));
      const formattedTotal = "INR " + totalFareInt.toLocaleString('en-IN') + ".00";
      const formattedHalf = "INR " + (totalFareInt * PAYMENT_CONFIG.splitPercentage).toLocaleString('en-IN') + ".00";
-     const isPaid = req.status === "Paid";
+     const isPaid = isPaidStatus(req.status);
 
      displayData.requestId = req.requestId;
      displayData.groupName = req.groupName || "Group";

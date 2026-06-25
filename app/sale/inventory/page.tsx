@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Filter, Plus, ArrowRight, X, Plane, ChevronDown, MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 type InventorySegment = {
     segment_id: number;
@@ -302,7 +303,7 @@ function extractInventoryErrorMessage(data: unknown): string | null {
 }
 
 export default function InventoryPage() {
-    const { access, refreshAccess } = useAuth();
+    const { access, refreshAccess, openAuthModal } = useAuth();
     const [inventoryFlights, setInventoryFlights] = useState<InventoryFlight[]>([]);
     const [groupBookings, setGroupBookings] = useState<GroupBookingApi[]>([]);
     const [tickets, setTickets] = useState<TicketApi[]>([]);
@@ -334,7 +335,7 @@ export default function InventoryPage() {
         }
 
         try {
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+            const apiBase = getPublicApiUrl();
             const res = await fetch(`${apiBase}/tickets/${ticketId}/agent-fulfill/`, {
                 method: "POST",
                 headers: {
@@ -380,7 +381,7 @@ export default function InventoryPage() {
         }
 
         try {
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+            const apiBase = getPublicApiUrl();
             const res = await fetch(`${apiBase}/tickets/${ticketId}/agent-cancel/`, {
                 method: "POST",
                 headers: {
@@ -427,7 +428,7 @@ export default function InventoryPage() {
             setLoadError(null);
 
             try {
-                const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+                const apiBase = getPublicApiUrl();
                 const fetchInventory = (token: string) => fetch(`${apiBase}/flights/inventory/`, {
                     headers: {
                         "Authorization": `Bearer ${token}`,
@@ -496,7 +497,7 @@ export default function InventoryPage() {
         const controller = new AbortController();
 
         const fetchAuthedJson = async (path: string) => {
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+            const apiBase = getPublicApiUrl();
             const request = (token: string | null) => fetch(`${apiBase}${path}`, {
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -614,8 +615,12 @@ export default function InventoryPage() {
             <div className="flex items-center gap-1 font-bold text-slate-700"><span className="text-slate-400">💺</span> {flight.seats_available}</div>
             <div className="font-bold text-slate-800">{formatFare(flight.price)}</div>
             <div>
-                <span className="px-4 py-1.5 rounded-full text-[12px] font-bold border bg-green-50 text-emerald-600 border-green-200">
-                    Open
+                <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold border ${
+                    flight.seats_available <= 0
+                        ? "bg-slate-100 text-slate-500 border-slate-200"
+                        : "bg-green-50 text-emerald-600 border-green-200"
+                }`}>
+                    {flight.seats_available <= 0 ? "Sold out" : "Open"}
                 </span>
             </div>
             <div className="text-slate-400 hover:text-slate-600 transition-colors flex justify-end">
@@ -625,7 +630,7 @@ export default function InventoryPage() {
     );
 
     return (
-        <div className="w-full min-h-screen bg-slate-50 flex flex-col font-sans">
+        <div className="w-full min-h-screen bg-background flex flex-col font-sans">
             <SaleNavbar />
 
             {/* Main Content with Drawer Flex */}
@@ -673,13 +678,28 @@ export default function InventoryPage() {
                                     </div>
                                 )}
 
-                                {!isLoading && !loadError && inventoryFlights.length === 0 && (
+                                {!isLoading && !access && (
+                                    <div className="px-6 py-10 text-center">
+                                        <p className="text-slate-600 font-medium mb-4">
+                                            Sign in as an agent to view and manage your flight inventory.
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={openAuthModal}
+                                            className="bg-[#D60D26] hover:bg-[#b00b1d] text-white font-bold px-8 py-3 rounded-full transition-colors"
+                                        >
+                                            Log in
+                                        </button>
+                                    </div>
+                                )}
+
+                                {!isLoading && access && !loadError && inventoryFlights.length === 0 && (
                                     <div className="px-6 py-10 text-center text-slate-500 font-medium">
                                         No inventory flights found yet.
                                     </div>
                                 )}
 
-                                {!isLoading && !loadError && Object.entries(groupedFlights).map(([monthLabel, flights]) => (
+                                {!isLoading && access && !loadError && Object.entries(groupedFlights).map(([monthLabel, flights]) => (
                                     <div key={monthLabel}>
                                         <div className="bg-[#F2FBFF] px-6 py-3 font-bold text-slate-700 text-[14px]">
                                             {monthLabel}

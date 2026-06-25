@@ -6,7 +6,7 @@ export default async function DestinationPage({ params }: { params: Promise<{ ci
     const formattedCity = city.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
     return (
-        <div className="w-full min-h-screen bg-slate-50 flex flex-col">
+        <div className="w-full min-h-screen bg-background flex flex-col">
             <Navbar />
 
             {/* Top Header Banner */}

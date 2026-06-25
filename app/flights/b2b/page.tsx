@@ -20,7 +20,7 @@ import { Logo } from '@/components/ui/logo';
 
 export default function B2BFlightsPage() {
   const [balanceHidden, setBalanceHidden] = useState(true);
-  const [activeSort, setActiveSort] = useState('Recommended');
+  const [activeSort, setActiveSort] = useState('Cheapest');
   const [sortOpen, setSortOpen] = useState(false);
 
   // Accordion active state trackers

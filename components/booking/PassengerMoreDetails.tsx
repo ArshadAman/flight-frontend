@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Armchair, Utensils } from "lucide-react";
 import JsBarcode from "jsbarcode";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 function parseDate(dateVal: any): Date {
   if (!dateVal) return new Date();
@@ -229,7 +230,7 @@ export function PassengerMoreDetails({ ticket }: { ticket?: any }) {
 
     const fetchSSR = async () => {
       try {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+        const apiBase = getPublicApiUrl();
         const res = await fetch(`${apiBase}/tickets/${ticket.id}/ssr/`, {
           headers: {
             "Authorization": `Bearer ${token}`

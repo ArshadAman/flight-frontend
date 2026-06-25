@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 import { 
   Armchair, 
   Utensils, 
@@ -168,7 +169,7 @@ export default function SSRSelection({
       }
 
       try {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+        const apiBase = getPublicApiUrl();
         const ticketId = ticket?.id || id;
         const res = await fetch(`${apiBase}/tickets/${ticketId}/ssr/`, {
           headers: {
@@ -678,7 +679,7 @@ export default function SSRSelection({
     }
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+      const apiBase = getPublicApiUrl();
       const ticketId = ticket?.id || id;
       const res = await fetch(`${apiBase}/tickets/${ticketId}/ssr/add/`, {
         method: "POST",

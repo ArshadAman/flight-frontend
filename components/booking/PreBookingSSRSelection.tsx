@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { type Flight } from "@/lib/flight";
 import { type BookingPassenger } from "@/lib/booking";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 interface PreBookingSSRSelectionProps {
   searchKey: string;
@@ -119,7 +120,7 @@ export default function PreBookingSSRSelection({
       }
 
       try {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+        const apiBase = getPublicApiUrl();
         const res = await fetch(`${apiBase}/flights/ssr/`, {
           method: "POST",
           headers: {

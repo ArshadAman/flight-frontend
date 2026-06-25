@@ -225,8 +225,8 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
         row: "flex w-full mt-2",
         cell: "text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
         day: cn("h-11 w-11 p-0 font-bold hover:bg-slate-100 rounded-xl transition-all text-[15px]"),
-        day_selected: "bg-[#888] text-white hover:bg-[#888] rounded-xl shadow-md",
-        day_today: "text-[#888] border border-[#888]",
+        day_selected: "bg-primary text-primary-foreground hover:bg-primary rounded-xl shadow-md",
+        day_today: "text-primary border border-primary",
         day_outside: "text-slate-300 opacity-50",
         day_disabled: "text-slate-300 opacity-50",
     };
@@ -236,9 +236,9 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
             {/* Header / Trip Type Logic */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white h-auto sm:h-14 rounded-t-[1.5rem] relative overflow-hidden">
                 <div className="hidden sm:block absolute bottom-0 w-full h-[1.5px] bg-slate-200" />
-                <div className="flex items-center px-8 h-14 bg-white text-[#D60D26] sm:border-b-[3px] border-[#D60D26] relative z-10 min-w-[150px] w-full sm:w-auto">
+                <div className="flex items-center px-8 h-14 bg-white text-brand sm:border-b-[3px] border-brand relative z-10 min-w-[150px] w-full sm:w-auto rounded-tl-[1.5rem]">
                     <div className="flex items-center gap-2 font-bold text-[15px] md:text-[16px]">
-                        <PlaneTakeoff className="w-5 h-5 text-[#D60D26]" strokeWidth={2.5} />
+                        <PlaneTakeoff className="w-5 h-5 text-brand" strokeWidth={2.5} />
                         <span className="tracking-tight">Flights</span>
                     </div>
                 </div>
@@ -725,7 +725,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                         {['Economy', 'Prem. Economy', 'Business', 'First'].map((cabin) => (
                                             <label key={cabin} className="flex items-center gap-3 cursor-pointer group" onClick={() => setCabinClass(cabin)}>
                                                 <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", cabinClass === cabin ? "border-[#888]" : "border-slate-300")}>
-                                                    {cabinClass === cabin && <div className="w-2.5 h-2.5 rounded-full bg-[#888]" />}
+                                                    {cabinClass === cabin && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                                                 </div>
                                                 <span className="text-[14px] font-semibold text-slate-700">{cabin}</span>
                                             </label>

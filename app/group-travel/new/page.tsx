@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { format, isValid, parse } from "date-fns";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
@@ -85,19 +87,48 @@ const flightQuotes = [
   }
 ];
 
-const formSchema = z.object({
-  groupName: z.string().min(1, "Group Name is required"),
-  origin: z.string().min(1, "Origin is required"),
-  destination: z.string().min(1, "Destination is required"),
-  departureDate: z.string().min(1, "Departure Date is required"),
-  returnDate: z.string().min(1, "Return Date is required"),
-  passengersGroup: z.string().min(1, "Please select a passenger group"),
-  expectedFare: z.string().min(1, "Expected Fare is required").regex(/^\d+(\.\d{1,2})?$/, "Must be a valid amount"),
-  cabin: z.string().min(1, "Please select a cabin"),
-  groupCategory: z.string().min(1, "Group Category is required"),
-  timing: z.string().min(1, "Please select a timing"),
-  airlinePreference: z.string().min(1, "Please select an airline"),
-});
+const DATE_DISPLAY_FORMAT = "dd MMM, yy";
+
+function formatGroupTravelDate(date: Date) {
+  return format(date, DATE_DISPLAY_FORMAT);
+}
+
+function startOfToday() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+}
+
+function parseGroupTravelDate(value: string): Date | undefined {
+  const parsed = parse(value, DATE_DISPLAY_FORMAT, new Date());
+  return isValid(parsed) ? parsed : undefined;
+}
+
+const formSchema = z
+  .object({
+    groupName: z.string().min(1, "Group Name is required"),
+    origin: z.string().min(1, "Origin is required"),
+    destination: z.string().min(1, "Destination is required"),
+    departureDate: z.string().min(1, "Departure Date is required"),
+    returnDate: z.string().min(1, "Return Date is required"),
+    passengersGroup: z.string().min(1, "Please select a passenger group"),
+    expectedFare: z.string().min(1, "Expected Fare is required").regex(/^\d+(\.\d{1,2})?$/, "Must be a valid amount"),
+    cabin: z.string().min(1, "Please select a cabin"),
+    groupCategory: z.string().min(1, "Group Category is required"),
+    timing: z.string().min(1, "Please select a timing"),
+    airlinePreference: z.string().min(1, "Please select an airline"),
+  })
+  .superRefine((data, ctx) => {
+    const departure = parseGroupTravelDate(data.departureDate);
+    const returnDate = parseGroupTravelDate(data.returnDate);
+    if (departure && returnDate && returnDate < departure) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Return date must be on or after departure",
+        path: ["returnDate"],
+      });
+    }
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -115,20 +146,23 @@ export default function GroupTravelPage() {
   const [isNegotiateSuccessOpen, setIsNegotiateSuccessOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [createdRequest, setCreatedRequest] = useState<any>(null);
+  const [departureOpen, setDepartureOpen] = useState(false);
+  const [returnOpen, setReturnOpen] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleCloseNegotiateModal = () => {
     setIsNegotiateSuccessOpen(false);
     setIsNegotiating(false);
   };
   
-  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      groupName: "Harshit786",
-      origin: "Delhi(DEL)",
-      destination: "Bangkok(BKK)",
-      departureDate: "19 Aug, 25",
-      returnDate: "28 Sep, 25",
+      groupName: "",
+      origin: "",
+      destination: "",
+      departureDate: "",
+      returnDate: "",
       passengersGroup: "",
       expectedFare: "",
       cabin: "",
@@ -143,7 +177,7 @@ export default function GroupTravelPage() {
   const watchedValues = watch();
 
   const handleFormSubmit = async (data: FormValues) => {
-
+      setSubmitError(null);
       // Generate request ID and timestamp
       const requestId = `GRP${Date.now().toString().slice(-10)}`;
       const now = new Date();
@@ -191,12 +225,14 @@ export default function GroupTravelPage() {
 
       if (res) {
         setCreatedRequest(res);
+        setIsModalOpen(true);
+      } else {
+        setSubmitError("Failed to submit group travel request. Please sign in and try again.");
       }
-      setIsModalOpen(true);
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <main className="min-h-screen bg-background flex flex-col font-sans">
       <Navbar />
 
       {/* Red Status Bar */}
@@ -325,9 +361,19 @@ export default function GroupTravelPage() {
                         
                         {/* Swap icon */}
                         <div className="flex justify-center shrink-0">
-                          <div className="w-9 h-9 rounded-full border border-[#D60D26] text-[#D60D26] flex items-center justify-center cursor-pointer">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const o = watch("origin");
+                              const d = watch("destination");
+                              setValue("origin", d);
+                              setValue("destination", o);
+                            }}
+                            className="w-9 h-9 rounded-full border border-[#D60D26] text-[#D60D26] flex items-center justify-center cursor-pointer hover:bg-rose-50 transition-colors"
+                            aria-label="Swap origin and destination"
+                          >
                             <ArrowRightLeft className="w-5 h-5 transform rotate-90 md:rotate-0" />
-                          </div>
+                          </button>
                         </div>
 
                         {/* Destination */}
@@ -341,34 +387,106 @@ export default function GroupTravelPage() {
                         </div>
 
                         {/* Departure Date */}
-                        <div className="relative">
-                          <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0 hover:text-gray-700 cursor-pointer z-10 w-full flex justify-between">
-                            Departure Date
-                          </label>
-                          <div className="relative flex items-center">
-                            <Input
-                              {...register("departureDate")}
-                              className={`pb-2 pt-2 px-0 border-0 border-b ${errors.departureDate ? 'border-red-500' : 'border-gray-200'} rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent w-full`}
-                            />
-                            <CalendarIcon className="w-5 h-5 text-gray-400 absolute right-0 bottom-3 pointer-events-none" />
-                          </div>
-                          {errors.departureDate && <span className="text-red-500 text-[11px] font-semibold mt-1 block"> {errors.departureDate.message} </span>}
-                        </div>
+                        <Controller
+                          name="departureDate"
+                          control={control}
+                          render={({ field }) => {
+                            const selected = parseGroupTravelDate(field.value);
+                            return (
+                              <div className="relative">
+                                <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0 z-10">
+                                  Departure Date
+                                </label>
+                                <Popover open={departureOpen} onOpenChange={setDepartureOpen}>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className={`relative flex w-full items-center pb-2 pt-2 border-0 border-b text-left ${errors.departureDate ? "border-red-500" : "border-gray-200"} focus-visible:outline-none focus-visible:border-gray-500`}
+                                    >
+                                      <span className="text-[16px] text-gray-900">
+                                        {field.value || "Select date"}
+                                      </span>
+                                      <CalendarIcon className="w-5 h-5 text-gray-400 absolute right-0 bottom-3" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={selected}
+                                      onSelect={(date) => {
+                                        if (!date) return;
+                                        const formatted = formatGroupTravelDate(date);
+                                        field.onChange(formatted);
+                                        setDepartureOpen(false);
+                                        const returnVal = watch("returnDate");
+                                        const returnParsed = parseGroupTravelDate(returnVal);
+                                        if (returnParsed && returnParsed < date) {
+                                          setValue("returnDate", formatted);
+                                        }
+                                      }}
+                                      disabled={{ before: startOfToday() }}
+                                      defaultMonth={selected ?? new Date()}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                                {errors.departureDate && (
+                                  <span className="text-red-500 text-[11px] font-semibold mt-1 block">
+                                    {errors.departureDate.message}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          }}
+                        />
 
                         {/* Return Date */}
-                        <div className="relative">
-                          <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0 hover:text-gray-700 cursor-pointer z-10 w-full flex justify-between">
-                            Return Date
-                          </label>
-                          <div className="relative flex items-center">
-                            <Input
-                              {...register("returnDate")}
-                              className={`pb-2 pt-2 px-0 border-0 border-b ${errors.returnDate ? 'border-red-500' : 'border-gray-200'} rounded-none shadow-none focus-visible:ring-0 focus-visible:border-gray-500 h-auto text-[16px] text-gray-900 bg-transparent w-full`}
-                            />
-                            <CalendarIcon className="w-5 h-5 text-gray-400 absolute right-0 bottom-3 pointer-events-none" />
-                          </div>
-                          {errors.returnDate && <span className="text-red-500 text-[11px] font-semibold mt-1 block"> {errors.returnDate.message} </span>}
-                        </div>
+                        <Controller
+                          name="returnDate"
+                          control={control}
+                          render={({ field }) => {
+                            const selected = parseGroupTravelDate(field.value);
+                            const departure = parseGroupTravelDate(watch("departureDate"));
+                            const minReturn = departure ?? startOfToday();
+                            return (
+                              <div className="relative">
+                                <label className="text-[13px] text-gray-500 absolute top-[-10px] left-0 z-10">
+                                  Return Date
+                                </label>
+                                <Popover open={returnOpen} onOpenChange={setReturnOpen}>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className={`relative flex w-full items-center pb-2 pt-2 border-0 border-b text-left ${errors.returnDate ? "border-red-500" : "border-gray-200"} focus-visible:outline-none focus-visible:border-gray-500`}
+                                    >
+                                      <span className="text-[16px] text-gray-900">
+                                        {field.value || "Select date"}
+                                      </span>
+                                      <CalendarIcon className="w-5 h-5 text-gray-400 absolute right-0 bottom-3" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={selected}
+                                      onSelect={(date) => {
+                                        if (!date) return;
+                                        field.onChange(formatGroupTravelDate(date));
+                                        setReturnOpen(false);
+                                      }}
+                                      disabled={{ before: minReturn }}
+                                      defaultMonth={selected ?? departure ?? new Date()}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                                {errors.returnDate && (
+                                  <span className="text-red-500 text-[11px] font-semibold mt-1 block">
+                                    {errors.returnDate.message}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          }}
+                        />
 
                       </div>
 
@@ -555,7 +673,7 @@ export default function GroupTravelPage() {
                       </div>
 
                       <div className="bg-[#F2FBFF] py-2 px-4 flex justify-end">
-                        <span className="text-[14px] font-bold text-gray-900 flex items-center gap-1.5"><User className="w-4 h-4"/> {totalPassengers} Adult{totalPassengers > 1 ? 's' : ''}</span>
+                        <span className="text-[14px] font-bold text-gray-900 flex items-center gap-1.5"><User className="w-4 h-4"/> {adults + children} Passenger{(adults + children) !== 1 ? 's' : ''}</span>
                       </div>
 
                       <div className="p-4 space-y-4 bg-white rounded-b-[12px]">
@@ -642,6 +760,9 @@ export default function GroupTravelPage() {
             </div>
 
             {/* Action Buttons */}
+            {submitError && (
+              <p className="w-full max-w-[1100px] text-red-600 text-sm font-semibold mb-2">{submitError}</p>
+            )}
             <div className="w-full max-w-[1100px] flex flex-col sm:flex-row gap-4 mb-20 text-[16px] md:text-[18px]">
               <Button variant="outline" className="flex-1 py-5 md:py-7 rounded-full border-gray-900 text-gray-900 font-bold hover:bg-gray-50 flex gap-2 w-full text-[16px] md:text-[18px]">
                 Cancel 
@@ -661,7 +782,7 @@ export default function GroupTravelPage() {
                       <div className="bg-green-500 rounded-full flex items-center justify-center w-8 h-8 shrink-0">
                         <CheckCircle2 className="text-white w-5 h-5" />
                       </div>
-                      <h3 className="text-[17px] font-bold text-green-600 tracking-tight">Ticket change request submitted</h3>
+                      <h3 className="text-[17px] font-bold text-green-600 tracking-tight">Group travel request submitted</h3>
                     </div>
                     
                     <p className="text-gray-500 text-[15px] leading-[1.6] mb-8 font-medium">

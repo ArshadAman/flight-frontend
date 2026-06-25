@@ -8,6 +8,7 @@ import { Bell, ChevronDown, CalendarIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useGroupTravel } from '@/context/GroupTravelContext';
 import { NotificationModal } from '@/components/NotificationModal';
+import { BOOKED_STATUSES } from '@/lib/groupTravel';
 
 export default function ViewBookingPage() {
   const [activeTab, setActiveTab] = useState('View Booking');
@@ -15,12 +16,14 @@ export default function ViewBookingPage() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   
   // Filter for completed/paid bookings
-  const paidPayments = requests.filter((req) => ["PAID", "PNR_CREATED", "NAME_SUBMITTED", "TICKETED", "COMPLETED", "Paid"].includes(req.status === "PAID" ? "Paid" : req.status === "PNR_CREATED" ? "PNR Created" : req.status === "NAME_SUBMITTED" ? "Names Submitted" : req.status === "TICKETED" ? "Ticketed" : req.status === "COMPLETED" ? "Completed" : req.status));
+  const paidPayments = requests.filter((req) =>
+    BOOKED_STATUSES.includes(req.status as (typeof BOOKED_STATUSES)[number])
+  );
 
   const tabs = ['View Request', 'Make Payment', 'Add Passenger', 'View Booking'];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-background flex flex-col font-sans">
       <B2BNavbar />
 
       <main className="flex-1 w-full max-w-[1440px] mx-auto bg-white shadow-sm mt-4 mb-10 overflow-hidden relative pb-20">

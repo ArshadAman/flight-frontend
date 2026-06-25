@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
+import { Outfit } from "next/font/google";
 import "./globals.css";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "My Travel Deal | Journeys Simple, Safe, And Affordable",
@@ -15,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="antialiased overflow-x-hidden w-full">
+    <html lang="en" suppressHydrationWarning className={outfit.variable}>
+      <body className="antialiased overflow-x-hidden w-full font-sans" suppressHydrationWarning>
         <AuthProvider>
           <GroupTravelProvider>
             <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-black">

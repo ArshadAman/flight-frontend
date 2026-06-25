@@ -1,5 +1,5 @@
-import type { Flight } from "@/lib/flight";
-import { mealOptionsForFlight } from "@/lib/flight";
+import { getPublicApiUrl } from "@/lib/apiConfig";
+import { mealOptionsForFlight, type Flight } from "@/lib/flight";
 
 export const BOOKING_DRAFT_KEY = "flight_booking_draft";
 
@@ -143,7 +143,7 @@ export async function submitFlightBooking(
   token: string | null,
   bookingSSRDetails: any[] = []
 ): Promise<{ ok: true; tickets: unknown[] } | { ok: false; error: string }> {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+  const apiBase = getPublicApiUrl();
 
   const paxPayload = passengers.map((p) => ({
     pax_type: p.pax_type,

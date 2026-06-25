@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -82,7 +83,7 @@ interface TicketItem {
   created_at: string;
 }
 
-const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+const apiBase = getPublicApiUrl();
 
 export default function AgentDashboardPage() {
   const router = useRouter();

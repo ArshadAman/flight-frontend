@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useGroupTravel } from '@/context/GroupTravelContext';
 import { PAYMENT_CONFIG } from '@/lib/paymentConfig';
 import { NotificationModal } from '@/components/NotificationModal';
+import { PAYABLE_STATUSES } from '@/lib/groupTravel';
 
 export default function MakePaymentPage() {
   const [activeTab, setActiveTab] = useState('Make Payment');
@@ -16,12 +17,14 @@ export default function MakePaymentPage() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   
   // Filter for pending payments
-  const pendingPayments = requests.filter((req) => ["PAYMENT_PENDING", "PARTIALLY_PAID", "Payment pending"].includes(req.status === "PAYMENT_PENDING" ? "Payment Pending" : req.status === "PARTIALLY_PAID" ? "Partially Paid" : req.status));
+  const pendingPayments = requests.filter((req) =>
+    PAYABLE_STATUSES.includes(req.status as (typeof PAYABLE_STATUSES)[number])
+  );
 
   const tabs = ['View Request', 'Make Payment', 'Add Passenger', 'View Booking'];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-background flex flex-col font-sans">
       <Navbar />
 
       <main className="flex-1 w-full max-w-[1440px] mx-auto bg-white shadow-sm mt-4 mb-10 overflow-hidden relative pb-20">

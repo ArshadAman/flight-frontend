@@ -7,7 +7,7 @@ import { FlightBookingForm } from "@/components/booking/FlightBookingForm";
 
 export default function BookPage() {
   return (
-    <main className="min-h-screen bg-[#F2FBFF] flex flex-col">
+    <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
       <Suspense
         fallback={

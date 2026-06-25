@@ -3,7 +3,7 @@ import { Footer } from "@/components/Footer";
 
 export default function B2BForSalePage() {
     return (
-        <div className="w-full min-h-screen bg-slate-50 flex flex-col">
+        <div className="w-full min-h-screen bg-background flex flex-col">
             <B2BNavbar />
 
             {/* Top Header Banner */}

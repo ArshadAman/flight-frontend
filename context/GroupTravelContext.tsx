@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { mapAirlinePreference } from "@/lib/groupTravel";
 
 export interface GroupQuote {
   id: string;
@@ -119,8 +120,8 @@ function formatHumanToDate(humanStr: string): string {
   if (!humanStr) return "";
   if (/^\d{4}-\d{2}-\d{2}$/.test(humanStr)) return humanStr;
   try {
-    const cleaned = humanStr.replace(",", "").trim();
-    const parts = cleaned.split(/\s+/);
+    const normalized = humanStr.replace(/,/g, " ").replace(/\s+/g, " ").trim();
+    const parts = normalized.split(" ");
     if (parts.length < 3) return humanStr;
     const day = parseInt(parts[0], 10);
     const monthStr = parts[1].toLowerCase();
@@ -128,14 +129,14 @@ function formatHumanToDate(humanStr: string): string {
     if (year < 100) year += 2000;
     const months: Record<string, number> = {
       jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
-      jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+      jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
     };
     const month = months[monthStr.slice(0, 3)] ?? 0;
     const d = new Date(year, month, day);
     if (isNaN(d.getTime())) return humanStr;
     const pad = (n: number) => n.toString().padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  } catch (e) {
+  } catch {
     return humanStr;
   }
 }
@@ -256,7 +257,7 @@ export function GroupTravelProvider({ children }: { children: React.ReactNode })
           pax_children: req.children,
           pax_infants: req.infants,
           expected_fare_per_pax: parseFloat(req.expectedFare) || 0,
-          airline_preference: req.airlinePreference,
+          airline_preference: mapAirlinePreference(req.airlinePreference),
           timing_preference: req.timing?.toUpperCase() || 'MORNING',
           group_category: req.groupCategory,
           remarks: req.remarks || "",
@@ -437,6 +438,7 @@ export function GroupTravelProvider({ children }: { children: React.ReactNode })
         headers: {
           "Content-Type": "application/json",
           "X-Mock-Role": "ADMIN",
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({ pnr_number: pnrNumber }),
       });
@@ -466,11 +468,12 @@ export function GroupTravelProvider({ children }: { children: React.ReactNode })
         headers: {
           "Content-Type": "application/json",
           "X-Mock-Role": role,
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error(await response.text());
-      await refreshRequests("AGENT");
+      await refreshRequests(role);
       return true;
     } catch (e) {
       console.error("Error updating request:", e)
@@ -486,6 +489,7 @@ export function GroupTravelProvider({ children }: { children: React.ReactNode })
         headers: {
           "Content-Type": "application/json",
           "X-Mock-Role": "ADMIN",
+          ...getAuthHeaders(),
         },
       });
       if (!response.ok) throw new Error(await response.text());

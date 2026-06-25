@@ -12,6 +12,7 @@ import { ItineraryDetails } from "@/components/booking/ItineraryDetails";
 import { PassengerMoreDetails } from "@/components/booking/PassengerMoreDetails";
 import { PaymentDetails, BookingActions } from "@/components/booking/PaymentDetails";
 import SSRSelection from "@/components/booking/SSRSelection";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -80,7 +81,7 @@ export default function BookingDetailsPage({ params }: PageProps) {
         }
 
         try {
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+            const apiBase = getPublicApiUrl();
             // If the id is a PNR or ticket number, we first fetch all tickets and filter, 
             // or try to fetch by direct UUID if valid format.
             const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);

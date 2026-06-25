@@ -117,7 +117,7 @@ export default function AgentSignupPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row font-sans">
       {/* Left Column: Brand Panel (matching the B2B partner desk style) */}
       <div className="lg:w-[45%] bg-[#121121] text-white flex flex-col justify-between p-8 md:p-14 relative overflow-hidden border-r border-slate-800">
         <div className="absolute top-0 left-0 w-96 h-96 bg-red-600/10 rounded-full blur-3xl" />

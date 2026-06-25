@@ -3,7 +3,7 @@ import { Footer } from "@/components/Footer";
 
 export default function Loading() {
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col">
+    <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
       {/* Hero & FlightSearch Skeleton */}

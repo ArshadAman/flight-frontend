@@ -294,7 +294,7 @@ export function OperatorDashboardView({ NavbarComponent }: OperatorDashboardView
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-background flex flex-col font-sans">
       <NavbarComponent />
 
       {/* Toast notifications */}

@@ -8,6 +8,7 @@ import { Plane, Clock, ChevronRight, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { fetchWithAuth } from "@/lib/api";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const statusConfig: Record<string, { label: string; dot: string; badge: string }> = {
@@ -322,9 +323,7 @@ export default function MyBooking() {
 
         const fetchTickets = async () => {
             try {
-                const apiBase = (
-                    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1"
-                ).replace(/\/$/, "");
+                const apiBase = getPublicApiUrl();
 
                 let apiTickets: ApiTicket[] = [];
                 try {

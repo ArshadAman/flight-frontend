@@ -4,6 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, ArrowRightLeft, X, Plane, ChevronLeft, ChevronRight, Check, Clock, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
+import { RouteMapBackground } from "@/components/sale/RouteMapBackground";
 
 type Airport = {
     code: string;
@@ -39,6 +41,38 @@ const POLICY_FIELDS: { key: PolicyKey; label: string; placeholder: string }[] = 
 ];
 
 const TERMINAL_OPTIONS = ["Terminal 1", "Terminal 2", "Terminal 3"];
+
+const AIRPORT_COORDS: Record<string, { lat: number; lng: number }> = {
+    DEL: { lat: 28.5562, lng: 77.1 },
+    BOM: { lat: 19.0896, lng: 72.8656 },
+    BLR: { lat: 13.1986, lng: 77.7066 },
+    MAA: { lat: 12.9941, lng: 80.1709 },
+    CCU: { lat: 22.6546, lng: 88.4467 },
+    HYD: { lat: 17.2403, lng: 78.4294 },
+    PNQ: { lat: 18.5822, lng: 73.9197 },
+    AMD: { lat: 23.0772, lng: 72.6347 },
+    GOI: { lat: 15.3808, lng: 73.8314 },
+    JAI: { lat: 26.8242, lng: 75.8122 },
+    COK: { lat: 10.152, lng: 76.4019 },
+    LKO: { lat: 26.7606, lng: 80.8893 },
+    GAU: { lat: 26.1061, lng: 91.5859 },
+    TRV: { lat: 8.4821, lng: 76.9201 },
+    BBI: { lat: 20.2443, lng: 85.8178 },
+    PAT: { lat: 25.5913, lng: 85.088 },
+    IDR: { lat: 22.7218, lng: 75.8011 },
+    IXC: { lat: 30.6735, lng: 76.7885 },
+    JFK: { lat: 40.6413, lng: -73.7781 },
+    LHR: { lat: 51.47, lng: -0.4543 },
+    DXB: { lat: 25.2532, lng: 55.3657 },
+    SIN: { lat: 1.3644, lng: 103.9915 },
+    CDG: { lat: 49.0097, lng: 2.5479 },
+    HND: { lat: 35.5494, lng: 139.7798 },
+    SYD: { lat: -33.9399, lng: 151.1753 },
+    YYZ: { lat: 43.6777, lng: -79.6248 },
+    FRA: { lat: 50.0379, lng: 8.5622 },
+    HKG: { lat: 22.308, lng: 113.9185 },
+    BKK: { lat: 13.69, lng: 100.7501 },
+};
 
 const AIRPORTS: Airport[] = [
     { code: "DEL", city: "New Delhi", country: "India", name: "Indira Gandhi International Airport" },
@@ -336,7 +370,7 @@ export default function AddPNRPage() {
 
         setIsSubmitting(true);
         try {
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
+            const apiBase = getPublicApiUrl();
 
             for (const dateStr of selectedOperatingDates) {
                 const [year, month, day] = dateStr.split('-').map(Number);
@@ -495,7 +529,8 @@ export default function AddPNRPage() {
         onPrev: () => void,
         onNext: () => void,
         pickedDate: string | null,
-        onPickDate: (iso: string) => void
+        onPickDate: (iso: string) => void,
+        highlighted = false
     ) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -524,11 +559,11 @@ export default function AddPNRPage() {
         }
 
         return (
-            <div className="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden w-[320px] flex flex-col pointer-events-auto shrink-0 mb-10">
+            <div className={`bg-white rounded-xl shadow-2xl border overflow-hidden w-full max-w-[320px] flex flex-col pointer-events-auto shrink-0 ${highlighted ? "border-[#D60D26] ring-2 ring-[#D60D26]/20" : "border-slate-200"}`}>
                 <div className="bg-[#121121] text-white text-center py-2.5 text-[12px] font-bold tracking-widest uppercase">
                     {title}
                 </div>
-                <div className="bg-[#F2FBFF] text-slate-800 flex items-center justify-between px-5 py-3 font-extrabold text-[15px]">
+                <div className="bg-[#FFE8EE] text-slate-800 flex items-center justify-between px-5 py-3 font-extrabold text-[15px]">
                     <button onClick={onPrev} className="hover:text-[#D60D26] transition-colors p-1 rounded">
                         <ChevronLeft className="w-5 h-5" />
                     </button>
@@ -540,7 +575,7 @@ export default function AddPNRPage() {
                 <div className="p-5 bg-white">
                     <div className="grid grid-cols-7 text-center text-[13px] font-bold mb-4">
                         {['S','M','T','W','T','F','S'].map((d, i) => (
-                            <div key={i} className={i === 0 || i === 6 ? 'text-[#D60D26]' : 'text-slate-600'}>{d}</div>
+                            <div key={i} className={i === 0 ? 'text-[#D60D26]' : 'text-slate-600'}>{d}</div>
                         ))}
                     </div>
                     <div className="grid grid-cols-7 text-center text-[14px] gap-y-2">
@@ -576,15 +611,23 @@ export default function AddPNRPage() {
         );
     };
 
-    const mapQuery = origin ? `${origin.city}, ${origin.country}` : "World";
-    const mapZoom = origin ? (destination ? 4 : 5) : 2;
+    const originCoords = origin ? AIRPORT_COORDS[origin.code] ?? null : null;
+    const destinationCoords = destination ? AIRPORT_COORDS[destination.code] ?? null : null;
+
+    const handleSwapRoute = () => {
+        if (!origin || !destination) return;
+        const nextOrigin = destination;
+        const nextDestination = origin;
+        setOrigin(nextOrigin);
+        setDestination(nextDestination);
+    };
 
     return (
         <div className="w-full h-screen flex flex-col bg-[#F2FBFF] overflow-hidden font-sans relative">
             {/* Header */}
             <div className="w-full h-16 bg-gradient-to-r from-[#D60D26] to-[#30060F] text-white flex items-center justify-between px-4 sm:px-6 z-20 shrink-0 shadow-md overflow-x-auto no-scrollbar">
                 <button onClick={() => router.back()} className="flex items-center gap-1 sm:gap-2 font-bold text-[14px] sm:text-[15px] hover:text-white/80 transition-colors shrink-0">
-                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Add PNR</span><span className="sm:hidden">Back</span>
+                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> Add flights
                 </button>
                 <div className="flex items-center gap-1.5 sm:gap-3 text-[11px] sm:text-[14px] shrink-0 mx-auto px-4">
                     <div className="flex flex-col items-center relative">
@@ -607,24 +650,15 @@ export default function AddPNRPage() {
 
             {/* Map Background (Only for steps 0-2) */}
             {step < 3 && (
-                <div className="absolute inset-0 z-0 top-16 bottom-20">
-                    <iframe 
-                        src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=p&z=${mapZoom}&ie=UTF8&iwloc=&output=embed`}
-                        width="100%" 
-                        height="100%" 
-                        style={{ border: 0, opacity: 0.8 }} 
-                        allowFullScreen 
-                        loading="lazy" 
-                        className="absolute inset-0 pointer-events-none"
-                    ></iframe>
-                    {/* Removed SVG overlay to prevent unwanted marks */}
+                <div className="absolute inset-0 z-0 top-16 bottom-[88px]">
+                    <RouteMapBackground origin={originCoords} destination={destinationCoords} />
                 </div>
             )}
 
             {/* Step 0-2 View */}
             {step < 3 && (
-                <div className="relative z-20 flex-1 overflow-y-auto flex flex-col items-center pt-10 pb-20 px-4 pointer-events-none w-full">
-                    <div className="bg-white rounded-[24px] shadow-2xl p-4 flex flex-col sm:flex-row items-center gap-4 w-full max-w-[800px] pointer-events-auto transition-transform hover:scale-[1.01] relative shrink-0 z-30">
+                <div className="relative z-20 flex-1 overflow-y-auto flex flex-col items-center pt-6 sm:pt-8 pb-24 px-4 pointer-events-none w-full">
+                    <div className="bg-white rounded-[20px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] px-5 py-4 sm:px-8 sm:py-5 flex flex-col sm:flex-row items-center gap-4 w-full max-w-[720px] pointer-events-auto relative shrink-0 z-30">
                         <div 
                             className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "origin" ? "bg-slate-50 ring-2 ring-[#D60D26]/20" : "hover:bg-slate-50"}`}
                             onClick={() => setActiveInput("origin")}
@@ -641,14 +675,27 @@ export default function AddPNRPage() {
                                 />
                             ) : (
                                 <div className="font-extrabold text-slate-800 text-[20px] truncate">
-                                    {origin ? `${origin.city} (${origin.code})` : <span className="text-slate-300">Select Origin</span>}
+                                    {origin ? (
+                                        <>
+                                            {origin.city}{" "}
+                                            <span className="text-[#D60D26]">({origin.code})</span>
+                                        </>
+                                    ) : (
+                                        <span className="text-slate-300">Select Origin</span>
+                                    )}
                                 </div>
                             )}
                         </div>
                         
-                        <div className="w-12 h-12 rounded-full border border-[#D60D26] text-[#D60D26] flex items-center justify-center shrink-0 bg-white z-10">
+                        <button
+                            type="button"
+                            onClick={handleSwapRoute}
+                            disabled={!origin || !destination}
+                            className="w-12 h-12 rounded-full border border-[#D60D26] text-[#D60D26] flex items-center justify-center shrink-0 bg-white z-10 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-rose-50 transition-colors"
+                            aria-label="Swap origin and destination"
+                        >
                             <ArrowRight className="w-5 h-5" />
-                        </div>
+                        </button>
 
                         <div 
                             className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "destination" ? "bg-slate-50 ring-2 ring-[#D60D26]/20" : "hover:bg-slate-50"}`}
@@ -666,7 +713,14 @@ export default function AddPNRPage() {
                                 />
                             ) : (
                                 <div className="font-extrabold text-slate-800 text-[20px] truncate">
-                                    {destination ? `${destination.city} (${destination.code})` : <span className="text-slate-300">Select Destination</span>}
+                                    {destination ? (
+                                        <>
+                                            {destination.city}{" "}
+                                            <span className="text-[#D60D26]">({destination.code})</span>
+                                        </>
+                                    ) : (
+                                        <span className="text-slate-300">Select Destination</span>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -703,34 +757,26 @@ export default function AddPNRPage() {
                     </div>
 
                     {step > 0 && (
-                        <div className="mt-10 flex flex-col md:flex-row gap-6 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-20 items-center">
-                            {step === 1 && renderCalendar(
-                                "DEPARTURE",
+                        <div className="mt-8 flex flex-col lg:flex-row gap-5 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-20 items-center justify-center w-full max-w-[700px]">
+                            {renderCalendar(
+                                "FROM",
                                 calendarMonth,
                                 () => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)),
                                 () => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)),
                                 selectedDate,
                                 (iso) => setSelectedDate(iso)
                             )}
-                            {step === 2 && (
-                                <>
-                                    {renderCalendar(
-                                        "FROM",
-                                        calendarMonth,
-                                        () => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)),
-                                        () => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)),
-                                        selectedDate,
-                                        (iso) => setSelectedDate(iso)
-                                    )}
-                                    {renderCalendar(
-                                        "TO",
-                                        returnCalendarMonth,
-                                        () => setReturnCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)),
-                                        () => setReturnCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)),
-                                        selectedReturnDate,
-                                        (iso) => setSelectedReturnDate(iso)
-                                    )}
-                                </>
+                            {renderCalendar(
+                                "TO",
+                                returnCalendarMonth,
+                                () => setReturnCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)),
+                                () => setReturnCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)),
+                                selectedReturnDate,
+                                (iso) => {
+                                    setSelectedReturnDate(iso);
+                                    setStep(2);
+                                },
+                                step === 2
                             )}
                         </div>
                     )}
@@ -902,8 +948,11 @@ export default function AddPNRPage() {
                             )}
                         </div>
                         <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto mt-2 sm:mt-0">
-                            {step === 1 && (
-                                <button onClick={() => setStep(2)} className="w-full sm:w-auto justify-center border border-[#D60D26] text-[#D60D26] hover:bg-rose-50 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[14px] sm:text-[15px] flex items-center gap-2 transition-colors">
+                            {step >= 1 && !selectedReturnDate && (
+                                <button
+                                    onClick={() => setStep(2)}
+                                    className="w-full sm:w-auto justify-center border border-[#D60D26] text-[#D60D26] hover:bg-rose-50 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[14px] sm:text-[15px] flex items-center gap-2 transition-colors"
+                                >
                                     <ArrowRightLeft className="w-4 h-4" /> Add return flight
                                 </button>
                             )}

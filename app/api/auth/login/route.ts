@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBackendApiUrl } from "@/lib/apiConfig";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const backendBase = process.env.BACKEND_API_URL || "http://localhost:8001";
+    const backendBase = getBackendApiUrl();
 
     // Step 1: Get JWT tokens from Django
     const tokenRes = await fetch(`${backendBase}/api/v1/auth/login/`, {

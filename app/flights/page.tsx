@@ -4,7 +4,7 @@ import { FlightSearch } from "@/components/FlightSearch";
 
 export default function FlightsPage() {
     return (
-        <div className="w-full min-h-screen bg-slate-50 flex flex-col">
+        <div className="w-full min-h-screen bg-background flex flex-col">
             <Navbar />
 
             {/* Top Header Banner */}

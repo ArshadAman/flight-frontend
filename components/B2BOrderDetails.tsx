@@ -263,7 +263,7 @@ export function B2BOrderDetails() {
                       </div>
                   </div>
                   <div className="flex items-center gap-3 mt-1 select-none">
-                      <span className="bg-[#888] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider">PUB</span>
+                      <span className="bg-slate-500 text-white text-[11px] font-black px-2.5 py-1 rounded shadow-sm tracking-wider">PUB</span>
                       <span className="border border-slate-300 text-slate-600 bg-white text-[11px] font-[800] px-2.5 py-1 rounded shadow-sm">FEE</span>
                       <span className="bg-[#D60D26] text-white text-[11px] font-[900] px-2.5 py-1 rounded shadow-sm tracking-wider flex items-center gap-1.5">
                           <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -340,7 +340,7 @@ export function B2BOrderDetails() {
 
           {/* Payment details block */}
           <div className="bg-white rounded-xl border border-slate-200 flex flex-col mb-6 shadow-sm overflow-hidden">
-              <div className="bg-[#888] px-6 py-3.5">
+              <div className="bg-navy px-6 py-3.5">
                   <h2 className="text-white font-bold text-[15px]">Payment details</h2>
               </div>
               

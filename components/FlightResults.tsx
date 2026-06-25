@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import {
   ChevronDown,
   ChevronUp,
@@ -129,7 +129,7 @@ export function FlightResults({
   const tripType = searchParams?.get('tripType');
   const searchOrigin = searchParams?.get('origin');
   const searchDestination = searchParams?.get('destination');
-  const departureDate = searchParams?.get('date');
+  const departureDate = searchParams?.get('departureDate') || searchParams?.get('date');
   const returnDate = searchParams?.get('returnDate');
 
   const allFlights = useMemo(() => [...flights, ...returnFlights], [flights, returnFlights]);
@@ -229,7 +229,26 @@ export function FlightResults({
     }
   }, [availableEquipment]);
 
-  const [activeSort, setActiveSort] = useState("Recommended");
+  const effectiveSelectedAirlines = useMemo(() => {
+    if (Object.keys(selectedAirlines).length > 0) return selectedAirlines;
+    if (initialAirlineCode) return { [initialAirlineCode]: true };
+    const all: Record<string, boolean> = {};
+    availableAirlines.forEach((a) => {
+      all[a.code] = true;
+    });
+    return all;
+  }, [selectedAirlines, availableAirlines, initialAirlineCode]);
+
+  const effectiveSelectedEquipment = useMemo(() => {
+    if (Object.keys(selectedEquipment).length > 0) return selectedEquipment;
+    const all: Record<string, boolean> = {};
+    availableEquipment.forEach((eq) => {
+      all[eq] = true;
+    });
+    return all;
+  }, [selectedEquipment, availableEquipment]);
+
+  const [activeSort, setActiveSort] = useState("Cheapest");
   const [sortOpen, setSortOpen] = useState(false);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [fareTypeModalOpen, setFareTypeModalOpen] = useState(false);
@@ -319,9 +338,10 @@ export function FlightResults({
     }));
   };
 
-  // Helper to filter and sort list of flights dynamically
-  const processFlights = useCallback((flightList: Flight[]) => {
-    let result = [...flightList];
+  // Filter + sort flights (all filter state must be in the dependency list)
+  const processFlights = useCallback(
+    (flightList: Flight[]) => {
+      let result = [...flightList];
 
       if (nonStopOnly) {
         result = result.filter((f) => f.stops === 0);
@@ -342,7 +362,9 @@ export function FlightResults({
       }
 
       if (fareType !== "ALL") {
-        result = result.filter((f) => f.is_agent_flight || (f.fare_type || "PUB") === fareType);
+        result = result.filter(
+          (f) => f.is_agent_flight || (f.fare_type || "PUB") === fareType
+        );
       }
 
       result = result.filter((f) => f.price >= minPrice && f.price <= maxPrice);
@@ -358,7 +380,9 @@ export function FlightResults({
       });
 
       if (availableAirlines.length > 0) {
-        const airlineKeys = Object.keys(selectedAirlines).filter((k) => selectedAirlines[k]);
+        const airlineKeys = Object.keys(effectiveSelectedAirlines).filter(
+          (k) => effectiveSelectedAirlines[k]
+        );
         if (airlineKeys.length === 0) {
           result = [];
         } else if (airlineKeys.length < availableAirlines.length) {
@@ -370,16 +394,24 @@ export function FlightResults({
       }
 
       if (availableEquipment.length > 0) {
-        const equipmentKeys = Object.keys(selectedEquipment).filter((k) => selectedEquipment[k]);
+        const equipmentKeys = Object.keys(effectiveSelectedEquipment).filter(
+          (k) => effectiveSelectedEquipment[k]
+        );
         if (equipmentKeys.length === 0) {
           result = [];
         } else if (equipmentKeys.length < availableEquipment.length) {
-          result = result.filter((f) => f.equipment && equipmentKeys.includes(f.equipment));
+          result = result.filter(
+            (f) => f.equipment && equipmentKeys.includes(f.equipment)
+          );
         }
       }
 
-      result = result.filter((f) => matchesTimeSlot(f.departure_minutes, selectedDepartureSlots));
-      result = result.filter((f) => matchesTimeSlot(f.arrival_minutes, selectedArrivalSlots));
+      result = result.filter((f) =>
+        matchesTimeSlot(f.departure_minutes, selectedDepartureSlots)
+      );
+      result = result.filter((f) =>
+        matchesTimeSlot(f.arrival_minutes, selectedArrivalSlots)
+      );
 
       if (activeSort === "Cheapest" || activeSort === "Price: Low to High") {
         result.sort((a, b) => a.price - b.price);
@@ -389,9 +421,28 @@ export function FlightResults({
             (a.duration_minutes ?? 9999) - (b.duration_minutes ?? 9999)
         );
       }
+      // "Recommended" keeps API order
 
-    return result;
-  }, [activeSort, maxPrice, nonStopOnly, selectedStops]);
+      return result;
+    },
+    [
+      activeSort,
+      nonStopOnly,
+      selectedStops,
+      baggageOnly,
+      fareType,
+      minPrice,
+      maxPrice,
+      maxDurationMinutes,
+      maxTicketHours,
+      availableAirlines,
+      availableEquipment,
+      effectiveSelectedAirlines,
+      effectiveSelectedEquipment,
+      selectedDepartureSlots,
+      selectedArrivalSlots,
+    ]
+  );
 
   const filteredOutbound = useMemo(() => processFlights(flights), [flights, processFlights]);
   const filteredReturn = useMemo(() => processFlights(returnFlights), [returnFlights, processFlights]);
@@ -493,8 +544,8 @@ export function FlightResults({
               return {
                 code: isSecondLeg ? `AI-${flight.id.split('-').pop() || '102'}` : flight.id,
                 date: flight.travel_date
-                  ? new Date(`${flight.travel_date}T00:00:00`).toLocaleDateString("en-US", { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' })
-                  : "Wed, 01 Oct 25",
+                  ? format(parseISO(flight.travel_date), "EEE, d MMM yy")
+                  : "—",
                 route: isSecondLeg
                   ? `${flight.destination.substring(0, 3).toUpperCase()} ➔ ${flight.origin.substring(0, 3).toUpperCase()}`
                   : `${flight.origin.substring(0, 3).toUpperCase()} ➔ ${flight.destination.substring(0, 3).toUpperCase()}`,
@@ -597,7 +648,7 @@ export function FlightResults({
                           e.stopPropagation();
                           handleBookClick(flight);
                         }}
-                        className="bg-[#D60D26] hover:bg-[#b00b1d] text-white rounded-[8px] px-5 py-2 font-bold text-[14px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-1.5 ml-4"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-5 py-2 font-bold text-sm shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-1.5 ml-4"
                       >
                         Book Now <ArrowUpRight className="w-4 h-4" strokeWidth={3} />
                       </button>
@@ -680,7 +731,7 @@ export function FlightResults({
                         const ret = isReturnFlight ? flight : (selectedReturn || undefined);
                         persistDraftAndNavigate(out || flight, ret || undefined);
                       }}
-                      className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-[100px] px-8 h-[40px] font-bold text-[14px] flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 h-10 font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95"
                     >
                       Book Now <ArrowUpRight className="w-4 h-4" strokeWidth={3} />
                     </button>
@@ -824,17 +875,17 @@ export function FlightResults({
     <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1440px] mx-auto select-none mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
 
       {/* Left Column: Accordion Filters Panel */}
-      <aside className="w-full lg:w-[285px] shrink-0">
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col sticky top-24">
+      <aside className="w-full lg:w-[285px] shrink-0 lg:self-start">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm sticky top-24 max-h-[calc(100dvh-6.5rem)] flex flex-col overflow-hidden">
 
-          <div className="flex items-center gap-2.5 text-[15px] font-[800] text-[#121121] pb-4 border-b border-slate-100 mb-2">
+          <div className="flex items-center gap-2.5 text-[15px] font-[800] text-[#121121] p-5 pb-4 border-b border-slate-100 shrink-0">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D60D26" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
             </svg>
             <span>Filters :</span>
           </div>
 
-          <div className="flex flex-col">
+          <div className="flex flex-col overflow-y-auto overscroll-contain p-5 pt-2 min-h-0">
 
             {/* General */}
             <div className="border-b border-slate-100 py-3">
@@ -959,15 +1010,15 @@ export function FlightResults({
                 <div className="mt-3 flex flex-col px-1 animate-in fade-in duration-200">
                   <input
                     type="range"
-                    min="3000"
-                    max="12000"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(parseInt(e.target.value))}
+                    min={priceBounds.min}
+                    max={priceBounds.max || 15000}
+                    value={Math.min(maxPrice, priceBounds.max || 15000)}
+                    onChange={(e) => setMaxPrice(parseInt(e.target.value, 10))}
                     className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
                   />
                   <div className="flex justify-between text-xs font-bold text-slate-500 mt-2">
-                    <span>₹3,000</span>
-                    <span>Max: ₹{maxPrice.toLocaleString('en-IN')}</span>
+                    <span>₹{priceBounds.min.toLocaleString("en-IN")}</span>
+                    <span>Max: ₹{Math.min(maxPrice, priceBounds.max || 15000).toLocaleString("en-IN")}</span>
                   </div>
                 </div>
               )}
