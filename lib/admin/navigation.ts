@@ -21,10 +21,17 @@ export const adminNavSections: AdminNavSection[] = [
     icon: "Plug",
     children: [
       { label: "Supplier Inventory", href: "/admin/inventory/search" },
-      { label: "API Booking", href: "/admin/api-bookings" },
       { label: "Supplier Booking", href: "/admin/bookings" },
       { label: "Supplier Manage API", href: "/admin/api/managed" },
       { label: "Agent API", href: "/admin/api/agent" },
+    ],
+  },
+  {
+    id: "bookings",
+    label: "Bookings",
+    icon: "Ticket",
+    children: [
+      { label: "API Booking", href: "/admin/api-bookings" },
     ],
   },
   {

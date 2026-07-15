@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Wallet,
   Settings,
+  Ticket,
   ChevronDown,
   ChevronRight,
   BarChart3,
@@ -21,6 +22,7 @@ import { adminNavSections } from "@/lib/admin/navigation";
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard,
   Plug,
+  Ticket,
   Users,
   Briefcase,
   MessageSquare,
@@ -32,6 +34,7 @@ function isActive(pathname: string, href?: string) {
   if (!href) return false;
   if (pathname === href) return true;
   if (href === "/admin/bookings" && pathname.startsWith("/admin/bookings/")) return true;
+  if (href === "/admin/api-bookings" && pathname.startsWith("/admin/api-bookings")) return true;
   if (href === "/admin/inventory/search" && pathname.startsWith("/admin/inventory/")) return true;
   if (href === "/admin/api/agent" && pathname.startsWith("/admin/api/agent")) return true;
   if (href === "/admin/queries" && pathname.startsWith("/admin/queries/")) return true;
