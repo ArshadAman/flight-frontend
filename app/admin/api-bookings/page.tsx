@@ -17,7 +17,7 @@ import {
 } from "@/lib/admin/tickets-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Info, MoreVertical, RefreshCw, Search } from "lucide-react";
+import { Eye, RefreshCw, Search } from "lucide-react";
 import type { AdminStatus } from "@/lib/admin/types";
 
 const statusTabs = ["All", "Confirmed", "Pending", "Cancelled", "Failed"] as const;
@@ -245,12 +245,32 @@ export default function ApiBookingsPage() {
               {
                 key: "actions",
                 header: "",
-                render: () => (
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <Info className="h-4 w-4" />
-                    <MoreVertical className="h-4 w-4" />
-                  </div>
-                ),
+                render: (r) => {
+                  const t = r as unknown as ApiTicket;
+                  return (
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1 border-[#e8ebef] text-xs"
+                        asChild
+                      >
+                        <Link href={`/admin/api-bookings/${t.id}/ticket`}>
+                          <Eye className="h-3.5 w-3.5" />
+                          View Ticket
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 text-xs text-[#006aec]"
+                        asChild
+                      >
+                        <Link href={`/admin/api-bookings/${t.id}`}>Details</Link>
+                      </Button>
+                    </div>
+                  );
+                },
               },
             ]}
           />

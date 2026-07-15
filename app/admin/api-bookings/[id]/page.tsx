@@ -20,7 +20,7 @@ import { AdminBadge } from "@/components/admin/AdminBadge";
 import { AdminConfirmModal } from "@/components/admin/AdminConfirmModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Ticket } from "lucide-react";
 import type { AdminStatus } from "@/lib/admin/types";
 
 function mapStatus(s: ApiTicket["status"]): AdminStatus {
@@ -147,7 +147,17 @@ export default function ApiBookingDetailPage({
                 : "Loading…"}
             </p>
           </div>
-          {ticket && <AdminBadge status={mapStatus(ticket.status)} label={ticket.status} />}
+          {ticket && (
+            <div className="flex flex-wrap items-center gap-2">
+              <AdminBadge status={mapStatus(ticket.status)} label={ticket.status} />
+              <Button size="sm" className="h-9 gap-1.5 bg-[#006aec] hover:bg-[#006aec]/90" asChild>
+                <Link href={`/admin/api-bookings/${ticket.id}/ticket`}>
+                  <Ticket className="h-4 w-4" />
+                  View Ticket
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -85,6 +85,7 @@ export function getAdminBreadcrumb(pathname: string): string {
       if (child.href === pathname) return child.label;
     }
   }
+  if (pathname.includes("/api-bookings") && pathname.includes("/ticket")) return "E-Ticket";
   if (pathname.includes("/api-bookings")) return "API Booking";
   if (pathname.includes("/inventory/book")) return "API Book";
   if (pathname.includes("/rebooking")) return "Rebooking";
