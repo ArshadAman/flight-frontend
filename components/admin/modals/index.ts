@@ -1,5 +1,17 @@
 export { AdminFigmaModal } from "./AdminFigmaModal";
 export { SupplierActionModal } from "./SupplierActionModal";
-export { AdminFormModal } from "./AdminFormModal";
-export type { FormField } from "./AdminFormModal";
-export { AdminFilterModal } from "./AdminFilterModal";
+export {
+  CustomerMarkupModal,
+  AgentDiscountModal,
+  SalesPromotionModal,
+  BlockAirlinesModal,
+  AddSuppliersModal,
+  BlockRoutesModal,
+} from "./AgentActionModals";
+export {
+  FigmaFormRow,
+  FigmaModalFooter,
+  FigmaModalTabs,
+  FigmaCheckboxList,
+  FigmaSearchBar,
+} from "./FigmaFormFields";

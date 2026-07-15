@@ -1,12 +1,18 @@
 "use client";
 
 import { use } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminBadge } from "@/components/admin/AdminBadge";
+import {
+  AdminProfileLayout,
+  AdminProfileFields,
+} from "@/components/admin/AdminProfileLayout";
 import { customers } from "@/lib/admin/mock-data";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import {
+  agentApiProfileTabs,
+  taxInformationFields,
+  bankDetailsFields,
+  contactPersonFields,
+} from "@/lib/admin/figma-fields";
 
 export default function CustomerDetailPage({
   params,
@@ -17,40 +23,82 @@ export default function CustomerDetailPage({
   const customer = customers.find((c) => c.id === id);
   if (!customer) notFound();
 
+  const first = customer.name.split(" ")[0].toUpperCase();
+
+  const agencyValues: Record<string, string> = {
+    AgentID: customer.id,
+    AgentName: customer.name,
+    "Company Name": "Wordlight",
+    "Brand Name": customer.name,
+    "Register Address": "———",
+    "Operation Center": "———",
+    "Company Reg. No.": "———",
+    "Vat no.": "———",
+    "Mobile No. / office No.": customer.phone,
+    "Account Email": customer.email,
+    "Marketing Email": customer.email,
+    "Operational Email": customer.email,
+    "Login Id": customer.email,
+    Class: "B2C",
+    Currency: "INR",
+    "Add Role": "Customer",
+  };
+
   return (
-    <div className="flex min-h-full flex-col">
-      <div className="border-b border-slate-200 bg-white px-6 py-5">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/customers" className="rounded p-1 text-slate-500 hover:bg-slate-100">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-slate-900">{customer.name}</h1>
-            <p className="text-sm text-slate-500">{customer.id}</p>
-          </div>
-          <AdminBadge status={customer.status} />
-        </div>
-      </div>
-      <div className="grid gap-6 p-6 lg:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 lg:col-span-2">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              ["Email", customer.email],
-              ["Phone", customer.phone],
-              ["Bookings", String(customer.bookings)],
-              ["API Access", customer.apiAccess ? "Enabled" : "Disabled"],
-            ].map(([k, v]) => (
-              <div key={k}>
-                <p className="text-xs text-slate-500">{k}</p>
-                <p className="font-medium">{v}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
-          <Button className="w-full">Enable API Access</Button>
-        </div>
-      </div>
-    </div>
+    <AdminProfileLayout
+      title={`${first}_Profile`}
+      tabs={[...agentApiProfileTabs]}
+      backHref="/admin/api/customer"
+    >
+      {(activeTab) => {
+        if (activeTab === "Agency Information") {
+          return (
+            <AdminProfileFields
+              fields={["AgentID", "AgentName", "Company Name", "Brand Name", "Register Address", "Operation Center", "Company Reg. No.", "Vat no.", "Mobile No. / office No.", "Account Email", "Marketing Email", "Operational Email", "Login Id", "Class", "Currency", "Add Role"]}
+              values={agencyValues}
+            />
+          );
+        }
+        if (activeTab === "Product") {
+          return (
+            <AdminProfileFields
+              fields={["B2B API", "B2B", "B2C"]}
+              actions={{
+                "B2B API": { label: customer.apiAccess ? "Active" : "Activate", variant: "activate" },
+                B2B: { label: "Disable", variant: "disable" },
+                B2C: { label: customer.apiAccess ? "Active" : "Disable", variant: customer.apiAccess ? "activate" : "disable" },
+              }}
+            />
+          );
+        }
+        if (activeTab === "Tax Information") {
+          return (
+            <AdminProfileFields
+              fields={[...taxInformationFields]}
+              values={{
+                "Aadhar Number": "165467812712",
+                "PAN Number": "0000-0000-0000",
+                "PAN Name Holder": customer.name,
+              }}
+              fileFields={["Aadhar Documents", "PAN Documents"]}
+            />
+          );
+        }
+        if (activeTab === "Bank Details") {
+          return (
+            <AdminProfileFields
+              fields={[...bankDetailsFields]}
+              fileFields={["Bank Documents"]}
+            />
+          );
+        }
+        return (
+          <AdminProfileFields
+            fields={[...contactPersonFields]}
+            values={Object.fromEntries(contactPersonFields.map((f) => [f, "———"]))}
+          />
+        );
+      }}
+    </AdminProfileLayout>
   );
 }

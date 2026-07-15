@@ -5,7 +5,6 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminDataTable } from "@/components/admin/AdminDataTable";
 import { AdminBadge } from "@/components/admin/AdminBadge";
 import { AdminEmptyState, AdminLoadingState } from "@/components/admin/AdminEmptyState";
-import { AdminFilterModal } from "@/components/admin/modals/AdminFilterModal";
 import type { AdminStatus } from "@/lib/admin/types";
 
 export function AdminListPage<T extends Record<string, unknown>>({
@@ -21,14 +20,20 @@ export function AdminListPage<T extends Record<string, unknown>>({
   emptyTitle,
   emptyDescription,
   showFilter = true,
+  metrics,
+  selectedKey,
   children,
+  activeTab: controlledTab,
+  onTabChange,
 }: {
   title: string;
   subtitle?: string;
   tabs?: string[];
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
   columns: {
     key: string;
-    header: string;
+    header: React.ReactNode;
     render?: (row: T) => React.ReactNode;
     className?: string;
   }[];
@@ -40,24 +45,32 @@ export function AdminListPage<T extends Record<string, unknown>>({
   emptyTitle?: string;
   emptyDescription?: string;
   showFilter?: boolean;
+  metrics?: React.ReactNode;
+  selectedKey?: string | null;
   children?: React.ReactNode;
 }) {
-  const [activeTab, setActiveTab] = useState(tabs?.[0] ?? "");
-  const [filterOpen, setFilterOpen] = useState(false);
+  const [internalTab, setInternalTab] = useState(tabs?.[0] ?? "");
+  const activeTab = controlledTab ?? internalTab;
+  const handleTabChange = onTabChange ?? setInternalTab;
 
   return (
     <div className="flex min-h-full flex-col">
       <AdminPageHeader
         title={title}
-        subtitle={subtitle}
+        subtitle={metrics ? undefined : subtitle}
         tabs={tabs}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         showFilter={showFilter}
-        onFilterClick={() => setFilterOpen(true)}
         action={action}
       />
       <div className="flex-1 p-6">
+        {metrics && (
+          <div className="mb-4">
+            {metrics}
+            {subtitle && <p className="mt-4 text-xs text-slate-500">{subtitle}</p>}
+          </div>
+        )}
         {loading ? (
           <AdminLoadingState />
         ) : data.length === 0 ? (
@@ -68,12 +81,10 @@ export function AdminListPage<T extends Record<string, unknown>>({
             data={data}
             keyField={keyField}
             onRowClick={onRowClick}
+            selectedKey={selectedKey}
           />
         )}
       </div>
-      {showFilter && (
-        <AdminFilterModal open={filterOpen} onOpenChange={setFilterOpen} />
-      )}
       {children}
     </div>
   );

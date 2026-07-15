@@ -1,17 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { AdminListPage, statusColumn } from "@/components/admin/AdminListPage";
-import { AdminFormModal } from "@/components/admin/modals/AdminFormModal";
 import { customers } from "@/lib/admin/mock-data";
-import { addCustomerFields } from "@/lib/admin/modal-configs";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
 export default function CustomersPage() {
   const router = useRouter();
-  const [addOpen, setAddOpen] = useState(false);
 
   return (
     <AdminListPage
@@ -21,10 +18,12 @@ export default function CustomersPage() {
       data={customers}
       onRowClick={(row) => router.push(`/admin/customers/${row.id}`)}
       action={
-        <Button size="sm" className="h-9 gap-1" onClick={() => setAddOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Add Customer
-        </Button>
+        <Link href="/admin/customers/add">
+          <Button size="sm" className="h-9 gap-1 bg-[#006aec] hover:bg-[#006aec]/90">
+            <Plus className="h-4 w-4" />
+            Add Customer
+          </Button>
+        </Link>
       }
       columns={[
         { key: "id", header: "Customer ID" },
@@ -39,14 +38,6 @@ export default function CustomersPage() {
           render: (r) => (r.apiAccess ? "Yes" : "No"),
         },
       ]}
-    >
-      <AdminFormModal
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        title="Add Customer"
-        fields={addCustomerFields}
-        submitLabel="Add Customer"
-      />
-    </AdminListPage>
+    />
   );
 }

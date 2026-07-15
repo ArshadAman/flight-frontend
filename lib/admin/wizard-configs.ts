@@ -15,52 +15,37 @@ export const rebookingSteps: WizardStep[] = [
 export const refundSteps: WizardStep[] = [
   { id: 1, label: "Booking", subtitle: "XYR9NF" },
   { id: 2, label: "Tickets" },
-  { id: 3, label: "Refund Type" },
-  { id: 4, label: "Amount" },
-  { id: 5, label: "Reason" },
-  { id: 6, label: "Confirm" },
+  { id: 3, label: "Type" },
+  { id: 4, label: "Payment" },
+  { id: 5, label: "Summary" },
 ];
 
 export const specialRequestSteps: WizardStep[] = [
   { id: 1, label: "Booking", subtitle: "XYR9NF" },
-  { id: 2, label: "Passenger" },
-  { id: 3, label: "Request Type" },
-  { id: 4, label: "Details" },
-  { id: 5, label: "Attachments" },
-  { id: 6, label: "Submit" },
+  { id: 2, label: "Tickets" },
+  { id: 3, label: "Type" },
+  { id: 4, label: "Payment" },
+  { id: 5, label: "Summary" },
 ];
 
-export const agentApiProfileTabs = [
-  "Agency Information",
-  "Product",
-  "Tax Information",
-  "Bank Details",
-  "Contact Person Information",
-] as const;
+export {
+  agentApiProfileTabs,
+  agencyInformationFields as agencyInfoFields,
+  bookingManagementTabs,
+} from "./figma-fields";
 
-export type AgentApiProfileTab = (typeof agentApiProfileTabs)[number];
-
-export const agencyInfoFields = [
-  "AgentID",
-  "AgentName",
-  "Company Name",
-  "Brand Name",
-  "Register Address",
-  "Operation Center",
-  "Company Reg. No.",
-  "Vat no.",
-  "Mobile No. / office No.",
-  "Account Email",
-  "Marketing Email",
-  "Operational Email",
-  "Login Id",
-  "Class",
-  "Currency",
-  "Add Role",
-];
+export type AgentApiProfileTab =
+  | "Agency Information"
+  | "Product"
+  | "Tax Information"
+  | "Bank Details"
+  | "Contact Person Information";
 
 export const bookingManagementViews = [
-  { id: "all", label: "All Bookings", subtitle: "3 integrations (9 accounts)" },
-  { id: "assigned", label: "Assigned", subtitle: "Bookings assigned to agents" },
-  { id: "fulfillment", label: "Fulfillment", subtitle: "Pending fulfillment actions" },
+  { id: "all", label: "All PNRs", subtitle: "3 integrations (9 accounts)" },
+  { id: "refunds", label: "Refunds PNRs", subtitle: "Refund requests" },
+  { id: "cancel", label: "Cancel PNRs", subtitle: "Cancelled PNRs" },
+  { id: "voided", label: "Voided PNRs", subtitle: "Voided PNRs" },
+  { id: "rebooking", label: "Rebooking Request", subtitle: "Rebooking queue" },
+  { id: "special", label: "Special Request", subtitle: "Special requests" },
 ] as const;

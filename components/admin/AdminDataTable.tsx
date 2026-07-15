@@ -8,10 +8,11 @@ export function AdminDataTable<T extends Record<string, unknown>>({
   keyField,
   className,
   onRowClick,
+  selectedKey,
 }: {
   columns: {
     key: string;
-    header: string;
+    header: React.ReactNode;
     render?: (row: T) => React.ReactNode;
     className?: string;
   }[];
@@ -19,6 +20,7 @@ export function AdminDataTable<T extends Record<string, unknown>>({
   keyField: keyof T;
   className?: string;
   onRowClick?: (row: T) => void;
+  selectedKey?: string | null;
 }) {
   return (
     <div className={cn("overflow-hidden rounded-lg border border-slate-200 bg-white", className)}>
@@ -40,13 +42,16 @@ export function AdminDataTable<T extends Record<string, unknown>>({
             </tr>
           </thead>
           <tbody>
-            {data.map((row) => (
+            {data.map((row) => {
+              const isSelected = selectedKey != null && String(row[keyField]) === selectedKey;
+              return (
               <tr
                 key={String(row[keyField])}
                 onClick={() => onRowClick?.(row)}
                 className={cn(
                   "border-b border-slate-100 transition-colors last:border-0",
-                  onRowClick && "cursor-pointer hover:bg-slate-50"
+                  onRowClick && "cursor-pointer hover:bg-slate-50",
+                  isSelected && "bg-rose-50 hover:bg-rose-50"
                 )}
               >
                 {columns.map((col) => (
@@ -60,7 +65,8 @@ export function AdminDataTable<T extends Record<string, unknown>>({
                   </td>
                 ))}
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

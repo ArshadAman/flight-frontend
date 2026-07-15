@@ -1,47 +1,73 @@
 "use client";
 
-import { Bell, HelpCircle, Search, ChevronDown } from "lucide-react";
-import { getAdminBreadcrumb } from "@/lib/admin/navigation";
-import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { Bell, HelpCircle, ChevronDown, Calendar, LogIn } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
 
 export function AdminTopBar() {
-  const pathname = usePathname();
-  const breadcrumb = getAdminBreadcrumb(pathname);
+  const { user, access, openAuthModal, logout } = useAuth();
+  const initial = (user?.name || user?.username || "H").charAt(0).toUpperCase();
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5">
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#e8ebef] bg-white px-4">
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded bg-[#D60D26] text-sm font-bold text-white">
-            FF
+        <Link href="/admin/dashboard" className="flex w-[148px] items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded bg-[#D60D26] text-[10px] font-bold text-white">
+            MT
           </div>
-          <span className="text-sm font-bold text-slate-800">FyreFly</span>
-        </div>
-        <div className="h-5 w-px bg-slate-200" />
-        <div className="flex items-center gap-1 text-sm text-slate-500">
-          <span>Admin</span>
-          <ChevronDown className="h-3.5 w-3.5" />
-        </div>
-        <div className="hidden items-center gap-1 rounded border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-500 md:flex">
-          <Search className="h-3.5 w-3.5" />
-          <span>{breadcrumb}</span>
-        </div>
+          <div className="leading-tight">
+            <p className="text-[11px] font-bold text-[#D60D26]">My Travel Deal</p>
+          </div>
+        </Link>
+        <div className="h-5 w-px bg-[#e8ebef]" />
+        <button
+          type="button"
+          className="flex items-center gap-2 rounded border border-[#e8ebef] px-2.5 py-1.5 text-xs text-[#1c304a]"
+        >
+          <span className="h-2 w-2 rounded-full bg-orange-400" />
+          Demo_workspace
+          <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+        </button>
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="hidden items-center gap-1 rounded border border-slate-200 px-2 py-1 text-xs text-slate-600 sm:flex">
-          <span className="font-medium">EN</span>
-          <ChevronDown className="h-3 w-3" />
-        </div>
-        <button type="button" className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+        <button
+          type="button"
+          className="flex items-center gap-1.5 rounded border border-[#e8ebef] px-2.5 py-1.5 text-xs text-[#1c304a]"
+        >
+          <Calendar className="h-3.5 w-3.5 text-slate-400" />
+          Last 24 hours
+          <ChevronDown className="h-3 w-3 text-slate-400" />
+        </button>
+        <button type="button" className="rounded p-1.5 text-slate-400 hover:bg-slate-100">
           <Bell className="h-4 w-4" />
         </button>
-        <button type="button" className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+        <button type="button" className="rounded p-1.5 text-slate-400 hover:bg-slate-100">
           <HelpCircle className="h-4 w-4" />
         </button>
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#D60D26] text-xs font-bold text-white">
-          A
-        </div>
+
+        {access && user ? (
+          <div className="flex items-center gap-2">
+            <div className="hidden text-right sm:block">
+              <p className="text-[11px] font-medium text-[#1c304a]">{user.name || user.username}</p>
+              <p className="text-[10px] text-slate-400">{user.role || "USER"}</p>
+            </div>
+            <button
+              type="button"
+              title="Sign out"
+              onClick={logout}
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-[#5b8def] text-xs font-bold text-white"
+            >
+              {initial}
+            </button>
+          </div>
+        ) : (
+          <Button size="sm" variant="outline" className="h-8 gap-1 border-[#e8ebef] text-xs" onClick={openAuthModal}>
+            <LogIn className="h-3.5 w-3.5" />
+            Login
+          </Button>
+        )}
       </div>
     </header>
   );

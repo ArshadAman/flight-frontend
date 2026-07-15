@@ -2,43 +2,67 @@
 
 import { useState } from "react";
 import { AdminListPage, statusColumn } from "@/components/admin/AdminListPage";
-import { AdminFormModal } from "@/components/admin/modals/AdminFormModal";
+import { SalesPromotionModal } from "@/components/admin/modals";
 import { promotions } from "@/lib/admin/mock-data";
-import { promotionFields } from "@/lib/admin/modal-configs";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Info, MoreVertical, Plus } from "lucide-react";
+
+const rows = promotions.map((p, i) => ({
+  ...p,
+  agentId: String(23853 + i * 111),
+  month: "May",
+  promoType: i === 0 ? "Sales" : "Travel",
+}));
 
 export default function AgentPromotionsPage() {
-  const [addOpen, setAddOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
-    <AdminListPage
-      title="Sales Promotions"
-      tabs={["Active", "Expired", "All"]}
-      keyField="id"
-      data={promotions}
-      action={
-        <Button size="sm" className="h-9 gap-1" onClick={() => setAddOpen(true)}>
-          <Plus className="h-4 w-4" />
-          New Promotion
-        </Button>
-      }
-      columns={[
-        { key: "id", header: "ID" },
-        { key: "name", header: "Promotion" },
-        { key: "agent", header: "Agent" },
-        { key: "discount", header: "Discount" },
-        { key: "validTill", header: "Valid Till" },
-        statusColumn("status"),
-      ]}
-    >
-      <AdminFormModal
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        title="New Promotion"
-        fields={promotionFields}
-        submitLabel="Create Promotion"
+    <>
+      <AdminListPage
+        title="Sales Promotion"
+        subtitle={`${rows.length} Promotions`}
+        tabs={["Sales", "Travel", "All"]}
+        keyField="id"
+        data={rows}
+        action={
+          <Button
+            size="sm"
+            className="h-9 gap-1 bg-[#006aec] hover:bg-[#006aec]/90"
+            onClick={() => setModalOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            New Promotion
+          </Button>
+        }
+        columns={[
+          {
+            key: "select",
+            header: "",
+            render: () => (
+              <input type="checkbox" className="rounded border-slate-300" onClick={(e) => e.stopPropagation()} />
+            ),
+          },
+          { key: "agentId", header: "Agent Id" },
+          { key: "name", header: "Sales Promotion" },
+          { key: "agent", header: "Agency Name" },
+          { key: "month", header: "Select Month" },
+          { key: "discount", header: "Discount %" },
+          { key: "promoType", header: "Type" },
+          statusColumn("status"),
+          {
+            key: "actions",
+            header: "",
+            render: () => (
+              <div className="flex items-center gap-2 text-slate-400">
+                <Info className="h-4 w-4" />
+                <MoreVertical className="h-4 w-4" />
+              </div>
+            ),
+          },
+        ]}
       />
-    </AdminListPage>
+      <SalesPromotionModal open={modalOpen} onOpenChange={setModalOpen} />
+    </>
   );
 }

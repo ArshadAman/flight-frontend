@@ -2,41 +2,65 @@
 
 import { useState } from "react";
 import { AdminListPage } from "@/components/admin/AdminListPage";
-import { AdminFormModal } from "@/components/admin/modals/AdminFormModal";
+import { BlockAirlinesModal } from "@/components/admin/modals";
 import { blockedAirlines } from "@/lib/admin/mock-data";
-import { blockAirlineFields } from "@/lib/admin/modal-configs";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Info, MoreVertical, Plus } from "lucide-react";
+
+const rows = blockedAirlines.map((a, i) => ({
+  ...a,
+  id: String(23853 + i * 111),
+  airlineClass: "Economy",
+}));
 
 export default function BlockAirlinesPage() {
-  const [addOpen, setAddOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
-    <AdminListPage
-      title="Block Airlines"
-      tabs={["All", "By Agent"]}
-      keyField="airline"
-      data={blockedAirlines}
-      action={
-        <Button size="sm" className="h-9 gap-1" onClick={() => setAddOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Block Airline
-        </Button>
-      }
-      columns={[
-        { key: "agent", header: "Agent" },
-        { key: "airline", header: "Airline" },
-        { key: "reason", header: "Reason" },
-        { key: "blockedOn", header: "Blocked On" },
-      ]}
-    >
-      <AdminFormModal
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        title="Block Airline"
-        fields={blockAirlineFields}
-        submitLabel="Block Airline"
+    <>
+      <AdminListPage
+        title="Block Airlines"
+        subtitle={`${rows.length} Blocked Airlines`}
+        tabs={["All", "By Agent"]}
+        keyField="id"
+        data={rows}
+        action={
+          <Button
+            size="sm"
+            className="h-9 gap-1 bg-[#006aec] hover:bg-[#006aec]/90"
+            onClick={() => setModalOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Block Airline
+          </Button>
+        }
+        columns={[
+          {
+            key: "select",
+            header: "",
+            render: () => (
+              <input type="checkbox" className="rounded border-slate-300" onClick={(e) => e.stopPropagation()} />
+            ),
+          },
+          { key: "id", header: "Agent Id" },
+          { key: "agent", header: "Agency Name" },
+          { key: "airline", header: "Airline Name" },
+          { key: "airlineClass", header: "Class" },
+          { key: "reason", header: "Reason" },
+          { key: "blockedOn", header: "Blocked On" },
+          {
+            key: "actions",
+            header: "",
+            render: () => (
+              <div className="flex items-center gap-2 text-slate-400">
+                <Info className="h-4 w-4" />
+                <MoreVertical className="h-4 w-4" />
+              </div>
+            ),
+          },
+        ]}
       />
-    </AdminListPage>
+      <BlockAirlinesModal open={modalOpen} onOpenChange={setModalOpen} />
+    </>
   );
 }

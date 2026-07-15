@@ -1,33 +1,21 @@
 "use client";
 
 import { use } from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   AdminProfileLayout,
   AdminProfileFields,
 } from "@/components/admin/AdminProfileLayout";
 import { agents } from "@/lib/admin/mock-data";
-import { agentApiProfileTabs } from "@/lib/admin/wizard-configs";
+import {
+  agentApiProfileTabs,
+  agencyInformationFields,
+  taxInformationFields,
+  bankDetailsFields,
+  contactPersonFields,
+} from "@/lib/admin/figma-fields";
 import { Button } from "@/components/ui/button";
-
-const profileData: Record<string, string> = {
-  AgentID: "AGT-001",
-  AgentName: "AJAY_Profile",
-  "Company Name": "Ajay Travels Pvt Ltd",
-  "Brand Name": "Ajay Travels",
-  "Register Address": "123 MG Road, Delhi",
-  "Operation Center": "Delhi NCR",
-  "Company Reg. No.": "U63000DL2020PTC123456",
-  "Vat no.": "07AABCA1234A1Z5",
-  "Mobile No. / office No.": "+91 98765 43210",
-  "Account Email": "accounts@ajaytravels.com",
-  "Marketing Email": "marketing@ajaytravels.com",
-  "Operational Email": "ops@ajaytravels.com",
-  "Login Id": "ajay_travels",
-  Class: "Premium",
-  Currency: "INR",
-  "Add Role": "B2B Agent",
-};
 
 export default function AgentApiProfilePage({
   params,
@@ -36,34 +24,57 @@ export default function AgentApiProfilePage({
 }) {
   const { id } = use(params);
   const agent = agents.find((a) => a.id === id);
-
   if (!agent) notFound();
+
+  const first = agent.name.split(" ")[0].toUpperCase();
+
+  const agencyValues: Record<string, string> = {
+    AgentID: "———",
+    AgentName: "———",
+    "Company Name": "———",
+    "Brand Name": "———",
+    "Register Address": "———",
+    "Operation Center": "———",
+    "Company Reg. No.": "———",
+    "Vat no.": "———",
+    "Mobile No. / office No.": "———",
+    "Account Email": "———",
+    "Marketing Email": "———",
+    "Operational Email": "———",
+    "Login Id": "———",
+    Class: "———",
+    Currency: "———",
+    "Add Role": "———",
+  };
 
   return (
     <AdminProfileLayout
-      title={`${agent.name.replace(/\s/g, "_")}_Profile`}
+      title={`${first}_Profile`}
       tabs={[...agentApiProfileTabs]}
       backHref="/admin/api/agent"
       action={
-        <Button size="sm" className="h-9">
-          Save Changes
+        <Button size="sm" className="h-9 bg-[#006aec] hover:bg-[#006aec]/90" asChild>
+          <Link href={`/admin/api/agent/${id}/generated`}>View Generated API</Link>
         </Button>
       }
     >
       {(activeTab) => {
         if (activeTab === "Agency Information") {
-          return <AdminProfileFields fields={Object.keys(profileData)} values={profileData} />;
+          return (
+            <AdminProfileFields
+              fields={["AgentID", ...agencyInformationFields]}
+              values={agencyValues}
+            />
+          );
         }
         if (activeTab === "Product") {
           return (
             <AdminProfileFields
-              fields={["GDS Access", "Inventory Type", "Domestic", "International", "API Enabled"]}
-              values={{
-                "GDS Access": "Amadeus, Sabre",
-                "Inventory Type": "Published",
-                Domestic: "Yes",
-                International: "Yes",
-                "API Enabled": "Yes",
+              fields={["B2B API", "B2B", "B2C"]}
+              actions={{
+                "B2B API": { label: "Activate", variant: "activate" },
+                B2B: { label: "Disable", variant: "disable" },
+                B2C: { label: "Disable", variant: "disable" },
               }}
             />
           );
@@ -71,39 +82,28 @@ export default function AgentApiProfilePage({
         if (activeTab === "Tax Information") {
           return (
             <AdminProfileFields
-              fields={["GST Number", "PAN", "TDS Applicable", "Tax Category"]}
+              fields={[...taxInformationFields]}
               values={{
-                "GST Number": "07AABCA1234A1Z5",
-                PAN: "AABCA1234A",
-                "TDS Applicable": "Yes",
-                "Tax Category": "B2B",
+                "Aadhar Number": "165467812712",
+                "PAN Number": "0000-0000-0000",
+                "PAN Name Holder": "Harshit Chirgania",
               }}
+              fileFields={["Aadhar Documents", "PAN Documents"]}
             />
           );
         }
         if (activeTab === "Bank Details") {
           return (
             <AdminProfileFields
-              fields={["Bank Name", "Account Number", "IFSC", "Account Holder"]}
-              values={{
-                "Bank Name": "HDFC Bank",
-                "Account Number": "****4567",
-                IFSC: "HDFC0001234",
-                "Account Holder": "Ajay Travels Pvt Ltd",
-              }}
+              fields={[...bankDetailsFields]}
+              fileFields={["Bank Documents"]}
             />
           );
         }
         return (
           <AdminProfileFields
-            fields={["Contact Name", "Designation", "Phone", "Email", "Alternate Phone"]}
-            values={{
-              "Contact Name": "Ajay Kumar",
-              Designation: "Director",
-              Phone: agent.phone,
-              Email: agent.email,
-              "Alternate Phone": "+91 98765 00000",
-            }}
+            fields={[...contactPersonFields]}
+            values={Object.fromEntries(contactPersonFields.map((f) => [f, "———"]))}
           />
         );
       }}

@@ -2,41 +2,65 @@
 
 import { useState } from "react";
 import { AdminListPage } from "@/components/admin/AdminListPage";
-import { AdminFormModal } from "@/components/admin/modals/AdminFormModal";
+import { BlockRoutesModal } from "@/components/admin/modals";
 import { blockedRoutes } from "@/lib/admin/mock-data";
-import { blockRouteFields } from "@/lib/admin/modal-configs";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Info, MoreVertical, Plus } from "lucide-react";
+
+const rows = blockedRoutes.map((r, i) => ({
+  ...r,
+  id: String(23853 + i * 111),
+  tripType: (["One Way", "Round Trip", "Multi-City"] as const)[i % 3],
+}));
 
 export default function BlockRoutesPage() {
-  const [addOpen, setAddOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
-    <AdminListPage
-      title="Block Routes"
-      tabs={["All", "By Agent"]}
-      keyField="route"
-      data={blockedRoutes}
-      action={
-        <Button size="sm" className="h-9 gap-1" onClick={() => setAddOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Block Route
-        </Button>
-      }
-      columns={[
-        { key: "agent", header: "Agent" },
-        { key: "route", header: "Route" },
-        { key: "reason", header: "Reason" },
-        { key: "blockedOn", header: "Blocked On" },
-      ]}
-    >
-      <AdminFormModal
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        title="Block Route"
-        fields={blockRouteFields}
-        submitLabel="Block Route"
+    <>
+      <AdminListPage
+        title="Block Routes"
+        subtitle={`${rows.length} Blocked Routes`}
+        tabs={["One Way", "Round Trip", "Multi-City"]}
+        keyField="id"
+        data={rows}
+        action={
+          <Button
+            size="sm"
+            className="h-9 gap-1 bg-[#006aec] hover:bg-[#006aec]/90"
+            onClick={() => setModalOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Block Route
+          </Button>
+        }
+        columns={[
+          {
+            key: "select",
+            header: "",
+            render: () => (
+              <input type="checkbox" className="rounded border-slate-300" onClick={(e) => e.stopPropagation()} />
+            ),
+          },
+          { key: "id", header: "Agent Id" },
+          { key: "agent", header: "Agency Name" },
+          { key: "route", header: "Route" },
+          { key: "tripType", header: "Trip Type" },
+          { key: "reason", header: "Reason" },
+          { key: "blockedOn", header: "Blocked On" },
+          {
+            key: "actions",
+            header: "",
+            render: () => (
+              <div className="flex items-center gap-2 text-slate-400">
+                <Info className="h-4 w-4" />
+                <MoreVertical className="h-4 w-4" />
+              </div>
+            ),
+          },
+        ]}
       />
-    </AdminListPage>
+      <BlockRoutesModal open={modalOpen} onOpenChange={setModalOpen} />
+    </>
   );
 }

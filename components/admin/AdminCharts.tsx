@@ -29,46 +29,73 @@ export function AdminBarChart({
 export function AdminDonutChart({
   segments,
   size = 120,
+  centerLabel,
+  centerValue,
+  showCounts = false,
 }: {
-  segments: { label: string; value: number; color: string }[];
+  segments: { label: string; value: number; color: string; count?: number }[];
   size?: number;
+  centerLabel?: string;
+  centerValue?: string;
+  showCounts?: boolean;
 }) {
   const total = segments.reduce((s, seg) => s + seg.value, 0);
   let cumulative = 0;
 
   return (
     <div className="flex items-center gap-6">
-      <svg width={size} height={size} viewBox="0 0 42 42" className="-rotate-90">
+      <div className="relative shrink-0" style={{ width: size, height: size }}>
+        <svg width={size} height={size} viewBox="0 0 42 42" className="-rotate-90">
+          {segments.map((seg) => {
+            const pct = (seg.value / total) * 100;
+            const offset = cumulative;
+            cumulative += pct;
+            return (
+              <circle
+                key={seg.label}
+                cx="21"
+                cy="21"
+                r="15.915"
+                fill="transparent"
+                stroke={seg.color}
+                strokeWidth="5"
+                strokeDasharray={`${pct} ${100 - pct}`}
+                strokeDashoffset={-offset}
+              />
+            );
+          })}
+        </svg>
+        {(centerLabel || centerValue) && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            {centerLabel && (
+              <span className="text-[9px] font-medium text-slate-500">{centerLabel}</span>
+            )}
+            {centerValue && (
+              <span className="text-sm font-bold text-[#1c304a]">{centerValue}</span>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5">
         {segments.map((seg) => {
-          const pct = (seg.value / total) * 100;
-          const offset = cumulative;
-          cumulative += pct;
+          const pct = ((seg.value / total) * 100).toFixed(1);
           return (
-            <circle
-              key={seg.label}
-              cx="21"
-              cy="21"
-              r="15.915"
-              fill="transparent"
-              stroke={seg.color}
-              strokeWidth="5"
-              strokeDasharray={`${pct} ${100 - pct}`}
-              strokeDashoffset={-offset}
-            />
+            <div key={seg.label} className="flex items-center gap-2 text-xs">
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: seg.color }}
+              />
+              <span className="text-slate-600">{seg.label}</span>
+              {showCounts && seg.count != null ? (
+                <span className="font-semibold text-slate-800">
+                  {seg.count} ({pct}%)
+                </span>
+              ) : (
+                <span className="font-semibold text-slate-800">{pct}%</span>
+              )}
+            </div>
           );
         })}
-      </svg>
-      <div className="flex flex-col gap-1.5">
-        {segments.map((seg) => (
-          <div key={seg.label} className="flex items-center gap-2 text-xs">
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: seg.color }}
-            />
-            <span className="text-slate-600">{seg.label}</span>
-            <span className="font-semibold text-slate-800">{seg.value}%</span>
-          </div>
-        ))}
       </div>
     </div>
   );

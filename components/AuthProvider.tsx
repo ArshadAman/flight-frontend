@@ -9,6 +9,8 @@ type User = {
   first_name?: string
   last_name?: string
   role?: string
+  is_staff?: boolean
+  is_superuser?: boolean
 }
 
 type AuthContextValue = {
@@ -47,6 +49,8 @@ const normalizeUser = (user: Partial<User> & { username?: string; first_name?: s
   first_name: user.first_name,
   last_name: user.last_name,
   role: user.role,
+  is_staff: Boolean(user.is_staff),
+  is_superuser: Boolean(user.is_superuser),
 }) as User
 
 const unwrapResponse = <T extends Record<string, unknown>>(payload: unknown): T => {

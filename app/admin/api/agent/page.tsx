@@ -1,84 +1,70 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { AdminDataTable } from "@/components/admin/AdminDataTable";
-import { AdminBadge } from "@/components/admin/AdminBadge";
-import { AdminFilterModal } from "@/components/admin/modals/AdminFilterModal";
-import { AdminFormModal } from "@/components/admin/modals/AdminFormModal";
-import { agents, apiIntegrations } from "@/lib/admin/mock-data";
-import { generateApiFields } from "@/lib/admin/modal-configs";
+import { AdminListPage } from "@/components/admin/AdminListPage";
+import { agents } from "@/lib/admin/mock-data";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowRight } from "lucide-react";
+import { ArrowRight, Info, MoreVertical } from "lucide-react";
 
-const agentApiList = agents.map((agent, i) => ({
-  id: agent.id,
-  name: agent.name,
-  apiKey: `ak_live_${agent.id.toLowerCase().replace("-", "")}`,
-  status: agent.status,
-  requests: apiIntegrations[i % apiIntegrations.length]?.requests ?? 0,
-  lastActive: "2 min ago",
+const rows = agents.map((a, i) => ({
+  id: a.id,
+  agentId: String(23853 + i * 111),
+  name: a.name.split(" ")[0],
+  agencyName: a.name.includes(" ") ? a.name.split(" ").slice(1).join(" ") || "Wordlight" : "Wordlight",
+  apiKey: `#${1212 + i}VC`,
+  date: "22, Dec 2021",
+  time: "12:30 PM",
 }));
 
 export default function AgentApiPage() {
-  const [activeTab, setActiveTab] = useState("All Agents");
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [generateOpen, setGenerateOpen] = useState(false);
-
   return (
-    <div className="flex min-h-full flex-col">
-      <AdminPageHeader
-        title="Agent API"
-        subtitle="3 integrations (9 accounts)"
-        tabs={["All Agents", "Active", "Integrations Map"]}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onFilterClick={() => setFilterOpen(true)}
-        action={
-          <Button size="sm" className="h-9 gap-1" onClick={() => setGenerateOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Generate API
-          </Button>
-        }
-      />
-      <div className="flex-1 p-6">
-        <AdminDataTable
-          keyField="id"
-          data={agentApiList}
-          columns={[
-            { key: "id", header: "Agent ID" },
-            { key: "name", header: "Agent Name" },
-            { key: "apiKey", header: "API Key" },
-            {
-              key: "status",
-              header: "Status",
-              render: (r) => <AdminBadge status={r.status} />,
-            },
-            { key: "requests", header: "API Calls" },
-            { key: "lastActive", header: "Last Active" },
-            {
-              key: "profile",
-              header: "Profile",
-              render: (r) => (
-                <Link href={`/admin/api/agent/${r.id}`}>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-medium hover:bg-slate-50">
-                    View Profile <ArrowRight className="h-3 w-3" />
-                  </span>
-                </Link>
-              ),
-            },
-          ]}
-        />
-      </div>
-      <AdminFilterModal open={filterOpen} onOpenChange={setFilterOpen} />
-      <AdminFormModal
-        open={generateOpen}
-        onOpenChange={setGenerateOpen}
-        title="Generate API Key"
-        fields={generateApiFields}
-        submitLabel="Generate"
-      />
-    </div>
+    <AdminListPage
+      title="AgentAPI"
+      subtitle={`${rows.length} Customers`}
+      tabs={["All Customers", "Generated API", "Non-Generated API"]}
+      keyField="id"
+      data={rows}
+      columns={[
+        {
+          key: "select",
+          header: "",
+          render: () => (
+            <input type="checkbox" className="rounded border-slate-300" onClick={(e) => e.stopPropagation()} />
+          ),
+        },
+        { key: "agentId", header: "AgentId" },
+        { key: "name", header: "Agent Name" },
+        { key: "agencyName", header: "Agency Name" },
+        { key: "apiKey", header: "API key" },
+        {
+          key: "date",
+          header: "Date",
+          render: (r) => (
+            <div>
+              <p className="text-sm">{String(r.date)}</p>
+              <p className="text-xs text-slate-400">{String(r.time)}</p>
+            </div>
+          ),
+        },
+        {
+          key: "actions",
+          header: "Action",
+          render: (r) => (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" className="h-8 gap-1 bg-[#5ba3f5] hover:bg-[#5ba3f5]/90">
+                Generate API <ArrowRight className="h-3 w-3" />
+              </Button>
+              <Link href={`/admin/api/agent/${r.id}`} onClick={(e) => e.stopPropagation()}>
+                <Button size="sm" className="h-8 gap-1 bg-[#006aec] hover:bg-[#006aec]/90">
+                  View Profile <ArrowRight className="h-3 w-3" />
+                </Button>
+              </Link>
+              <Info className="h-4 w-4 text-slate-400" />
+              <MoreVertical className="h-4 w-4 text-slate-400" />
+            </div>
+          ),
+        },
+      ]}
+    />
   );
 }
