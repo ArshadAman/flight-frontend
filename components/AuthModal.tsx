@@ -1,18 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowUpRight, Briefcase, User as UserIcon } from "lucide-react";
+import { ArrowUpRight, Briefcase, Shield, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { usePathname, useRouter } from "next/navigation";
+import { isAdminSession } from "@/lib/admin/tickets-api";
 
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-// Which top-level portal: customer or agent
-type Portal = "customer" | "agent";
+// Which top-level portal: customer, agent, or admin
+type Portal = "customer" | "agent" | "admin";
 // Which form within the portal
 type AuthTab = "login" | "signup";
 
@@ -25,7 +26,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
 
-    const { login, register, registerAgent } = useAuth();
+    const { login, register, registerAgent, logout } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const pathname = usePathname();
@@ -38,6 +39,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         document.body.style.overflow = isOpen ? "hidden" : "unset";
         return () => { document.body.style.overflow = "unset"; };
     }, [isOpen]);
+
+    // Admin portal is login-only
+    useEffect(() => {
+        if (portal === "admin" && activeTab !== "login") setActiveTab("login");
+    }, [portal, activeTab]);
 
     // Reset form when switching portals or tabs
     useEffect(() => {
@@ -56,11 +62,27 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         try {
             if (activeTab === "login") {
                 const loggedInUser = await login(identifier.trim(), password);
+                if (portal === "admin") {
+                    if (!isAdminSession(loggedInUser)) {
+                        logout();
+                        setErrorMessage("This account does not have admin access.");
+                        return;
+                    }
+                    onClose();
+                    router.push("/admin/dashboard");
+                    return;
+                }
                 onClose();
                 if (loggedInUser && loggedInUser.role === "AGENT") {
                     router.push(pathname?.startsWith("/sale") ? "/sale/inventory" : "/agent/dashboard");
+                } else if (isAdminSession(loggedInUser)) {
+                    router.push("/admin/dashboard");
                 }
             } else {
+                if (portal === "admin") {
+                    setErrorMessage("Admin accounts cannot be created here.");
+                    return;
+                }
                 const payload = {
                     username: identifier.trim(),
                     email: identifier.includes("@") ? identifier.trim() : `${identifier.trim()}@example.com`,
@@ -96,7 +118,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 className="bg-white rounded-[1.25rem] w-full max-w-[520px] max-h-[95vh] overflow-y-auto shadow-2xl relative flex flex-col cursor-auto animate-in fade-in zoom-in-95 duration-200"
             >
                 {/* ── Portal Switcher ── */}
-                <div className="flex items-center gap-2 px-6 pt-5 pb-0">
+                <div className="flex flex-wrap items-center gap-2 px-6 pt-5 pb-0">
                     <button
                         onClick={() => { setPortal("customer"); setActiveTab("login"); }}
                         className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-[700] transition-all border ${
@@ -119,32 +141,49 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         <Briefcase className="w-3.5 h-3.5" />
                         Travel Agent
                     </button>
+                    <button
+                        onClick={() => { setPortal("admin"); setActiveTab("login"); }}
+                        className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-[700] transition-all border ${
+                            portal === "admin"
+                                ? "bg-[#1F2937] text-white border-[#1F2937]"
+                                : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+                        }`}
+                    >
+                        <Shield className="w-3.5 h-3.5" />
+                        Admin
+                    </button>
                 </div>
 
-                {/* ── Login / Signup Tabs ── */}
-                <div className="flex w-full relative z-0 mt-4">
-                    <button
-                        onClick={() => setActiveTab("login")}
-                        className={`flex-1 py-[14px] text-center text-[22px] transition-colors relative font-[700] ${
-                            activeTab === "login"
-                                ? `border-b-[3px] ${portal === "agent" ? "text-[#0C2342] border-[#0C2342]" : "text-primary border-primary"}`
-                                : "text-[#888] border-b-[3px] border-[#e5e7eb]"
-                        }`}
-                    >
-                        Login
-                    </button>
-                    <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-gray-200" />
-                    <button
-                        onClick={() => setActiveTab("signup")}
-                        className={`flex-1 py-[14px] text-center text-[22px] transition-colors relative font-[700] ${
-                            activeTab === "signup"
-                                ? `border-b-[3px] ${portal === "agent" ? "text-[#0C2342] border-[#0C2342]" : "text-primary border-primary"}`
-                                : "text-[#888] border-b-[3px] border-[#e5e7eb]"
-                        }`}
-                    >
-                        Signup
-                    </button>
-                </div>
+                {/* ── Login / Signup Tabs (admin is login-only) ── */}
+                {portal === "admin" ? (
+                    <div className="w-full mt-4 border-b-[3px] border-[#1F2937] py-[14px] text-center text-[22px] font-[700] text-[#1F2937]">
+                        Admin Login
+                    </div>
+                ) : (
+                    <div className="flex w-full relative z-0 mt-4">
+                        <button
+                            onClick={() => setActiveTab("login")}
+                            className={`flex-1 py-[14px] text-center text-[22px] transition-colors relative font-[700] ${
+                                activeTab === "login"
+                                    ? `border-b-[3px] ${portal === "agent" ? "text-[#0C2342] border-[#0C2342]" : "text-primary border-primary"}`
+                                    : "text-[#888] border-b-[3px] border-[#e5e7eb]"
+                            }`}
+                        >
+                            Login
+                        </button>
+                        <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-gray-200" />
+                        <button
+                            onClick={() => setActiveTab("signup")}
+                            className={`flex-1 py-[14px] text-center text-[22px] transition-colors relative font-[700] ${
+                                activeTab === "signup"
+                                    ? `border-b-[3px] ${portal === "agent" ? "text-[#0C2342] border-[#0C2342]" : "text-primary border-primary"}`
+                                    : "text-[#888] border-b-[3px] border-[#e5e7eb]"
+                            }`}
+                        >
+                            Signup
+                        </button>
+                    </div>
+                )}
 
                 {/* ── Form Body ── */}
                 <div className="px-6 pt-6 pb-6 w-full flex flex-col items-center">
@@ -157,6 +196,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     <span>Travel Agent Portal —</span>
                                     <span className="font-[800] text-[#0C2342] text-[22px]">My Travel Deal</span>
                                 </>
+                            ) : portal === "admin" ? (
+                                <>
+                                    <Shield className="w-4 h-4 text-[#1F2937]" />
+                                    <span>Admin Control Panel —</span>
+                                    <span className="font-[800] text-[#1F2937] text-[22px]">My Travel Deal</span>
+                                </>
                             ) : (
                                 <>
                                     Welcome to <span className="font-[800] text-[#121121] text-[22px]">My Travel Deal!</span>
@@ -164,9 +209,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                             )}
                         </h2>
                         <p className="text-[14px] sm:text-[16px] font-[600] text-[#888] mt-1 tracking-tight">
-                            {activeTab === "login"
-                                ? `${portal === "agent" ? "Agent login" : "Please login"} using your email / username`
-                                : `${portal === "agent" ? "Register as a new agent" : "Create your account"} to get started`}
+                            {portal === "admin"
+                                ? "Sign in with your admin username or email"
+                                : activeTab === "login"
+                                    ? `${portal === "agent" ? "Agent login" : "Please login"} using your email / username`
+                                    : `${portal === "agent" ? "Register as a new agent" : "Create your account"} to get started`}
                         </p>
                     </div>
 
@@ -187,7 +234,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         <div className={`rounded-[1.25rem] w-full p-6 sm:px-8 pb-7 border ${
                             portal === "agent"
                                 ? "bg-slate-50/40 border-slate-200"
-                                : "bg-rose-50/30 border-rose-100/50"
+                                : portal === "admin"
+                                    ? "bg-slate-100/60 border-slate-200"
+                                    : "bg-rose-50/30 border-rose-100/50"
                         }`}>
                             <div className="flex flex-col gap-6 w-full">
                                 {/* Full Name — signup only */}
@@ -259,7 +308,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     className={`w-full sm:w-[90%] rounded-[100px] text-white h-[50px] text-[20px] font-[700] tracking-wide shadow-none transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 ${
                                         portal === "agent"
                                             ? "bg-[#0C2342] hover:bg-[#0a1e38]"
-                                            : "bg-primary hover:bg-[#D60D26]"
+                                            : portal === "admin"
+                                                ? "bg-[#1F2937] hover:bg-[#111827]"
+                                                : "bg-primary hover:bg-[#D60D26]"
                                     }`}
                                 >
                                     {loading ? (
@@ -272,7 +323,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                         </span>
                                     ) : (
                                         <>
-                                            {activeTab === "login" ? "Login" : "Create Account"}
+                                            {portal === "admin" ? "Login as Admin" : activeTab === "login" ? "Login" : "Create Account"}
                                             <ArrowUpRight className="w-[18px] h-[18px] stroke-[2.5px]" />
                                         </>
                                     )}
