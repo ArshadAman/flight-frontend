@@ -15,8 +15,8 @@ type PassengerData = {
 type BookingTicket = {
   id?: string;
   status?: string;
-  pnr_number?: string;
-  ticket_number?: string;
+  pnr_number?: string | null;
+  ticket_number?: string | null;
   departure_datetime?: string;
   passengers_data?: PassengerData[];
   basic_amount?: string | number;
