@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { AuthModal } from "@/components/AuthModal";
 import { Logo } from "@/components/ui/logo";
 import { Menu, X, User as UserIcon, LogOut, ChevronDown, CornerDownRight, ChevronRight, ArrowRight, Bell } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -12,7 +11,7 @@ import { NavLink } from "@/components/NavLink";
 import { NotificationModal } from "@/components/NotificationModal";
 
 export function Navbar() {
-  const { isAuthModalOpen, openAuthModal, closeAuthModal, user, logout } = useAuth();
+  const { openAuthModal, user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isGroupTravelOpen, setIsGroupTravelOpen] = useState(false);
@@ -437,9 +436,6 @@ export function Navbar() {
           )}
         </div>
       </div>
-
-      {/* Auth Modal Portal */}
-      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
 
       {/* Notification Modal Portal */}
       <NotificationModal isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />

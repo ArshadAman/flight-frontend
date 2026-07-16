@@ -1,13 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, HelpCircle, ChevronDown, Calendar, LogIn } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bell, HelpCircle, ChevronDown, Calendar, LogIn, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 
 export function AdminTopBar() {
+  const router = useRouter();
   const { user, access, openAuthModal, logout } = useAuth();
   const initial = (user?.name || user?.username || "H").charAt(0).toUpperCase();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#e8ebef] bg-white px-4">
@@ -53,14 +60,21 @@ export function AdminTopBar() {
               <p className="text-[11px] font-medium text-[#1c304a]">{user.name || user.username}</p>
               <p className="text-[10px] text-slate-400">{user.role || "USER"}</p>
             </div>
-            <button
-              type="button"
-              title="Sign out"
-              onClick={logout}
+            <div
               className="flex h-7 w-7 items-center justify-center rounded-full bg-[#5b8def] text-xs font-bold text-white"
+              title={user.name || user.username}
             >
               {initial}
-            </button>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1 border-[#e8ebef] text-xs text-slate-700"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Logout
+            </Button>
           </div>
         ) : (
           <Button size="sm" variant="outline" className="h-8 gap-1 border-[#e8ebef] text-xs" onClick={openAuthModal}>

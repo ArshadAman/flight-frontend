@@ -7,12 +7,11 @@ import { Logo } from "@/components/ui/logo";
 import { Menu, X, ChevronDown, User as UserIcon, LogOut, Bell } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/context/AuthContext";
-import { AuthModal } from "@/components/AuthModal";
 import { Button } from "@/components/ui/button";
 import { NotificationModal } from "@/components/NotificationModal";
 
 export function B2BNavbar() {
-  const { isAuthModalOpen, openAuthModal, closeAuthModal, user: authUser, logout } = useAuth();
+  const { openAuthModal, user: authUser, logout } = useAuth();
   const user = authUser;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -810,7 +809,6 @@ export function B2BNavbar() {
       </div>
 
       {/* Auth Modal Portal */}
-      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
 
       {/* Notification Modal */}
       <NotificationModal isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />

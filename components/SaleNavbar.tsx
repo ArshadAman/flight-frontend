@@ -7,11 +7,10 @@ import { Logo } from "@/components/ui/logo";
 import { Menu, X, ChevronDown, ChevronRight, User as UserIcon, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/context/AuthContext";
-import { AuthModal } from "@/components/AuthModal";
 import { Button } from "@/components/ui/button";
 
 export function SaleNavbar() {
-  const { isAuthModalOpen, openAuthModal, closeAuthModal, user, logout } = useAuth();
+  const { openAuthModal, user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -460,7 +459,6 @@ export function SaleNavbar() {
         </div>
       </div>
 
-      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
     </>
   );
 }

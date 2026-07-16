@@ -1,5 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { AuthModal } from "@/components/AuthModal"
 
 type User = {
   id: string
@@ -246,6 +247,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     clearTokens()
     setUser(null)
+    setAccess(null)
+    setIsAuthModalOpen(false)
+    if (typeof window !== 'undefined') {
+      // Clear legacy / offline auth keys that can keep the UI looking signed-in
+      localStorage.removeItem('mock-access-token')
+      localStorage.removeItem('offline_bookings')
+      try {
+        sessionStorage.removeItem(ACCESS_KEY)
+        sessionStorage.removeItem(REFRESH_KEY)
+      } catch {
+        // ignore
+      }
+    }
   }
 
   const openAuthModal = () => setIsAuthModalOpen(true)
@@ -324,7 +338,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     closeAuthModal,
   }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+    </AuthContext.Provider>
+  )
 }
 
 export const useAuth = () => {
