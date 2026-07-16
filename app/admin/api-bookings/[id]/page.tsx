@@ -20,8 +20,9 @@ import { AdminBadge } from "@/components/admin/AdminBadge";
 import { AdminConfirmModal } from "@/components/admin/AdminConfirmModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Ticket } from "lucide-react";
+import { ArrowLeft, Ticket, FileDown } from "lucide-react";
 import type { AdminStatus } from "@/lib/admin/types";
+import { openPrintableETicket } from "@/lib/eticket";
 
 function mapStatus(s: ApiTicket["status"]): AdminStatus {
   if (s === "CONFIRMED") return "approved";
@@ -150,7 +151,15 @@ export default function ApiBookingDetailPage({
           {ticket && (
             <div className="flex flex-wrap items-center gap-2">
               <AdminBadge status={mapStatus(ticket.status)} label={ticket.status} />
-              <Button size="sm" className="h-9 gap-1.5 bg-[#006aec] hover:bg-[#006aec]/90" asChild>
+              <Button
+                size="sm"
+                className="h-9 gap-1.5 bg-[#006aec] hover:bg-[#006aec]/90"
+                onClick={() => openPrintableETicket(ticket)}
+              >
+                <FileDown className="h-4 w-4" />
+                Download E-Ticket
+              </Button>
+              <Button size="sm" variant="outline" className="h-9 gap-1.5 border-[#e8ebef]" asChild>
                 <Link href={`/admin/api-bookings/${ticket.id}/ticket`}>
                   <Ticket className="h-4 w-4" />
                   View Ticket

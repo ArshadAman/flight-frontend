@@ -17,8 +17,9 @@ import {
 } from "@/lib/admin/tickets-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, RefreshCw, Search } from "lucide-react";
+import { Eye, RefreshCw, Search, FileDown } from "lucide-react";
 import type { AdminStatus } from "@/lib/admin/types";
+import { openPrintableETicket } from "@/lib/eticket";
 
 const statusTabs = ["All", "Confirmed", "Pending", "Cancelled", "Failed"] as const;
 
@@ -253,11 +254,20 @@ export default function ApiBookingsPage() {
                         size="sm"
                         variant="outline"
                         className="h-8 gap-1 border-[#e8ebef] text-xs"
+                        onClick={() => openPrintableETicket(t)}
+                      >
+                        <FileDown className="h-3.5 w-3.5" />
+                        E-Ticket
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1 border-[#e8ebef] text-xs"
                         asChild
                       >
                         <Link href={`/admin/api-bookings/${t.id}/ticket`}>
                           <Eye className="h-3.5 w-3.5" />
-                          View Ticket
+                          View
                         </Link>
                       </Button>
                       <Button

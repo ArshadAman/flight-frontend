@@ -10,6 +10,7 @@ import {
 } from "@/lib/admin/tickets-api";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Briefcase, Plane, Utensils, Armchair } from "lucide-react";
+import { openPrintableETicket } from "@/lib/eticket";
 
 function statusLabel(status: ApiTicket["status"]) {
   if (status === "CONFIRMED") return "Confirm";
@@ -146,9 +147,9 @@ export default function ApiBookingETicketPage({
               size="sm"
               variant="outline"
               className="border-[#e8ebef]"
-              onClick={() => window.print()}
+              onClick={() => openPrintableETicket(ticket)}
             >
-              Print E-Ticket
+              Print / Download E-Ticket
             </Button>
           )}
         </div>
@@ -468,8 +469,12 @@ export default function ApiBookingETicketPage({
             </div>
 
             <div className="flex flex-wrap gap-2 print:hidden">
-              <Button variant="outline" className="border-[#e8ebef] text-slate-700" onClick={() => window.print()}>
-                Print E-Ticket
+              <Button
+                variant="outline"
+                className="border-[#e8ebef] text-slate-700"
+                onClick={() => openPrintableETicket(ticket)}
+              >
+                Print / Download E-Ticket
               </Button>
               <Button variant="outline" className="border-[#e8ebef] text-slate-700" asChild>
                 <Link href={`/admin/api-bookings/${id}`}>Back to booking</Link>
