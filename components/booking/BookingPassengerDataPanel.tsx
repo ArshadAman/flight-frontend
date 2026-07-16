@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { COUNTRIES } from "@/lib/data/countries";
 import type { BookingDraft, BookingPassenger } from "@/lib/booking";
 import type { Flight } from "@/lib/flight";
+import { BookingDateField } from "@/components/booking/BookingDateField";
 
 const inputClass =
   "border border-slate-200 rounded-md px-3 py-2.5 text-[13px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white placeholder:text-slate-400";
@@ -289,11 +290,13 @@ export function BookingPassengerDataPanel({
                           className={inputClass}
                         />
                         <input type="text" placeholder="Middle Name" className={inputClass} />
-                        <input
-                          type="date"
+                        <BookingDateField
                           value={pax.dob}
-                          onChange={(e) => onUpdatePax(pax.id, "dob", e.target.value)}
-                          className={cn(inputClass, "text-slate-600")}
+                          onChange={(iso) => onUpdatePax(pax.id, "dob", iso)}
+                          placeholder="Date of birth"
+                          maxDate={new Date()}
+                          minDate={new Date(1920, 0, 1)}
+                          className="h-[42px]"
                         />
                       </div>
                     )}
@@ -335,7 +338,13 @@ export function BookingPassengerDataPanel({
                               <input type="text" placeholder="Last Name As Per Passport" className={inputClassSm} defaultValue={pax.last_name} />
                               <input type="text" placeholder="First Name As Per Passport" className={inputClassSm} defaultValue={pax.first_name} />
                               <input type="text" placeholder="Middle Name As Per Passport" className={inputClassSm} />
-                              <input type="date" className={cn(inputClassSm, "text-slate-600")} defaultValue={pax.dob} />
+                              <BookingDateField
+                                value={pax.dob}
+                                onChange={(iso) => onUpdatePax(pax.id, "dob", iso)}
+                                placeholder="Date of birth"
+                                maxDate={new Date()}
+                                minDate={new Date(1920, 0, 1)}
+                              />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                               <select className={cn(inputClassSm, "text-slate-600")}>
@@ -361,7 +370,12 @@ export function BookingPassengerDataPanel({
                                   <option key={c} value={c}>{c}</option>
                                 ))}
                               </select>
-                              <input type="date" placeholder="Validity" className={cn(inputClassSm, "text-slate-600")} />
+                              <BookingDateField
+                                value={pax.passport_expiry || ""}
+                                onChange={(iso) => onUpdatePax(pax.id, "passport_expiry", iso)}
+                                placeholder="Validity"
+                                minDate={new Date()}
+                              />
                             </div>
                           </div>
 

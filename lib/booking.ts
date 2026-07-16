@@ -15,6 +15,7 @@ export type BookingPassenger = {
   outbound_meal: string;
   return_meal: string;
   passport_number?: string;
+  passport_expiry?: string;
 };
 
 export type BookingDraft = {
@@ -71,6 +72,7 @@ export function buildInitialPassengers(
     dob: "",
     outbound_meal: "none",
     return_meal: "none",
+    passport_expiry: "",
   });
 
   for (let i = 0; i < adults; i++) list.push(mk(0, `Adult ${i + 1}`, "MR"));
