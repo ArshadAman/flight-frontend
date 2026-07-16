@@ -151,19 +151,20 @@ export default function ApiBookingDetailPage({
           {ticket && (
             <div className="flex flex-wrap items-center gap-2">
               <AdminBadge status={mapStatus(ticket.status)} label={ticket.status} />
+              <Button size="sm" className="h-9 gap-1.5 bg-[#006aec] hover:bg-[#006aec]/90" asChild>
+                <Link href={`/admin/api-bookings/${ticket.id}/ticket`}>
+                  <Ticket className="h-4 w-4" />
+                  View E-Ticket
+                </Link>
+              </Button>
               <Button
                 size="sm"
-                className="h-9 gap-1.5 bg-[#006aec] hover:bg-[#006aec]/90"
+                variant="outline"
+                className="h-9 gap-1.5 border-[#e8ebef]"
                 onClick={() => openPrintableETicket(ticket)}
               >
                 <FileDown className="h-4 w-4" />
-                Download E-Ticket
-              </Button>
-              <Button size="sm" variant="outline" className="h-9 gap-1.5 border-[#e8ebef]" asChild>
-                <Link href={`/admin/api-bookings/${ticket.id}/ticket`}>
-                  <Ticket className="h-4 w-4" />
-                  View Ticket
-                </Link>
+                Print / Download
               </Button>
             </div>
           )}

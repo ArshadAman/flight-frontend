@@ -254,21 +254,21 @@ export default function ApiBookingsPage() {
                         size="sm"
                         variant="outline"
                         className="h-8 gap-1 border-[#e8ebef] text-xs"
-                        onClick={() => openPrintableETicket(t)}
+                        asChild
                       >
-                        <FileDown className="h-3.5 w-3.5" />
-                        E-Ticket
+                        <Link href={`/admin/api-bookings/${t.id}/ticket`}>
+                          <Eye className="h-3.5 w-3.5" />
+                          E-Ticket
+                        </Link>
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         className="h-8 gap-1 border-[#e8ebef] text-xs"
-                        asChild
+                        onClick={() => openPrintableETicket(t)}
                       >
-                        <Link href={`/admin/api-bookings/${t.id}/ticket`}>
-                          <Eye className="h-3.5 w-3.5" />
-                          View
-                        </Link>
+                        <FileDown className="h-3.5 w-3.5" />
+                        Print
                       </Button>
                       <Button
                         size="sm"
