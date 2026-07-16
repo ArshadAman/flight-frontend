@@ -22,7 +22,6 @@ import { FareTypeModal } from "./FareTypeModal";
 import AddOnModal, { BaggageOption as AddOnBaggage } from "./AddOnModal";
 import { RulesModal } from "./RulesModal";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
 import { saveBookingDraft, type BookingDraft } from "@/lib/booking";
 
 export type Flight = {
@@ -120,7 +119,6 @@ export function FlightResults({
   cabin = "Economy",
 }: FlightResultsProps) {
 
-  const { user, openAuthModal } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -468,19 +466,10 @@ export function FlightResults({
   };
 
   const handleBookClick = (flight: Flight) => {
-    if (!user) {
-      console.log("[FlightResults] User unauthenticated, opening AuthModal.");
-      openAuthModal();
-      return;
-    }
     persistDraftAndNavigate(flight);
   };
 
   const handleContinueToBook = () => {
-    if (!user) {
-      openAuthModal();
-      return;
-    }
     if (!selectedOutbound) {
       setSelectionError("Please select an outbound flight.");
       return;

@@ -64,6 +64,7 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
     setError(null);
     if (!draft) return;
     if (!user) {
+      setError("Please sign in to complete your booking.");
       openAuthModal();
       return;
     }
