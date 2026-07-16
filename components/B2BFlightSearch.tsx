@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { format } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { PlaneTakeoff, ArrowRightLeft, ArrowUpRight, ArrowRight, ChevronDown, Plus, Minus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { POPULAR_AIRLINES, defaultReturnDate } from "@/lib/flightSearch";
+import { POPULAR_AIRLINES, defaultReturnDate, isBeforeToday, maxFlightBookingDate, startOfToday } from "@/lib/flightSearch";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -142,6 +142,10 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
         setErrorMsg(null);
         if (!origin.trim() || !destination.trim() || !date) {
             setErrorMsg("Please fill in Origin, Destination, and Departure Date.");
+            return;
+        }
+        if (isBeforeToday(date)) {
+            setErrorMsg("Departure Date cannot be in the past.");
             return;
         }
         if (origin.trim().toLowerCase() === destination.trim().toLowerCase()) {
@@ -340,7 +344,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                             {/* Departure Date */}
                             <div className="flex flex-col flex-1 group relative h-[70px] w-full">
                                 <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">Departure Date <ChevronDown className="w-3.5 h-3.5" /></label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{format(date || new Date(), "dd MMM' yy")}</div>
+                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{format(date || new Date(), "dd MMM yy")}</div>
                                 <p className="text-[13px] text-slate-500 mt-1 font-medium">{format(date || new Date(), "EEEE")}</p>
                                 <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
                             </div>
@@ -429,7 +433,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                             {/* Departure Date */}
                             <div className="flex flex-col flex-1 group relative h-[70px] w-full">
                                 <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">Departure Date <ChevronDown className="w-3.5 h-3.5" /></label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{format(date2 || new Date(), "dd MMM' yy")}</div>
+                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{format(date2 || new Date(), "dd MMM yy")}</div>
                                 <p className="text-[13px] text-slate-500 mt-1 font-medium">{format(date2 || new Date(), "EEEE")}</p>
                                 <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
                             </div>
@@ -616,7 +620,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                             <PopoverTrigger asChild>
                                 <div className="flex flex-col w-full lg:w-[150px] xl:w-[170px] group cursor-pointer relative h-[90px]">
                                     <label className="text-[14px] font-bold text-slate-400 mb-1.5 flex items-center gap-1">Departure Date <ChevronDown className="w-4 h-4" /></label>
-                                    <div className="font-extrabold text-slate-900 tracking-tight text-[24px] leading-none h-[30px] flex items-center">{date ? format(date, "dd MMM' yy") : "Select Date"}</div>
+                                    <div className="font-extrabold text-slate-900 tracking-tight text-[24px] leading-none h-[30px] flex items-center">{date ? format(date, "dd MMM yy") : "Select Date"}</div>
                                     <p className="text-[13px] text-slate-500 mt-1.5 font-semibold">{date ? format(date, "EEEE") : ""}</p>
                                     <div className="absolute bottom-0 left-0 w-full lg:w-[90%] h-[1.5px] bg-slate-200 group-hover:bg-slate-300" />
                                 </div>
@@ -636,9 +640,10 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                         }
                                     }}
                                     numberOfMonths={2}
-                                    defaultMonth={date || new Date(2026, 2)}
-                                    fromDate={new Date(2026, 0, 1)}
-                                    toDate={new Date(2026, 11, 31)}
+                                    defaultMonth={date && !isBeforeToday(date) ? date : startOfToday()}
+                                    fromDate={startOfToday()}
+                                    toDate={maxFlightBookingDate()}
+                                    disabled={isBeforeToday}
                                     classNames={calendarClassNames}
                                 />
                             </PopoverContent>
@@ -662,7 +667,7 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                     <div className="h-[46px] flex items-start pt-[2px]">
                                         {returnDate && tripType !== 'one-way' ? (
                                             <div className="font-extrabold text-slate-900 tracking-tight text-[24px] leading-none">
-                                                {format(returnDate, "dd MMM' yy")}
+                                                {format(returnDate, "dd MMM yy")}
                                                 <p className="text-[13px] text-slate-500 mt-1.5 font-semibold">{format(returnDate, "EEEE")}</p>
                                             </div>
                                         ) : (
@@ -680,10 +685,14 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                                     selected={returnDate}
                                     onSelect={(d) => { if (d) { setReturnDate(d); setIsRetOpen(false); } }}
                                     numberOfMonths={2}
-                                    defaultMonth={date || returnDate || new Date(2026, 2)}
-                                    fromDate={date || new Date(2026, 0, 1)}
-                                    toDate={new Date(2026, 11, 31)}
-                                    disabled={(d) => date ? d < new Date(date.getFullYear(), date.getMonth(), date.getDate()) : false}
+                                    defaultMonth={returnDate || date || startOfToday()}
+                                    fromDate={date && !isBeforeToday(date) ? date : startOfToday()}
+                                    toDate={maxFlightBookingDate()}
+                                    disabled={(d) => {
+                                        if (isBeforeToday(d)) return true;
+                                        if (date) return startOfDay(d) < startOfDay(date);
+                                        return false;
+                                    }}
                                     classNames={calendarClassNames}
                                 />
                             </PopoverContent>

@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, startOfDay, addYears } from "date-fns";
 
 export type TravellerCounts = {
   adults: number;
@@ -37,6 +37,21 @@ export function cabinToClassCode(cabin: string): string {
 export function formatDateParam(date?: Date): string | undefined {
   if (!date) return undefined;
   return format(date, "yyyy-MM-dd");
+}
+
+/** e.g. 08 Jul 26 */
+export const FLIGHT_DATE_DISPLAY_FORMAT = "dd MMM yy";
+
+export function startOfToday(): Date {
+  return startOfDay(new Date());
+}
+
+export function isBeforeToday(date: Date): boolean {
+  return startOfDay(date) < startOfToday();
+}
+
+export function maxFlightBookingDate(): Date {
+  return addYears(startOfToday(), 2);
 }
 
 /** Default return date: 3 days after departure (round-trip) */
