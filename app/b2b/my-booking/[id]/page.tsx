@@ -13,6 +13,7 @@ import { PassengerMoreDetails } from "@/components/booking/PassengerMoreDetails"
 import { PaymentDetails, BookingActions } from "@/components/booking/PaymentDetails";
 import SSRSelection from "@/components/booking/SSRSelection";
 import { getPublicApiUrl } from "@/lib/apiConfig";
+import { canCancelOrModifyBooking } from "@/lib/bookingRules";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -160,6 +161,11 @@ export default function B2BBookingDetailsPage({ params }: PageProps) {
                     isB2B={true} 
                     onCancelled={fetchTicketDetails} 
                     onAddBaggageClick={() => {
+                        const rule = canCancelOrModifyBooking(ticket);
+                        if (!rule.allowed) {
+                            alert(rule.reason);
+                            return;
+                        }
                         setSsrDefaultTab("assistance");
                         setSsrOpen(true);
                         setTimeout(() => {
@@ -168,6 +174,11 @@ export default function B2BBookingDetailsPage({ params }: PageProps) {
                         }, 100);
                     }}
                     onModificationClick={() => {
+                        const rule = canCancelOrModifyBooking(ticket);
+                        if (!rule.allowed) {
+                            alert(rule.reason);
+                            return;
+                        }
                         setSsrDefaultTab("seats");
                         setSsrOpen(true);
                         setTimeout(() => {

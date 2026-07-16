@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { getPublicApiUrl } from "@/lib/apiConfig";
+import { canCancelOrModifyBooking, hasFlightDeparted } from "@/lib/bookingRules";
 
 type PassengerData = {
   pax_type?: number;
@@ -16,6 +17,7 @@ type BookingTicket = {
   status?: string;
   pnr_number?: string;
   ticket_number?: string;
+  departure_datetime?: string;
   passengers_data?: PassengerData[];
   basic_amount?: string | number;
   tax_amount?: string | number;
@@ -145,6 +147,12 @@ export function BookingActions({
   }, [ticket?.status]);
 
   const isCancelled = localStatus === "CANCELLED";
+  const changeRule = canCancelOrModifyBooking({
+    departure_datetime: ticket?.departure_datetime,
+    status: localStatus,
+  });
+  const flightDeparted = hasFlightDeparted(ticket);
+  const changesLocked = isCancelled || !changeRule.allowed;
 
   const markOfflineBookingCancelled = () => {
     if (typeof window === "undefined") return false;
@@ -186,6 +194,11 @@ export function BookingActions({
 
   const handleCancelClick = () => {
     if (isCancelled) return;
+    if (!changeRule.allowed) {
+      setCancelStatus("error");
+      setErrorMessage(changeRule.reason || "Cancellation is not available for this booking.");
+      return;
+    }
     setRemarks("Customer requested cancellation");
     setShowConfirm(true);
   };
@@ -403,6 +416,12 @@ export function BookingActions({
         </div>
       )}
 
+      {!isCancelled && flightDeparted && (
+        <div className="mb-6 px-5 py-4 rounded-2xl bg-amber-50 border border-amber-100 text-amber-900 font-[700] text-sm animate-in slide-in-from-top duration-300">
+          This flight has already departed. Cancel, modification, and add-ons are no longer available.
+        </div>
+      )}
+
       {/* Status feedback */}
       {cancelStatus === "success" && (
         <div className="mb-4 px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-green-700 font-bold text-sm flex items-center gap-2 animate-in slide-in-from-top duration-300">
@@ -412,7 +431,7 @@ export function BookingActions({
       {cancelStatus === "error" && (
         <div className="mb-4 px-5 py-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-800 font-bold text-sm flex flex-col gap-2 shadow-sm animate-in slide-in-from-top duration-300">
           <div className="flex items-center gap-2 text-rose-900 text-base">
-            <span>❌</span> GDS Carrier Cancellation Refused
+            <span>❌</span> Cancellation not available
           </div>
           {errorMessage && (
             <div className="text-xs font-semibold text-rose-600 bg-white/70 rounded-lg p-2.5 border border-rose-100 mt-1 leading-normal select-text">
@@ -427,10 +446,11 @@ export function BookingActions({
         {!isCancelled && (
           <button
             onClick={handleCancelClick}
-            disabled={isCancelling}
+            disabled={isCancelling || changesLocked}
+            title={changesLocked ? changeRule.reason : undefined}
             className={`flex-1 min-w-[140px] px-4 py-3.5 rounded-full border text-[16px] font-[800] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-center tracking-tight ${
-              isCancelling
-                ? "border-gray-300 text-gray-400 bg-white cursor-wait"
+              isCancelling || changesLocked
+                ? "border-gray-300 text-gray-400 bg-white cursor-not-allowed"
                 : "border-gray-300 text-[#1e2329] bg-white hover:bg-primary hover:text-white hover:border-primary"
             }`}
           >
@@ -442,8 +462,17 @@ export function BookingActions({
         {!isCancelled && (
           <button
             onClick={onAddBaggageClick}
-            title="Add baggage or excess luggage allowance via actual GDS airline updates."
-            className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-primary hover:text-white hover:border-primary transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight"
+            disabled={changesLocked}
+            title={
+              changesLocked
+                ? changeRule.reason
+                : "Add baggage or excess luggage allowance via actual GDS airline updates."
+            }
+            className={`flex-1 min-w-[140px] px-4 py-3.5 rounded-full border text-[16px] font-[800] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-center tracking-tight ${
+              changesLocked
+                ? "border-gray-300 text-gray-400 bg-white cursor-not-allowed"
+                : "border-gray-300 text-[#1e2329] bg-white hover:bg-primary hover:text-white hover:border-primary"
+            }`}
           >
             Add Baggage
           </button>
@@ -461,8 +490,17 @@ export function BookingActions({
         {!isCancelled && (
           <button
             onClick={onModificationClick}
-            title="Modify seats or meal choices via actual GDS airline updates."
-            className="flex-1 min-w-[140px] px-4 py-3.5 rounded-full border border-gray-300 text-[16px] font-[800] text-[#1e2329] hover:bg-primary hover:text-white hover:border-primary transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] bg-white text-center tracking-tight"
+            disabled={changesLocked}
+            title={
+              changesLocked
+                ? changeRule.reason
+                : "Modify seats or meal choices via actual GDS airline updates."
+            }
+            className={`flex-1 min-w-[140px] px-4 py-3.5 rounded-full border text-[16px] font-[800] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-center tracking-tight ${
+              changesLocked
+                ? "border-gray-300 text-gray-400 bg-white cursor-not-allowed"
+                : "border-gray-300 text-[#1e2329] bg-white hover:bg-primary hover:text-white hover:border-primary"
+            }`}
           >
             Modification
           </button>

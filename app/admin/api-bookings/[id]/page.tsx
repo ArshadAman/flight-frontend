@@ -301,15 +301,53 @@ export default function ApiBookingDetailPage({
             </Section>
 
             {ticket.cancellation_data && Object.keys(ticket.cancellation_data).length > 0 && (
-              <Section title="Cancellation / admin history">
-                <pre className="overflow-x-auto rounded bg-slate-50 p-3 text-xs text-slate-600">
-                  {JSON.stringify(ticket.cancellation_data, null, 2)}
-                </pre>
+              <Section title="Cancellation summary">
+                {(() => {
+                  const c = ticket.cancellation_data as Record<string, unknown>;
+                  const money = (v: unknown) => {
+                    const n = typeof v === "string" ? Number(v) : Number(v ?? 0);
+                    if (Number.isNaN(n)) return "—";
+                    return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                  };
+                  return (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <KV label="Cancelled by" value={String(c.cancelled_by || "—")} />
+                      <KV label="Admin / actor" value={String(c.actor_username || c.actor_email || "—")} />
+                      <KV label="Ticket owner" value={String(c.ticket_owner_email || "—")} />
+                      <KV
+                        label="Type"
+                        value={
+                          Number(c.cancellation_type) === 1
+                            ? "Airline / schedule change"
+                            : "User / admin initiated"
+                        }
+                      />
+                      <KV label="Paid amount" value={money(c.paid_amount)} />
+                      <KV label="Airline penalty" value={money(c.airline_penalty)} />
+                      <KV label="Service fee" value={money(c.service_fee)} />
+                      <KV label="Refund amount" value={money(c.refund_amount)} />
+                      <div className="sm:col-span-2 lg:col-span-3">
+                        <KV label="Remarks" value={String(c.remarks || "—")} />
+                      </div>
+                    </div>
+                  );
+                })()}
               </Section>
             )}
 
+            {(() => {
+              const departed =
+                ticket.departure_datetime &&
+                !Number.isNaN(new Date(ticket.departure_datetime).getTime()) &&
+                Date.now() >= new Date(ticket.departure_datetime).getTime();
+              return (
             <div className="space-y-3 border-t border-[#e8ebef] pt-4">
-              {ticket.status !== "CANCELLED" && (
+              {departed && ticket.status !== "CANCELLED" && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  This flight has already departed. Cancel and modification are locked.
+                </div>
+              )}
+              {ticket.status !== "CANCELLED" && !departed && (
                 <div className="flex flex-wrap items-end gap-2">
                   <div className="min-w-[240px] flex-1">
                     <label className="mb-1 block text-xs text-slate-500">Cancel remarks</label>
@@ -335,7 +373,7 @@ export default function ApiBookingDetailPage({
                       size="sm"
                       variant="outline"
                       className="border-[#e8ebef]"
-                      disabled={busy || ticket.status === s}
+                      disabled={busy || ticket.status === s || (Boolean(departed) && s === "CANCELLED")}
                       onClick={() => void handleStatus(s)}
                     >
                       {s}
@@ -344,7 +382,7 @@ export default function ApiBookingDetailPage({
                 </div>
               )}
 
-              {ticket.is_agent_booking && ticket.status === "PENDING" && (
+              {ticket.is_agent_booking && ticket.status === "PENDING" && !departed && (
                 <div className="flex flex-wrap items-center gap-2">
                   <Input
                     placeholder="Airline PNR"
@@ -367,6 +405,8 @@ export default function ApiBookingDetailPage({
                 </div>
               )}
             </div>
+              );
+            })()}
           </>
         )}
       </div>
