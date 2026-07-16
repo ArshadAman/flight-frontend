@@ -30,8 +30,12 @@ export function formatBookingDateDisplay(iso?: string): string {
 type BookingDateFieldProps = {
   value: string;
   onChange: (isoDate: string) => void;
+  /** Always-visible label above the field (e.g. Date of Birth) */
+  label: string;
+  required?: boolean;
   placeholder?: string;
   className?: string;
+  error?: boolean;
   /** Cap selectable dates (e.g. DOB cannot be in the future) */
   maxDate?: Date;
   /** Earliest selectable date */
@@ -42,8 +46,11 @@ type BookingDateFieldProps = {
 export function BookingDateField({
   value,
   onChange,
+  label,
+  required = false,
   placeholder = "Select date",
   className,
+  error = false,
   maxDate,
   minDate,
   id,
@@ -51,44 +58,53 @@ export function BookingDateField({
   const [open, setOpen] = useState(false);
   const selected = value && isValid(parseISO(value)) ? parseISO(value) : undefined;
   const display = formatBookingDateDisplay(value);
+  const fieldId = id || `date-${label.replace(/\s+/g, "-").toLowerCase()}`;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          id={id}
-          type="button"
-          className={cn(
-            "flex w-full items-center justify-between gap-2 border border-slate-200 rounded-md px-3 py-2.5 text-left text-[13px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white",
-            display ? "text-slate-800" : "text-slate-400",
-            className
-          )}
-        >
-          <span className="truncate">{display || placeholder}</span>
-          <CalendarIcon className="h-4 w-4 shrink-0 text-slate-400" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 z-[120]" align="start">
-        <Calendar
-          mode="single"
-          selected={selected}
-          captionLayout="dropdown"
-          fromYear={minDate?.getFullYear() ?? 1920}
-          toYear={maxDate?.getFullYear() ?? new Date().getFullYear() + 20}
-          defaultMonth={selected ?? maxDate ?? minDate ?? new Date(1990, 0, 1)}
-          onSelect={(date) => {
-            if (!date) return;
-            onChange(toBookingDateIso(date));
-            setOpen(false);
-          }}
-          disabled={(date) => {
-            const day = startOfDay(date);
-            if (minDate && day < startOfDay(minDate)) return true;
-            if (maxDate && day > startOfDay(maxDate)) return true;
-            return false;
-          }}
-        />
-      </PopoverContent>
-    </Popover>
+    <div className={cn("flex flex-col gap-1", className)}>
+      <label htmlFor={fieldId} className="text-[12px] font-bold text-slate-600">
+        {label}
+        {required && <span className="text-primary ml-0.5">*</span>}
+      </label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            id={fieldId}
+            type="button"
+            aria-label={label}
+            aria-required={required}
+            className={cn(
+              "flex w-full items-center justify-between gap-2 border rounded-md px-3 py-2.5 text-left text-[13px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white min-h-[42px]",
+              display ? "text-slate-800" : "text-slate-400",
+              error ? "border-red-400 ring-1 ring-red-200" : "border-slate-200"
+            )}
+          >
+            <span className="truncate">{display || placeholder}</span>
+            <CalendarIcon className="h-4 w-4 shrink-0 text-slate-400" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0 z-[120]" align="start">
+          <Calendar
+            mode="single"
+            selected={selected}
+            captionLayout="dropdown"
+            fromYear={minDate?.getFullYear() ?? 1920}
+            toYear={maxDate?.getFullYear() ?? new Date().getFullYear() + 20}
+            defaultMonth={selected ?? maxDate ?? minDate ?? new Date(1990, 0, 1)}
+            onSelect={(date) => {
+              if (!date) return;
+              onChange(toBookingDateIso(date));
+              setOpen(false);
+            }}
+            disabled={(date) => {
+              const day = startOfDay(date);
+              if (minDate && day < startOfDay(minDate)) return true;
+              if (maxDate && day > startOfDay(maxDate)) return true;
+              return false;
+            }}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }

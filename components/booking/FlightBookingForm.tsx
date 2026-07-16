@@ -73,8 +73,16 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
       return;
     }
     for (const p of passengers) {
-      if (!p.first_name.trim() || !p.last_name.trim() || !p.dob) {
-        setError(`Complete all fields for ${p.label}.`);
+      if (!p.first_name.trim()) {
+        setError(`${p.label}: First name is required.`);
+        return;
+      }
+      if (!p.last_name.trim()) {
+        setError(`${p.label}: Last name is required.`);
+        return;
+      }
+      if (!p.dob) {
+        setError(`${p.label}: Date of birth is required.`);
         return;
       }
     }
@@ -208,6 +216,7 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
         onConfirmBooking={handleSubmit}
         loading={loading}
         onSearchAgain={() => router.push(b2b ? "/b2b/search" : "/search")}
+        formError={error}
         extraSections={
           <>
             <div className="px-6 pb-6">
@@ -219,11 +228,6 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
                 onChange={setSsrSelections}
               />
             </div>
-            {error && (
-              <div className="mx-6 mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-bold">
-                {error}
-              </div>
-            )}
           </>
         }
       />
