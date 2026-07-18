@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useCallback } from "react";
+import { useState, useEffect, Suspense, useCallback, Fragment } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { Navbar } from "@/components/Navbar";
@@ -47,6 +47,16 @@ function SearchResultsContent() {
     }
   };
 
+  const segCount = parseInt(searchParams.get("segCount") || "0", 10);
+  const multiCitySegments =
+    tripType === "multi-city" && segCount >= 2
+      ? Array.from({ length: segCount }, (_, i) => ({
+          origin: searchParams.get(`seg_origin_${i}`) || "",
+          destination: searchParams.get(`seg_dest_${i}`) || "",
+          date: searchParams.get(`seg_date_${i}`) || "",
+        }))
+      : [];
+
   const fetchForParams = useCallback(async (params: URLSearchParams) => {
     const query = buildFlightsApiQuery(params);
     const response = await fetch(`/api/flights?${query}`);
@@ -92,17 +102,45 @@ function SearchResultsContent() {
       <div className="w-full bg-[#D60D26] text-white select-none">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
           <div className="flex flex-col gap-0.5 w-full sm:w-auto min-w-0">
-            <div className="flex items-center gap-2.5 text-[17px] font-bold tracking-wide">
-              <span>{origin}</span>
-              <ArrowRight className="w-4 h-4 opacity-80 shrink-0" />
-              <span className="truncate">{destination}</span>
+            <div className="flex items-center gap-2.5 text-[17px] font-bold tracking-wide flex-wrap">
+              {multiCitySegments.length > 0 ? (
+                multiCitySegments.map((seg, i) => (
+                  <Fragment key={i}>
+                    {i > 0 && <span className="opacity-50">·</span>}
+                    <span>{seg.origin}</span>
+                    <ArrowRight className="w-4 h-4 opacity-80 shrink-0" />
+                    <span className="truncate">{seg.destination}</span>
+                  </Fragment>
+                ))
+              ) : (
+                <>
+                  <span>{origin}</span>
+                  <ArrowRight className="w-4 h-4 opacity-80 shrink-0" />
+                  <span className="truncate">{destination}</span>
+                </>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-2 text-[12px] font-medium opacity-80">
-              {departureDate && <span>{formatDisplayDate(departureDate)}</span>}
-              {returnDate && tripType === "round-trip" && (
+              {multiCitySegments.length > 0 ? (
+                multiCitySegments.map((seg, i) =>
+                  seg.date ? (
+                    <Fragment key={i}>
+                      {i > 0 && <span className="w-[3px] h-[3px] bg-white/60 rounded-full" />}
+                      <span>
+                        Leg {i + 1}: {formatDisplayDate(seg.date)}
+                      </span>
+                    </Fragment>
+                  ) : null
+                )
+              ) : (
                 <>
-                  <span className="w-[3px] h-[3px] bg-white/60 rounded-full" />
-                  <span>Return {formatDisplayDate(returnDate)}</span>
+                  {departureDate && <span>{formatDisplayDate(departureDate)}</span>}
+                  {returnDate && tripType === "round-trip" && (
+                    <>
+                      <span className="w-[3px] h-[3px] bg-white/60 rounded-full" />
+                      <span>Return {formatDisplayDate(returnDate)}</span>
+                    </>
+                  )}
                 </>
               )}
               <span className="w-[3px] h-[3px] bg-white/60 rounded-full" />
@@ -111,6 +149,12 @@ function SearchResultsContent() {
               </span>
               <span className="w-[3px] h-[3px] bg-white/60 rounded-full" />
               <span>{cabin}</span>
+              {tripType === "multi-city" && (
+                <>
+                  <span className="w-[3px] h-[3px] bg-white/60 rounded-full" />
+                  <span>Multi City</span>
+                </>
+              )}
             </div>
           </div>
           <button

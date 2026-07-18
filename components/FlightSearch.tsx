@@ -112,6 +112,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
                 setActiveDropdown(null);
+                setActiveLegDropdown(null);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -139,8 +140,152 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
         }));
     };
 
+    const cityHint = (name: string) => {
+        const city = GLOBAL_CITIES.find(
+            (c) => c.name.toLowerCase() === name.toLowerCase() || c.code.toLowerCase() === name.toLowerCase()
+        );
+        return city ? `${city.code}, ${city.country}` : name || "City or Airport";
+    };
+
+    const filterCities = (query: string) => {
+        const q = query.trim().toLowerCase();
+        if (q.length < 2) return [];
+        return GLOBAL_CITIES.filter(
+            (c) =>
+                c.name.toLowerCase().includes(q) ||
+                c.code.toLowerCase().includes(q) ||
+                c.country.toLowerCase().includes(q)
+        );
+    };
+
+    const updateLeg = (
+        index: number,
+        field: "origin" | "destination" | "date",
+        value: string | Date
+    ) => {
+        setMultiCityLegs((prev) => {
+            const next = prev.map((leg, i) => (i === index ? { ...leg, [field]: value } : leg));
+            // Chain next leg origin when destination changes
+            if (field === "destination" && typeof value === "string" && next[index + 1]) {
+                next[index + 1] = { ...next[index + 1], origin: value };
+            }
+            return next;
+        });
+        if (field === "origin" && typeof value === "string") {
+            setLegSearchValues((prev) => {
+                const copy = [...prev];
+                copy[index] = value;
+                return copy;
+            });
+        }
+        if (field === "destination" && typeof value === "string") {
+            setLegDestSearchValues((prev) => {
+                const copy = [...prev];
+                copy[index] = value;
+                if (copy[index + 1] !== undefined) copy[index + 1] = value; // next origin search mirrors
+                return copy;
+            });
+            setLegSearchValues((prev) => {
+                if (prev[index + 1] === undefined) return prev;
+                const copy = [...prev];
+                copy[index + 1] = value;
+                return copy;
+            });
+        }
+    };
+
+    const addMultiCityLeg = () => {
+        if (multiCityLegs.length >= 6) return;
+        const prev = multiCityLegs[multiCityLegs.length - 1];
+        const nextDate = new Date(prev.date);
+        nextDate.setDate(nextDate.getDate() + 2);
+        setMultiCityLegs([
+            ...multiCityLegs,
+            { origin: prev.destination, destination: "", date: nextDate },
+        ]);
+        setLegSearchValues([...legSearchValues, prev.destination]);
+        setLegDestSearchValues([...legDestSearchValues, ""]);
+    };
+
+    const removeMultiCityLeg = (index: number) => {
+        if (multiCityLegs.length <= 2) return;
+        setMultiCityLegs(multiCityLegs.filter((_, i) => i !== index));
+        setLegSearchValues(legSearchValues.filter((_, i) => i !== index));
+        setLegDestSearchValues(legDestSearchValues.filter((_, i) => i !== index));
+        setActiveLegDropdown(null);
+        setOpenLegCalendar(null);
+    };
+
     const handleSearch = () => {
         setErrorMsg(null);
+
+        if (tripType === "multi-city") {
+            for (let i = 0; i < multiCityLegs.length; i++) {
+                const leg = multiCityLegs[i];
+                if (!leg.origin.trim() || !leg.destination.trim() || !leg.date) {
+                    setErrorMsg(`Please fill Origin, Destination, and Date for Flight ${i + 1}.`);
+                    return;
+                }
+                if (isBeforeToday(leg.date)) {
+                    setErrorMsg(`Flight ${i + 1} date cannot be in the past.`);
+                    return;
+                }
+                if (leg.origin.trim().toLowerCase() === leg.destination.trim().toLowerCase()) {
+                    setErrorMsg(`Flight ${i + 1}: Origin and Destination cannot be the same.`);
+                    return;
+                }
+                if (i > 0 && multiCityLegs[i - 1].date && leg.date < multiCityLegs[i - 1].date) {
+                    setErrorMsg(`Flight ${i + 1} date must be on or after Flight ${i} date.`);
+                    return;
+                }
+            }
+
+            const first = multiCityLegs[0];
+            const last = multiCityLegs[multiCityLegs.length - 1];
+
+            try {
+                const newSearch = {
+                    origin: first.origin,
+                    destination: last.destination,
+                    date: format(first.date, "MMM dd, yyyy"),
+                };
+                const updatedSearches = [
+                    newSearch,
+                    ...lastSearches.filter(
+                        (s) => s.origin !== first.origin || s.destination !== last.destination
+                    ),
+                ].slice(0, 5);
+                setLastSearches(updatedSearches);
+                localStorage.setItem("lastFlightSearches", JSON.stringify(updatedSearches));
+            } catch (e) {
+                console.error("Could not save to last searches", e);
+            }
+
+            if (onSearch) {
+                onSearch({
+                    origin: first.origin,
+                    destination: last.destination,
+                    nonStop,
+                    baggageFares,
+                    studentFareSearch,
+                    defenceFareSearch,
+                    srCitizenSearch: false,
+                    corporateFareSearch,
+                    travellers,
+                    cabin: cabinClass,
+                    tripType: "multi-city",
+                    departureDate: first.date,
+                    airlineCode: airlineCode || undefined,
+                    tripSegments: multiCityLegs.map((leg) => ({
+                        origin: leg.origin,
+                        destination: leg.destination,
+                        travelDate: leg.date,
+                    })),
+                });
+            }
+            return;
+        }
+
         if (!origin.trim() || !destination.trim() || !date) {
             setErrorMsg("Please fill in Origin, Destination, and Departure Date.");
             return;
@@ -283,7 +428,33 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                 {/* Trip Type Selector */}
                 <div className="flex items-center flex-wrap gap-4 md:gap-8">
                     {(["one-way", "round-trip", "multi-city"] as const).map((type) => (
-                        <label key={type} className="flex items-center space-x-2 cursor-pointer group" onClick={() => setTripType(type)}>
+                        <label
+                            key={type}
+                            className="flex items-center space-x-2 cursor-pointer group"
+                            onClick={() => {
+                                setTripType(type);
+                                if (type === "multi-city") {
+                                    const leg1 = {
+                                        origin: origin || "New Delhi",
+                                        destination: destination || "Mumbai",
+                                        date: date || new Date(),
+                                    };
+                                    const leg2Date = new Date(leg1.date);
+                                    leg2Date.setDate(leg2Date.getDate() + 2);
+                                    const legs = [
+                                        leg1,
+                                        {
+                                            origin: leg1.destination,
+                                            destination: multiCityLegs[1]?.destination || "Bangalore",
+                                            date: multiCityLegs[1]?.date || leg2Date,
+                                        },
+                                    ];
+                                    setMultiCityLegs(legs);
+                                    setLegSearchValues(legs.map((l) => l.origin));
+                                    setLegDestSearchValues(legs.map((l) => l.destination));
+                                }
+                            }}
+                        >
                             <div className={cn(
                                 "w-[20px] h-[20px] rounded-full border-[1.5px] flex items-center justify-center shadow-sm",
                                 tripType === type ? "border-brand" : "border-slate-300"
@@ -302,115 +473,307 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
 
                 {tripType === 'multi-city' ? (
                     /* --------------------------------- */
-                    /* MULTI CITY DESIGN START           */
+                    /* MULTI CITY — editable legs        */
                     /* --------------------------------- */
-                    <div className="flex flex-col gap-6 mt-2 relative">
-                        {/* ROW 1 */}
-                        <div className="flex flex-col lg:flex-row items-center gap-6 w-full relative">
-                            {/* Origin */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Departure From</label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{origin}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">DEL, Indira Gandhi...</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
+                    <div className="flex flex-col gap-5 mt-2 relative" ref={searchRef}>
+                        {multiCityLegs.map((leg, idx) => {
+                            const originQuery = legSearchValues[idx] ?? leg.origin;
+                            const destQuery = legDestSearchValues[idx] ?? leg.destination;
+                            const originMatches = filterCities(originQuery);
+                            const destMatches = filterCities(destQuery);
+                            const minDate =
+                                idx > 0 && multiCityLegs[idx - 1]?.date
+                                    ? startOfDay(multiCityLegs[idx - 1].date)
+                                    : startOfToday();
 
-                            {/* Red Arrow Circle */}
-                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
-                                <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
-                            </div>
+                            return (
+                                <div
+                                    key={idx}
+                                    className="flex flex-col lg:flex-row items-center gap-4 lg:gap-6 w-full relative"
+                                >
+                                    <div className="w-full lg:w-auto lg:absolute lg:-left-2 lg:-top-1 text-[11px] font-bold uppercase tracking-wider text-[#D60D26]">
+                                        Flight {idx + 1}
+                                    </div>
 
-                            {/* Destination */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Going To</label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{destination}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">BOM, Chhatrapat...</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
+                                    {/* Origin */}
+                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                        <label className="text-[14px] font-bold text-slate-400 mb-1 block">Departure From</label>
+                                        <input
+                                            type="text"
+                                            className="bg-transparent border-none outline-none font-extrabold text-slate-900 tracking-tight text-[20px] p-0 placeholder:text-slate-300 leading-none w-full"
+                                            value={originQuery}
+                                            onChange={(e) => {
+                                                const v = e.target.value;
+                                                setLegSearchValues((prev) => {
+                                                    const copy = [...prev];
+                                                    copy[idx] = v;
+                                                    return copy;
+                                                });
+                                                updateLeg(idx, "origin", v);
+                                                setActiveLegDropdown({ legIdx: idx, field: "origin" });
+                                            }}
+                                            onFocus={() => setActiveLegDropdown({ legIdx: idx, field: "origin" })}
+                                            placeholder="City or Airport"
+                                        />
+                                        <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">{cityHint(leg.origin)}</p>
+                                        <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                                        {activeLegDropdown?.legIdx === idx &&
+                                            activeLegDropdown.field === "origin" &&
+                                            originMatches.length > 0 && (
+                                                <div className="absolute top-[100%] left-0 w-full lg:w-[120%] bg-white rounded-2xl shadow-2xl z-[100] mt-2 border border-slate-100 max-h-[260px] overflow-y-auto">
+                                                    <ul className="py-2">
+                                                        {originMatches.map((city) => (
+                                                            <li
+                                                                key={city.code}
+                                                                className="px-5 py-3 hover:bg-slate-50 cursor-pointer flex items-center justify-between border-b border-slate-50 last:border-0"
+                                                                onClick={() => {
+                                                                    updateLeg(idx, "origin", city.name);
+                                                                    setLegSearchValues((prev) => {
+                                                                        const copy = [...prev];
+                                                                        copy[idx] = city.name;
+                                                                        return copy;
+                                                                    });
+                                                                    setActiveLegDropdown(null);
+                                                                }}
+                                                            >
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-bold text-slate-800 text-[14px]">{city.name}</span>
+                                                                    <span className="text-slate-400 text-[12px]">{city.country}</span>
+                                                                </div>
+                                                                <span className="font-bold text-slate-300 bg-slate-100 px-2 py-1 rounded text-[12px]">{city.code}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                    </div>
 
-                            {/* Departure Date */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">Departure Date <ChevronDown className="w-3.5 h-3.5" /></label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{format(date || new Date(), "dd MMM yy")}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 font-medium">{format(date || new Date(), "EEEE")}</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
+                                    <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
+                                        <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+                                    </div>
 
-                            {/* Return Date Link */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Return Date</label>
-                                <div className="h-[46px] flex items-center">
-                                    <span className="text-blue-500 text-[13px] font-semibold leading-tight cursor-pointer hover:underline">
-                                        Book Round Trip<br />To Save Extra
-                                    </span>
+                                    {/* Destination */}
+                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                        <label className="text-[14px] font-bold text-slate-400 mb-1 block">Going To</label>
+                                        <input
+                                            type="text"
+                                            className="bg-transparent border-none outline-none font-extrabold text-slate-900 tracking-tight text-[20px] p-0 placeholder:text-slate-300 leading-none w-full"
+                                            value={destQuery}
+                                            onChange={(e) => {
+                                                const v = e.target.value;
+                                                setLegDestSearchValues((prev) => {
+                                                    const copy = [...prev];
+                                                    copy[idx] = v;
+                                                    return copy;
+                                                });
+                                                updateLeg(idx, "destination", v);
+                                                setActiveLegDropdown({ legIdx: idx, field: "destination" });
+                                            }}
+                                            onFocus={() => setActiveLegDropdown({ legIdx: idx, field: "destination" })}
+                                            placeholder="City or Airport"
+                                        />
+                                        <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">{cityHint(leg.destination)}</p>
+                                        <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                                        {activeLegDropdown?.legIdx === idx &&
+                                            activeLegDropdown.field === "destination" &&
+                                            destMatches.length > 0 && (
+                                                <div className="absolute top-[100%] left-0 w-full lg:w-[120%] bg-white rounded-2xl shadow-2xl z-[100] mt-2 border border-slate-100 max-h-[260px] overflow-y-auto">
+                                                    <ul className="py-2">
+                                                        {destMatches.map((city) => (
+                                                            <li
+                                                                key={city.code}
+                                                                className="px-5 py-3 hover:bg-slate-50 cursor-pointer flex items-center justify-between border-b border-slate-50 last:border-0"
+                                                                onClick={() => {
+                                                                    updateLeg(idx, "destination", city.name);
+                                                                    setLegDestSearchValues((prev) => {
+                                                                        const copy = [...prev];
+                                                                        copy[idx] = city.name;
+                                                                        return copy;
+                                                                    });
+                                                                    setActiveLegDropdown(null);
+                                                                }}
+                                                            >
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-bold text-slate-800 text-[14px]">{city.name}</span>
+                                                                    <span className="text-slate-400 text-[12px]">{city.country}</span>
+                                                                </div>
+                                                                <span className="font-bold text-slate-300 bg-slate-100 px-2 py-1 rounded text-[12px]">{city.code}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                    </div>
+
+                                    {/* Departure Date */}
+                                    <Popover
+                                        open={openLegCalendar === idx}
+                                        onOpenChange={(open) => setOpenLegCalendar(open ? idx : null)}
+                                    >
+                                        <PopoverTrigger asChild>
+                                            <div className="flex flex-col flex-1 group relative h-[70px] w-full cursor-pointer">
+                                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">
+                                                    Departure Date <ChevronDown className="w-3.5 h-3.5" />
+                                                </label>
+                                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">
+                                                    {format(leg.date || new Date(), "dd MMM yy")}
+                                                </div>
+                                                <p className="text-[13px] text-slate-500 mt-1 font-medium">
+                                                    {format(leg.date || new Date(), "EEEE")}
+                                                </p>
+                                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                                            </div>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                            className="w-auto p-0 bg-white rounded-3xl shadow-2xl border-none overflow-hidden z-[110]"
+                                            align="center"
+                                            side="bottom"
+                                            sideOffset={8}
+                                            avoidCollisions={false}
+                                        >
+                                            <Calendar
+                                                mode="single"
+                                                selected={leg.date}
+                                                onSelect={(d) => {
+                                                    if (d) {
+                                                        updateLeg(idx, "date", d);
+                                                        setOpenLegCalendar(null);
+                                                    }
+                                                }}
+                                                numberOfMonths={2}
+                                                defaultMonth={leg.date && !isBeforeToday(leg.date) ? leg.date : minDate}
+                                                fromDate={minDate}
+                                                toDate={maxFlightBookingDate()}
+                                                disabled={(d) => startOfDay(d) < minDate}
+                                                classNames={calendarClassNames}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+
+                                    {/* Travellers only on first row */}
+                                    {idx === 0 ? (
+                                        <Popover open={isTravellerOpen} onOpenChange={setIsTravellerOpen}>
+                                            <PopoverTrigger asChild>
+                                                <div className="flex flex-col flex-1 group relative h-[70px] w-full cursor-pointer">
+                                                    <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">
+                                                        Traveller & Class <ChevronDown className="w-3.5 h-3.5" />
+                                                    </label>
+                                                    <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">
+                                                        {travellers.adults + travellers.children + travellers.infants} Traveller
+                                                    </div>
+                                                    <p className="text-[13px] text-slate-500 mt-1 font-medium">{cabinClass}</p>
+                                                    <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                                                </div>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                                className="w-[320px] p-5 bg-white rounded-xl shadow-2xl border-none z-[110]"
+                                                align="center"
+                                                side="bottom"
+                                                sideOffset={8}
+                                                avoidCollisions={false}
+                                            >
+                                                <div className="space-y-5">
+                                                    {[
+                                                        { label: "Adults", age: "(12+ Years)", key: "adults" as const },
+                                                        { label: "Children", age: "(2-12 Years)", key: "children" as const },
+                                                        { label: "Infant", age: "(0-2 Years)", key: "infants" as const },
+                                                    ].map((item) => (
+                                                        <div key={item.key} className="flex items-center justify-between">
+                                                            <div>
+                                                                <p className="font-bold text-slate-800 text-[16px]">{item.label}</p>
+                                                                <p className="text-[12px] text-slate-500 font-medium">{item.age}</p>
+                                                            </div>
+                                                            <div className="flex items-center border border-slate-200 rounded-md h-[36px]">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => updateTravellers(item.key, "sub")}
+                                                                    className="px-3 text-slate-600 font-bold border-r border-slate-200"
+                                                                >
+                                                                    -
+                                                                </button>
+                                                                <span className="px-4 font-bold text-slate-800 min-w-[36px] text-center">
+                                                                    {travellers[item.key]}
+                                                                </span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => updateTravellers(item.key, "add")}
+                                                                    className="px-3 text-slate-600 font-bold border-l border-slate-200"
+                                                                >
+                                                                    +
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    <hr className="border-slate-100" />
+                                                    <div className="space-y-2.5">
+                                                        {["Economy", "Prem. Economy", "Business", "First"].map((cabin) => (
+                                                            <label
+                                                                key={cabin}
+                                                                className="flex items-center gap-3 cursor-pointer group"
+                                                                onClick={() => setCabinClass(cabin)}
+                                                            >
+                                                                <div
+                                                                    className={cn(
+                                                                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                                                        cabinClass === cabin ? "border-[#888]" : "border-slate-300"
+                                                                    )}
+                                                                >
+                                                                    {cabinClass === cabin && (
+                                                                        <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-[14px] font-semibold text-slate-700">{cabin}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                    <Button
+                                                        className="w-full mt-2 py-5 bg-white border-2 border-[#888] text-[#888] hover:bg-blue-50 font-bold text-[16px] rounded-xl shadow-none"
+                                                        onClick={() => setIsTravellerOpen(false)}
+                                                    >
+                                                        Done
+                                                    </Button>
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+                                    ) : (
+                                        <div className="hidden lg:flex flex-1 h-[70px]" />
+                                    )}
+
+                                    {/* Actions */}
+                                    <div className="flex items-center gap-3 justify-end h-[70px] shrink-0 mt-3 min-w-[140px]">
+                                        {idx === 0 ? (
+                                            <Button
+                                                onClick={handleSearch}
+                                                className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95"
+                                            >
+                                                Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+                                            </Button>
+                                        ) : (
+                                            <>
+                                                {multiCityLegs.length > 2 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeMultiCityLeg(idx)}
+                                                        className="text-slate-400 hover:text-[#D60D26] font-bold text-[13px]"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                )}
+                                                {idx === multiCityLegs.length - 1 && multiCityLegs.length < 6 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={addMultiCityLeg}
+                                                        className="text-[#D60D26] font-bold text-[15px] hover:underline flex items-center gap-1"
+                                                    >
+                                                        <Plus className="w-4 h-4" strokeWidth={3} /> Add City
+                                                    </button>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-                            {/* Traveller & Class */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">Traveller & Class <ChevronDown className="w-3.5 h-3.5" /></label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">1 Traveller</div>
-                                <p className="text-[13px] text-slate-500 mt-1 font-medium">{cabinClass}</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-
-                            {/* Search Button */}
-                            <div className="flex items-center justify-end h-[70px] shrink-0 mt-3">
-                                <Button onClick={handleSearch} className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
-                                    Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* ROW 2 */}
-                        <div className="flex flex-col lg:flex-row items-center gap-6 w-full relative">
-                            {/* Origin */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Departure From</label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{multiCityLegs[1].origin}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">DEL, Indira Gandhi...</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-                            {/* Red Arrow Circle */}
-                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
-                                <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
-                            </div>
-
-                            {/* Destination */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Going To</label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{multiCityLegs[1].destination}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">BOM, Chhatrapat...</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-                            {/* Departure Date */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">Departure Date <ChevronDown className="w-3.5 h-3.5" /></label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{format(multiCityLegs[1].date || new Date(), "dd MMM yy")}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 font-medium">{format(multiCityLegs[1].date || new Date(), "EEEE")}</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-                            {/* Return Date Link (Empty space equivalent in Row 2) */}
-                            <div className="flex flex-col flex-1 h-[70px] w-full hidden lg:flex">
-                            </div>
-
-                            {/* Traveller & Class (Empty space equivalent in Row 2) */}
-                            <div className="flex flex-col flex-1 h-[70px] w-full hidden lg:flex">
-                            </div>
-
-
-                            {/* Add City Button Area */}
-                            <div className="flex items-center justify-start h-[70px] shrink-0 min-w-[120px] mt-3 lg:pl-6">
-                                <button className="text-[#D60D26] font-bold text-[15px] hover:underline flex items-center gap-1">
-                                    <Plus className="w-4 h-4" strokeWidth={3} /> Add City
-                                </button>
-                            </div>
-                        </div>
+                            );
+                        })}
                     </div>
                 ) : (
                     /* --------------------------------- */

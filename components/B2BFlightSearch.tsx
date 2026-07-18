@@ -81,12 +81,12 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
     const [airlineCode, setAirlineCode] = React.useState("");
     const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
-    // Multi-city additional state
-    const [date2, setDate2] = React.useState<Date | undefined>(new Date());
-    const [origin2, setOrigin2] = React.useState("New Delhi");
-    const [destination2, setDestination2] = React.useState("Mumbai");
-    const [dayVariance2, setDayVariance2] = React.useState<number>(0);
-    const [isDayVarianceOpen2, setIsDayVarianceOpen2] = React.useState(false);
+    // Multi-city legs
+    const [multiCityLegs, setMultiCityLegs] = React.useState([
+        { origin: "New Delhi", destination: "Mumbai", date: new Date() as Date },
+        { origin: "Mumbai", destination: "Bangalore", date: new Date() as Date },
+    ]);
+    const [openLegCalendar, setOpenLegCalendar] = React.useState<number | null>(null);
 
     // Autocomplete Search States
     const [originSearch, setOriginSearch] = React.useState("New Delhi");
@@ -140,6 +140,71 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
 
     const handleSearch = () => {
         setErrorMsg(null);
+
+        if (tripType === "multi-city") {
+            for (let i = 0; i < multiCityLegs.length; i++) {
+                const leg = multiCityLegs[i];
+                if (!leg.origin.trim() || !leg.destination.trim() || !leg.date) {
+                    setErrorMsg(`Please fill Origin, Destination, and Date for Flight ${i + 1}.`);
+                    return;
+                }
+                if (isBeforeToday(leg.date)) {
+                    setErrorMsg(`Flight ${i + 1} date cannot be in the past.`);
+                    return;
+                }
+                if (leg.origin.trim().toLowerCase() === leg.destination.trim().toLowerCase()) {
+                    setErrorMsg(`Flight ${i + 1}: Origin and Destination cannot be the same.`);
+                    return;
+                }
+                if (i > 0 && multiCityLegs[i - 1].date && leg.date < multiCityLegs[i - 1].date) {
+                    setErrorMsg(`Flight ${i + 1} date must be on or after Flight ${i} date.`);
+                    return;
+                }
+            }
+            const first = multiCityLegs[0];
+            const last = multiCityLegs[multiCityLegs.length - 1];
+            try {
+                const newSearch = {
+                    origin: first.origin,
+                    destination: last.destination,
+                    date: format(first.date, "MMM dd, yyyy"),
+                };
+                const updatedSearches = [
+                    newSearch,
+                    ...lastSearches.filter(
+                        (s) => s.origin !== first.origin || s.destination !== last.destination
+                    ),
+                ].slice(0, 5);
+                setLastSearches(updatedSearches);
+                localStorage.setItem("lastFlightSearches", JSON.stringify(updatedSearches));
+            } catch (e) {
+                console.error("Could not save to last searches", e);
+            }
+            if (onSearch) {
+                onSearch({
+                    origin: first.origin,
+                    destination: last.destination,
+                    nonStop,
+                    baggageFares,
+                    studentFareSearch,
+                    defenceFareSearch,
+                    corporateFareSearch,
+                    srCitizenSearch,
+                    travellers,
+                    cabin: cabinClass,
+                    tripType: "multi-city",
+                    departureDate: first.date,
+                    airlineCode: airlineCode || undefined,
+                    tripSegments: multiCityLegs.map((leg) => ({
+                        origin: leg.origin,
+                        destination: leg.destination,
+                        travelDate: leg.date,
+                    })),
+                });
+            }
+            return;
+        }
+
         if (!origin.trim() || !destination.trim() || !date) {
             setErrorMsg("Please fill in Origin, Destination, and Departure Date.");
             return;
@@ -296,6 +361,23 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                             if (type === "round-trip" && date && (!returnDate || returnDate < date)) {
                                 setReturnDate(defaultReturnDate(date));
                             }
+                            if (type === "multi-city") {
+                                const leg1Date = date || new Date();
+                                const leg2Date = new Date(leg1Date);
+                                leg2Date.setDate(leg2Date.getDate() + 2);
+                                setMultiCityLegs([
+                                    {
+                                        origin: origin || "New Delhi",
+                                        destination: destination || "Mumbai",
+                                        date: leg1Date,
+                                    },
+                                    {
+                                        origin: destination || "Mumbai",
+                                        destination: multiCityLegs[1]?.destination || "Bangalore",
+                                        date: multiCityLegs[1]?.date || leg2Date,
+                                    },
+                                ]);
+                            }
                         }}>
                             <div className={cn(
                                 "w-[16px] h-[16px] rounded-full border-[1.5px] flex items-center justify-center transition-colors",
@@ -314,176 +396,152 @@ export function B2BFlightSearch({ onSearch }: FlightSearchProps) {
                 </div>
 
                 {tripType === 'multi-city' ? (
-                    /* --------------------------------- */
-                    /* MULTI CITY DESIGN START           */
-                    /* --------------------------------- */
-                    <div className="flex flex-col gap-6 mt-2 relative">
-                        {/* ROW 1 */}
-                        <div className="flex flex-col lg:flex-row items-center gap-6 w-full relative">
-                            {/* Origin */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Departure From</label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{origin}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">DEL, Indira Gandhi...</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-                            {/* Red Arrow Circle */}
-                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
-                                <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
-                            </div>
-
-                            {/* Destination */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Going To</label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{destination}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">BOM, Chhatrapat...</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-                            {/* Departure Date */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">Departure Date <ChevronDown className="w-3.5 h-3.5" /></label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{format(date || new Date(), "dd MMM yy")}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 font-medium">{format(date || new Date(), "EEEE")}</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-                            {/* Return Date Link */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Return Date</label>
-                                <div className="h-[46px] flex items-center">
-                                    <span className="text-blue-500 text-[13px] font-semibold leading-tight cursor-pointer hover:underline">
-                                        Book Round Trip<br />To Save Extra
-                                    </span>
+                    <div className="flex flex-col gap-5 mt-2 relative">
+                        {multiCityLegs.map((leg, idx) => {
+                            const minDate =
+                                idx > 0 && multiCityLegs[idx - 1]?.date
+                                    ? startOfDay(multiCityLegs[idx - 1].date)
+                                    : startOfToday();
+                            return (
+                                <div
+                                    key={idx}
+                                    className="flex flex-col lg:flex-row items-center gap-4 lg:gap-6 w-full relative"
+                                >
+                                    <div className="w-full lg:w-auto text-[11px] font-bold uppercase tracking-wider text-[#D60D26] lg:absolute lg:-left-1 lg:-top-1">
+                                        Flight {idx + 1}
+                                    </div>
+                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                        <label className="text-[14px] font-bold text-slate-400 mb-1 block">Departure From</label>
+                                        <input
+                                            type="text"
+                                            className="bg-transparent border-none outline-none font-extrabold text-slate-900 tracking-tight text-[20px] p-0 leading-none w-full"
+                                            value={leg.origin}
+                                            onChange={(e) => {
+                                                const v = e.target.value;
+                                                setMultiCityLegs((prev) =>
+                                                    prev.map((l, i) => (i === idx ? { ...l, origin: v } : l))
+                                                );
+                                            }}
+                                            placeholder="City or Airport"
+                                        />
+                                        <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                                    </div>
+                                    <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
+                                        <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+                                    </div>
+                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                        <label className="text-[14px] font-bold text-slate-400 mb-1 block">Going To</label>
+                                        <input
+                                            type="text"
+                                            className="bg-transparent border-none outline-none font-extrabold text-slate-900 tracking-tight text-[20px] p-0 leading-none w-full"
+                                            value={leg.destination}
+                                            onChange={(e) => {
+                                                const v = e.target.value;
+                                                setMultiCityLegs((prev) => {
+                                                    const next = prev.map((l, i) =>
+                                                        i === idx ? { ...l, destination: v } : l
+                                                    );
+                                                    if (next[idx + 1]) {
+                                                        next[idx + 1] = { ...next[idx + 1], origin: v };
+                                                    }
+                                                    return next;
+                                                });
+                                            }}
+                                            placeholder="City or Airport"
+                                        />
+                                        <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                                    </div>
+                                    <Popover
+                                        open={openLegCalendar === idx}
+                                        onOpenChange={(open) => setOpenLegCalendar(open ? idx : null)}
+                                    >
+                                        <PopoverTrigger asChild>
+                                            <div className="flex flex-col flex-1 group relative h-[70px] w-full cursor-pointer">
+                                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">
+                                                    Departure Date <ChevronDown className="w-3.5 h-3.5" />
+                                                </label>
+                                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">
+                                                    {format(leg.date || new Date(), "dd MMM yy")}
+                                                </div>
+                                                <p className="text-[13px] text-slate-500 mt-1 font-medium">
+                                                    {format(leg.date || new Date(), "EEEE")}
+                                                </p>
+                                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                                            </div>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                            className="w-auto p-0 bg-white rounded-3xl shadow-2xl border-none overflow-hidden z-[110]"
+                                            align="center"
+                                            side="bottom"
+                                            sideOffset={8}
+                                        >
+                                            <Calendar
+                                                mode="single"
+                                                selected={leg.date}
+                                                onSelect={(d) => {
+                                                    if (!d) return;
+                                                    setMultiCityLegs((prev) =>
+                                                        prev.map((l, i) => (i === idx ? { ...l, date: d } : l))
+                                                    );
+                                                    setOpenLegCalendar(null);
+                                                }}
+                                                numberOfMonths={2}
+                                                defaultMonth={leg.date && !isBeforeToday(leg.date) ? leg.date : minDate}
+                                                fromDate={minDate}
+                                                toDate={maxFlightBookingDate()}
+                                                disabled={(d) => startOfDay(d) < minDate}
+                                                classNames={calendarClassNames}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                    {idx === 0 ? (
+                                        <div className="flex items-center justify-end h-[70px] shrink-0 mt-3">
+                                            <Button
+                                                onClick={handleSearch}
+                                                className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1"
+                                            >
+                                                Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-3 justify-end h-[70px] shrink-0 mt-3 min-w-[140px]">
+                                            {multiCityLegs.length > 2 && (
+                                                <button
+                                                    type="button"
+                                                    className="text-slate-400 hover:text-[#D60D26] font-bold text-[13px]"
+                                                    onClick={() =>
+                                                        setMultiCityLegs((prev) => prev.filter((_, i) => i !== idx))
+                                                    }
+                                                >
+                                                    Remove
+                                                </button>
+                                            )}
+                                            {idx === multiCityLegs.length - 1 && multiCityLegs.length < 6 && (
+                                                <button
+                                                    type="button"
+                                                    className="text-[#D60D26] font-bold text-[15px] hover:underline flex items-center gap-1"
+                                                    onClick={() => {
+                                                        const prev = multiCityLegs[multiCityLegs.length - 1];
+                                                        const nextDate = new Date(prev.date);
+                                                        nextDate.setDate(nextDate.getDate() + 2);
+                                                        setMultiCityLegs([
+                                                            ...multiCityLegs,
+                                                            {
+                                                                origin: prev.destination,
+                                                                destination: "",
+                                                                date: nextDate,
+                                                            },
+                                                        ]);
+                                                    }}
+                                                >
+                                                    <Plus className="w-4 h-4" strokeWidth={3} /> Add City
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-                            {/* Traveller & Class */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">Traveller & Class <ChevronDown className="w-3.5 h-3.5" /></label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">1 Traveller</div>
-                                <p className="text-[13px] text-slate-500 mt-1 font-medium">{cabinClass}</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-                            {/* +/- Day Dropdown Popover */}
-                            <Popover open={isDayVarianceOpen} onOpenChange={setIsDayVarianceOpen}>
-                                <PopoverTrigger asChild>
-                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full cursor-pointer">
-                                        <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">+/- Day <ChevronDown className="w-3.5 h-3.5" /></label>
-                                        <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">+/- 0{dayVariance}</div>
-                                        <p className="text-[13px] text-slate-500 mt-1 font-medium">Day{dayVariance !== 1 ? 's' : ''}</p>
-                                        <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200 group-hover:bg-slate-300" />
-                                    </div>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[180px] p-3 bg-white rounded-xl shadow-2xl border-none z-[110]" align="start" side="bottom" sideOffset={8}>
-                                    <div className="flex flex-col space-y-1">
-                                        {[0, 1, 2, 3].map((days) => (
-                                            <button 
-                                                key={days}
-                                                className={cn(
-                                                    "w-full text-left px-4 py-2.5 rounded-lg font-bold text-[15px] transition-colors",
-                                                    dayVariance === days ? "bg-[#D60D26] text-white" : "text-slate-700 hover:bg-slate-100"
-                                                )}
-                                                onClick={() => {
-                                                    setDayVariance(days);
-                                                    setIsDayVarianceOpen(false);
-                                                }}
-                                            >
-                                                +/- 0{days} Day{days !== 1 ? 's' : ''}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-
-                            {/* Search Button */}
-                            <div className="flex items-center justify-end h-[70px] shrink-0 mt-3">
-                                <Button onClick={handleSearch} className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95">
-                                    Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* ROW 2 */}
-                        <div className="flex flex-col lg:flex-row items-center gap-6 w-full relative">
-                            {/* Origin */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Departure From</label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{origin2}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">DEL, Indira Gandhi...</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-                            {/* Red Arrow Circle */}
-                            <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
-                                <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
-                            </div>
-
-                            {/* Destination */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 block">Going To</label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{destination2}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">BOM, Chhatrapat...</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-                            {/* Departure Date */}
-                            <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">Departure Date <ChevronDown className="w-3.5 h-3.5" /></label>
-                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">{format(date2 || new Date(), "dd MMM yy")}</div>
-                                <p className="text-[13px] text-slate-500 mt-1 font-medium">{format(date2 || new Date(), "EEEE")}</p>
-                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                            </div>
-
-                            {/* Return Date Link (Empty space equivalent in Row 2) */}
-                            <div className="flex flex-col flex-1 h-[70px] w-full hidden lg:flex">
-                            </div>
-
-                            {/* Traveller & Class (Empty space equivalent in Row 2) */}
-                            <div className="flex flex-col flex-1 h-[70px] w-full hidden lg:flex">
-                            </div>
-
-                            {/* +/- Day Dropdown Popover */}
-                            <Popover open={isDayVarianceOpen2} onOpenChange={setIsDayVarianceOpen2}>
-                                <PopoverTrigger asChild>
-                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full cursor-pointer">
-                                        <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">+/- Day <ChevronDown className="w-3.5 h-3.5" /></label>
-                                        <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">+/- 0{dayVariance2}</div>
-                                        <p className="text-[13px] text-slate-500 mt-1 font-medium">Day{dayVariance2 !== 1 ? 's' : ''}</p>
-                                        <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200 group-hover:bg-slate-300" />
-                                    </div>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[180px] p-3 bg-white rounded-xl shadow-2xl border-none z-[110]" align="start" side="bottom" sideOffset={8}>
-                                    <div className="flex flex-col space-y-1">
-                                        {[0, 1, 2, 3].map((days) => (
-                                            <button 
-                                                key={days}
-                                                className={cn(
-                                                    "w-full text-left px-4 py-2.5 rounded-lg font-bold text-[15px] transition-colors",
-                                                    dayVariance2 === days ? "bg-[#D60D26] text-white" : "text-slate-700 hover:bg-slate-100"
-                                                )}
-                                                onClick={() => {
-                                                    setDayVariance2(days);
-                                                    setIsDayVarianceOpen2(false);
-                                                }}
-                                            >
-                                                +/- 0{days} Day{days !== 1 ? 's' : ''}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-
-                            {/* Add City Button Area */}
-                            <div className="flex items-center justify-start h-[70px] shrink-0 min-w-[120px] mt-3 lg:pl-6">
-                                <button className="text-[#D60D26] font-bold text-[15px] hover:underline flex items-center gap-1">
-                                    <Plus className="w-4 h-4" strokeWidth={3} /> Add City
-                                </button>
-                            </div>
-                        </div>
+                            );
+                        })}
                     </div>
                 ) : (
                     /* --------------------------------- */

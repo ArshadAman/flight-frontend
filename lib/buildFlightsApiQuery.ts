@@ -25,5 +25,18 @@ export function buildFlightsApiQuery(searchParams: URLSearchParams): string {
     if (value) params.set(key, value);
   }
 
+  // Forward multi-city segment params so the BFF can build trip_segments
+  const segCountRaw = searchParams.get("segCount");
+  if (segCountRaw) {
+    params.set("segCount", segCountRaw);
+    const segCount = parseInt(segCountRaw, 10) || 0;
+    for (let i = 0; i < segCount; i++) {
+      for (const key of [`seg_origin_${i}`, `seg_dest_${i}`, `seg_date_${i}`] as const) {
+        const value = searchParams.get(key);
+        if (value) params.set(key, value);
+      }
+    }
+  }
+
   return params.toString();
 }

@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   X,
   ArrowRight,
-  PlaneTakeoff,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { QuoteModal } from "./QuoteModal";
@@ -759,106 +758,8 @@ export function FlightResults({
     );
   };
 
-  const renderMultiCityMatrix = () => {
-    const dates1 = Array.from({ length: 5 }).map((_, i) => {
-      const d = new Date(departureDate || Date.now());
-      d.setDate(d.getDate() + i - 2);
-      return d;
-    });
-    
-    const dates2 = Array.from({ length: 5 }).map((_, i) => {
-      const d = new Date(returnDate || Date.now());
-      d.setDate(d.getDate() + i - 2);
-      return d;
-    });
-
-    const oCode = (searchOrigin || "DEL").substring(0, 3).toUpperCase();
-    const dCode = (searchDestination || "BOM").substring(0, 3).toUpperCase();
-    const rCode = "BKK";
-
-    return (
-      <div className="w-full mt-6 mb-12 animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="border-[2px] border-[#377BD7] bg-white overflow-hidden w-full overflow-x-auto rounded-sm">
-          <div className="min-w-[800px] flex flex-col">
-            {/* Header Row */}
-            <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr_1fr_1fr] border-b border-[#377BD7]/30">
-              {/* Top Left Cell */}
-              <div className="relative bg-[#F9EDED] flex flex-col p-4 justify-between border-r border-[#377BD7]/30">
-                 <div className="flex items-center gap-1 text-[12px] font-black text-[#121121] self-end z-10">
-                   {oCode} <ArrowRight className="w-3 h-3 text-[#D60D26]" /> {dCode} <PlaneTakeoff className="w-3.5 h-3.5 text-slate-400" />
-                 </div>
-                 <div className="flex items-center gap-1 text-[12px] font-black text-[#121121] self-start mt-8 z-10">
-                   {rCode} <ArrowRight className="w-3 h-3 text-[#D60D26]" /> {oCode} <PlaneTakeoff className="w-3.5 h-3.5 text-slate-400" />
-                 </div>
-                 <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
-                   <line x1="0" y1="0" x2="100%" y2="100%" stroke="#e2e8f0" strokeWidth="1.5" />
-                 </svg>
-              </div>
-
-              {/* Col Headers */}
-              {dates1.map((d, i) => (
-                <div key={i} className="bg-[#F9EDED] flex flex-col items-center justify-center p-3 border-r border-[#377BD7]/30 last:border-r-0">
-                  <span className="text-[15px] font-[900] text-[#121121]">{format(d, "dd MMM, yy")}</span>
-                  <span className="text-[13px] font-medium text-slate-500 mt-0.5">{format(d, "EEEE")}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Rows */}
-            {dates2.map((d2, rIdx) => (
-              <div key={rIdx} className="grid grid-cols-[1.2fr_1fr_1fr_1fr_1fr_1fr] border-b border-[#377BD7]/30 last:border-b-0">
-                {/* Row Header */}
-                <div className="bg-[#F9EDED] flex flex-col items-center justify-center p-3 border-r border-[#377BD7]/30">
-                  <span className="text-[15px] font-[900] text-[#121121]">{format(d2, "dd MMM, yy")}</span>
-                  <span className="text-[13px] font-medium text-slate-500 mt-0.5">{format(d2, "EEEE")}</span>
-                </div>
-
-                {/* Data Cells */}
-                {dates1.map((d1, cIdx) => {
-                  const seed = rIdx * 5 + cIdx;
-                  const isNull = (rIdx === 1 && cIdx === 1) || (rIdx === 1 && cIdx === 3) || 
-                                 (rIdx === 2 && cIdx === 0) || (rIdx === 2 && cIdx === 4) ||
-                                 (rIdx === 3 && cIdx === 1);
-                  
-                  if (isNull || flights.length === 0) {
-                    return (
-                      <div key={cIdx} className="bg-white flex items-center justify-center p-3 border-r border-[#377BD7]/30 last:border-r-0 min-h-[100px]">
-                         <div className="w-5 h-5 rounded-full bg-[#D60D26] text-white font-bold text-[13px] flex items-center justify-center shadow-sm">i</div>
-                      </div>
-                    );
-                  }
-
-                  const flight = flights[seed % flights.length];
-                  const stopsText = flight.stops === 0 ? "Non-Stop" : `0${flight.stops} Stop`;
-
-                  return (
-                    <div key={cIdx} className="bg-white flex flex-col items-center justify-center p-3 border-r border-[#377BD7]/30 last:border-r-0 min-h-[100px] cursor-pointer hover:bg-slate-50 transition-colors">
-                      <span className="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">{flight.airline}</span>
-                      <span className="text-[20px] font-black text-[#121121] tracking-tight">
-                        ₹{flight.price.toLocaleString("en-IN")}
-                      </span>
-                      <span className="text-[10px] font-[800] text-[#D60D26] bg-rose-50 px-2 py-0.5 rounded-full mt-2 border border-rose-100">{stopsText}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const canContinue = Boolean(selectedOutbound && (!isRoundTrip || selectedReturn));
   const totalSelectedPrice = (selectedOutbound?.price ?? 0) + (selectedReturn?.price ?? 0);
-
-  if (tripType === "multi-city") {
-    return (
-      <div className="w-full max-w-[1440px] mx-auto select-none mt-4 px-4 sm:px-0">
-        {renderMultiCityMatrix()}
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1440px] mx-auto select-none mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
