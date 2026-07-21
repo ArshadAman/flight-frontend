@@ -82,6 +82,61 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
     setLoading(true);
     const token = localStorage.getItem("access_token") || localStorage.getItem("mock-access-token");
 
+    const multiLegs =
+      draft.tripType === "multi-city" && draft.multiCityFlights?.length
+        ? draft.multiCityFlights
+        : null;
+
+    if (multiLegs) {
+      const allTickets: unknown[] = [];
+      let failed = false;
+      for (const leg of multiLegs) {
+        const result = await submitFlightBooking(
+          leg,
+          undefined,
+          { mobile: contactMobile, email: contactEmail },
+          passengers,
+          token,
+          bookingSSRDetails
+        );
+        if (result.ok) {
+          allTickets.push(...result.tickets);
+        } else {
+          failed = true;
+          break;
+        }
+      }
+
+      if (!failed && allTickets.length) {
+        clearBookingDraft();
+        const pnrs = allTickets
+          .map((t: unknown) => (t as { pnr_number?: string })?.pnr_number)
+          .filter(Boolean) as string[];
+        setSuccessPnrs(pnrs.length ? pnrs : ["CONFIRMED"]);
+        setLoading(false);
+        return;
+      }
+
+      const stored: Array<Record<string, unknown>> = multiLegs.map((leg, i) => {
+        const ticket = buildOfflineTicket(draft, passengers, leg, `Flight ${i + 1}`) as Record<
+          string,
+          unknown
+        >;
+        ticket.ssr_data = { BookingSSRDetails: bookingSSRDetails };
+        return ticket;
+      });
+      try {
+        const existing = JSON.parse(localStorage.getItem("offline_bookings") || "[]");
+        localStorage.setItem("offline_bookings", JSON.stringify([...existing, ...stored]));
+      } catch {
+        /* ignore */
+      }
+      clearBookingDraft();
+      setSuccessPnrs(stored.map((t) => (t as { pnr_number: string }).pnr_number));
+      setLoading(false);
+      return;
+    }
+
     const result = await submitFlightBooking(
       draft.outbound,
       draft.returnFlight,

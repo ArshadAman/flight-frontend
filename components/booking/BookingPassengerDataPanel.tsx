@@ -264,11 +264,27 @@ export function BookingPassengerDataPanel({
                 {/* Itinerary */}
                 <div className="px-6 py-6 flex flex-col border-b border-slate-100">
                   <h3 className="text-slate-800 font-bold text-sm mb-5">Itinerary details:</h3>
-                  <ItineraryRow flight={draft.outbound} date={draft.departureDate} />
-                  {draft.returnFlight && (
-                    <div className="mt-6 pt-6 border-t border-slate-100">
-                      <ItineraryRow flight={draft.returnFlight} date={draft.returnDate} />
-                    </div>
+                  {draft.tripType === "multi-city" && draft.multiCityFlights?.length ? (
+                    draft.multiCityFlights.map((flight, i) => (
+                      <div
+                        key={`mc-${i}-${flight.flight_key || flight.id}`}
+                        className={i > 0 ? "mt-6 pt-6 border-t border-slate-100" : undefined}
+                      >
+                        <p className="text-[11px] font-black uppercase tracking-wider text-[#D60D26] mb-2">
+                          Flight {i + 1}
+                        </p>
+                        <ItineraryRow flight={flight} date={flight.travel_date || draft.departureDate} />
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      <ItineraryRow flight={draft.outbound} date={draft.departureDate} />
+                      {draft.returnFlight && (
+                        <div className="mt-6 pt-6 border-t border-slate-100">
+                          <ItineraryRow flight={draft.returnFlight} date={draft.returnDate} />
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 

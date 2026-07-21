@@ -19,7 +19,7 @@ export type BookingPassenger = {
 };
 
 export type BookingDraft = {
-  tripType: "one-way" | "round-trip";
+  tripType: "one-way" | "round-trip" | "multi-city";
   origin: string;
   destination: string;
   departureDate: string;
@@ -30,6 +30,8 @@ export type BookingDraft = {
   infants: number;
   outbound: Flight;
   returnFlight?: Flight;
+  /** All selected sectors when tripType is multi-city (includes outbound as [0]). */
+  multiCityFlights?: Flight[];
   createdAt: string;
 };
 
@@ -91,12 +93,23 @@ export function computeBookingTotal(
   passengers: BookingPassenger[]
 ): { subtotal: number; tax: number; meals: number; total: number } {
   const payingPax = draft.adults + draft.children;
-  const outboundBase = draft.outbound.price * payingPax;
-  const returnBase = draft.returnFlight ? draft.returnFlight.price * payingPax : 0;
-  const subtotal = outboundBase + returnBase;
+
+  let subtotal: number;
+  if (draft.tripType === "multi-city" && draft.multiCityFlights?.length) {
+    subtotal = draft.multiCityFlights.reduce((sum, f) => sum + f.price * payingPax, 0);
+  } else {
+    const outboundBase = draft.outbound.price * payingPax;
+    const returnBase = draft.returnFlight ? draft.returnFlight.price * payingPax : 0;
+    subtotal = outboundBase + returnBase;
+  }
+
+  const agentLegs =
+    draft.tripType === "multi-city" && draft.multiCityFlights?.length
+      ? draft.multiCityFlights.some((f) => f.is_agent_flight)
+      : draft.outbound.is_agent_flight || Boolean(draft.returnFlight?.is_agent_flight);
 
   let tax = 0;
-  if (draft.outbound.is_agent_flight || (draft.returnFlight && draft.returnFlight.is_agent_flight)) {
+  if (agentLegs) {
     const cabin = (draft.cabin || "").toLowerCase();
     const isPremium = cabin.includes("business") || cabin.includes("first") || cabin.includes("premium");
     const taxRate = isPremium ? 0.12 : 0.05;

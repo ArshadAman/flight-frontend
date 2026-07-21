@@ -195,7 +195,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
     };
 
     const addMultiCityLeg = () => {
-        if (multiCityLegs.length >= 6) return;
+        if (multiCityLegs.length >= 5) return;
         const prev = multiCityLegs[multiCityLegs.length - 1];
         const nextDate = new Date(prev.date);
         nextDate.setDate(nextDate.getDate() + 2);
@@ -473,9 +473,9 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
 
                 {tripType === 'multi-city' ? (
                     /* --------------------------------- */
-                    /* MULTI CITY — editable legs        */
+                    /* MULTI CITY — Yatra-style legs     */
                     /* --------------------------------- */
-                    <div className="flex flex-col gap-5 mt-2 relative" ref={searchRef}>
+                    <div className="flex flex-col gap-4 mt-2 relative" ref={searchRef}>
                         {multiCityLegs.map((leg, idx) => {
                             const originQuery = legSearchValues[idx] ?? leg.origin;
                             const destQuery = legDestSearchValues[idx] ?? leg.destination;
@@ -489,15 +489,14 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                             return (
                                 <div
                                     key={idx}
-                                    className="flex flex-col lg:flex-row items-center gap-4 lg:gap-6 w-full relative"
+                                    className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-5 w-full relative border-b border-slate-100 pb-4 last:border-0 last:pb-0"
                                 >
-                                    <div className="w-full lg:w-auto lg:absolute lg:-left-2 lg:-top-1 text-[11px] font-bold uppercase tracking-wider text-[#D60D26]">
+                                    <div className="w-full lg:w-16 shrink-0 text-[12px] font-extrabold uppercase tracking-wider text-[#D60D26] pt-1">
                                         Flight {idx + 1}
                                     </div>
 
-                                    {/* Origin */}
-                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full">
-                                        <label className="text-[14px] font-bold text-slate-400 mb-1 block">Departure From</label>
+                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full min-w-0">
+                                        <label className="text-[14px] font-bold text-slate-400 mb-1 block">Leaving From</label>
                                         <input
                                             type="text"
                                             className="bg-transparent border-none outline-none font-extrabold text-slate-900 tracking-tight text-[20px] p-0 placeholder:text-slate-300 leading-none w-full"
@@ -548,12 +547,11 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                                             )}
                                     </div>
 
-                                    <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3 mx-2">
+                                    <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3">
                                         <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
                                     </div>
 
-                                    {/* Destination */}
-                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full">
+                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full min-w-0">
                                         <label className="text-[14px] font-bold text-slate-400 mb-1 block">Going To</label>
                                         <input
                                             type="text"
@@ -605,15 +603,14 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                                             )}
                                     </div>
 
-                                    {/* Departure Date */}
                                     <Popover
                                         open={openLegCalendar === idx}
                                         onOpenChange={(open) => setOpenLegCalendar(open ? idx : null)}
                                     >
                                         <PopoverTrigger asChild>
-                                            <div className="flex flex-col flex-1 group relative h-[70px] w-full cursor-pointer">
+                                            <div className="flex flex-col flex-1 group relative h-[70px] w-full cursor-pointer max-w-full lg:max-w-[180px]">
                                                 <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">
-                                                    Departure Date <ChevronDown className="w-3.5 h-3.5" />
+                                                    Departure <ChevronDown className="w-3.5 h-3.5" />
                                                 </label>
                                                 <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">
                                                     {format(leg.date || new Date(), "dd MMM yy")}
@@ -650,130 +647,125 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                                         </PopoverContent>
                                     </Popover>
 
-                                    {/* Travellers only on first row */}
-                                    {idx === 0 ? (
-                                        <Popover open={isTravellerOpen} onOpenChange={setIsTravellerOpen}>
-                                            <PopoverTrigger asChild>
-                                                <div className="flex flex-col flex-1 group relative h-[70px] w-full cursor-pointer">
-                                                    <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">
-                                                        Traveller & Class <ChevronDown className="w-3.5 h-3.5" />
-                                                    </label>
-                                                    <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">
-                                                        {travellers.adults + travellers.children + travellers.infants} Traveller
-                                                    </div>
-                                                    <p className="text-[13px] text-slate-500 mt-1 font-medium">{cabinClass}</p>
-                                                    <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                                                </div>
-                                            </PopoverTrigger>
-                                            <PopoverContent
-                                                className="w-[320px] p-5 bg-white rounded-xl shadow-2xl border-none z-[110]"
-                                                align="center"
-                                                side="bottom"
-                                                sideOffset={8}
-                                                avoidCollisions={false}
+                                    <div className="flex items-center justify-end lg:justify-center h-[70px] shrink-0 min-w-[72px]">
+                                        {multiCityLegs.length > 2 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => removeMultiCityLeg(idx)}
+                                                className="text-slate-400 hover:text-[#D60D26] font-bold text-[13px]"
                                             >
-                                                <div className="space-y-5">
-                                                    {[
-                                                        { label: "Adults", age: "(12+ Years)", key: "adults" as const },
-                                                        { label: "Children", age: "(2-12 Years)", key: "children" as const },
-                                                        { label: "Infant", age: "(0-2 Years)", key: "infants" as const },
-                                                    ].map((item) => (
-                                                        <div key={item.key} className="flex items-center justify-between">
-                                                            <div>
-                                                                <p className="font-bold text-slate-800 text-[16px]">{item.label}</p>
-                                                                <p className="text-[12px] text-slate-500 font-medium">{item.age}</p>
-                                                            </div>
-                                                            <div className="flex items-center border border-slate-200 rounded-md h-[36px]">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => updateTravellers(item.key, "sub")}
-                                                                    className="px-3 text-slate-600 font-bold border-r border-slate-200"
-                                                                >
-                                                                    -
-                                                                </button>
-                                                                <span className="px-4 font-bold text-slate-800 min-w-[36px] text-center">
-                                                                    {travellers[item.key]}
-                                                                </span>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => updateTravellers(item.key, "add")}
-                                                                    className="px-3 text-slate-600 font-bold border-l border-slate-200"
-                                                                >
-                                                                    +
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                    <hr className="border-slate-100" />
-                                                    <div className="space-y-2.5">
-                                                        {["Economy", "Prem. Economy", "Business", "First"].map((cabin) => (
-                                                            <label
-                                                                key={cabin}
-                                                                className="flex items-center gap-3 cursor-pointer group"
-                                                                onClick={() => setCabinClass(cabin)}
-                                                            >
-                                                                <div
-                                                                    className={cn(
-                                                                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                                                                        cabinClass === cabin ? "border-[#888]" : "border-slate-300"
-                                                                    )}
-                                                                >
-                                                                    {cabinClass === cabin && (
-                                                                        <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                                                                    )}
-                                                                </div>
-                                                                <span className="text-[14px] font-semibold text-slate-700">{cabin}</span>
-                                                            </label>
-                                                        ))}
-                                                    </div>
-                                                    <Button
-                                                        className="w-full mt-2 py-5 bg-white border-2 border-[#888] text-[#888] hover:bg-blue-50 font-bold text-[16px] rounded-xl shadow-none"
-                                                        onClick={() => setIsTravellerOpen(false)}
-                                                    >
-                                                        Done
-                                                    </Button>
-                                                </div>
-                                            </PopoverContent>
-                                        </Popover>
-                                    ) : (
-                                        <div className="hidden lg:flex flex-1 h-[70px]" />
-                                    )}
-
-                                    {/* Actions */}
-                                    <div className="flex items-center gap-3 justify-end h-[70px] shrink-0 mt-3 min-w-[140px]">
-                                        {idx === 0 ? (
-                                            <Button
-                                                onClick={handleSearch}
-                                                className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-6 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95"
-                                            >
-                                                Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
-                                            </Button>
-                                        ) : (
-                                            <>
-                                                {multiCityLegs.length > 2 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeMultiCityLeg(idx)}
-                                                        className="text-slate-400 hover:text-[#D60D26] font-bold text-[13px]"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                )}
-                                                {idx === multiCityLegs.length - 1 && multiCityLegs.length < 6 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={addMultiCityLeg}
-                                                        className="text-[#D60D26] font-bold text-[15px] hover:underline flex items-center gap-1"
-                                                    >
-                                                        <Plus className="w-4 h-4" strokeWidth={3} /> Add City
-                                                    </button>
-                                                )}
-                                            </>
+                                                Remove
+                                            </button>
                                         )}
                                     </div>
                                 </div>
                             );
                         })}
+
+                        {/* Shared travellers + Add City + Search (Yatra layout) */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2 border-t border-slate-100 mt-1">
+                            <Popover open={isTravellerOpen} onOpenChange={setIsTravellerOpen}>
+                                <PopoverTrigger asChild>
+                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full cursor-pointer max-w-full sm:max-w-[220px]">
+                                        <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">
+                                            Traveller & Class <ChevronDown className="w-3.5 h-3.5" />
+                                        </label>
+                                        <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">
+                                            {travellers.adults + travellers.children + travellers.infants} Traveller
+                                        </div>
+                                        <p className="text-[13px] text-slate-500 mt-1 font-medium">{cabinClass}</p>
+                                        <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                                    </div>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                    className="w-[320px] p-5 bg-white rounded-xl shadow-2xl border-none z-[110]"
+                                    align="start"
+                                    side="bottom"
+                                    sideOffset={8}
+                                    avoidCollisions={false}
+                                >
+                                    <div className="space-y-5">
+                                        {[
+                                            { label: "Adults", age: "(12+ Years)", key: "adults" as const },
+                                            { label: "Children", age: "(2-12 Years)", key: "children" as const },
+                                            { label: "Infant", age: "(0-2 Years)", key: "infants" as const },
+                                        ].map((item) => (
+                                            <div key={item.key} className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="font-bold text-slate-800 text-[16px]">{item.label}</p>
+                                                    <p className="text-[12px] text-slate-500 font-medium">{item.age}</p>
+                                                </div>
+                                                <div className="flex items-center border border-slate-200 rounded-md h-[36px]">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => updateTravellers(item.key, "sub")}
+                                                        className="px-3 text-slate-600 font-bold border-r border-slate-200"
+                                                    >
+                                                        -
+                                                    </button>
+                                                    <span className="px-4 font-bold text-slate-800 min-w-[36px] text-center">
+                                                        {travellers[item.key]}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => updateTravellers(item.key, "add")}
+                                                        className="px-3 text-slate-600 font-bold border-l border-slate-200"
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <hr className="border-slate-100" />
+                                        <div className="space-y-2.5">
+                                            {["Economy", "Prem. Economy", "Business", "First"].map((cabin) => (
+                                                <label
+                                                    key={cabin}
+                                                    className="flex items-center gap-3 cursor-pointer group"
+                                                    onClick={() => setCabinClass(cabin)}
+                                                >
+                                                    <div
+                                                        className={cn(
+                                                            "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                                            cabinClass === cabin ? "border-[#888]" : "border-slate-300"
+                                                        )}
+                                                    >
+                                                        {cabinClass === cabin && (
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                                                        )}
+                                                    </div>
+                                                    <span className="text-[14px] font-semibold text-slate-700">{cabin}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                        <Button
+                                            className="w-full mt-2 py-5 bg-white border-2 border-[#888] text-[#888] hover:bg-blue-50 font-bold text-[16px] rounded-xl shadow-none"
+                                            onClick={() => setIsTravellerOpen(false)}
+                                        >
+                                            Done
+                                        </Button>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+
+                            <div className="flex flex-1 flex-wrap items-center justify-end gap-3 sm:gap-4">
+                                {multiCityLegs.length < 5 && (
+                                    <button
+                                        type="button"
+                                        onClick={addMultiCityLeg}
+                                        className="text-[#D60D26] font-bold text-[15px] hover:underline flex items-center gap-1"
+                                    >
+                                        <Plus className="w-4 h-4" strokeWidth={3} /> Add City (up to 5)
+                                    </button>
+                                )}
+                                <Button
+                                    onClick={handleSearch}
+                                    className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-8 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95"
+                                >
+                                    Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 ) : (
                     /* --------------------------------- */

@@ -115,7 +115,9 @@ export function BookingConfirmation({
         <p className="mt-3 text-base text-muted-foreground max-w-md mx-auto leading-relaxed">
           {draft.tripType === "round-trip"
             ? "Your round-trip reservation is confirmed. Save your PNR below for check-in and support."
-            : "Your flight is booked. Save your PNR below for check-in and support."}
+            : draft.tripType === "multi-city"
+              ? "Your multi-city itinerary is confirmed. Save each PNR below for check-in and support."
+              : "Your flight is booked. Save your PNR below for check-in and support."}
         </p>
       </div>
 
@@ -129,14 +131,31 @@ export function BookingConfirmation({
             </span>
           </div>
           <span className="text-[11px] font-bold uppercase tracking-wider text-white/70 bg-white/10 px-3 py-1 rounded-full shrink-0">
-            {draft.tripType === "round-trip" ? "Round trip" : "One way"}
+            {draft.tripType === "round-trip"
+              ? "Round trip"
+              : draft.tripType === "multi-city"
+                ? "Multi city"
+                : "One way"}
           </span>
         </div>
 
         <div className="px-6 py-2 divide-y divide-dashed divide-slate-200">
-          <FlightLegSummary label="Outbound" flight={draft.outbound} date={draft.departureDate} />
-          {draft.returnFlight && (
-            <FlightLegSummary label="Return" flight={draft.returnFlight} date={draft.returnDate} />
+          {draft.tripType === "multi-city" && draft.multiCityFlights?.length ? (
+            draft.multiCityFlights.map((flight, i) => (
+              <FlightLegSummary
+                key={`mc-${i}-${flight.flight_key || flight.id}`}
+                label={`Flight ${i + 1}`}
+                flight={flight}
+                date={flight.travel_date || draft.departureDate}
+              />
+            ))
+          ) : (
+            <>
+              <FlightLegSummary label="Outbound" flight={draft.outbound} date={draft.departureDate} />
+              {draft.returnFlight && (
+                <FlightLegSummary label="Return" flight={draft.returnFlight} date={draft.returnDate} />
+              )}
+            </>
           )}
         </div>
 

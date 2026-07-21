@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { Navbar } from "@/components/Navbar";
 import { FlightResults, Flight } from "@/components/FlightResults";
+import { MultiCityResults } from "@/components/MultiCityResults";
 import { SearchLoadingModal } from "@/components/SearchLoadingModal";
 import { Footer } from "@/components/Footer";
 import { ArrowUpRight, ArrowRight } from "lucide-react";
@@ -56,6 +57,15 @@ function SearchResultsContent() {
           date: searchParams.get(`seg_date_${i}`) || "",
         }))
       : [];
+  const isMultiCity = multiCitySegments.length >= 2;
+
+  const fareType = corporateFare
+    ? ("CORP" as const)
+    : studentFare
+      ? ("STU" as const)
+      : defenceFare
+        ? ("DEF" as const)
+        : ("ALL" as const);
 
   const fetchForParams = useCallback(async (params: URLSearchParams) => {
     const query = buildFlightsApiQuery(params);
@@ -73,6 +83,13 @@ function SearchResultsContent() {
   }, []);
 
   useEffect(() => {
+    if (isMultiCity) {
+      setIsLoading(false);
+      setHasSearched(true);
+      setFetchError(false);
+      return;
+    }
+
     const run = async () => {
       if (!origin || !destination) {
         setIsLoading(false);
@@ -97,7 +114,7 @@ function SearchResultsContent() {
   return (
     <main className="min-h-screen bg-[#F2FBFF] flex flex-col w-full">
       <Navbar />
-      <SearchLoadingModal isOpen={isLoading} />
+      <SearchLoadingModal isOpen={isLoading && !isMultiCity} />
 
       <div className="w-full bg-[#D60D26] text-white select-none">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
@@ -167,13 +184,25 @@ function SearchResultsContent() {
       </div>
 
       <div className="max-w-[1440px] w-full mx-auto px-6 py-6 flex-1 pb-32">
-        {fetchError ? (
+        {fetchError && !isMultiCity ? (
           <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-rose-100">
             <h3 className="text-[24px] font-[800] text-slate-800 mb-2">Data currently unavailable</h3>
             <p className="text-[16px] text-slate-500 font-medium">
               We could not load the flight data at this time. Please try again later.
             </p>
           </div>
+        ) : isMultiCity && hasSearched ? (
+          <MultiCityResults
+            segments={multiCitySegments}
+            adults={adults}
+            children={children}
+            infants={infants}
+            cabin={cabin}
+            initialNonStop={nonStop}
+            initialBaggageFares={baggageFares}
+            initialAirlineCode={airlineCode || undefined}
+            initialFareType={fareType}
+          />
         ) : hasSearched && !isLoading ? (
           <FlightResults
             flights={flights}
@@ -186,9 +215,7 @@ function SearchResultsContent() {
             initialNonStop={nonStop}
             initialBaggageFares={baggageFares}
             initialAirlineCode={airlineCode || undefined}
-            initialFareType={
-              corporateFare ? "CORP" : studentFare ? "STU" : defenceFare ? "DEF" : "ALL"
-            }
+            initialFareType={fareType}
             cabin={cabin}
           />
         ) : !isLoading ? (

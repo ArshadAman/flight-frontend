@@ -68,6 +68,14 @@ interface FlightResultsProps {
   initialAirlineCode?: string;
   initialFareType?: "ALL" | "PUB" | "CORP" | "STU" | "DEF";
   cabin?: string;
+  /** Yatra-style multi-city: select a flight then continue (no instant Book Now). */
+  forceSelectMode?: boolean;
+  continueButtonLabel?: string;
+  selectionHint?: string;
+  /** Per-traveller fare already chosen on earlier multi-city legs. */
+  priorLegsFareTotal?: number;
+  onContinueWithSelection?: (flight: Flight) => void;
+  listTitle?: string;
 }
 
 type BaggageOption = {
@@ -116,7 +124,14 @@ export function FlightResults({
   initialAirlineCode,
   initialFareType = "ALL",
   cabin = "Economy",
+  forceSelectMode = false,
+  continueButtonLabel,
+  selectionHint,
+  priorLegsFareTotal = 0,
+  onContinueWithSelection,
+  listTitle,
 }: FlightResultsProps) {
+  const selectMode = isRoundTrip || forceSelectMode;
 
   const router = useRouter();
   const pathname = usePathname();
@@ -470,7 +485,11 @@ export function FlightResults({
 
   const handleContinueToBook = () => {
     if (!selectedOutbound) {
-      setSelectionError("Please select an outbound flight.");
+      setSelectionError("Please select a flight.");
+      return;
+    }
+    if (forceSelectMode && onContinueWithSelection) {
+      onContinueWithSelection(selectedOutbound);
       return;
     }
     if (isRoundTrip && !selectedReturn) {
@@ -630,7 +649,7 @@ export function FlightResults({
                       FEE
                     </span>
 
-                    {!isB2bRoute && !isRoundTrip && (
+                    {!isB2bRoute && !selectMode && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -641,7 +660,7 @@ export function FlightResults({
                         Book Now <ArrowUpRight className="w-4 h-4" strokeWidth={3} />
                       </button>
                     )}
-                    {!isB2bRoute && isRoundTrip && (flight.meal_available || flight.food_onboard) && (
+                    {!isB2bRoute && selectMode && (flight.meal_available || flight.food_onboard) && (
                       <span className="text-[11px] font-bold text-green-700 ml-2">Meals</span>
                     )}
                   </div>
@@ -653,7 +672,7 @@ export function FlightResults({
                     <div
                       key={sIdx}
                       onClick={() => {
-                        if (isB2bRoute || isRoundTrip) {
+                        if (isB2bRoute || selectMode) {
                           setCurrentSelectedId(uniqueKey);
                         }
                       }}
@@ -759,7 +778,8 @@ export function FlightResults({
   };
 
   const canContinue = Boolean(selectedOutbound && (!isRoundTrip || selectedReturn));
-  const totalSelectedPrice = (selectedOutbound?.price ?? 0) + (selectedReturn?.price ?? 0);
+  const totalSelectedPrice =
+    (selectedOutbound?.price ?? 0) + (selectedReturn?.price ?? 0) + priorLegsFareTotal;
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1440px] mx-auto select-none mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -1033,7 +1053,11 @@ export function FlightResults({
         <div className="flex flex-col gap-8">
 
           {/* Outbound Flights list */}
-          {renderFlightCards(filteredOutbound, false, isRoundTrip ? "Outbound Flights" : undefined)}
+          {renderFlightCards(
+            filteredOutbound,
+            false,
+            listTitle || (isRoundTrip ? "Outbound Flights" : undefined)
+          )}
 
           {/* Return Flights list */}
           {isRoundTrip && renderFlightCards(filteredReturn, true, "Return Flights")}
@@ -1046,11 +1070,16 @@ export function FlightResults({
 
       </section>
 
-      {!isB2bRoute && (
+      {((!isB2bRoute && selectMode) || (isB2bRoute && forceSelectMode)) && (
         <div className="fixed bottom-0 left-0 right-0 z-[90] bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-4 py-4">
           <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm">
-              {isRoundTrip ? (
+              {forceSelectMode ? (
+                <p className="font-semibold text-slate-700">
+                  {selectionHint || "Select a flight for this sector"}
+                  {selectedOutbound ? " · ✓ Selected" : ""}
+                </p>
+              ) : isRoundTrip ? (
                 <p className="font-semibold text-slate-700">
                   {selectedOutbound ? "✓ Outbound selected" : "Select outbound"}
                   {" · "}
@@ -1078,14 +1107,15 @@ export function FlightResults({
                   : "bg-slate-300 cursor-not-allowed"
               )}
             >
-              {isRoundTrip ? "Continue — book both flights" : "Continue to booking"}
+              {continueButtonLabel ||
+                (isRoundTrip ? "Continue — book both flights" : "Continue to booking")}
               <ArrowUpRight className="w-5 h-5" strokeWidth={2.5} />
             </button>
           </div>
         </div>
       )}
 
-      <div className="h-24" />
+      {(selectMode || forceSelectMode) && <div className="h-24" />}
 
       {/* Render QuoteModal for B2B */}
       <QuoteModal isOpen={quoteModalOpen} onClose={() => setQuoteModalOpen(false)} />
