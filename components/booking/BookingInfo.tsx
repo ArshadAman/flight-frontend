@@ -25,12 +25,14 @@ export function BookingInfo({ ticket }: { ticket?: any }) {
       ? "Confirmed"
       : ticket.status === "CANCELLED"
       ? "Cancelled"
+      : ticket.status === "FAILED"
+      ? "Failed"
       : ticket.status
     : "Booking Confirm";
   const statusColorClass = ticket
     ? ticket.status === "CONFIRMED"
       ? "text-green-600"
-      : ticket.status === "CANCELLED"
+      : ticket.status === "CANCELLED" || ticket.status === "FAILED"
       ? "text-rose-600"
       : "text-amber-600"
     : "text-green-600";
@@ -38,6 +40,15 @@ export function BookingInfo({ ticket }: { ticket?: any }) {
   const displayPrice = ticket 
     ? `₹${parseFloat(ticket.total_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
     : "₹3,500.00";
+
+  const failureReason =
+    ticket?.cancellation_data?.failure_reason ||
+    ticket?.cancellation_data?.gds_error ||
+    ticket?.gds_error ||
+    ticket?.agent_cancellation_reason ||
+    null;
+  const cancelRemarks =
+    ticket?.agent_cancellation_reason || ticket?.cancellation_data?.remarks || null;
 
   return (
     <>
@@ -76,17 +87,32 @@ export function BookingInfo({ ticket }: { ticket?: any }) {
         <span className="text-[36px] font-black text-primary tracking-tighter">{displayPrice}</span>
       </div>
     </div>
-    {ticket?.status === "CANCELLED" && (ticket?.agent_cancellation_reason || ticket?.cancellation_data?.remarks) && (
-      <div className="mx-8 mb-8 p-5 bg-rose-50 border border-rose-200 rounded-3xl flex items-start gap-3 text-rose-800 shadow-sm animate-in fade-in duration-300">
+    {ticket?.status === "CANCELLED" && cancelRemarks && (
+      <div className="mx-8 mb-4 p-5 bg-rose-50 border border-rose-200 rounded-3xl flex items-start gap-3 text-rose-800 shadow-sm animate-in fade-in duration-300">
         <svg className="w-5 h-5 text-[#D60D26] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
         <div>
           <span className="block font-black text-xs uppercase tracking-wider text-[#D60D26] mb-1">
-            Cancellation Reason
+            Cancellation Remarks
           </span>
           <p className="text-sm font-semibold text-slate-700 leading-relaxed">
-            {ticket.agent_cancellation_reason || ticket.cancellation_data?.remarks}
+            {cancelRemarks}
+          </p>
+        </div>
+      </div>
+    )}
+    {(ticket?.status === "FAILED" || (ticket?.status === "CANCELLED" && failureReason)) && failureReason && (
+      <div className="mx-8 mb-8 p-5 bg-amber-50 border border-amber-200 rounded-3xl flex items-start gap-3 text-amber-900 shadow-sm animate-in fade-in duration-300">
+        <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+          <span className="block font-black text-xs uppercase tracking-wider text-amber-700 mb-1">
+            {ticket?.status === "FAILED" ? "Failure Reason" : "Airline Sync / Failure Note"}
+          </span>
+          <p className="text-sm font-semibold text-slate-700 leading-relaxed">
+            {String(failureReason)}
           </p>
         </div>
       </div>

@@ -38,6 +38,7 @@ export type ApiTicket = {
   passengers_data: Array<Record<string, unknown>>;
   ssr_data: Record<string, unknown>;
   cancellation_data: Record<string, unknown>;
+  booking_channel?: "B2B" | "B2C" | string;
   created_at: string;
   updated_at: string;
   gds_cancelled?: boolean;
@@ -140,13 +141,18 @@ export async function getApiTicket(
 export async function cancelApiTicket(
   id: string,
   opts?: { remarks?: string; cancellation_type?: 0 | 1 }
-): Promise<{ ok: true; ticket: ApiTicket } | { ok: false; error: string }> {
+): Promise<{ ok: true; ticket: ApiTicket; gds_cancelled?: boolean; gds_error?: string } | { ok: false; error: string }> {
   try {
+    const remarks = (opts?.remarks || "").trim();
+    if (!remarks) {
+      return { ok: false, error: "Cancellation remarks are required." };
+    }
     const res = await ticketsFetch(`/tickets/${id}/cancel/`, {
       method: "POST",
       body: JSON.stringify({
-        remarks: opts?.remarks || "Cancelled by admin",
-        cancellation_type: opts?.cancellation_type ?? 0,
+        remarks,
+        // Admin cancels use airline/admin path (full refund rules on backend for admin actors)
+        cancellation_type: opts?.cancellation_type ?? 1,
         cancel_code: "005",
       }),
     });
@@ -154,7 +160,24 @@ export async function cancelApiTicket(
       const err = await res.json().catch(() => ({}));
       return { ok: false, error: (err as { detail?: string }).detail || "Cancel failed" };
     }
-    return { ok: true, ticket: unwrapData<ApiTicket>(await res.json()) };
+    const payload = await res.json();
+    const raw = payload && typeof payload === "object" ? (payload as Record<string, unknown>) : {};
+    const ticket = unwrapData<ApiTicket>(payload);
+    const nested =
+      raw.data && typeof raw.data === "object" ? (raw.data as Record<string, unknown>) : {};
+    return {
+      ok: true,
+      ticket,
+      gds_cancelled: Boolean(
+        raw.gds_cancelled ?? nested.gds_cancelled ?? (ticket as ApiTicket & { gds_cancelled?: boolean }).gds_cancelled
+      ),
+      gds_error:
+        typeof raw.gds_error === "string"
+          ? raw.gds_error
+          : typeof nested.gds_error === "string"
+            ? nested.gds_error
+            : undefined,
+    };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Network error" };
   }
@@ -226,7 +249,8 @@ export function formatTicketDate(iso: string) {
 export async function updateAdminTicketStatus(
   id: string,
   status: ApiTicketStatus,
-  remarks?: string
+  remarks?: string,
+  bookingChannel?: "B2B" | "B2C"
 ): Promise<{ ok: true; ticket: ApiTicket } | { ok: false; error: string }> {
   try {
     const res = await ticketsFetch(`/tickets/${id}/admin-status/`, {
@@ -234,6 +258,7 @@ export async function updateAdminTicketStatus(
       body: JSON.stringify({
         status,
         remarks: remarks || `Status set to ${status} by admin`,
+        ...(bookingChannel ? { booking_channel: bookingChannel } : {}),
       }),
     });
     if (!res.ok) {
@@ -244,6 +269,14 @@ export async function updateAdminTicketStatus(
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Network error" };
   }
+}
+
+export async function updateBookingChannel(
+  id: string,
+  channel: "B2B" | "B2C",
+  currentStatus: ApiTicketStatus
+): Promise<{ ok: true; ticket: ApiTicket } | { ok: false; error: string }> {
+  return updateAdminTicketStatus(id, currentStatus, `Booking channel set to ${channel}`, channel);
 }
 
 export function isAdminSession(user: {

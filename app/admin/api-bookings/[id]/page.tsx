@@ -10,6 +10,7 @@ import {
   fulfillAgentTicket,
   rejectAgentTicket,
   updateAdminTicketStatus,
+  updateBookingChannel,
   formatTicketDate,
   formatTicketMoney,
   isAdminSession,
@@ -75,9 +76,14 @@ export default function ApiBookingDetailPage({
 
   const handleCancel = async () => {
     if (!ticket) return;
+    if (!cancelRemarks.trim()) {
+      setActionMsg("Cancellation remarks are required.");
+      return;
+    }
     setBusy(true);
     const result = await cancelApiTicket(ticket.id, {
-      remarks: cancelRemarks || "Cancelled by admin from API Booking",
+      remarks: cancelRemarks.trim(),
+      cancellation_type: 1,
     });
     setBusy(false);
     setCancelOpen(false);
@@ -86,7 +92,26 @@ export default function ApiBookingDetailPage({
       return;
     }
     setTicket(result.ticket);
-    setActionMsg("Booking cancelled. Status is now CANCELLED.");
+    if (result.gds_cancelled === false) {
+      setActionMsg(
+        `Booking cancelled with 100% refund. Airline sync note: ${result.gds_error || "GDS unreachable"}.`
+      );
+    } else {
+      setActionMsg("Booking cancelled with refund processed as admin cancellation (100%).");
+    }
+  };
+
+  const handleChannelChange = async (channel: "B2B" | "B2C") => {
+    if (!ticket) return;
+    setBusy(true);
+    const result = await updateBookingChannel(ticket.id, channel, ticket.status);
+    setBusy(false);
+    if (!result.ok) {
+      setActionMsg(result.error);
+      return;
+    }
+    setTicket(result.ticket);
+    setActionMsg(`Booking categorized as ${channel}.`);
   };
 
   const handleStatus = async (status: ApiTicketStatus) => {
@@ -218,6 +243,18 @@ export default function ApiBookingDetailPage({
                 <KV label="Booking ref" value={ticket.booking_ref || "—"} />
                 <KV label="Created" value={formatTicketDate(ticket.created_at)} />
                 <KV label="Agent booking" value={ticket.is_agent_booking ? "Yes" : "No"} />
+                <div className="flex items-center justify-between gap-3 py-1.5">
+                  <span className="text-xs text-slate-500">Channel (B2B / B2C)</span>
+                  <select
+                    className="h-8 rounded-md border border-[#e8ebef] bg-white px-2 text-sm text-slate-800"
+                    value={ticket.booking_channel === "B2B" ? "B2B" : "B2C"}
+                    disabled={busy || !admin}
+                    onChange={(e) => void handleChannelChange(e.target.value as "B2B" | "B2C")}
+                  >
+                    <option value="B2C">B2C</option>
+                    <option value="B2B">B2B</option>
+                  </select>
+                </div>
               </Section>
 
               <Section title="Payment">
@@ -319,20 +356,47 @@ export default function ApiBookingDetailPage({
                         label="Type"
                         value={
                           Number(c.cancellation_type) === 1
-                            ? "Airline / schedule change"
-                            : "User / admin initiated"
+                            ? "Admin / Airline (full refund)"
+                            : "Customer (fare rules)"
                         }
                       />
                       <KV label="Paid amount" value={money(c.paid_amount)} />
                       <KV label="Airline penalty" value={money(c.airline_penalty)} />
                       <KV label="Service fee" value={money(c.service_fee)} />
                       <KV label="Refund amount" value={money(c.refund_amount)} />
+                      <KV label="Refund status" value={String(c.refund_status || "—")} />
+                      <KV
+                        label="GDS cancelled"
+                        value={c.gds_cancelled === true ? "Yes" : c.gds_cancelled === false ? "No" : "—"}
+                      />
                       <div className="sm:col-span-2 lg:col-span-3">
                         <KV label="Remarks" value={String(c.remarks || "—")} />
                       </div>
+                      {Boolean(c.failure_reason || c.gds_error) && (
+                        <div className="sm:col-span-2 lg:col-span-3">
+                          <KV
+                            label="Failure / sync reason"
+                            value={String(c.failure_reason || c.gds_error || "—")}
+                          />
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
+              </Section>
+            )}
+
+            {ticket.status === "FAILED" && (
+              <Section title="Failure details">
+                <KV
+                  label="Reason"
+                  value={String(
+                    (ticket.cancellation_data as Record<string, unknown>)?.failure_reason ||
+                      (ticket.cancellation_data as Record<string, unknown>)?.gds_error ||
+                      ticket.agent_cancellation_reason ||
+                      "No failure reason recorded"
+                  )}
+                />
               </Section>
             )}
 
@@ -351,13 +415,17 @@ export default function ApiBookingDetailPage({
               {ticket.status !== "CANCELLED" && !departed && (
                 <div className="flex flex-wrap items-end gap-2">
                   <div className="min-w-[240px] flex-1">
-                    <label className="mb-1 block text-xs text-slate-500">Cancel remarks</label>
-                    <Input value={cancelRemarks} onChange={(e) => setCancelRemarks(e.target.value)} />
+                    <label className="mb-1 block text-xs text-slate-500">Cancel remarks *</label>
+                    <Input
+                      value={cancelRemarks}
+                      onChange={(e) => setCancelRemarks(e.target.value)}
+                      placeholder="Required remarks for cancellation"
+                    />
                   </div>
                   <Button
                     variant="outline"
                     className="border-[#D60D26] text-[#D60D26]"
-                    disabled={busy}
+                    disabled={busy || !cancelRemarks.trim()}
                     onClick={() => setCancelOpen(true)}
                   >
                     Cancel this booking
@@ -417,7 +485,7 @@ export default function ApiBookingDetailPage({
         onOpenChange={setCancelOpen}
         variant="deny"
         title="Cancel this API booking?"
-        description="This cancels the ticket for the user who booked it (including user-panel bookings). Local status becomes CANCELLED even if GDS is unreachable."
+        description="This cancels the ticket and applies a 100% refund for admin cancellations (including when airline sync fails). Remarks are saved on the booking."
         confirmLabel="Cancel booking"
         onConfirm={() => void handleCancel()}
         loading={busy}

@@ -9,6 +9,7 @@ import { COUNTRIES } from "@/lib/data/countries";
 import type { BookingDraft, BookingPassenger } from "@/lib/booking";
 import type { Flight } from "@/lib/flight";
 import { BookingDateField } from "@/components/booking/BookingDateField";
+import { validatePassengerDob } from "@/lib/passengerAge";
 
 const inputClass =
   "border border-slate-200 rounded-md px-3 py-2.5 text-[13px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white placeholder:text-slate-400 w-full";
@@ -181,7 +182,8 @@ export function BookingPassengerDataPanel({
       if (!p.title?.trim()) return `${p.label}: Title is required.`;
       if (!p.first_name.trim()) return `${p.label}: First name is required.`;
       if (!p.last_name.trim()) return `${p.label}: Last name is required.`;
-      if (!p.dob) return `${p.label}: Date of birth is required.`;
+      const dobErr = validatePassengerDob(p.dob, p.pax_type, draft.departureDate, p.label);
+      if (dobErr) return dobErr;
     }
     if (!contactMobile.trim()) return "Contact mobile is required (open CTC tab).";
     if (!contactEmail.trim()) return "Contact email is required (open CTC tab).";
@@ -389,9 +391,15 @@ export function BookingPassengerDataPanel({
                           placeholder="Select date of birth"
                           maxDate={new Date()}
                           minDate={new Date(1920, 0, 1)}
-                          error={Boolean(localError?.toLowerCase().includes("date of birth"))}
+                          error={Boolean(
+                            localError?.toLowerCase().includes("date of birth") ||
+                              localError?.toLowerCase().includes("dob")
+                          )}
                           className="sm:col-span-2 md:col-span-1 lg:col-span-2"
                         />
+                        <p className="sm:col-span-2 text-[11px] text-slate-400 font-medium -mt-1">
+                          Age on travel date: Adult 12+, Child 2–11, Infant under 2.
+                        </p>
                       </div>
                     )}
 

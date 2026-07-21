@@ -204,6 +204,11 @@ export function BookingActions({
   };
 
   const handleConfirmCancel = async () => {
+    if (!remarks.trim()) {
+      setErrorMessage("Please enter cancellation remarks before confirming.");
+      setCancelStatus("error");
+      return;
+    }
     setShowConfirm(false);
     setIsCancelling(true);
     setCancelStatus("idle");
@@ -236,7 +241,7 @@ export function BookingActions({
         },
         body: JSON.stringify({
           cancellation_type: 0,
-          remarks: remarks,
+          remarks: remarks.trim(),
           cancel_code: "005",
         }),
       });
@@ -248,19 +253,34 @@ export function BookingActions({
       }
 
       if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err);
+        const errBody = await res.json().catch(() => null);
+        const detail =
+          errBody && typeof errBody === "object"
+            ? (errBody as { detail?: string }).detail || JSON.stringify(errBody)
+            : await res.text().catch(() => "");
+        throw new Error(detail || `Cancellation failed (${res.status})`);
       }
 
       const data = await res.json();
-      if (!data.gds_cancelled) {
-        throw new Error(data.gds_error || "GDS cancellation rejected by airline provider");
+      // Backend always marks local status CANCELLED; GDS sync may still fail.
+      // Do not treat GDS failure as a full cancellation failure (that incorrectly showed Failed).
+      const localCancelled =
+        String(data?.status || "").toUpperCase() === "CANCELLED" ||
+        String(data?.data?.status || "").toUpperCase() === "CANCELLED";
+
+      if (!localCancelled && data?.gds_cancelled === false) {
+        throw new Error(data.gds_error || "Cancellation was not completed.");
       }
 
       setLocalStatus("CANCELLED");
       setCancelStatus("success");
+      if (data?.gds_cancelled === false && data?.gds_error) {
+        setErrorMessage(
+          `Booking cancelled locally. Airline sync note: ${data.gds_error}. Refund follows fare rules.`
+        );
+      }
       if (onCancelled) {
-        onCancelled(data);
+        onCancelled(data?.data || data);
       }
     } catch (e: unknown) {
       console.error("[BookingActions] Cancel failed:", e);
@@ -293,8 +313,10 @@ export function BookingActions({
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
                 placeholder="E.g., Plan changed, flight time changed..."
+                required
                 className="w-full h-20 rounded-xl border border-gray-200 p-3 text-sm focus:border-red-500 focus:outline-none transition resize-none font-semibold text-slate-700 placeholder:text-gray-350"
               />
+              <p className="text-[11px] text-slate-400 mt-1 font-semibold">Remarks are required.</p>
             </div>
 
             {/* Action buttons */}
@@ -424,8 +446,15 @@ export function BookingActions({
 
       {/* Status feedback */}
       {cancelStatus === "success" && (
-        <div className="mb-4 px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-green-700 font-bold text-sm flex items-center gap-2 animate-in slide-in-from-top duration-300">
-          ✅ Booking cancelled successfully. Refund will be processed as per fare rules.
+        <div className="mb-4 px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-green-700 font-bold text-sm animate-in slide-in-from-top duration-300">
+          <div className="flex items-center gap-2">
+            ✅ Booking cancelled successfully. Refund will be processed as per fare rules.
+          </div>
+          {errorMessage && (
+            <div className="mt-2 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-100 rounded-lg p-2.5 leading-normal">
+              {errorMessage}
+            </div>
+          )}
         </div>
       )}
       {cancelStatus === "error" && (

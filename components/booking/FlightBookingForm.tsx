@@ -12,8 +12,8 @@ import {
   loadBookingDraft,
   submitFlightBooking,
 } from "@/lib/booking";
+import { validatePassengerDob } from "@/lib/passengerAge";
 import { useAuth } from "@/context/AuthContext";
-import PreBookingSSRSelection, { type SelectionsState } from "./PreBookingSSRSelection";
 import { BookingPassengerDataPanel } from "./BookingPassengerDataPanel";
 import { BookingConfirmation } from "./BookingConfirmation";
 
@@ -27,7 +27,6 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [successPnrs, setSuccessPnrs] = useState<string[]>([]);
-  const [ssrSelections, setSsrSelections] = useState<SelectionsState>({});
 
   useEffect(() => {
     const d = loadBookingDraft();
@@ -44,17 +43,6 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
     () => (draft ? computeBookingTotal(draft, passengers) : null),
     [draft, passengers]
   );
-
-  const ssrTotalFees = useMemo(() => {
-    let sum = 0;
-    Object.values(ssrSelections).forEach((sel) => {
-      if (sel.seat) sum += parseFloat(String(sel.seat.Total_Amount || 0));
-      if (sel.meal) sum += parseFloat(String(sel.meal.Total_Amount || 0));
-      if (sel.baggage) sum += parseFloat(String(sel.baggage.Total_Amount || 0));
-      if (sel.wheelchair) sum += parseFloat(String(sel.wheelchair.Total_Amount || 0));
-    });
-    return sum;
-  }, [ssrSelections]);
 
   const updatePax = (id: string, field: keyof BookingPassenger, value: string) => {
     setPassengers((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
@@ -81,58 +69,15 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
         setError(`${p.label}: Last name is required.`);
         return;
       }
-      if (!p.dob) {
-        setError(`${p.label}: Date of birth is required.`);
+      const dobErr = validatePassengerDob(p.dob, p.pax_type, draft.departureDate, p.label);
+      if (dobErr) {
+        setError(dobErr);
         return;
       }
     }
 
+    // Seats/meals are only available post-booking via Add-ons / SSR.
     const bookingSSRDetails: Array<Record<string, unknown>> = [];
-    Object.entries(ssrSelections).forEach(([key, sel]) => {
-      const [paxIdStr, segmentIdStr] = key.split("-");
-      const paxId = parseInt(paxIdStr, 10);
-      const segmentId = parseInt(segmentIdStr, 10);
-
-      if (sel.seat?.SSR_Key) {
-        bookingSSRDetails.push({
-          Pax_Id: paxId,
-          SSR_Key: sel.seat.SSR_Key,
-          SSR_TypeName: sel.seat.SSR_TypeName,
-          SSR_Type: 3,
-          Segment_Id: segmentId,
-        });
-      }
-      if (sel.meal?.SSR_Key) {
-        bookingSSRDetails.push({
-          Pax_Id: paxId,
-          SSR_Key: sel.meal.SSR_Key,
-          SSR_Code: sel.meal.SSR_Code,
-          SSR_TypeDesc: sel.meal.SSR_TypeDesc,
-          SSR_Type: 1,
-          Segment_Id: segmentId,
-        });
-      }
-      if (sel.baggage?.SSR_Key) {
-        bookingSSRDetails.push({
-          Pax_Id: paxId,
-          SSR_Key: sel.baggage.SSR_Key,
-          SSR_Code: sel.baggage.SSR_Code,
-          SSR_TypeDesc: sel.baggage.SSR_TypeDesc,
-          SSR_Type: 0,
-          Segment_Id: segmentId,
-        });
-      }
-      if (sel.wheelchair?.SSR_Key) {
-        bookingSSRDetails.push({
-          Pax_Id: paxId,
-          SSR_Key: sel.wheelchair.SSR_Key,
-          SSR_Code: sel.wheelchair.SSR_Code,
-          SSR_TypeDesc: sel.wheelchair.SSR_TypeDesc,
-          SSR_Type: 4,
-          Segment_Id: segmentId,
-        });
-      }
-    });
 
     setLoading(true);
     const token = localStorage.getItem("access_token") || localStorage.getItem("mock-access-token");
@@ -157,12 +102,18 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
     }
 
     const stored: Array<Record<string, unknown>> = [];
-    const outboundTicket = buildOfflineTicket(draft, passengers, draft.outbound, "Outbound") as Record<string, unknown>;
+    const outboundTicket = buildOfflineTicket(draft, passengers, draft.outbound, "Outbound") as Record<
+      string,
+      unknown
+    >;
     outboundTicket.ssr_data = { BookingSSRDetails: bookingSSRDetails };
     stored.push(outboundTicket);
 
     if (draft.returnFlight) {
-      const returnTicket = buildOfflineTicket(draft, passengers, draft.returnFlight, "Return") as Record<string, unknown>;
+      const returnTicket = buildOfflineTicket(draft, passengers, draft.returnFlight, "Return") as Record<
+        string,
+        unknown
+      >;
       returnTicket.ssr_data = { BookingSSRDetails: bookingSSRDetails };
       stored.push(returnTicket);
     }
@@ -187,7 +138,7 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
   }
 
   if (successPnrs.length && draft) {
-    const confirmedTotal = pricing ? pricing.total + ssrTotalFees : undefined;
+    const confirmedTotal = pricing ? pricing.total : undefined;
     return (
       <BookingConfirmation
         draft={draft}
@@ -202,35 +153,20 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
   }
 
   return (
-    <>
-      <BookingPassengerDataPanel
-        draft={draft}
-        passengers={passengers}
-        pricing={pricing}
-        ssrTotalFees={ssrTotalFees}
-        contactMobile={contactMobile}
-        contactEmail={contactEmail}
-        onContactMobileChange={setContactMobile}
-        onContactEmailChange={setContactEmail}
-        onUpdatePax={updatePax}
-        onConfirmBooking={handleSubmit}
-        loading={loading}
-        onSearchAgain={() => router.push(b2b ? "/b2b/search" : "/search")}
-        formError={error}
-        extraSections={
-          <>
-            <div className="px-6 pb-6">
-              <PreBookingSSRSelection
-                searchKey={draft.outbound.search_key || "mock-search-key"}
-                outbound={draft.outbound}
-                returnFlight={draft.returnFlight}
-                passengers={passengers}
-                onChange={setSsrSelections}
-              />
-            </div>
-          </>
-        }
-      />
-    </>
+    <BookingPassengerDataPanel
+      draft={draft}
+      passengers={passengers}
+      pricing={pricing}
+      ssrTotalFees={0}
+      contactMobile={contactMobile}
+      contactEmail={contactEmail}
+      onContactMobileChange={setContactMobile}
+      onContactEmailChange={setContactEmail}
+      onUpdatePax={updatePax}
+      onConfirmBooking={handleSubmit}
+      loading={loading}
+      onSearchAgain={() => router.push(b2b ? "/b2b/search" : "/search")}
+      formError={error}
+    />
   );
 }

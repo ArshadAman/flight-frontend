@@ -218,6 +218,23 @@ export default function ApiBookingsPage() {
                 },
               },
               {
+                key: "booking_channel",
+                header: "Channel",
+                render: (r) => {
+                  const t = r as unknown as ApiTicket;
+                  const ch = t.booking_channel === "B2B" ? "B2B" : "B2C";
+                  return (
+                    <span
+                      className={`rounded px-2 py-0.5 text-[11px] font-bold ${
+                        ch === "B2B" ? "bg-violet-50 text-violet-700" : "bg-sky-50 text-sky-700"
+                      }`}
+                    >
+                      {ch}
+                    </span>
+                  );
+                },
+              },
+              {
                 key: "pax",
                 header: "Pax",
                 render: (r) =>

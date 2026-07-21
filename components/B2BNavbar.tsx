@@ -20,18 +20,12 @@ export function B2BNavbar() {
   const [isPaymentExpanded, setIsPaymentExpanded] = useState(true); // Starts expanded just like in the screenshot
   const [isProfileManagementExpanded, setIsProfileManagementExpanded] = useState(true); // Starts expanded just like in the screenshot
 
-  // For Sale multi-level dropdown states
-  const [isForSaleOpen, setIsForSaleOpen] = useState(false);
-  const [isFlightExpanded, setIsFlightExpanded] = useState(false);
-  const [isBookingExpanded, setIsBookingExpanded] = useState(false);
-
   const [balanceHidden, setBalanceHidden] = useState(true);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const myAccountRef = useRef<HTMLDivElement>(null);
-  const forSaleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -51,17 +45,14 @@ export function B2BNavbar() {
       if (myAccountRef.current && !myAccountRef.current.contains(event.target as Node)) {
         setIsMyAccountOpen(false);
       }
-      if (forSaleRef.current && !forSaleRef.current.contains(event.target as Node)) {
-        setIsForSaleOpen(false);
-      }
     }
-    if (openDropdown || isUserDropdownOpen || isMyAccountOpen || isForSaleOpen) {
+    if (openDropdown || isUserDropdownOpen || isMyAccountOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [openDropdown, isUserDropdownOpen, isMyAccountOpen, isForSaleOpen]);
+  }, [openDropdown, isUserDropdownOpen, isMyAccountOpen]);
 
   const toggleDropdown = (name: string) => {
     setOpenDropdown(openDropdown === name ? null : name);
@@ -269,125 +260,6 @@ export function B2BNavbar() {
                 )}
               </div>
 
-              {/* Custom High-Fidelity For Sale Dropdown */}
-              <div className="relative flex items-center h-full" ref={forSaleRef}>
-                <button
-                  onClick={() => setIsForSaleOpen(!isForSaleOpen)}
-                  className={`relative text-[14px] xl:text-[16px] py-1 flex items-center justify-center transition-colors duration-200 ${isForSaleOpen || pathname.startsWith('/sale')
-                    ? 'font-[700] text-primary'
-                    : 'font-[600] text-[#8A92A6] hover:text-[#0C2342]'
-                    }`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    For Sale
-                    <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className={`transition-transform duration-200 ${isForSaleOpen ? 'rotate-180' : ''}`}><path d="M5 6L0 0H10L5 6Z" /></svg>
-                  </div>
-                </button>
-
-                {isForSaleOpen && (
-                  <div className="absolute top-full left-0 mt-5 min-w-[280px] bg-white border-t-[5px] border-[#D60D26] rounded-xl shadow-xl z-50 p-4 animate-in fade-in duration-200">
-                    <div className="flex flex-col gap-3">
-
-                      {/* Flight Nested */}
-                      <div className="flex flex-col">
-                        <button
-                          onClick={() => setIsFlightExpanded(!isFlightExpanded)}
-                          className="flex items-center justify-between w-full hover:bg-slate-50 py-1.5 px-2 rounded transition-colors group"
-                        >
-                          <div className="flex items-center gap-2">
-                            <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M4 6v6a3 3 0 003 3h11" />
-                              <path d="M14 11l4 4-4 4" />
-                            </svg>
-                            <span className="font-bold text-slate-800 text-[14px]">Flight</span>
-                          </div>
-                          <ChevronDown size={14} className={`text-slate-400 group-hover:text-slate-600 transition-transform ${isFlightExpanded ? 'rotate-180' : '-rotate-90'}`} />
-                        </button>
-                        {isFlightExpanded && (
-                          <div className="pl-6 mt-1 flex relative">
-                            <div className="absolute left-[15px] top-0 bottom-4 w-[1px] bg-slate-300" />
-                            <div className="flex flex-col gap-2.5 w-full">
-                              {[
-                                { label: "All Booking", tab: "all" },
-                                { label: "Pending", tab: "pending" },
-                                { label: "Bookable", tab: "bookable" },
-                                { label: "Sold Out", tab: "sold-out" },
-                                { label: "Export", tab: "export" },
-                              ].map((sub, idx) => (
-                                <Link
-                                  key={idx}
-                                  href={`/sale/flight/${sub.tab}`}
-                                  onClick={() => setIsForSaleOpen(false)}
-                                  className="flex items-center gap-2 pl-1.5 group/sub text-slate-600 hover:text-[#D60D26] transition-colors text-[13px] font-bold"
-                                >
-                                  <div className="w-3.5 h-3 border-l border-b border-slate-300 relative -top-1 shrink-0" />
-                                  <span>{sub.label}</span>
-                                </Link>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Booking Nested */}
-                      <div className="flex flex-col">
-                        <button
-                          onClick={() => setIsBookingExpanded(!isBookingExpanded)}
-                          className="flex items-center justify-between w-full hover:bg-slate-50 py-1.5 px-2 rounded transition-colors group"
-                        >
-                          <div className="flex items-center gap-2">
-                            <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M4 6v6a3 3 0 003 3h11" />
-                              <path d="M14 11l4 4-4 4" />
-                            </svg>
-                            <span className="font-bold text-slate-800 text-[14px]">Booking</span>
-                          </div>
-                          <ChevronDown size={14} className={`text-slate-400 group-hover:text-slate-600 transition-transform ${isBookingExpanded ? 'rotate-180' : '-rotate-90'}`} />
-                        </button>
-                        {isBookingExpanded && (
-                          <div className="pl-6 mt-1 flex relative">
-                            <div className="absolute left-[15px] top-0 bottom-4 w-[1px] bg-slate-300" />
-                            <div className="flex flex-col gap-2.5 w-full">
-                              {[
-                                { label: "Upcoming", tab: "upcoming" },
-                                { label: "Departed", tab: "departed" },
-                                { label: "Travel", tab: "travel" },
-                              ].map((sub, idx) => (
-                                <Link
-                                  key={idx}
-                                  href={`/sale/booking/${sub.tab}`}
-                                  onClick={() => setIsForSaleOpen(false)}
-                                  className="flex items-center gap-2 pl-1.5 group/sub text-slate-600 hover:text-[#D60D26] transition-colors text-[13px] font-bold"
-                                >
-                                  <div className="w-3.5 h-3 border-l border-b border-slate-300 relative -top-1 shrink-0" />
-                                  <span>{sub.label}</span>
-                                </Link>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Simple Top-Level Elements */}
-                      <Link href="/sale/inventory" onClick={() => setIsForSaleOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-1.5 px-2 rounded transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold">
-                        <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg>
-                        <span>Inventory</span>
-                      </Link>
-
-                      <Link href="/sale/reports" onClick={() => setIsForSaleOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-1.5 px-2 rounded transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold">
-                        <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg>
-                        <span>Reports</span>
-                      </Link>
-
-                      <Link href="/sale/history" onClick={() => setIsForSaleOpen(false)} className="flex items-center gap-2 hover:bg-slate-50 py-1.5 px-2 rounded transition-colors text-slate-800 hover:text-[#D60D26] text-[14px] font-bold">
-                        <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg>
-                        <span>PNR History</span>
-                      </Link>
-
-                    </div>
-                  </div>
-                )}
-              </div>
             </nav>
 
             {/* Desktop Action Button */}
@@ -682,7 +554,6 @@ export function B2BNavbar() {
             </div>
           </div>
 
-          <NavLink href="/sale" isMobile onClick={() => setIsMobileMenuOpen(false)}>For Sale</NavLink>
         </nav>
 
         <div className="mt-auto px-6 pt-6 pb-8 w-full border-t border-slate-100">
