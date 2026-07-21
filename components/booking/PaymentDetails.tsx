@@ -261,26 +261,33 @@ export function BookingActions({
         throw new Error(detail || `Cancellation failed (${res.status})`);
       }
 
-      const data = await res.json();
+      const payload = await res.json();
+      // CustomRenderer wraps as { success, message, data: ticketFields + gds_* }
+      const ticketPayload =
+        payload && typeof payload === "object" && "data" in payload && payload.data
+          ? (payload.data as Record<string, unknown>)
+          : (payload as Record<string, unknown>);
+
       // Backend always marks local status CANCELLED; GDS sync may still fail.
       // Do not treat GDS failure as a full cancellation failure (that incorrectly showed Failed).
-      const localCancelled =
-        String(data?.status || "").toUpperCase() === "CANCELLED" ||
-        String(data?.data?.status || "").toUpperCase() === "CANCELLED";
+      const localCancelled = String(ticketPayload?.status || "").toUpperCase() === "CANCELLED";
+      const gdsCancelled = ticketPayload?.gds_cancelled === true;
+      const gdsError =
+        typeof ticketPayload?.gds_error === "string" ? ticketPayload.gds_error : undefined;
 
-      if (!localCancelled && data?.gds_cancelled === false) {
-        throw new Error(data.gds_error || "Cancellation was not completed.");
+      if (!localCancelled && ticketPayload?.gds_cancelled === false) {
+        throw new Error(gdsError || "Cancellation was not completed.");
       }
 
       setLocalStatus("CANCELLED");
       setCancelStatus("success");
-      if (data?.gds_cancelled === false && data?.gds_error) {
+      if (!gdsCancelled && gdsError) {
         setErrorMessage(
-          `Booking cancelled locally. Airline sync note: ${data.gds_error}. Refund follows fare rules.`
+          `Booking cancelled locally. Airline sync note: ${gdsError}. Refund follows fare rules.`
         );
       }
       if (onCancelled) {
-        onCancelled(data?.data || data);
+        onCancelled(ticketPayload);
       }
     } catch (e: unknown) {
       console.error("[BookingActions] Cancel failed:", e);

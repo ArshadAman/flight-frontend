@@ -143,7 +143,7 @@ export default function B2BFlightsPage() {
 
             {/* Menu Items with Arrows */}
             <nav className="hidden lg:flex items-center gap-7">
-              {['Group Travel', 'My Booking', 'My Account', 'For Sale'].map((item, idx) => (
+              {['Group Travel', 'My Booking', 'My Account'].map((item, idx) => (
                 <div key={idx} className="relative group">
                   <button className="flex items-center gap-1 text-[16px] font-[700] text-slate-600 hover:text-primary transition-colors py-2">
                     {item === 'Group Travel' ? (
@@ -152,8 +152,6 @@ export default function B2BFlightsPage() {
                       <Link href="/b2b/my-booking">{item}</Link>
                     ) : item === 'My Account' ? (
                       <Link href="/b2b/my-account">{item}</Link>
-                    ) : item === 'For Sale' ? (
-                      <Link href="/b2b/for-sale">{item}</Link>
                     ) : (
                       <span>{item}</span>
                     )}
