@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import {
   listApiTickets,
   formatTicketDate,
+  formatTicketDateOnly,
   formatTicketMoney,
   isAdminSession,
   type ApiTicket,
@@ -34,6 +35,7 @@ export default function ApiBookingsPage() {
   const { access, user, isLoading: authLoading, openAuthModal } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState<(typeof statusTabs)[number]>("All");
+  const [channelFilter, setChannelFilter] = useState<"ALL" | "B2B" | "B2C">("ALL");
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [tickets, setTickets] = useState<ApiTicket[]>([]);
@@ -55,6 +57,14 @@ export default function ApiBookingsPage() {
     setLoading(false);
   }, [tab, query]);
 
+  const visibleTickets =
+    channelFilter === "ALL"
+      ? tickets
+      : tickets.filter((t) => {
+          const ch = t.booking_channel === "B2B" ? "B2B" : "B2C";
+          return ch === channelFilter;
+        });
+
   useEffect(() => {
     if (authLoading) return;
     if (!access) {
@@ -69,12 +79,22 @@ export default function ApiBookingsPage() {
     <div className="flex min-h-full flex-col">
       <AdminPageHeader
         title="API Booking"
-        subtitle={loading ? "Loading…" : `${tickets.length} Bookings`}
+        subtitle={loading ? "Loading…" : `${visibleTickets.length} Bookings`}
         tabs={[...statusTabs]}
         activeTab={tab}
         onTabChange={(t) => setTab(t as (typeof statusTabs)[number])}
         action={
           <div className="flex flex-wrap items-center gap-2">
+            <select
+              className="h-9 rounded-md border border-[#e8ebef] bg-white px-2 text-sm text-slate-700"
+              value={channelFilter}
+              onChange={(e) => setChannelFilter(e.target.value as "ALL" | "B2B" | "B2C")}
+              aria-label="Filter by channel"
+            >
+              <option value="ALL">Channel: All</option>
+              <option value="B2C">Channel: B2C</option>
+              <option value="B2B">Channel: B2B</option>
+            </select>
             <div className="relative">
               <Input
                 placeholder="Search PNR / email / user"
@@ -150,7 +170,7 @@ export default function ApiBookingsPage() {
         ) : (
           <AdminDataTable
             keyField="id"
-            data={tickets as unknown as Record<string, unknown>[]}
+            data={visibleTickets as unknown as Record<string, unknown>[]}
             onRowClick={(row) => router.push(`/admin/api-bookings/${row.id}`)}
             columns={[
               {
@@ -171,9 +191,18 @@ export default function ApiBookingsPage() {
                   ),
               },
               {
+                key: "created_at",
+                header: "Booked",
+                render: (r) => (
+                  <span className="whitespace-nowrap text-xs text-slate-700">
+                    {formatTicketDate((r as unknown as ApiTicket).created_at)}
+                  </span>
+                ),
+              },
+              {
                 key: "dep",
                 header: "Dep. Date",
-                render: (r) => formatTicketDate((r as unknown as ApiTicket).departure_datetime),
+                render: (r) => formatTicketDateOnly((r as unknown as ApiTicket).departure_datetime),
               },
               {
                 key: "airline_name",

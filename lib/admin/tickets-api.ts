@@ -232,17 +232,38 @@ export function formatTicketMoney(amount: string | number, currency = "INR") {
   }
 }
 
-export function formatTicketDate(iso: string) {
+export function formatTicketDate(iso: string | null | undefined) {
+  if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleString("en-IN", {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return String(iso);
+    // Browser locale + timezone so India shows IST, US shows local TZ, etc.
+    return d.toLocaleString(undefined, {
       day: "numeric",
       month: "short",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZoneName: "short",
     });
   } catch {
-    return iso;
+    return String(iso);
+  }
+}
+
+/** Date-only (no time) in the viewer's locale/timezone. */
+export function formatTicketDateOnly(iso: string | null | undefined) {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return String(iso);
+    return d.toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return String(iso);
   }
 }
 

@@ -10,7 +10,6 @@ import {
   fulfillAgentTicket,
   rejectAgentTicket,
   updateAdminTicketStatus,
-  updateBookingChannel,
   formatTicketDate,
   formatTicketMoney,
   isAdminSession,
@@ -99,19 +98,6 @@ export default function ApiBookingDetailPage({
     } else {
       setActionMsg("Booking cancelled with refund processed as admin cancellation (100%).");
     }
-  };
-
-  const handleChannelChange = async (channel: "B2B" | "B2C") => {
-    if (!ticket) return;
-    setBusy(true);
-    const result = await updateBookingChannel(ticket.id, channel, ticket.status);
-    setBusy(false);
-    if (!result.ok) {
-      setActionMsg(result.error);
-      return;
-    }
-    setTicket(result.ticket);
-    setActionMsg(`Booking categorized as ${channel}.`);
   };
 
   const handleStatus = async (status: ApiTicketStatus) => {
@@ -243,18 +229,10 @@ export default function ApiBookingDetailPage({
                 <KV label="Booking ref" value={ticket.booking_ref || "—"} />
                 <KV label="Created" value={formatTicketDate(ticket.created_at)} />
                 <KV label="Agent booking" value={ticket.is_agent_booking ? "Yes" : "No"} />
-                <div className="flex items-center justify-between gap-3 py-1.5">
-                  <span className="text-xs text-slate-500">Channel (B2B / B2C)</span>
-                  <select
-                    className="h-8 rounded-md border border-[#e8ebef] bg-white px-2 text-sm text-slate-800"
-                    value={ticket.booking_channel === "B2B" ? "B2B" : "B2C"}
-                    disabled={busy || !admin}
-                    onChange={(e) => void handleChannelChange(e.target.value as "B2B" | "B2C")}
-                  >
-                    <option value="B2C">B2C</option>
-                    <option value="B2B">B2B</option>
-                  </select>
-                </div>
+                <KV
+                  label="Channel"
+                  value={ticket.booking_channel === "B2B" ? "B2B" : "B2C"}
+                />
               </Section>
 
               <Section title="Payment">
