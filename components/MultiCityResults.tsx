@@ -114,6 +114,10 @@ export function MultiCityResults({
   const canContinue = allSelected || Boolean(selected[activeLeg]);
   const continueLabel = allSelected || isLastLeg ? "Book Now" : "Select Next Flight";
 
+  const segmentsKey = segments
+    .map((s) => `${s.origin}|${s.destination}|${s.date}`)
+    .join(";");
+
   useEffect(() => {
     console.log("[MultiCity] state", {
       activeLeg,
@@ -126,11 +130,7 @@ export function MultiCityResults({
           ? { leg: i + 1, id: f.id, route: `${f.origin}->${f.destination}`, date: f.travel_date }
           : { leg: i + 1, id: null }
       ),
-      segments: segments.map((s, i) => ({
-        leg: i + 1,
-        route: `${s.origin}->${s.destination}`,
-        date: s.date,
-      })),
+      segmentsKey,
       isLoading,
     });
   }, [
@@ -140,7 +140,7 @@ export function MultiCityResults({
     canContinue,
     continueLabel,
     selected,
-    segments,
+    segmentsKey,
     isLoading,
   ]);
 
@@ -212,10 +212,6 @@ export function MultiCityResults({
       initialFareType,
     ]
   );
-
-  const segmentsKey = segments
-    .map((s) => `${s.origin}|${s.destination}|${s.date}`)
-    .join(";");
 
   useEffect(() => {
     cacheRef.current = {};

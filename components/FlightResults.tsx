@@ -170,6 +170,11 @@ export function FlightResults({
     return Array.from(map.entries()).map(([code, name]) => ({ code, name }));
   }, [allFlights]);
 
+  const availableAirlinesKey = useMemo(
+    () => availableAirlines.map((a) => a.code).sort().join("|"),
+    [availableAirlines]
+  );
+
   const availableEquipment = useMemo(() => {
     const set = new Set<string>();
     allFlights.forEach((f) => {
@@ -177,6 +182,11 @@ export function FlightResults({
     });
     return Array.from(set);
   }, [allFlights]);
+
+  const availableEquipmentKey = useMemo(
+    () => [...availableEquipment].sort().join("|"),
+    [availableEquipment]
+  );
 
   const maxDurationBound = useMemo(() => {
     const durations = allFlights.map((f) => f.duration_minutes ?? 180);
@@ -230,25 +240,41 @@ export function FlightResults({
 
   useEffect(() => {
     if (initialAirlineCode) {
-      setSelectedAirlines({ [initialAirlineCode]: true });
-    } else if (availableAirlines.length) {
-      const all: Record<string, boolean> = {};
-      availableAirlines.forEach((a) => {
-        all[a.code] = true;
+      setSelectedAirlines((prev) => {
+        const next = { [initialAirlineCode]: true };
+        const prevKeys = Object.keys(prev);
+        if (prevKeys.length === 1 && prev[initialAirlineCode]) return prev;
+        return next;
       });
-      setSelectedAirlines(all);
+      return;
     }
-  }, [initialAirlineCode, availableAirlines]);
+    if (!availableAirlinesKey) return;
+    setSelectedAirlines((prev) => {
+      const next: Record<string, boolean> = {};
+      availableAirlinesKey.split("|").forEach((code) => {
+        if (code) next[code] = true;
+      });
+      const prevKeys = Object.keys(prev).sort().join("|");
+      const nextKeys = Object.keys(next).sort().join("|");
+      if (prevKeys === nextKeys && prevKeys.split("|").every((k) => prev[k] === next[k])) {
+        return prev;
+      }
+      return next;
+    });
+  }, [initialAirlineCode, availableAirlinesKey]);
 
   useEffect(() => {
-    if (availableEquipment.length) {
-      const all: Record<string, boolean> = {};
-      availableEquipment.forEach((eq) => {
-        all[eq] = true;
+    if (!availableEquipmentKey) return;
+    setSelectedEquipment((prev) => {
+      const next: Record<string, boolean> = {};
+      availableEquipmentKey.split("|").forEach((eq) => {
+        if (eq) next[eq] = true;
       });
-      setSelectedEquipment(all);
-    }
-  }, [availableEquipment]);
+      const prevKeys = Object.keys(prev).sort().join("|");
+      if (prevKeys === availableEquipmentKey) return prev;
+      return next;
+    });
+  }, [availableEquipmentKey]);
 
   const effectiveSelectedAirlines = useMemo(() => {
     if (Object.keys(selectedAirlines).length > 0) return selectedAirlines;
