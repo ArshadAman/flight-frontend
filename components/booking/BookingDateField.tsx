@@ -89,7 +89,7 @@ export function BookingDateField({
             selected={selected}
             captionLayout="dropdown"
             fromYear={minDate?.getFullYear() ?? 1920}
-            toYear={maxDate?.getFullYear() ?? new Date().getFullYear() + 20}
+            toYear={maxDate?.getFullYear() ?? new Date().getFullYear()}
             defaultMonth={selected ?? maxDate ?? minDate ?? new Date(1990, 0, 1)}
             onSelect={(date) => {
               if (!date) return;

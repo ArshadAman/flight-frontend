@@ -39,6 +39,76 @@ export function bandLabel(band: PaxAgeBand): string {
   return "Adult (12+ years)";
 }
 
+function startOfLocalDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function addYearsClamped(d: Date, years: number): Date {
+  const out = new Date(d.getFullYear() + years, d.getMonth(), d.getDate());
+  // Feb 29 → last day of Feb when target year isn't a leap year
+  if (out.getMonth() !== d.getMonth()) {
+    out.setDate(0);
+  }
+  return startOfLocalDay(out);
+}
+
+function addDaysClamped(d: Date, days: number): Date {
+  const out = new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
+  return startOfLocalDay(out);
+}
+
+function formatYmd(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Allowed DOB calendar range so age on travel date matches the pax type.
+ * Adult: 12+ → DOB on/before travel−12y (cannot pick the travel day / 2026 as DOB).
+ * Child: 2–11 → after travel−12y … on/before travel−2y
+ * Infant: under 2 → after travel−2y … min(today, travel)
+ */
+export function dobBoundsForPaxType(
+  paxType: number,
+  travelDateIso: string | undefined | null
+): { minDate: Date; maxDate: Date; hint: string } {
+  const travel = parseYmd(travelDateIso || "") || startOfLocalDay(new Date());
+  const today = startOfLocalDay(new Date());
+  const hardMin = new Date(1920, 0, 1);
+  const notAfterToday = (d: Date) => (d > today ? today : d);
+
+  if (paxType === 2) {
+    const minDate = addDaysClamped(addYearsClamped(travel, -2), 1);
+    const maxDate = notAfterToday(travel);
+    return {
+      minDate: minDate < hardMin ? hardMin : minDate,
+      maxDate,
+      hint: "Infant must be under 2 on the travel date. DOB cannot be in the future.",
+    };
+  }
+
+  if (paxType === 1) {
+    const minDate = addDaysClamped(addYearsClamped(travel, -12), 1);
+    const maxDate = notAfterToday(addYearsClamped(travel, -2));
+    return {
+      minDate: minDate < hardMin ? hardMin : minDate,
+      maxDate,
+      hint: `Child must be 2–11 on travel. Latest allowed DOB: ${formatYmd(maxDate)}.`,
+    };
+  }
+
+  // Adult 12+
+  const maxDate = notAfterToday(addYearsClamped(travel, -12));
+  const minDate = addYearsClamped(travel, -120);
+  return {
+    minDate: minDate < hardMin ? hardMin : minDate,
+    maxDate,
+    hint: `Adult must be 12+ on travel. DOB must be on or before ${formatYmd(maxDate)} (not the travel date).`,
+  };
+}
+
 /**
  * Validates DOB against passenger type using age on the travel/departure date.
  * Returns an error message or null if valid.
@@ -74,7 +144,7 @@ function parseYmd(value: string): Date | null {
   const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) {
     const d = new Date(raw);
-    return Number.isNaN(d.getTime()) ? null : d;
+    return Number.isNaN(d.getTime()) ? null : startOfLocalDay(d);
   }
   const y = Number(m[1]);
   const mo = Number(m[2]) - 1;

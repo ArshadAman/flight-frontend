@@ -9,7 +9,7 @@ import { COUNTRIES } from "@/lib/data/countries";
 import type { BookingDraft, BookingPassenger } from "@/lib/booking";
 import type { Flight } from "@/lib/flight";
 import { BookingDateField } from "@/components/booking/BookingDateField";
-import { validatePassengerDob } from "@/lib/passengerAge";
+import { dobBoundsForPaxType, validatePassengerDob } from "@/lib/passengerAge";
 
 const inputClass =
   "border border-slate-200 rounded-md px-3 py-2.5 text-[13px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white placeholder:text-slate-400 w-full";
@@ -167,6 +167,7 @@ export function BookingPassengerDataPanel({
   const [localError, setLocalError] = useState<string | null>(null);
 
   const pax = passengers[activePaxIndex] || passengers[0];
+  const dobBounds = dobBoundsForPaxType(pax?.pax_type ?? 0, draft.departureDate);
   const payingPax = draft.adults + draft.children;
   const basePerPax = payingPax > 0 && pricing ? pricing.subtotal / payingPax : 0;
   const taxPerPax = payingPax > 0 && pricing ? pricing.tax / payingPax : 0;
@@ -405,16 +406,16 @@ export function BookingPassengerDataPanel({
                             onUpdatePax(pax.id, "dob", iso);
                           }}
                           placeholder="Select date of birth"
-                          maxDate={new Date()}
-                          minDate={new Date(1920, 0, 1)}
+                          maxDate={dobBounds.maxDate}
+                          minDate={dobBounds.minDate}
                           error={Boolean(
                             localError?.toLowerCase().includes("date of birth") ||
                               localError?.toLowerCase().includes("dob")
                           )}
                           className="sm:col-span-2 md:col-span-1 lg:col-span-2"
                         />
-                        <p className="sm:col-span-2 text-[11px] text-slate-400 font-medium -mt-1">
-                          Age on travel date: Adult 12+, Child 2–11, Infant under 2.
+                        <p className="sm:col-span-2 text-[11px] text-slate-500 font-medium -mt-1">
+                          {dobBounds.hint}
                         </p>
                       </div>
                     )}
@@ -471,8 +472,8 @@ export function BookingPassengerDataPanel({
                                   onUpdatePax(pax.id, "dob", iso);
                                 }}
                                 placeholder="Select date of birth"
-                                maxDate={new Date()}
-                                minDate={new Date(1920, 0, 1)}
+                                maxDate={dobBounds.maxDate}
+                                minDate={dobBounds.minDate}
                               />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
