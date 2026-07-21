@@ -575,7 +575,43 @@ export function FlightResults({
             return (
               <div
                 key={uniqueKey}
-                className="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.02)] overflow-hidden hover:shadow-md transition-shadow duration-300"
+                role={selectMode ? "button" : undefined}
+                tabIndex={selectMode ? 0 : undefined}
+                onClick={() => {
+                  if (!(isB2bRoute || selectMode)) return;
+                  setCurrentSelectedId(uniqueKey);
+                  if (!isReturnFlight && onSelectFlight) {
+                    console.log("[FlightResults] card select", {
+                      uniqueKey,
+                      flightId: flight.id,
+                      forceSelectMode,
+                      route: `${flight.origin}->${flight.destination}`,
+                      travel_date: flight.travel_date || legTravelDate,
+                    });
+                    onSelectFlight({
+                      ...flight,
+                      travel_date: flight.travel_date || legTravelDate || flight.travel_date,
+                    });
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (!selectMode) return;
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setCurrentSelectedId(uniqueKey);
+                    if (!isReturnFlight && onSelectFlight) {
+                      onSelectFlight({
+                        ...flight,
+                        travel_date: flight.travel_date || legTravelDate || flight.travel_date,
+                      });
+                    }
+                  }
+                }}
+                className={cn(
+                  "bg-white border border-slate-200 rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.02)] overflow-hidden hover:shadow-md transition-shadow duration-300",
+                  selectMode && "cursor-pointer",
+                  isSelected && forceSelectMode && "ring-2 ring-[#D60D26] ring-offset-1"
+                )}
               >
 
               {/* Horizontal Top Header Row (Figma specs: Light blue-grey background) */}
@@ -685,7 +721,9 @@ export function FlightResults({
                   {segments.map((seg, sIdx) => (
                     <div
                       key={sIdx}
-                      onClick={() => {
+                      onClick={(e) => {
+                        // Card already handles selection; stop duplicate bubbling noise
+                        e.stopPropagation();
                         if (isB2bRoute || selectMode) {
                           setCurrentSelectedId(uniqueKey);
                           if (!isReturnFlight && onSelectFlight) {

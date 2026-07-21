@@ -95,6 +95,10 @@ export function MultiCityResults({
 
   /** Cache per sector so switching tabs does not full-screen reload. */
   const cacheRef = useRef<Record<string, Flight[]>>({});
+  const activeLegRef = useRef(activeLeg);
+  activeLegRef.current = activeLeg;
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
 
   const current = segments[activeLeg];
   const isLastLeg = activeLeg >= segments.length - 1;
@@ -109,6 +113,36 @@ export function MultiCityResults({
   /** Book Now once every sector is chosen; otherwise advance when current is chosen. */
   const canContinue = allSelected || Boolean(selected[activeLeg]);
   const continueLabel = allSelected || isLastLeg ? "Book Now" : "Select Next Flight";
+
+  useEffect(() => {
+    console.log("[MultiCity] state", {
+      activeLeg,
+      isLastLeg,
+      allSelected,
+      canContinue,
+      continueLabel,
+      selectedSummary: selected.map((f, i) =>
+        f
+          ? { leg: i + 1, id: f.id, route: `${f.origin}->${f.destination}`, date: f.travel_date }
+          : { leg: i + 1, id: null }
+      ),
+      segments: segments.map((s, i) => ({
+        leg: i + 1,
+        route: `${s.origin}->${s.destination}`,
+        date: s.date,
+      })),
+      isLoading,
+    });
+  }, [
+    activeLeg,
+    isLastLeg,
+    allSelected,
+    canContinue,
+    continueLabel,
+    selected,
+    segments,
+    isLoading,
+  ]);
 
   const fetchLeg = useCallback(
     async (seg: MultiCitySegment) => {
@@ -197,6 +231,16 @@ export function MultiCityResults({
   }, [activeLeg, segmentsKey, fetchLeg]);
 
   const persistAndBook = (legs: Flight[]) => {
+    console.log("[MultiCity] persistAndBook", {
+      count: legs.length,
+      legs: legs.map((l, i) => ({
+        i,
+        id: l.id,
+        route: `${l.origin}->${l.destination}`,
+        date: l.travel_date,
+        price: l.price,
+      })),
+    });
     const first = legs[0];
     const last = legs[legs.length - 1];
     const draft: BookingDraft = {
@@ -218,34 +262,66 @@ export function MultiCityResults({
       createdAt: new Date().toISOString(),
     };
     saveBookingDraft(draft);
+    console.log("[MultiCity] draft saved, navigating to book");
     router.push(isB2bRoute ? "/b2b/book" : "/book");
   };
 
   const onPickFlight = (flight: Flight) => {
+    const legIdx = activeLegRef.current;
+    const seg = segments[legIdx];
+    console.log("[MultiCity] onPickFlight", {
+      legIdx,
+      flightId: flight.id,
+      route: `${flight.origin}->${flight.destination}`,
+      travel_date: flight.travel_date,
+      segDate: seg?.date,
+    });
     setSelected((prev) => {
       const next = [...prev];
-      next[activeLeg] = {
+      next[legIdx] = {
         ...flight,
-        travel_date: current?.date || flight.travel_date,
-        origin: current?.origin || flight.origin,
-        destination: current?.destination || flight.destination,
+        travel_date: seg?.date || flight.travel_date,
+        origin: seg?.origin || flight.origin,
+        destination: seg?.destination || flight.destination,
       };
-      // Changing an earlier sector invalidates later picks
-      for (let i = activeLeg + 1; i < next.length; i++) next[i] = null;
+      for (let i = legIdx + 1; i < next.length; i++) next[i] = null;
+      console.log(
+        "[MultiCity] selected after pick",
+        next.map((f, i) => (f ? `${i}:${f.id}` : `${i}:null`))
+      );
       return next;
     });
   };
 
   const handleContinue = () => {
-    if (allSelected) {
-      persistAndBook(selected as Flight[]);
+    const snap = selectedRef.current;
+    const leg = activeLegRef.current;
+    const everySelected = snap.length === segments.length && snap.every(Boolean);
+    console.log("[MultiCity] handleContinue CLICK", {
+      activeLeg: leg,
+      everySelected,
+      canContinue,
+      continueLabel,
+      selected: snap.map((f, i) => (f ? `${i}:${f.id}` : `${i}:null`)),
+    });
+
+    if (everySelected) {
+      console.log("[MultiCity] all selected → booking");
+      persistAndBook(snap as Flight[]);
       return;
     }
-    if (!selected[activeLeg]) return;
-    if (!isLastLeg) {
-      setActiveLeg((i) => i + 1);
+    if (!snap[leg]) {
+      console.warn("[MultiCity] blocked: current leg has no selection");
       return;
     }
+    if (leg < segments.length - 1) {
+      console.log("[MultiCity] advancing to next leg", leg + 1);
+      setActiveLeg(leg + 1);
+      return;
+    }
+    console.warn("[MultiCity] on last leg but not allSelected — cannot book yet", {
+      snap: snap.map((f) => Boolean(f)),
+    });
   };
 
   const goToLeg = (idx: number) => {
@@ -353,7 +429,13 @@ export function MultiCityResults({
         />
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 z-[200] bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.1)]">
+      <div className="fixed bottom-0 left-0 right-0 z-[300] pointer-events-auto bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.1)]">
+        <div className="max-w-[1440px] mx-auto px-4 py-2 text-[11px] font-mono text-slate-500 bg-amber-50 border-b border-amber-100">
+          [debug] activeLeg={activeLeg + 1}/{segments.length} · allSelected=
+          {String(allSelected)} · canContinue={String(canContinue)} · picks=
+          {selected.map((f, i) => (f ? `${i + 1}:✓` : `${i + 1}:✗`)).join(" ")} · check console
+          for [MultiCity] logs
+        </div>
         <div className="max-w-[1440px] mx-auto px-4 py-3 flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-4">
           <div className="flex-1 flex overflow-x-auto gap-0 divide-x divide-slate-200">
             {segments.map((seg, idx) => {
@@ -400,15 +482,24 @@ export function MultiCityResults({
                 ₹{totalFare.toLocaleString("en-IN")}
               </p>
             </div>
+            {/* Never use disabled= — it looked "stuck"; clicks always register + log */}
             <button
               type="button"
-              disabled={!canContinue}
-              onClick={handleContinue}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("[MultiCity] Book Now / Continue button DOM click", {
+                  canContinue,
+                  allSelected,
+                  disabledWouldBe: !canContinue,
+                });
+                handleContinue();
+              }}
               className={cn(
-                "px-8 py-3.5 rounded-full font-bold text-white flex items-center gap-2 transition-all whitespace-nowrap",
+                "relative z-[301] pointer-events-auto px-8 py-3.5 rounded-full font-bold text-white flex items-center gap-2 transition-all whitespace-nowrap",
                 canContinue
-                  ? "bg-[#D60D26] hover:bg-[#b00b1d] shadow-lg"
-                  : "bg-slate-300 cursor-not-allowed"
+                  ? "bg-[#D60D26] hover:bg-[#b00b1d] shadow-lg cursor-pointer"
+                  : "bg-slate-400 hover:bg-slate-500 cursor-pointer"
               )}
             >
               {continueLabel}
