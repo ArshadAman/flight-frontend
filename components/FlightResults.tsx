@@ -75,7 +75,13 @@ interface FlightResultsProps {
   /** Per-traveller fare already chosen on earlier multi-city legs. */
   priorLegsFareTotal?: number;
   onContinueWithSelection?: (flight: Flight) => void;
+  /** Fired when user picks a flight (radio) in select mode — for live multi-city summary. */
+  onSelectFlight?: (flight: Flight) => void;
   listTitle?: string;
+  /** Hide built-in sticky bar (parent owns Yatra-style multi-city footer). */
+  hideStickyBar?: boolean;
+  /** Force card dates when API omits travel_date (per multi-city sector). */
+  legTravelDate?: string;
 }
 
 type BaggageOption = {
@@ -129,7 +135,10 @@ export function FlightResults({
   selectionHint,
   priorLegsFareTotal = 0,
   onContinueWithSelection,
+  onSelectFlight,
   listTitle,
+  hideStickyBar = false,
+  legTravelDate,
 }: FlightResultsProps) {
   const selectMode = isRoundTrip || forceSelectMode;
 
@@ -544,24 +553,24 @@ export function FlightResults({
             const flightIdentifier = flight.flight_key || flight.id;
             const isSelected = currentSelectedId === uniqueKey;
 
-            // Determine mock legs for segments display (if stops > 0, show 2 connected rows!)
-            const segmentsCount = flight.stops > 0 ? 2 : 1;
-            const segments = Array.from({ length: segmentsCount }).map((_, sIdx) => {
-              const isSecondLeg = sIdx === 1;
-              return {
-                code: isSecondLeg ? `AI-${flight.id.split('-').pop() || '102'}` : flight.id,
-                date: flight.travel_date
-                  ? format(parseISO(flight.travel_date), "EEE, d MMM yy")
-                  : "—",
-                route: isSecondLeg
-                  ? `${flight.destination.substring(0, 3).toUpperCase()} ➔ ${flight.origin.substring(0, 3).toUpperCase()}`
-                  : `${flight.origin.substring(0, 3).toUpperCase()} ➔ ${flight.destination.substring(0, 3).toUpperCase()}`,
+            // One row per flight. Do NOT invent a reverse second leg — that made
+            // multi-city look like a single flight going everywhere.
+            const effectiveTravelDate = flight.travel_date || legTravelDate;
+            const displayDate = effectiveTravelDate
+              ? format(parseISO(effectiveTravelDate), "EEE, d MMM yy")
+              : "—";
+            const routeLabel = `${flight.origin} ➔ ${flight.destination}`;
+            const segments = [
+              {
+                code: flight.id,
+                date: displayDate,
+                route: routeLabel,
                 class: "E1/Economy",
-                timing: isSecondLeg ? "11:30PM - 02:15AM" : `${flight.departureTime} - ${flight.arrivalTime}`,
+                timing: `${flight.departureTime} - ${flight.arrivalTime}`,
                 duration: flight.duration,
-                seatsCode: isSecondLeg ? "0/32N" : `${sIdx}/32N`
-              };
-            });
+                seatsCode: flight.stops === 0 ? "Non-stop" : `${flight.stops} stop(s)`,
+              },
+            ];
 
             return (
               <div
@@ -660,7 +669,12 @@ export function FlightResults({
                         Book Now <ArrowUpRight className="w-4 h-4" strokeWidth={3} />
                       </button>
                     )}
-                    {!isB2bRoute && selectMode && (flight.meal_available || flight.food_onboard) && (
+                    {!isB2bRoute && forceSelectMode && isSelected && (
+                      <span className="ml-4 bg-emerald-500 text-white text-[12px] font-bold px-4 py-1.5 rounded-full">
+                        Selected
+                      </span>
+                    )}
+                    {!isB2bRoute && selectMode && !forceSelectMode && (flight.meal_available || flight.food_onboard) && (
                       <span className="text-[11px] font-bold text-green-700 ml-2">Meals</span>
                     )}
                   </div>
@@ -674,6 +688,12 @@ export function FlightResults({
                       onClick={() => {
                         if (isB2bRoute || selectMode) {
                           setCurrentSelectedId(uniqueKey);
+                          if (!isReturnFlight && onSelectFlight) {
+                            onSelectFlight({
+                              ...flight,
+                              travel_date: flight.travel_date || legTravelDate || flight.travel_date,
+                            });
+                          }
                         }
                       }}
                       className="grid grid-cols-[auto_1fr_1.2fr_1fr_1fr_1.5fr_1fr_1fr_auto] gap-x-4 gap-y-2 items-center px-6 py-5 border-b border-slate-100 hover:bg-slate-50/60 transition-colors last:border-b-0 cursor-pointer"
@@ -1070,7 +1090,8 @@ export function FlightResults({
 
       </section>
 
-      {((!isB2bRoute && selectMode) || (isB2bRoute && forceSelectMode)) && (
+      {!hideStickyBar &&
+        ((!isB2bRoute && selectMode) || (isB2bRoute && forceSelectMode)) && (
         <div className="fixed bottom-0 left-0 right-0 z-[90] bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-4 py-4">
           <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm">
@@ -1115,7 +1136,7 @@ export function FlightResults({
         </div>
       )}
 
-      {(selectMode || forceSelectMode) && <div className="h-24" />}
+      {(selectMode || forceSelectMode) && !hideStickyBar && <div className="h-24" />}
 
       {/* Render QuoteModal for B2B */}
       <QuoteModal isOpen={quoteModalOpen} onClose={() => setQuoteModalOpen(false)} />

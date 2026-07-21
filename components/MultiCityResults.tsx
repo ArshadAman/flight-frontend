@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
-import { ArrowRight, Check, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { FlightResults, type Flight } from "@/components/FlightResults";
 import { SearchLoadingModal } from "@/components/SearchLoadingModal";
@@ -27,9 +27,40 @@ type Props = {
   initialFareType?: "ALL" | "PUB" | "CORP" | "STU" | "DEF";
 };
 
-function formatSegDate(iso: string) {
+const CITY_CODES: Record<string, string> = {
+  "new delhi": "DEL",
+  delhi: "DEL",
+  mumbai: "BOM",
+  bangalore: "BLR",
+  bengaluru: "BLR",
+  chennai: "MAA",
+  kolkata: "CCU",
+  hyderabad: "HYD",
+  pune: "PNQ",
+  ahmedabad: "AMD",
+  goa: "GOI",
+  jaipur: "JAI",
+  cochin: "COK",
+  kochi: "COK",
+  lucknow: "LKO",
+  guwahati: "GAU",
+  indore: "IDR",
+  chandigarh: "IXC",
+  patna: "PAT",
+  bhubaneswar: "BBI",
+};
+
+function airportCode(city: string): string {
+  const raw = (city || "").trim();
+  if (/^[A-Z]{3}$/i.test(raw)) return raw.toUpperCase();
+  const known = CITY_CODES[raw.toLowerCase()];
+  if (known) return known;
+  return raw.slice(0, 3).toUpperCase();
+}
+
+function formatSegDate(iso: string, pattern = "dd MMM") {
   try {
-    return format(parseISO(iso), "dd MMM");
+    return format(parseISO(iso), pattern);
   } catch {
     return iso;
   }
@@ -49,6 +80,7 @@ export function MultiCityResults({
   const router = useRouter();
   const pathname = usePathname();
   const isB2bRoute = pathname?.startsWith("/b2b");
+  const payingPax = adults + children;
 
   const [activeLeg, setActiveLeg] = useState(0);
   const [selected, setSelected] = useState<(Flight | null)[]>(() =>
@@ -61,58 +93,70 @@ export function MultiCityResults({
   const current = segments[activeLeg];
   const isLastLeg = activeLeg >= segments.length - 1;
 
-  const priorTotal = useMemo(
-    () =>
-      selected.reduce((sum, f, i) => (i < activeLeg && f ? sum + f.price : sum), 0),
-    [selected, activeLeg]
+  const totalFare = useMemo(() => {
+    return selected.reduce((sum, f) => sum + (f?.price ?? 0), 0) * payingPax;
+  }, [selected, payingPax]);
+
+  const allSelected = selected.every(Boolean) && selected.length === segments.length;
+  const canContinue = Boolean(selected[activeLeg]);
+
+  const fetchLeg = useCallback(
+    async (seg: MultiCitySegment) => {
+      if (!seg?.origin || !seg?.destination || !seg?.date) {
+        setFlights([]);
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      setFetchError(false);
+      try {
+        const params = new URLSearchParams({
+          tripType: "one-way",
+          origin: seg.origin,
+          destination: seg.destination,
+          departureDate: seg.date,
+          adults: String(adults),
+          children: String(children),
+          infants: String(infants),
+          cabin,
+        });
+        if (initialNonStop) params.set("nonStop", "true");
+        if (initialBaggageFares) params.set("baggageFares", "true");
+        if (initialAirlineCode) params.set("airlineCode", initialAirlineCode);
+        if (initialFareType === "STU") params.set("studentFare", "true");
+        if (initialFareType === "DEF") params.set("defenceFare", "true");
+        if (initialFareType === "CORP") params.set("corporateFare", "true");
+
+        const res = await fetch(`/api/flights?${params.toString()}`);
+        if (!res.ok) throw new Error("search failed");
+        const data = await res.json();
+        // Stamp each result with THIS sector's cities + date so cards never
+        // inherit the wrong multi-city URL date (e.g. leg-1 date on leg 2).
+        const stamped: Flight[] = (data.flights || []).map((f: Flight) => ({
+          ...f,
+          origin: f.origin || seg.origin,
+          destination: f.destination || seg.destination,
+          travel_date: seg.date,
+        }));
+        setFlights(stamped);
+      } catch {
+        setFetchError(true);
+        setFlights([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [
+      adults,
+      children,
+      infants,
+      cabin,
+      initialNonStop,
+      initialBaggageFares,
+      initialAirlineCode,
+      initialFareType,
+    ]
   );
-
-  const fetchLeg = useCallback(async (seg: MultiCitySegment) => {
-    if (!seg?.origin || !seg?.destination) {
-      setFlights([]);
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    setFetchError(false);
-    try {
-      const params = new URLSearchParams({
-        tripType: "one-way",
-        origin: seg.origin,
-        destination: seg.destination,
-        departureDate: seg.date,
-        adults: String(adults),
-        children: String(children),
-        infants: String(infants),
-        cabin,
-      });
-      if (initialNonStop) params.set("nonStop", "true");
-      if (initialBaggageFares) params.set("baggageFares", "true");
-      if (initialAirlineCode) params.set("airlineCode", initialAirlineCode);
-      if (initialFareType === "STU") params.set("studentFare", "true");
-      if (initialFareType === "DEF") params.set("defenceFare", "true");
-      if (initialFareType === "CORP") params.set("corporateFare", "true");
-
-      const res = await fetch(`/api/flights?${params.toString()}`);
-      if (!res.ok) throw new Error("search failed");
-      const data = await res.json();
-      setFlights(data.flights || []);
-    } catch {
-      setFetchError(true);
-      setFlights([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [
-    adults,
-    children,
-    infants,
-    cabin,
-    initialNonStop,
-    initialBaggageFares,
-    initialAirlineCode,
-    initialFareType,
-  ]);
 
   const segmentsKey = segments
     .map((s) => `${s.origin}|${s.destination}|${s.date}`)
@@ -121,128 +165,137 @@ export function MultiCityResults({
   useEffect(() => {
     setSelected(segments.map(() => null));
     setActiveLeg(0);
-    // Reset when the multi-city itinerary in the URL changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [segmentsKey]);
 
   useEffect(() => {
-    if (current) fetchLeg(current);
-  }, [activeLeg, current, fetchLeg]);
+    if (!current) return;
+    fetchLeg(current);
+    // Depend on stable key + activeLeg — not the segment object identity
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLeg, segmentsKey, fetchLeg]);
 
   const persistAndBook = (legs: Flight[]) => {
     const first = legs[0];
     const last = legs[legs.length - 1];
     const draft: BookingDraft = {
       tripType: "multi-city",
-      origin: first.origin,
-      destination: last.destination,
+      origin: segments[0]?.origin || first.origin,
+      destination: segments[segments.length - 1]?.destination || last.destination,
       departureDate: segments[0]?.date || first.travel_date || new Date().toISOString().slice(0, 10),
       cabin,
       adults,
       children,
       infants,
       outbound: first,
-      multiCityFlights: legs,
+      multiCityFlights: legs.map((leg, i) => ({
+        ...leg,
+        travel_date: segments[i]?.date || leg.travel_date,
+        origin: segments[i]?.origin || leg.origin,
+        destination: segments[i]?.destination || leg.destination,
+      })),
       createdAt: new Date().toISOString(),
     };
     saveBookingDraft(draft);
     router.push(isB2bRoute ? "/b2b/book" : "/book");
   };
 
-  const handleContinue = (flight: Flight) => {
+  const onPickFlight = (flight: Flight) => {
     const next = [...selected];
-    next[activeLeg] = flight;
+    next[activeLeg] = {
+      ...flight,
+      travel_date: current?.date || flight.travel_date,
+      origin: current?.origin || flight.origin,
+      destination: current?.destination || flight.destination,
+    };
     for (let i = activeLeg + 1; i < next.length; i++) next[i] = null;
     setSelected(next);
+  };
+
+  const handleContinue = () => {
+    const flight = selected[activeLeg];
+    if (!flight) return;
 
     if (!isLastLeg) {
       setActiveLeg((i) => i + 1);
       return;
     }
 
-    const all = next.map((f, i) => (i === activeLeg ? flight : f));
-    if (all.some((f) => !f)) return;
-    persistAndBook(all as Flight[]);
+    if (!selected.every(Boolean)) return;
+    persistAndBook(selected as Flight[]);
   };
 
   const goToLeg = (idx: number) => {
-    // Only allow jumping to completed legs or the current one
-    if (idx > activeLeg) return;
+    // Allow revisit of any completed leg, or the next unfinished one
+    const maxReachable = selected.findIndex((f) => !f);
+    const limit = maxReachable === -1 ? segments.length - 1 : maxReachable;
+    if (idx > limit) return;
     setActiveLeg(idx);
   };
 
   return (
-    <div className="w-full flex flex-col gap-5">
+    <div className="w-full flex flex-col gap-4 pb-36">
       <SearchLoadingModal isOpen={isLoading} />
 
-      {/* Sector stepper — Yatra / MMT style */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5">
-        <p className="text-[13px] font-bold text-slate-500 mb-3 uppercase tracking-wide">
-          Select flights for each sector
-        </p>
-        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3">
+      {/* Yatra-style sector tabs */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="flex overflow-x-auto">
           {segments.map((seg, idx) => {
-            const picked = selected[idx];
             const isActive = idx === activeLeg;
-            const done = Boolean(picked) && idx < activeLeg;
+            const picked = selected[idx];
+            const maxReachable = selected.findIndex((f) => !f);
+            const limit = maxReachable === -1 ? segments.length - 1 : maxReachable;
+            const reachable = idx <= limit;
+
             return (
               <button
                 key={idx}
                 type="button"
                 onClick={() => goToLeg(idx)}
-                disabled={idx > activeLeg}
+                disabled={!reachable}
                 className={cn(
-                  "flex flex-col sm:min-w-[180px] flex-1 text-left rounded-xl border px-4 py-3 transition-all",
+                  "flex-1 min-w-[200px] px-5 py-4 text-left border-b-2 transition-colors",
                   isActive
-                    ? "border-[#D60D26] bg-[#FFF5F6] shadow-sm"
-                    : done
-                      ? "border-emerald-200 bg-emerald-50/60 cursor-pointer hover:border-emerald-300"
-                      : "border-slate-200 bg-slate-50 opacity-70 cursor-not-allowed"
+                    ? "border-[#1A73E8] bg-[#F0F7FF]"
+                    : picked
+                      ? "border-transparent bg-white hover:bg-slate-50"
+                      : "border-transparent bg-slate-50/80 opacity-60 cursor-not-allowed"
                 )}
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <span
-                    className={cn(
-                      "text-[11px] font-black uppercase tracking-wider",
-                      isActive ? "text-[#D60D26]" : done ? "text-emerald-700" : "text-slate-400"
-                    )}
-                  >
-                    Flight {idx + 1}
-                  </span>
-                  {done && <Check className="w-3.5 h-3.5 text-emerald-600" strokeWidth={3} />}
-                </div>
-                <div className="flex items-center gap-1.5 text-[14px] font-extrabold text-slate-900">
-                  <span className="truncate">{seg.origin}</span>
-                  <ArrowRight className="w-3.5 h-3.5 shrink-0 text-slate-400" />
-                  <span className="truncate">{seg.destination}</span>
-                </div>
+                <p
+                  className={cn(
+                    "text-[13px] font-extrabold truncate",
+                    isActive ? "text-[#1A73E8]" : "text-slate-800"
+                  )}
+                >
+                  {seg.origin} ({airportCode(seg.origin)}) - {seg.destination} (
+                  {airportCode(seg.destination)})
+                </p>
                 <p className="text-[12px] text-slate-500 font-medium mt-0.5">
                   {formatSegDate(seg.date)}
-                  {picked
-                    ? ` · ${picked.airline} · ₹${picked.price.toLocaleString("en-IN")}`
-                    : isActive
-                      ? " · Choose a flight"
-                      : ""}
+                  {picked ? " · Selected" : isActive ? " · Choose flight" : ""}
                 </p>
               </button>
             );
           })}
         </div>
-
-        {priorTotal > 0 && (
-          <p className="mt-3 text-[13px] font-semibold text-slate-600">
-            Selected so far: ₹
-            {(priorTotal * (adults + children)).toLocaleString("en-IN")}
-            <span className="text-slate-400 font-medium"> (fares × travellers)</span>
-          </p>
-        )}
       </div>
+
+      <p className="text-[14px] font-bold text-slate-600 px-1">
+        Showing flights for{" "}
+        <span className="text-slate-900">
+          {current?.origin} → {current?.destination}
+        </span>{" "}
+        on <span className="text-slate-900">{formatSegDate(current?.date || "", "EEE, dd MMM yyyy")}</span>
+        <span className="text-slate-400 font-medium"> — pick one flight for this sector only</span>
+      </p>
 
       {fetchError ? (
         <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-rose-100">
           <h3 className="text-[22px] font-[800] text-slate-800 mb-2">Could not load this sector</h3>
           <p className="text-[15px] text-slate-500 font-medium">
-            Try again or change dates for Flight {activeLeg + 1}.
+            Try again for Flight {activeLeg + 1} ({current?.origin} → {current?.destination} on{" "}
+            {formatSegDate(current?.date || "")}).
           </p>
           <button
             type="button"
@@ -267,13 +320,78 @@ export function MultiCityResults({
           initialFareType={initialFareType}
           cabin={cabin}
           forceSelectMode
-          continueButtonLabel={isLastLeg ? "Book Now" : "Select Next Flight"}
-          selectionHint={`Flight ${activeLeg + 1}: ${current?.origin} → ${current?.destination}`}
-          priorLegsFareTotal={priorTotal}
-          onContinueWithSelection={handleContinue}
-          listTitle={`Flight ${activeLeg + 1} — ${current?.origin} → ${current?.destination}`}
+          hideStickyBar
+          legTravelDate={current?.date}
+          onSelectFlight={onPickFlight}
+          listTitle={undefined}
         />
       )}
+
+      {/* Yatra-style sticky summary: every sector side-by-side */}
+      <div className="fixed bottom-0 left-0 right-0 z-[90] bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.1)]">
+        <div className="max-w-[1440px] mx-auto px-4 py-3 flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-4">
+          <div className="flex-1 flex overflow-x-auto gap-0 divide-x divide-slate-200">
+            {segments.map((seg, idx) => {
+              const picked = selected[idx];
+              return (
+                <div
+                  key={idx}
+                  className={cn(
+                    "min-w-[200px] flex-1 px-4 py-1",
+                    idx === activeLeg ? "bg-[#F0F7FF]/ : ""
+                  )}
+                >
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
+                    Flight {idx + 1} · {formatSegDate(seg.date)}
+                  </p>
+                  {picked ? (
+                    <>
+                      <p className="text-[13px] font-extrabold text-slate-900 truncate">
+                        {picked.airline} {picked.id}
+                      </p>
+                      <p className="text-[12px] font-semibold text-slate-600 flex items-center gap-1">
+                        {airportCode(seg.origin)}
+                        <ArrowRight className="w-3 h-3" />
+                        {airportCode(seg.destination)}
+                        <span className="text-slate-400 font-medium ml-1">
+                          {picked.departureTime} – {picked.arrivalTime}
+                        </span>
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-[13px] font-semibold text-slate-400 mt-1">
+                      {idx === activeLeg ? "Select a flight above" : "Pending"}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-between lg:justify-end gap-4 shrink-0 border-t lg:border-t-0 border-slate-100 pt-3 lg:pt-0">
+            <div className="text-right">
+              <p className="text-[11px] font-bold text-slate-400 uppercase">Total Fare</p>
+              <p className="text-[22px] font-black text-slate-900 leading-none">
+                ₹{totalFare.toLocaleString("en-IN")}
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={!canContinue || (isLastLeg && !allSelected && !selected[activeLeg])}
+              onClick={handleContinue}
+              className={cn(
+                "px-8 py-3.5 rounded-full font-bold text-white flex items-center gap-2 transition-all whitespace-nowrap",
+                canContinue
+                  ? "bg-[#D60D26] hover:bg-[#b00b1d] shadow-lg"
+                  : "bg-slate-300 cursor-not-allowed"
+              )}
+            >
+              {isLastLeg ? "Book Now" : "Select Next Flight"}
+              <ArrowUpRight className="w-5 h-5" strokeWidth={2.5} />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
