@@ -37,57 +37,70 @@ const statusConfig: Record<string, { label: string; dot: string; badge: string }
 // ─── API ticket shape (matches backend TicketSerializer) ──────────────────────
 type ApiTicket = {
     id: string;
-    user: string;
+    user?: string;
     pnr_number: string | null;
     ticket_number: string | null;
     booking_ref: string | null;
-    flight_id: string | null;
+    flight_id?: string | null;
     status: "CONFIRMED" | "CANCELLED" | "PENDING" | "FAILED";
     origin: string;
     destination: string;
-    departure_datetime: string;
-    arrival_datetime: string;
-    travel_type: number;
+    departure_datetime?: string | null;
+    arrival_datetime?: string | null;
+    travel_type?: number;
     airline_code: string;
     airline_name: string | null;
     flight_number: string;
     cabin_class: string | null;
-    basic_amount: string;
-    tax_amount: string;
-    total_amount: string;
-    currency: string;
-    baggage_check_in: string | null;
-    baggage_hand: string | null;
-    is_refundable: boolean;
-    food_onboard: string | null;
-    segments_data: Array<{
+    basic_amount?: string;
+    tax_amount?: string;
+    total_amount: string | number;
+    currency?: string;
+    baggage_check_in?: string | null;
+    baggage_hand?: string | null;
+    is_refundable?: boolean;
+    food_onboard?: string | boolean | null;
+    segments_data?: Array<{
         origin: string;
         destination: string;
         origin_city?: string;
         destination_city?: string;
-        departure_datetime: string;
-        arrival_datetime: string;
+        departure_datetime?: string;
+        arrival_datetime?: string;
         duration?: string;
         airline_name?: string;
         flight_number?: string;
         origin_terminal?: string;
         destination_terminal?: string;
     }>;
-    passengers_data: Array<{
+    passengers_data?: Array<{
         title?: string;
         first_name?: string;
         last_name?: string;
         dob?: string | null;
         gender?: string;
     }>;
-    ssr_data: Record<string, unknown>;
-    cancellation_data: Record<string, unknown>;
+    ssr_data?: Record<string, unknown>;
+    cancellation_data?: Record<string, unknown>;
     created_at: string;
-    updated_at: string;
+    updated_at?: string;
+    /** Offline / legacy display fallbacks */
+    departure_display?: string;
+    arrival_display?: string;
+    duration?: string;
+    travel_date?: string;
+    leg_label?: string;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function formatDate(iso: string) {
+function isValidDateInput(value: unknown): value is string {
+    if (value == null || value === "") return false;
+    const t = new Date(String(value)).getTime();
+    return !Number.isNaN(t);
+}
+
+function formatDate(iso: string | null | undefined, fallback?: string) {
+    if (!isValidDateInput(iso)) return fallback || "—";
     try {
         return new Date(iso).toLocaleDateString("en-IN", {
             day: "numeric",
@@ -95,11 +108,12 @@ function formatDate(iso: string) {
             year: "numeric",
         });
     } catch {
-        return iso;
+        return fallback || String(iso);
     }
 }
 
-function formatTime(iso: string) {
+function formatTime(iso: string | null | undefined, fallback?: string) {
+    if (!isValidDateInput(iso)) return fallback || "—";
     try {
         return new Date(iso).toLocaleTimeString("en-IN", {
             hour: "2-digit",
@@ -107,13 +121,13 @@ function formatTime(iso: string) {
             hour12: false,
         });
     } catch {
-        return "—";
+        return fallback || "—";
     }
 }
 
-function formatCurrency(amount: string, currency: string) {
-    const num = parseFloat(amount);
-    if (isNaN(num)) return amount;
+function formatCurrency(amount: string | number, currency: string) {
+    const num = typeof amount === "number" ? amount : parseFloat(String(amount));
+    if (isNaN(num)) return String(amount);
     return new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: currency || "INR",
@@ -121,15 +135,17 @@ function formatCurrency(amount: string, currency: string) {
     }).format(num);
 }
 
-function calcDuration(dep: string, arr: string) {
+function calcDuration(dep: string | null | undefined, arr: string | null | undefined, fallback?: string) {
+    if (!isValidDateInput(dep) || !isValidDateInput(arr)) return fallback || "";
     try {
         const diff = new Date(arr).getTime() - new Date(dep).getTime();
-        if (diff <= 0) return "";
+        if (!Number.isFinite(diff) || diff <= 0) return fallback || "";
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
+        if (Number.isNaN(h) || Number.isNaN(m)) return fallback || "";
         return `${h}h ${m}m`;
     } catch {
-        return "";
+        return fallback || "";
     }
 }
 
@@ -137,17 +153,95 @@ function passengerAge(dob: string | null | undefined) {
     if (!dob) return null;
     try {
         const diff = Date.now() - new Date(dob).getTime();
+        if (Number.isNaN(diff)) return null;
         return Math.floor(diff / (365.25 * 24 * 3600000));
     } catch {
         return null;
     }
 }
 
+/** Repair older offline multi-city tickets that lacked ISO datetimes. */
+function normalizeOfflineTicket(raw: any): ApiTicket {
+    const ticket = { ...raw } as ApiTicket;
+    const travelDate = ticket.travel_date || String(ticket.created_at || "").slice(0, 10);
+
+    if (!isValidDateInput(ticket.departure_datetime) && ticket.departure_display && travelDate) {
+        ticket.departure_datetime = combineDisplayToIso(travelDate, ticket.departure_display);
+    }
+    if (!isValidDateInput(ticket.arrival_datetime) && ticket.arrival_display && travelDate) {
+        ticket.arrival_datetime = combineDisplayToIso(
+            travelDate,
+            ticket.arrival_display,
+            ticket.departure_display
+        );
+    }
+    if (!ticket.segments_data?.length && ticket.origin && ticket.destination) {
+        ticket.segments_data = [
+            {
+                origin: ticket.origin,
+                destination: ticket.destination,
+                departure_datetime: ticket.departure_datetime || undefined,
+                arrival_datetime: ticket.arrival_datetime || undefined,
+                duration: ticket.duration,
+                airline_name: ticket.airline_name || undefined,
+                flight_number: ticket.flight_number,
+            },
+        ];
+    }
+    return ticket;
+}
+
+function combineDisplayToIso(dateIso: string, timeStr: string, depTime?: string): string {
+    const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateIso).slice(0, 10));
+    if (!ymd) return new Date().toISOString();
+    const parse = (t: string) => {
+        const m12 = String(t).trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (m12) {
+            let h = parseInt(m12[1], 10);
+            const min = parseInt(m12[2], 10);
+            const p = m12[3].toUpperCase();
+            if (p === "PM" && h !== 12) h += 12;
+            if (p === "AM" && h === 12) h = 0;
+            return h * 60 + min;
+        }
+        const m24 = String(t).trim().match(/^(\d{1,2}):(\d{2})$/);
+        if (m24) return parseInt(m24[1], 10) * 60 + parseInt(m24[2], 10);
+        return null;
+    };
+    const mins = parse(timeStr);
+    if (mins == null) {
+        return new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]), 12, 0).toISOString();
+    }
+    let dayOffset = 0;
+    if (depTime) {
+        const depMins = parse(depTime);
+        if (depMins != null && mins < depMins) dayOffset = 1;
+    }
+    return new Date(
+        Number(ymd[1]),
+        Number(ymd[2]) - 1,
+        Number(ymd[3]) + dayOffset,
+        Math.floor(mins / 60),
+        mins % 60
+    ).toISOString();
+}
+
 // ─── Ticket card ──────────────────────────────────────────────────────────────
 function TicketCard({ ticket }: { ticket: ApiTicket }) {
     const cfg = statusConfig[ticket.status] || statusConfig["CONFIRMED"];
-    const duration = calcDuration(ticket.departure_datetime, ticket.arrival_datetime);
+    const duration = calcDuration(
+        ticket.departure_datetime,
+        ticket.arrival_datetime,
+        ticket.duration || ticket.segments_data?.[0]?.duration
+    );
     const passengers = ticket.passengers_data ?? [];
+    const depTime = formatTime(ticket.departure_datetime, ticket.departure_display);
+    const arrTime = formatTime(ticket.arrival_datetime, ticket.arrival_display);
+    const depDate = formatDate(ticket.departure_datetime, ticket.travel_date);
+    const arrDate = formatDate(ticket.arrival_datetime, ticket.travel_date);
+    const originCity = ticket.segments_data?.[0]?.origin_city;
+    const destCity =
+        ticket.segments_data?.[ticket.segments_data.length - 1]?.destination_city;
 
     return (
         <div className="bg-white rounded-[1.5rem] shadow-sm border border-rose-50 overflow-hidden mb-8">
@@ -167,6 +261,9 @@ function TicketCard({ ticket }: { ticket: ApiTicket }) {
                         <span>
                             PNR: <b className="text-gray-700 tracking-tighter ml-1">{ticket.pnr_number}</b>
                         </span>
+                    )}
+                    {ticket.leg_label && (
+                        <span className="text-primary font-[800]">{ticket.leg_label}</span>
                     )}
                     <span>
                         Booked:{" "}
@@ -197,13 +294,13 @@ function TicketCard({ ticket }: { ticket: ApiTicket }) {
                         <p className="text-[28px] font-[900] text-[#1e2329] tracking-tight leading-none">
                             {ticket.origin}
                         </p>
-                        <p className="text-[13px] font-[600] text-gray-400 mt-1">
-                            {ticket.segments_data?.[0]?.origin_city || ticket.origin}
-                        </p>
+                        {originCity && originCity !== ticket.origin && (
+                            <p className="text-[13px] font-[600] text-gray-400 mt-1">{originCity}</p>
+                        )}
                         <span className="inline-block mt-3 px-3 py-1 bg-white border border-gray-200 rounded text-[13px] font-[800] text-gray-700">
-                            {formatTime(ticket.departure_datetime)}
+                            {depTime}
                         </span>
-                        <p className="text-[12px] text-gray-400 mt-1">{formatDate(ticket.departure_datetime)}</p>
+                        <p className="text-[12px] text-gray-400 mt-1">{depDate}</p>
                     </div>
 
                     {/* Flight line */}
@@ -241,14 +338,13 @@ function TicketCard({ ticket }: { ticket: ApiTicket }) {
                         <p className="text-[28px] font-[900] text-[#1e2329] tracking-tight leading-none">
                             {ticket.destination}
                         </p>
-                        <p className="text-[13px] font-[600] text-gray-400 mt-1">
-                            {ticket.segments_data?.[ticket.segments_data.length - 1]?.destination_city ||
-                                ticket.destination}
-                        </p>
+                        {destCity && destCity !== ticket.destination && (
+                            <p className="text-[13px] font-[600] text-gray-400 mt-1">{destCity}</p>
+                        )}
                         <span className="inline-block mt-3 px-3 py-1 bg-white border border-gray-200 rounded text-[13px] font-[800] text-gray-700">
-                            {formatTime(ticket.arrival_datetime)}
+                            {arrTime}
                         </span>
-                        <p className="text-[12px] text-gray-400 mt-1">{formatDate(ticket.arrival_datetime)}</p>
+                        <p className="text-[12px] text-gray-400 mt-1">{arrDate}</p>
                     </div>
                 </div>
 
@@ -258,7 +354,7 @@ function TicketCard({ ticket }: { ticket: ApiTicket }) {
                     <div className="flex justify-between items-center px-1">
                         <span className="text-[16px] font-[600] text-gray-400">Total Paid:</span>
                         <span className="text-[22px] font-[800] text-[#1e2329]">
-                            {formatCurrency(ticket.total_amount, ticket.currency)}
+                            {formatCurrency(ticket.total_amount, ticket.currency || "INR")}
                         </span>
                     </div>
 
@@ -355,7 +451,9 @@ export default function MyBooking() {
                     const stored = localStorage.getItem("offline_bookings");
                     if (stored) {
                         const parsed = JSON.parse(stored);
-                        offlineTickets = parsed.filter((t: any) => !t.user_email || t.user_email === user?.email);
+                        offlineTickets = parsed
+                            .filter((t: any) => !t.user_email || t.user_email === user?.email)
+                            .map((t: any) => normalizeOfflineTicket(t));
                     }
                 } catch (storageErr) {
                     console.error("[MyBooking Page Error] Failed to parse offline bookings:", storageErr);

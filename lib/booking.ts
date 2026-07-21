@@ -278,30 +278,113 @@ export function buildOfflineTicket(
   legLabel: string
 ) {
   const pnr = `PNR${Math.floor(100000 + Math.random() * 900000)}`;
+  const travelDate =
+    leg.travel_date ||
+    draft.departureDate ||
+    new Date().toISOString().slice(0, 10);
+  const departureDatetime = combineTravelDateAndTime(travelDate, leg.departureTime);
+  const arrivalDatetime = combineTravelDateAndTime(
+    travelDate,
+    leg.arrivalTime,
+    leg.departureTime
+  );
+
   return {
     id: `ticket-${Math.random().toString(36).slice(2, 11)}`,
     pnr_number: pnr,
     ticket_number: `ETKT-${Math.floor(1000000 + Math.random() * 9000000)}`,
+    booking_ref: pnr,
     status: "CONFIRMED",
     origin: leg.origin,
     destination: leg.destination,
+    departure_datetime: departureDatetime,
+    arrival_datetime: arrivalDatetime,
+    travel_type: draft.tripType === "multi-city" ? 2 : draft.tripType === "round-trip" ? 1 : 0,
     airline_name: leg.airline,
     airline_code: leg.airline_code || leg.id.split("-")[0],
-    flight_number: leg.id.split("-")[1] || "000",
+    flight_number: leg.id.split("-")[1] || leg.id || "000",
     cabin_class: draft.cabin,
-    total_amount: leg.price * (draft.adults + draft.children),
+    basic_amount: String(leg.price * (draft.adults + draft.children)),
+    tax_amount: "0",
+    total_amount: String(leg.price * (draft.adults + draft.children)),
+    currency: "INR",
     food_onboard: leg.meal_available ?? leg.food_onboard ?? false,
     passengers_data: passengers.map((p) => ({
       title: p.title,
       first_name: p.first_name,
       last_name: p.last_name,
+      dob: p.dob,
       outbound_meal: p.outbound_meal,
       return_meal: p.return_meal,
     })),
+    segments_data: [
+      {
+        origin: leg.origin,
+        destination: leg.destination,
+        origin_city: leg.origin,
+        destination_city: leg.destination,
+        departure_datetime: departureDatetime,
+        arrival_datetime: arrivalDatetime,
+        duration: leg.duration,
+        airline_name: leg.airline,
+        flight_number: leg.id.split("-")[1] || leg.id || "000",
+      },
+    ],
     leg_label: legLabel,
     departure_display: leg.departureTime,
     arrival_display: leg.arrivalTime,
     duration: leg.duration,
+    travel_date: travelDate,
     created_at: new Date().toISOString(),
   };
+}
+
+/** Build ISO datetime from yyyy-MM-dd + "06:15 AM" / "23:30" style time. */
+function combineTravelDateAndTime(
+  dateIso: string,
+  timeStr: string,
+  depTimeForOvernight?: string
+): string {
+  const datePart = String(dateIso || "").slice(0, 10);
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart);
+  const mins = parseClockToMinutes(timeStr);
+  if (!ymd || mins == null) {
+    // Fall back to noon on travel date so UI never shows Invalid Date
+    if (ymd) {
+      return new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]), 12, 0, 0).toISOString();
+    }
+    return new Date().toISOString();
+  }
+
+  let dayOffset = 0;
+  if (depTimeForOvernight) {
+    const depMins = parseClockToMinutes(depTimeForOvernight);
+    if (depMins != null && mins < depMins) dayOffset = 1; // arrives next calendar day
+  }
+
+  const y = Number(ymd[1]);
+  const m = Number(ymd[2]) - 1;
+  const d = Number(ymd[3]) + dayOffset;
+  const hours = Math.floor(mins / 60);
+  const minutes = mins % 60;
+  return new Date(y, m, d, hours, minutes, 0).toISOString();
+}
+
+function parseClockToMinutes(raw: string): number | null {
+  const s = String(raw || "").trim();
+  if (!s) return null;
+  const m12 = s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (m12) {
+    let h = parseInt(m12[1], 10);
+    const min = parseInt(m12[2], 10);
+    const period = m12[3].toUpperCase();
+    if (period === "PM" && h !== 12) h += 12;
+    if (period === "AM" && h === 12) h = 0;
+    return h * 60 + min;
+  }
+  const m24 = s.match(/^(\d{1,2}):(\d{2})$/);
+  if (m24) {
+    return parseInt(m24[1], 10) * 60 + parseInt(m24[2], 10);
+  }
+  return null;
 }
