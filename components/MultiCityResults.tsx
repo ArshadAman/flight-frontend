@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { FlightResults, type Flight } from "@/components/FlightResults";
-import { SearchLoadingModal } from "@/components/SearchLoadingModal";
 import { saveBookingDraft, type BookingDraft } from "@/lib/booking";
 import { cn } from "@/lib/utils";
 
@@ -66,6 +65,10 @@ function formatSegDate(iso: string, pattern = "dd MMM") {
   }
 }
 
+function legCacheKey(seg: MultiCitySegment) {
+  return `${seg.origin}|${seg.destination}|${seg.date}`;
+}
+
 export function MultiCityResults({
   segments,
   adults = 1,
@@ -90,6 +93,9 @@ export function MultiCityResults({
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
 
+  /** Cache per sector so switching tabs does not full-screen reload. */
+  const cacheRef = useRef<Record<string, Flight[]>>({});
+
   const current = segments[activeLeg];
   const isLastLeg = activeLeg >= segments.length - 1;
 
@@ -97,8 +103,12 @@ export function MultiCityResults({
     return selected.reduce((sum, f) => sum + (f?.price ?? 0), 0) * payingPax;
   }, [selected, payingPax]);
 
-  const allSelected = selected.every(Boolean) && selected.length === segments.length;
-  const canContinue = Boolean(selected[activeLeg]);
+  const allSelected =
+    selected.length === segments.length && selected.every((f) => Boolean(f));
+
+  /** Book Now once every sector is chosen; otherwise advance when current is chosen. */
+  const canContinue = allSelected || Boolean(selected[activeLeg]);
+  const continueLabel = allSelected || isLastLeg ? "Book Now" : "Select Next Flight";
 
   const fetchLeg = useCallback(
     async (seg: MultiCitySegment) => {
@@ -107,8 +117,20 @@ export function MultiCityResults({
         setIsLoading(false);
         return;
       }
+
+      const key = legCacheKey(seg);
+      const cached = cacheRef.current[key];
+      if (cached) {
+        setFlights(cached);
+        setFetchError(false);
+        setIsLoading(false);
+        return;
+      }
+
+      // Inline spinner only — never a full-screen modal (blocks Book Now)
       setIsLoading(true);
       setFetchError(false);
+
       try {
         const params = new URLSearchParams({
           tripType: "one-way",
@@ -130,14 +152,13 @@ export function MultiCityResults({
         const res = await fetch(`/api/flights?${params.toString()}`);
         if (!res.ok) throw new Error("search failed");
         const data = await res.json();
-        // Stamp each result with THIS sector's cities + date so cards never
-        // inherit the wrong multi-city URL date (e.g. leg-1 date on leg 2).
         const stamped: Flight[] = (data.flights || []).map((f: Flight) => ({
           ...f,
           origin: f.origin || seg.origin,
           destination: f.destination || seg.destination,
           travel_date: seg.date,
         }));
+        cacheRef.current[key] = stamped;
         setFlights(stamped);
       } catch {
         setFetchError(true);
@@ -163,6 +184,7 @@ export function MultiCityResults({
     .join(";");
 
   useEffect(() => {
+    cacheRef.current = {};
     setSelected(segments.map(() => null));
     setActiveLeg(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -171,7 +193,6 @@ export function MultiCityResults({
   useEffect(() => {
     if (!current) return;
     fetchLeg(current);
-    // Depend on stable key + activeLeg — not the segment object identity
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLeg, segmentsKey, fetchLeg]);
 
@@ -201,50 +222,51 @@ export function MultiCityResults({
   };
 
   const onPickFlight = (flight: Flight) => {
-    const next = [...selected];
-    next[activeLeg] = {
-      ...flight,
-      travel_date: current?.date || flight.travel_date,
-      origin: current?.origin || flight.origin,
-      destination: current?.destination || flight.destination,
-    };
-    for (let i = activeLeg + 1; i < next.length; i++) next[i] = null;
-    setSelected(next);
+    setSelected((prev) => {
+      const next = [...prev];
+      next[activeLeg] = {
+        ...flight,
+        travel_date: current?.date || flight.travel_date,
+        origin: current?.origin || flight.origin,
+        destination: current?.destination || flight.destination,
+      };
+      // Changing an earlier sector invalidates later picks
+      for (let i = activeLeg + 1; i < next.length; i++) next[i] = null;
+      return next;
+    });
   };
 
   const handleContinue = () => {
-    const flight = selected[activeLeg];
-    if (!flight) return;
-
+    if (allSelected) {
+      persistAndBook(selected as Flight[]);
+      return;
+    }
+    if (!selected[activeLeg]) return;
     if (!isLastLeg) {
       setActiveLeg((i) => i + 1);
       return;
     }
-
-    if (!selected.every(Boolean)) return;
-    persistAndBook(selected as Flight[]);
   };
 
   const goToLeg = (idx: number) => {
-    // Allow revisit of any completed leg, or the next unfinished one
-    const maxReachable = selected.findIndex((f) => !f);
-    const limit = maxReachable === -1 ? segments.length - 1 : maxReachable;
+    const firstEmpty = selected.findIndex((f) => !f);
+    const limit = firstEmpty === -1 ? segments.length - 1 : firstEmpty;
     if (idx > limit) return;
     setActiveLeg(idx);
   };
 
   return (
     <div className="w-full flex flex-col gap-4 pb-36">
-      <SearchLoadingModal isOpen={isLoading} />
+      {/* No full-screen SearchLoadingModal — it blocked Book Now (z-index) and
+          flashed on every sector switch. Inline spinner in FlightResults only. */}
 
-      {/* Yatra-style sector tabs */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         <div className="flex overflow-x-auto">
           {segments.map((seg, idx) => {
             const isActive = idx === activeLeg;
             const picked = selected[idx];
-            const maxReachable = selected.findIndex((f) => !f);
-            const limit = maxReachable === -1 ? segments.length - 1 : maxReachable;
+            const firstEmpty = selected.findIndex((f) => !f);
+            const limit = firstEmpty === -1 ? segments.length - 1 : firstEmpty;
             const reachable = idx <= limit;
 
             return (
@@ -284,8 +306,14 @@ export function MultiCityResults({
         <span className="text-slate-900">
           {current?.origin} → {current?.destination}
         </span>{" "}
-        on <span className="text-slate-900">{formatSegDate(current?.date || "", "EEE, dd MMM yyyy")}</span>
-        <span className="text-slate-400 font-medium"> — pick one flight for this sector only</span>
+        on{" "}
+        <span className="text-slate-900">
+          {formatSegDate(current?.date || "", "EEE, dd MMM yyyy")}
+        </span>
+        <span className="text-slate-400 font-medium">
+          {" "}
+          — pick one flight for this sector only
+        </span>
       </p>
 
       {fetchError ? (
@@ -325,8 +353,7 @@ export function MultiCityResults({
         />
       )}
 
-      {/* Yatra-style sticky summary: every sector side-by-side */}
-      <div className="fixed bottom-0 left-0 right-0 z-[90] bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.1)]">
+      <div className="fixed bottom-0 left-0 right-0 z-[200] bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.1)]">
         <div className="max-w-[1440px] mx-auto px-4 py-3 flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-4">
           <div className="flex-1 flex overflow-x-auto gap-0 divide-x divide-slate-200">
             {segments.map((seg, idx) => {
@@ -375,7 +402,7 @@ export function MultiCityResults({
             </div>
             <button
               type="button"
-              disabled={!canContinue || (isLastLeg && !allSelected && !selected[activeLeg])}
+              disabled={!canContinue}
               onClick={handleContinue}
               className={cn(
                 "px-8 py-3.5 rounded-full font-bold text-white flex items-center gap-2 transition-all whitespace-nowrap",
@@ -384,7 +411,7 @@ export function MultiCityResults({
                   : "bg-slate-300 cursor-not-allowed"
               )}
             >
-              {isLastLeg ? "Book Now" : "Select Next Flight"}
+              {continueLabel}
               <ArrowUpRight className="w-5 h-5" strokeWidth={2.5} />
             </button>
           </div>
