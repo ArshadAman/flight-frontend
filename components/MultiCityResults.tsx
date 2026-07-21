@@ -255,17 +255,15 @@ export function MultiCityResults({
                 disabled={!reachable}
                 className={cn(
                   "flex-1 min-w-[200px] px-5 py-4 text-left border-b-2 transition-colors",
-                  isActive
-                    ? "border-[#1A73E8] bg-[#F0F7FF]"
-                    : picked
-                      ? "border-transparent bg-white hover:bg-slate-50"
-                      : "border-transparent bg-slate-50/80 opacity-60 cursor-not-allowed"
+                  isActive && "border-blue-600 bg-blue-50",
+                  !isActive && picked && "border-transparent bg-white hover:bg-slate-50",
+                  !isActive && !picked && "border-transparent bg-slate-50/80 opacity-60 cursor-not-allowed"
                 )}
               >
                 <p
                   className={cn(
                     "text-[13px] font-extrabold truncate",
-                    isActive ? "text-[#1A73E8]" : "text-slate-800"
+                    isActive ? "text-blue-600" : "text-slate-800"
                   )}
                 >
                   {seg.origin} ({airportCode(seg.origin)}) - {seg.destination} (
@@ -338,7 +336,7 @@ export function MultiCityResults({
                   key={idx}
                   className={cn(
                     "min-w-[200px] flex-1 px-4 py-1",
-                    idx === activeLeg ? "bg-[#F0F7FF]/ : ""
+                    idx === activeLeg && "bg-blue-50"
                   )}
                 >
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
