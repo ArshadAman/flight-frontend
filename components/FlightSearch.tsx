@@ -180,12 +180,13 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
             });
         }
         if (field === "destination" && typeof value === "string") {
+            // Update this leg's To only — never copy into the next leg's To.
             setLegDestSearchValues((prev) => {
                 const copy = [...prev];
                 copy[index] = value;
-                if (copy[index + 1] !== undefined) copy[index + 1] = value; // next origin search mirrors
                 return copy;
             });
+            // Chain next leg's From from this To (Yatra behavior).
             setLegSearchValues((prev) => {
                 if (prev[index + 1] === undefined) return prev;
                 const copy = [...prev];
