@@ -60,6 +60,20 @@ export function BookingDateField({
   const display = formatBookingDateDisplay(value);
   const fieldId = id || `date-${label.replace(/\s+/g, "-").toLowerCase()}`;
 
+  const thisYear = new Date().getFullYear();
+  const fromYear = minDate?.getFullYear() ?? 1920;
+  // Future dates (passport expiry, etc.): allow far ahead when maxDate omitted.
+  const toYear =
+    maxDate?.getFullYear() ??
+    Math.max(thisYear + 20, fromYear, selected?.getFullYear() ?? thisYear);
+  const defaultMonth =
+    selected ??
+    (maxDate && (!minDate || maxDate >= minDate) && maxDate.getFullYear() <= thisYear
+      ? maxDate
+      : null) ??
+    minDate ??
+    new Date(1990, 0, 1);
+
   return (
     <div className={cn("flex flex-col gap-1", className)}>
       <label htmlFor={fieldId} className="text-[12px] font-bold text-slate-600">
@@ -88,9 +102,9 @@ export function BookingDateField({
             mode="single"
             selected={selected}
             captionLayout="dropdown"
-            fromYear={minDate?.getFullYear() ?? 1920}
-            toYear={maxDate?.getFullYear() ?? new Date().getFullYear()}
-            defaultMonth={selected ?? maxDate ?? minDate ?? new Date(1990, 0, 1)}
+            fromYear={fromYear}
+            toYear={toYear}
+            defaultMonth={defaultMonth}
             onSelect={(date) => {
               if (!date) return;
               onChange(toBookingDateIso(date));

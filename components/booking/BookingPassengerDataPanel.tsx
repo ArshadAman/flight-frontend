@@ -9,7 +9,7 @@ import { COUNTRIES } from "@/lib/data/countries";
 import type { BookingDraft, BookingPassenger } from "@/lib/booking";
 import type { Flight } from "@/lib/flight";
 import { BookingDateField } from "@/components/booking/BookingDateField";
-import { dobBoundsForPaxType, validatePassengerDob } from "@/lib/passengerAge";
+import { dobBoundsForPaxType, passportExpiryBounds, validatePassengerDob, validatePassportExpiry } from "@/lib/passengerAge";
 
 const inputClass =
   "border border-slate-200 rounded-md px-3 py-2.5 text-[13px] font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 bg-white placeholder:text-slate-400 w-full";
@@ -168,6 +168,7 @@ export function BookingPassengerDataPanel({
 
   const pax = passengers[activePaxIndex] || passengers[0];
   const dobBounds = dobBoundsForPaxType(pax?.pax_type ?? 0, draft.departureDate);
+  const passportBounds = passportExpiryBounds(draft.departureDate);
   const payingPax = draft.adults + draft.children;
   const basePerPax = payingPax > 0 && pricing ? pricing.subtotal / payingPax : 0;
   const taxPerPax = payingPax > 0 && pricing ? pricing.tax / payingPax : 0;
@@ -185,6 +186,11 @@ export function BookingPassengerDataPanel({
       if (!p.last_name.trim()) return `${p.label}: Last name is required.`;
       const dobErr = validatePassengerDob(p.dob, p.pax_type, draft.departureDate, p.label);
       if (dobErr) return dobErr;
+      const hasPassportNo = Boolean(p.passport_number?.trim());
+      const passportErr = validatePassportExpiry(p.passport_expiry, draft.departureDate, p.label, {
+        required: hasPassportNo,
+      });
+      if (passportErr) return passportErr;
     }
     if (!contactMobile.trim()) return "Contact mobile is required (open CTC tab).";
     if (!contactEmail.trim()) return "Contact email is required (open CTC tab).";
@@ -200,6 +206,8 @@ export function BookingPassengerDataPanel({
       setLocalError(err);
       if (err.includes("CTC") || err.toLowerCase().includes("email") || err.toLowerCase().includes("mobile")) {
         setActiveTab("CTC");
+      } else if (err.toLowerCase().includes("passport")) {
+        setActiveTab("APIS");
       }
       return;
     }
@@ -215,6 +223,8 @@ export function BookingPassengerDataPanel({
       setActiveStep("details");
       if (err.includes("CTC") || err.toLowerCase().includes("email") || err.toLowerCase().includes("mobile")) {
         setActiveTab("CTC");
+      } else if (err.toLowerCase().includes("passport")) {
+        setActiveTab("APIS");
       }
       return;
     }
@@ -510,12 +520,18 @@ export function BookingPassengerDataPanel({
                               </Field>
                               <BookingDateField
                                 label="Passport Validity / Expiry"
+                                required={Boolean(pax.passport_number?.trim())}
                                 value={pax.passport_expiry || ""}
-                                onChange={(iso) => onUpdatePax(pax.id, "passport_expiry", iso)}
+                                onChange={(iso) => {
+                                  setLocalError(null);
+                                  onUpdatePax(pax.id, "passport_expiry", iso);
+                                }}
                                 placeholder="Select expiry date"
-                                minDate={new Date()}
+                                minDate={passportBounds.minDate}
+                                maxDate={passportBounds.maxDate}
                               />
                             </div>
+                            <p className="text-[11px] text-slate-500 -mt-2">{passportBounds.hint}</p>
                           </div>
 
                           <div className="flex flex-col gap-4">

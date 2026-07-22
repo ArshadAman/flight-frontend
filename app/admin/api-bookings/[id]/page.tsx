@@ -13,6 +13,10 @@ import {
   formatTicketDate,
   formatTicketMoney,
   isAdminSession,
+  listApiTickets,
+  getMultiCityItinerary,
+  findRelatedMultiCityTickets,
+  travelTypeLabel,
   type ApiTicket,
   type ApiTicketStatus,
 } from "@/lib/admin/tickets-api";
@@ -40,6 +44,7 @@ export default function ApiBookingDetailPage({
   const { access, user, openAuthModal } = useAuth();
   const admin = isAdminSession(user);
   const [ticket, setTicket] = useState<ApiTicket | null>(null);
+  const [relatedLegs, setRelatedLegs] = useState<ApiTicket[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -56,8 +61,15 @@ export default function ApiBookingDetailPage({
     if (!result.ok) {
       setError(result.error);
       setTicket(null);
+      setRelatedLegs([]);
     } else {
       setTicket(result.ticket);
+      const list = await listApiTickets();
+      if (list.ok) {
+        setRelatedLegs(findRelatedMultiCityTickets(result.ticket, list.tickets));
+      } else {
+        setRelatedLegs([]);
+      }
     }
     setLoading(false);
   }, [id]);
@@ -209,15 +221,67 @@ export default function ApiBookingDetailPage({
           <p className="text-sm text-slate-500">Loading ticket…</p>
         ) : (
           <>
+            {(() => {
+              const itinerary = getMultiCityItinerary(ticket);
+              const displaySectors =
+                itinerary.sectors.length > 1
+                  ? itinerary.sectors
+                  : relatedLegs.length
+                    ? [
+                        {
+                          airline_name: ticket.airline_name,
+                          airline_code: ticket.airline_code,
+                          flight_number: ticket.flight_number,
+                          origin: ticket.origin,
+                          destination: ticket.destination,
+                          departure_datetime: ticket.departure_datetime,
+                          arrival_datetime: ticket.arrival_datetime,
+                          duration: undefined,
+                          leg_label: "This ticket",
+                        },
+                        ...relatedLegs.map((leg, i) => ({
+                          airline_name: leg.airline_name,
+                          airline_code: leg.airline_code,
+                          flight_number: leg.flight_number,
+                          origin: leg.origin,
+                          destination: leg.destination,
+                          departure_datetime: leg.departure_datetime,
+                          arrival_datetime: leg.arrival_datetime,
+                          duration: undefined,
+                          leg_label: `Related leg ${i + 1}`,
+                          ticket_id: leg.id,
+                          pnr_number: leg.pnr_number,
+                        })),
+                      ]
+                    : ticket.segments_data || [];
+              const isMultiCity =
+                ticket.travel_type === 2 ||
+                Boolean(itinerary.groupId) ||
+                displaySectors.length > 1 ||
+                relatedLegs.length > 0;
+
+              return (
+                <>
             <div className="grid gap-4 lg:grid-cols-3">
               <Section title="Flight">
+                <KV label="Trip type" value={isMultiCity ? "Multi City" : travelTypeLabel(ticket.travel_type)} />
                 <KV label="Airline" value={`${ticket.airline_name || ""} (${ticket.airline_code})`} />
                 <KV label="Flight" value={ticket.flight_number} />
-                <KV label="Route" value={`${ticket.origin} → ${ticket.destination}`} />
+                <KV
+                  label="Route"
+                  value={
+                    isMultiCity && displaySectors.length > 1
+                      ? displaySectors
+                          .map((s) => `${String(s.origin || "")}→${String(s.destination || "")}`)
+                          .join(" · ")
+                      : `${ticket.origin} → ${ticket.destination}`
+                  }
+                />
                 <KV label="Departure" value={formatTicketDate(ticket.departure_datetime)} />
                 <KV label="Arrival" value={formatTicketDate(ticket.arrival_datetime)} />
                 <KV label="Cabin" value={ticket.cabin_class || "—"} />
                 <KV label="Refundable" value={ticket.is_refundable ? "Yes" : "No"} />
+                {itinerary.groupId && <KV label="Multi-city group" value={itinerary.groupId} />}
               </Section>
 
               <Section title="Booked by (user panel)">
@@ -280,12 +344,35 @@ export default function ApiBookingDetailPage({
               </div>
             </Section>
 
-            <Section title="Segments">
+            <Section
+              title={
+                isMultiCity
+                  ? `Multi-city itinerary (${displaySectors.length} sector${displaySectors.length === 1 ? "" : "s"})`
+                  : "Segments"
+              }
+            >
+              {isMultiCity && relatedLegs.length > 0 && (
+                <p className="mb-3 text-xs text-slate-500">
+                  Each multi-city sector is ticketed separately. Related PNRs:{" "}
+                  {relatedLegs.map((leg, i) => (
+                    <span key={leg.id}>
+                      {i > 0 ? ", " : ""}
+                      <Link
+                        href={`/admin/api-bookings/${leg.id}`}
+                        className="font-medium text-[#006aec] hover:underline"
+                      >
+                        {leg.pnr_number || leg.booking_ref || leg.id.slice(0, 8)}
+                      </Link>
+                      {` (${leg.origin}→${leg.destination})`}
+                    </span>
+                  ))}
+                </p>
+              )}
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-[#eef6ff] text-xs text-slate-600">
                     <tr>
-                      {["Airline", "Flight", "From", "To", "Dep", "Arr", "Duration"].map((h) => (
+                      {["#", "Airline", "Flight", "From", "To", "Dep", "Arr", "Duration"].map((h) => (
                         <th key={h} className="px-3 py-2 font-medium">
                           {h}
                         </th>
@@ -293,20 +380,31 @@ export default function ApiBookingDetailPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {(ticket.segments_data || []).map((s, i) => (
+                    {displaySectors.map((s, i) => (
                       <tr key={i} className="border-t border-[#e8ebef]">
+                        <td className="px-3 py-2 text-slate-500">
+                          {String(s.leg_label || i + 1)}
+                        </td>
                         <td className="px-3 py-2">{String(s.airline_name || s.airline_code || "—")}</td>
                         <td className="px-3 py-2 text-[#006aec]">{String(s.flight_number || "—")}</td>
                         <td className="px-3 py-2">{String(s.origin || "—")}</td>
                         <td className="px-3 py-2">{String(s.destination || "—")}</td>
-                        <td className="px-3 py-2">{String(s.departure_datetime || "—")}</td>
-                        <td className="px-3 py-2">{String(s.arrival_datetime || "—")}</td>
+                        <td className="px-3 py-2">
+                          {s.departure_datetime
+                            ? formatTicketDate(String(s.departure_datetime))
+                            : "—"}
+                        </td>
+                        <td className="px-3 py-2">
+                          {s.arrival_datetime
+                            ? formatTicketDate(String(s.arrival_datetime))
+                            : "—"}
+                        </td>
                         <td className="px-3 py-2">{String(s.duration || "—")}</td>
                       </tr>
                     ))}
-                    {!ticket.segments_data?.length && (
+                    {!displaySectors.length && (
                       <tr>
-                        <td colSpan={7} className="px-3 py-4 text-slate-400">
+                        <td colSpan={8} className="px-3 py-4 text-slate-400">
                           No segment data
                         </td>
                       </tr>
@@ -315,6 +413,9 @@ export default function ApiBookingDetailPage({
                 </table>
               </div>
             </Section>
+                </>
+              );
+            })()}
 
             {ticket.cancellation_data && Object.keys(ticket.cancellation_data).length > 0 && (
               <Section title="Cancellation summary">

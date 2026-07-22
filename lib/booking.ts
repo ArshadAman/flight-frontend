@@ -148,7 +148,36 @@ type BuyPayload = {
   }>;
   return_flight_key?: string;
   return_fare_id?: string;
+  flight_snapshot?: Record<string, unknown>;
 };
+
+function flightSnapshot(leg: Flight): Record<string, unknown> {
+  const travelDate = leg.travel_date || new Date().toISOString().slice(0, 10);
+  const departureDatetime = combineTravelDateAndTime(travelDate, leg.departureTime);
+  const arrivalDatetime = combineTravelDateAndTime(
+    travelDate,
+    leg.arrivalTime,
+    leg.departureTime
+  );
+  return {
+    origin: leg.origin,
+    destination: leg.destination,
+    airline: leg.airline,
+    airline_name: leg.airline,
+    airline_code: leg.airline_code || leg.id.split("-")[0],
+    flight_number: leg.id.split("-")[1] || leg.id || "000",
+    id: leg.id,
+    price: leg.price,
+    basic_amount: leg.price,
+    total_amount: leg.price,
+    duration: leg.duration,
+    travel_date: travelDate,
+    departure_datetime: departureDatetime,
+    arrival_datetime: arrivalDatetime,
+    cabin_class: undefined,
+    stops: leg.stops,
+  };
+}
 
 export async function submitFlightBooking(
   leg: Flight,
@@ -156,9 +185,22 @@ export async function submitFlightBooking(
   contact: { mobile: string; email: string },
   passengers: BookingPassenger[],
   token: string | null,
-  bookingSSRDetails: any[] = []
+  bookingSSRDetails: any[] = [],
+  extras?: {
+    multiCityGroupId?: string;
+    itineraryFlights?: Flight[];
+    travelType?: number;
+    bookingRef?: string;
+  }
 ): Promise<{ ok: true; tickets: unknown[] } | { ok: false; error: string }> {
   const apiBase = getPublicApiUrl();
+
+  if (!leg.flight_key || !leg.search_key || !leg.fare_id) {
+    return {
+      ok: false,
+      error: "Missing live flight keys from the airline API. Please search again and select a real fare.",
+    };
+  }
 
   const paxPayload = passengers.map((p) => ({
     pax_type: p.pax_type,
@@ -175,16 +217,42 @@ export async function submitFlightBooking(
       : {}),
   }));
 
-  const body: BuyPayload & { booking_ssr_details?: any[] } = {
-    search_key: leg.search_key || "mock-search-key",
-    flight_key: leg.flight_key || "mock-flight-key",
-    fare_id: leg.fare_id || "mock-fare-id",
+  const itineraryMeta =
+    extras?.multiCityGroupId && extras.itineraryFlights?.length
+      ? [
+          {
+            SSR_Type: "MULTI_CITY_ITINERARY",
+            multi_city_group_id: extras.multiCityGroupId,
+            booking_ref: extras.bookingRef,
+            sectors: extras.itineraryFlights.map((f, i) => flightToSegment(f, i)),
+          },
+        ]
+      : [];
+
+  const body: BuyPayload & {
+    booking_ssr_details?: any[];
+    travel_type?: number;
+    booking_ref?: string;
+    multi_city_group_id?: string;
+    itinerary_segments?: ReturnType<typeof flightToSegment>[];
+  } = {
+    search_key: leg.search_key || "",
+    flight_key: leg.flight_key || "",
+    fare_id: leg.fare_id || "",
     customer_mobile: contact.mobile,
     passenger_mobile: contact.mobile,
     passenger_email: contact.email,
     passengers: paxPayload,
-    booking_ssr_details: bookingSSRDetails
+    booking_ssr_details: [...bookingSSRDetails, ...itineraryMeta],
+    flight_snapshot: flightSnapshot(leg),
   };
+
+  if (extras?.travelType != null) body.travel_type = extras.travelType;
+  if (extras?.bookingRef) body.booking_ref = extras.bookingRef;
+  if (extras?.multiCityGroupId) body.multi_city_group_id = extras.multiCityGroupId;
+  if (extras?.itineraryFlights?.length) {
+    body.itinerary_segments = extras.itineraryFlights.map((f, i) => flightToSegment(f, i));
+  }
 
   if (returnLeg) {
     body.return_flight_key = returnLeg.flight_key;
@@ -225,6 +293,7 @@ export async function submitFlightBooking(
         ...body,
         return_flight_key: undefined,
         return_fare_id: undefined,
+        flight_snapshot: flightSnapshot(leg),
       }),
     });
     if (outRes.ok) {
@@ -245,12 +314,15 @@ export async function submitFlightBooking(
         },
         body: JSON.stringify({
           search_key: returnLeg.search_key || body.search_key,
-          flight_key: returnLeg.flight_key,
-          fare_id: returnLeg.fare_id,
+          flight_key: returnLeg.flight_key || "",
+          fare_id: returnLeg.fare_id || "",
           customer_mobile: contact.mobile,
           passenger_mobile: contact.mobile,
           passenger_email: contact.email,
           passengers: paxPayload,
+          booking_ssr_details: body.booking_ssr_details,
+          travel_type: body.travel_type,
+          flight_snapshot: flightSnapshot(returnLeg),
         }),
       });
       if (retRes.ok) {
@@ -271,11 +343,43 @@ export async function submitFlightBooking(
   return { ok: false, error: "Unable to complete booking with the provider" };
 }
 
+export function flightToSegment(leg: Flight, index: number) {
+  const travelDate =
+    leg.travel_date || new Date().toISOString().slice(0, 10);
+  const departureDatetime = combineTravelDateAndTime(travelDate, leg.departureTime);
+  const arrivalDatetime = combineTravelDateAndTime(
+    travelDate,
+    leg.arrivalTime,
+    leg.departureTime
+  );
+  return {
+    segment_id: index,
+    leg_label: `Flight ${index + 1}`,
+    origin: leg.origin,
+    destination: leg.destination,
+    origin_city: leg.origin,
+    destination_city: leg.destination,
+    departure_datetime: departureDatetime,
+    arrival_datetime: arrivalDatetime,
+    duration: leg.duration,
+    airline_name: leg.airline,
+    airline_code: leg.airline_code || leg.id.split("-")[0],
+    flight_number: leg.id.split("-")[1] || leg.id || "000",
+    travel_date: travelDate,
+    price: leg.price,
+  };
+}
+
 export function buildOfflineTicket(
   draft: BookingDraft,
   passengers: BookingPassenger[],
   leg: Flight,
-  legLabel: string
+  legLabel: string,
+  opts?: {
+    multiCityGroupId?: string;
+    bookingRef?: string;
+    itineraryFlights?: Flight[];
+  }
 ) {
   const pnr = `PNR${Math.floor(100000 + Math.random() * 900000)}`;
   const travelDate =
@@ -289,11 +393,35 @@ export function buildOfflineTicket(
     leg.departureTime
   );
 
+  const itinerary = opts?.itineraryFlights?.length
+    ? opts.itineraryFlights.map((f, i) => flightToSegment(f, i))
+    : [
+        {
+          segment_id: 0,
+          leg_label: legLabel,
+          origin: leg.origin,
+          destination: leg.destination,
+          origin_city: leg.origin,
+          destination_city: leg.destination,
+          departure_datetime: departureDatetime,
+          arrival_datetime: arrivalDatetime,
+          duration: leg.duration,
+          airline_name: leg.airline,
+          airline_code: leg.airline_code || leg.id.split("-")[0],
+          flight_number: leg.id.split("-")[1] || leg.id || "000",
+          travel_date: travelDate,
+          price: leg.price,
+        },
+      ];
+
+  const bookingRef = opts?.bookingRef || pnr;
+
   return {
     id: `ticket-${Math.random().toString(36).slice(2, 11)}`,
     pnr_number: pnr,
     ticket_number: `ETKT-${Math.floor(1000000 + Math.random() * 9000000)}`,
-    booking_ref: pnr,
+    booking_ref: bookingRef,
+    multi_city_group_id: opts?.multiCityGroupId,
     status: "CONFIRMED",
     origin: leg.origin,
     destination: leg.destination,
@@ -317,19 +445,20 @@ export function buildOfflineTicket(
       outbound_meal: p.outbound_meal,
       return_meal: p.return_meal,
     })),
-    segments_data: [
-      {
-        origin: leg.origin,
-        destination: leg.destination,
-        origin_city: leg.origin,
-        destination_city: leg.destination,
-        departure_datetime: departureDatetime,
-        arrival_datetime: arrivalDatetime,
-        duration: leg.duration,
-        airline_name: leg.airline,
-        flight_number: leg.id.split("-")[1] || leg.id || "000",
-      },
-    ],
+    segments_data: itinerary,
+    ssr_data: {
+      multi_city_group_id: opts?.multiCityGroupId,
+      BookingSSRDetails: opts?.multiCityGroupId
+        ? [
+            {
+              SSR_Type: "MULTI_CITY_ITINERARY",
+              multi_city_group_id: opts.multiCityGroupId,
+              booking_ref: bookingRef,
+              sectors: itinerary,
+            },
+          ]
+        : [],
+    },
     leg_label: legLabel,
     departure_display: leg.departureTime,
     arrival_display: leg.arrivalTime,

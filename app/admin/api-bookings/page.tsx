@@ -13,6 +13,7 @@ import {
   formatTicketDateOnly,
   formatTicketMoney,
   isAdminSession,
+  getMultiCityItinerary,
   type ApiTicket,
   type ApiTicketStatus,
 } from "@/lib/admin/tickets-api";
@@ -226,10 +227,25 @@ export default function ApiBookingsPage() {
                 header: "Route",
                 render: (r) => {
                   const t = r as unknown as ApiTicket;
+                  const itinerary = getMultiCityItinerary(t);
+                  const isMulti =
+                    t.travel_type === 2 ||
+                    Boolean(itinerary.groupId) ||
+                    itinerary.sectors.length > 1;
                   return (
-                    <p className="text-sm font-medium">
-                      {t.origin} → {t.destination}
-                    </p>
+                    <div>
+                      <p className="text-sm font-medium">
+                        {t.origin} → {t.destination}
+                      </p>
+                      {isMulti && (
+                        <p className="text-[11px] font-semibold text-amber-700">
+                          Multi City
+                          {itinerary.sectors.length > 1
+                            ? ` · ${itinerary.sectors.length} sectors`
+                            : ""}
+                        </p>
+                      )}
+                    </div>
                   );
                 },
               },

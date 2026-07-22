@@ -12,7 +12,7 @@ import {
   loadBookingDraft,
   submitFlightBooking,
 } from "@/lib/booking";
-import { validatePassengerDob } from "@/lib/passengerAge";
+import { validatePassengerDob, validatePassportExpiry } from "@/lib/passengerAge";
 import { useAuth } from "@/context/AuthContext";
 import { BookingPassengerDataPanel } from "./BookingPassengerDataPanel";
 import { BookingConfirmation } from "./BookingConfirmation";
@@ -74,6 +74,13 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
         setError(dobErr);
         return;
       }
+      const passportErr = validatePassportExpiry(p.passport_expiry, draft.departureDate, p.label, {
+        required: Boolean(p.passport_number?.trim()),
+      });
+      if (passportErr) {
+        setError(passportErr);
+        return;
+      }
     }
 
     // Seats/meals are only available post-booking via Add-ons / SSR.
@@ -88,6 +95,15 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
         : null;
 
     if (multiLegs) {
+      const multiCityGroupId = `MC-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const sharedBookingRef = `MC${Math.floor(100000 + Math.random() * 900000)}`;
+      const multiExtras = {
+        multiCityGroupId,
+        bookingRef: sharedBookingRef,
+        itineraryFlights: multiLegs,
+        travelType: 2,
+      };
+
       const allTickets: unknown[] = [];
       let failed = false;
       for (const leg of multiLegs) {
@@ -97,7 +113,8 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
           { mobile: contactMobile, email: contactEmail },
           passengers,
           token,
-          bookingSSRDetails
+          bookingSSRDetails,
+          multiExtras
         );
         if (result.ok) {
           allTickets.push(...result.tickets);
@@ -118,11 +135,19 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
       }
 
       const stored: Array<Record<string, unknown>> = multiLegs.map((leg, i) => {
-        const ticket = buildOfflineTicket(draft, passengers, leg, `Flight ${i + 1}`) as Record<
-          string,
-          unknown
-        >;
-        ticket.ssr_data = { BookingSSRDetails: bookingSSRDetails };
+        const ticket = buildOfflineTicket(draft, passengers, leg, `Flight ${i + 1}`, {
+          multiCityGroupId,
+          bookingRef: sharedBookingRef,
+          itineraryFlights: multiLegs,
+        }) as Record<string, unknown>;
+        const prevSsr = (ticket.ssr_data as Record<string, unknown>) || {};
+        const prevDetails = Array.isArray(prevSsr.BookingSSRDetails)
+          ? (prevSsr.BookingSSRDetails as unknown[])
+          : [];
+        ticket.ssr_data = {
+          ...prevSsr,
+          BookingSSRDetails: [...prevDetails, ...bookingSSRDetails],
+        };
         return ticket;
       });
       try {

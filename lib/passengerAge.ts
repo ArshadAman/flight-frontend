@@ -153,3 +153,48 @@ function parseYmd(value: string): Date | null {
   if (d.getFullYear() !== y || d.getMonth() !== mo || d.getDate() !== day) return null;
   return d;
 }
+
+/**
+ * Passport must still be valid on the travel date (common airline rule).
+ * Calendar allows up to 15 years ahead.
+ */
+export function passportExpiryBounds(travelDateIso: string | undefined | null): {
+  minDate: Date;
+  maxDate: Date;
+  hint: string;
+} {
+  const today = startOfLocalDay(new Date());
+  const travel = parseYmd(travelDateIso || "") || today;
+  const minDate = travel > today ? travel : today;
+  const maxDate = addYearsClamped(today, 15);
+  return {
+    minDate,
+    maxDate,
+    hint: `Passport must be valid on the travel date (${formatYmd(travel)}). Expiry cannot be in the past.`,
+  };
+}
+
+export function validatePassportExpiry(
+  expiryIso: string | undefined | null,
+  travelDateIso: string | undefined | null,
+  passengerLabel = "Passenger",
+  opts?: { required?: boolean }
+): string | null {
+  const required = opts?.required ?? false;
+  if (!expiryIso?.trim()) {
+    return required ? `${passengerLabel}: Passport expiry date is required.` : null;
+  }
+  const expiry = parseYmd(expiryIso);
+  if (!expiry) {
+    return `${passengerLabel}: Enter a valid passport expiry date.`;
+  }
+  const travel = parseYmd(travelDateIso || "") || startOfLocalDay(new Date());
+  if (expiry < travel) {
+    return `${passengerLabel}: Passport expires before the travel date (${formatYmd(travel)}).`;
+  }
+  const { maxDate } = passportExpiryBounds(travelDateIso);
+  if (expiry > maxDate) {
+    return `${passengerLabel}: Passport expiry looks too far in the future.`;
+  }
+  return null;
+}

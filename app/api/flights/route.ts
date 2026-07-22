@@ -72,14 +72,6 @@ function formatTime12h(date: Date): string {
     return `${hoursStr}:${minutesStr} ${ampm}`;
 }
 
-const MOCK_AIRLINES = [
-    { code: "AI", name: "Air India" },
-    { code: "6E", name: "IndiGo" },
-    { code: "UK", name: "Vistara" },
-    { code: "SG", name: "SpiceJet" },
-    { code: "G8", name: "Go First" },
-];
-
 function normalizeFareType(raw: unknown): string {
     const s = String(raw || "PUB").toUpperCase();
     if (s.includes("CORP") || s === "CP") return "CORP";
@@ -208,88 +200,85 @@ function mapBackendFlight(flight: any, fare: any, idx: number, searchKey: string
     };
 }
 
-// Fallback mock generator in case the backend is down
-function generateMockFlights(
-    origin: string,
-    destination: string,
-    count: number = 4,
-    studentFare: boolean = false,
-    defenceFare: boolean = false,
-    corporateFare: boolean = false,
-    isB2b: boolean = false,
-    travelDate?: string
-) {
-    if (!origin || !destination) return [];
+type LiveSearchFilters = {
+    studentFareSearch: boolean;
+    defenceFareSearch: boolean;
+    corporateFareSearch: boolean;
+    isB2b: boolean;
+    nonStop: boolean;
+    baggageFaresOnly: boolean;
+    airlineCodeParam: string;
+};
 
-    const basePrices = [3200, 3800, 4500, 5100, 6200, 7500];
-    const equipmentTypes = ["Boeing 737", "Airbus A320", "Boeing 787", "ATR 72"];
-    const seed = origin.length + destination.length;
-
-    return Array.from({ length: count }).map((_, i) => {
-        const airlineMeta = MOCK_AIRLINES[(seed + i) % MOCK_AIRLINES.length];
-        const basePrice = basePrices[(seed + i * 2) % basePrices.length];
-        const stops = i % 3 === 0 ? 1 : 0;
-
-        const depHour = 6 + (i * 3);
-        const depPeriod = depHour >= 12 ? "PM" : "AM";
-        const displayDepHour = depHour > 12 ? depHour - 12 : depHour;
-
-        const durationHours = 2 + (i % 2);
-        const durationMins = 15 + (i * 15 % 60);
-        const durationStr = `${durationHours}h ${durationMins}m`;
-
-        const arrHour = depHour + durationHours;
-        const arrPeriod = arrHour >= 12 && arrHour < 24 ? "PM" : "AM";
-        const displayArrHour = arrHour > 12 ? (arrHour === 24 ? 12 : arrHour - 12) : arrHour;
-
-        let fareType = "PUB";
-        if (studentFare) {
-            fareType = "STU";
-        } else if (defenceFare) {
-            fareType = "DEF";
-        } else if (corporateFare) {
-            fareType = "CORP";
-        } else if (isB2b) {
-            fareType = i % 2 === 0 ? "CORP" : "PUB";
-        }
-
-        return {
-            id: `${airlineMeta.code}-${100 + i}-${fareType}`,
-            airline: airlineMeta.name,
-            airline_code: airlineMeta.code,
-            origin: origin.charAt(0).toUpperCase() + origin.slice(1).toLowerCase(),
-            destination: destination.charAt(0).toUpperCase() + destination.slice(1).toLowerCase(),
-            departureTime: `${displayDepHour.toString().padStart(2, "0")}:${durationMins.toString().padStart(2, "0")} ${depPeriod}`,
-            arrivalTime: `${displayArrHour.toString().padStart(2, "0")}:${((durationMins + 30) % 60).toString().padStart(2, "0")} ${arrPeriod}`,
-            duration: durationStr,
-            duration_minutes: durationHours * 60 + durationMins,
-            departure_minutes: depHour * 60 + durationMins,
-            arrival_minutes: arrHour * 60 + ((durationMins + 30) % 60),
-            price: basePrice + (stops === 0 ? 500 : 0) + (Math.floor(Math.random() * 500)),
-            stops,
-            fare_type: fareType,
-            has_baggage: i % 2 === 0,
-            baggage_label: i % 2 === 0 ? "15kg" : undefined,
-            equipment: equipmentTypes[i % equipmentTypes.length],
-            ticket_time_limit_hours: i % 2 === 0 ? 12 : 24,
-            cabin_class: "Economy",
-            meal_available: i % 3 !== 0,
-            food_onboard: i % 2 === 0,
-            meal_options:
-                i % 3 !== 0
-                    ? parseMealOptionsFromApi([
-                          { meal_code: "veg", meal_name: "Vegetarian", price: 249 },
-                          { meal_code: "nonveg", meal_name: "Non-veg", price: 299 },
-                      ])
-                    : undefined,
-            tax_amount: Math.round((basePrice + (stops === 0 ? 500 : 0)) * 0.15),
-            base_amount: basePrice,
-            search_key: "mock-search-key",
-            flight_key: `mock-flight-${i}`,
-            fare_id: `mock-fare-${i}`,
-            travel_date: travelDate || new Date().toISOString().slice(0, 10),
-        };
+async function fetchBackendSearch(backendUrl: string, postPayload: Record<string, unknown>) {
+    const response = await fetch(`${backendUrl}/api/v1/flights/search/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(postPayload),
+        cache: "no-store",
     });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Backend search failed with status ${response.status}: ${errorText}`);
+    }
+
+    let backendResult = await response.json();
+    if (backendResult && backendResult.data && !backendResult.flights) {
+        backendResult = backendResult.data;
+    }
+    if (!backendResult || !backendResult.flights) {
+        throw new Error(`Backend returned unsuccessful search: ${JSON.stringify(backendResult)}`);
+    }
+    return backendResult as { search_key?: string; flights: any[] };
+}
+
+function mapAndFilterLiveFlights(
+    backendResult: { search_key?: string; flights: any[] },
+    filters: LiveSearchFilters
+) {
+    const searchKey = backendResult.search_key || "";
+    const allFaresMapped: any[] = [];
+    backendResult.flights.forEach((flight: any, idx: number) => {
+        if (flight.fares && flight.fares.length > 0) {
+            flight.fares.forEach((fare: any) => {
+                allFaresMapped.push(mapBackendFlight(flight, fare, idx, searchKey));
+            });
+        } else {
+            allFaresMapped.push(mapBackendFlight(flight, {}, idx, searchKey));
+        }
+    });
+
+    const cheapestByFlightKey = new Map<string, any>();
+    for (const f of allFaresMapped) {
+        const parts = (f.id || "").split("-");
+        const key = `${parts[0]}-${parts[1]}-${f.origin}-${f.destination}`;
+        const existing = cheapestByFlightKey.get(key);
+        if (!existing || f.price < existing.price) {
+            cheapestByFlightKey.set(key, f);
+        }
+    }
+    let mapped: any[] = Array.from(cheapestByFlightKey.values());
+
+    if (filters.studentFareSearch) {
+        mapped = mapped.filter((f) => f.is_agent_flight || f.fare_type === "STU");
+    } else if (filters.defenceFareSearch) {
+        mapped = mapped.filter((f) => f.is_agent_flight || f.fare_type === "DEF");
+    } else if (filters.corporateFareSearch) {
+        mapped = mapped.filter((f) => f.is_agent_flight || f.fare_type === "CORP");
+    } else if (filters.isB2b) {
+        mapped = mapped.filter((f) => f.is_agent_flight || f.fare_type === "CORP" || f.fare_type === "PUB");
+    } else {
+        mapped = mapped.filter((f) => f.is_agent_flight || f.fare_type === "PUB");
+    }
+
+    if (filters.nonStop) mapped = mapped.filter((f) => f.stops === 0);
+    if (filters.baggageFaresOnly) mapped = mapped.filter((f) => f.has_baggage);
+    if (filters.airlineCodeParam) {
+        mapped = mapped.filter((f) => f.airline_code?.toUpperCase() === filters.airlineCodeParam);
+    }
+
+    return mapped;
 }
 
 export async function GET(request: Request) {
@@ -361,6 +350,14 @@ export async function GET(request: Request) {
         const rM = String(futureReturn.getMonth() + 1).padStart(2, '0');
         const rD = String(futureReturn.getDate()).padStart(2, '0');
         finalReturnDate = `${rY}-${rM}-${rD}`;
+    } else if (tripType === "round-trip" && returnDate && returnDate === departureDate) {
+        // Same-day return often fails FlyShop validation — bump return +1 day
+        const depDateObj = new Date(departureDate + "T12:00:00");
+        const futureReturn = new Date(depDateObj.getTime() + 24 * 60 * 60 * 1000);
+        const rY = futureReturn.getFullYear();
+        const rM = String(futureReturn.getMonth() + 1).padStart(2, '0');
+        const rD = String(futureReturn.getDate()).padStart(2, '0');
+        finalReturnDate = `${rY}-${rM}-${rD}`;
     } else if (tripType === "round-trip" && !finalReturnDate) {
         const depDateObj = new Date(finalTravelDate);
         const futureReturn = new Date(depDateObj.getTime() + 3 * 24 * 60 * 60 * 1000);
@@ -373,6 +370,27 @@ export async function GET(request: Request) {
     // Build multi-city segments if applicable
     const segCount = parseInt(searchParams.get("segCount") || "0", 10);
     const isMultiCity = tripType === "multi-city" && segCount >= 2;
+
+    const filters: LiveSearchFilters = {
+        studentFareSearch,
+        defenceFareSearch,
+        corporateFareSearch,
+        isB2b,
+        nonStop,
+        baggageFaresOnly,
+        airlineCodeParam,
+    };
+
+    const basePaxPayload = {
+        adult_count: adults,
+        child_count: children,
+        infant_count: infants,
+        class_of_travel: cabinCode,
+        airline_code: airlineCodeParam,
+        student_fare_search: studentFareSearch,
+        defence_fare_search: defenceFareSearch,
+        sr_citizen_search: srCitizenSearch,
+    };
 
     let postPayload: Record<string, unknown>;
 
@@ -396,204 +414,91 @@ export async function GET(request: Request) {
         postPayload = {
             travel_type: 2,
             trip_segments: tripSegments,
-            adult_count: adults,
-            child_count: children,
-            infant_count: infants,
-            class_of_travel: cabinCode,
-            airline_code: airlineCodeParam,
-            student_fare_search: studentFareSearch,
-            defence_fare_search: defenceFareSearch,
-            sr_citizen_search: srCitizenSearch,
+            ...basePaxPayload,
         };
         console.log("[BFF] Multi-city payload built:", postPayload);
     } else {
+        // Always one-way to FlyShop. Round-trip uses two one-way calls (provider RT search returns 9999).
         postPayload = {
             origin: originIata,
             destination: destinationIata,
             travel_date: finalTravelDate,
-            return_date: (tripType === "round-trip" && finalReturnDate) ? finalReturnDate : null,
-            adult_count: adults,
-            child_count: children,
-            infant_count: infants,
-            class_of_travel: cabinCode,
-            airline_code: airlineCodeParam,
-            student_fare_search: studentFareSearch,
-            defence_fare_search: defenceFareSearch,
-            sr_citizen_search: srCitizenSearch,
+            return_date: null,
+            ...basePaxPayload,
         };
     }
 
     console.log(`BFF Request to backend search URL: ${backendUrl}/api/v1/flights/search/ with payload:`, postPayload);
 
     try {
-        const response = await fetch(`${backendUrl}/api/v1/flights/search/`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(postPayload),
-            cache: "no-store",
-        });
+        if (tripType === "round-trip" && !isMultiCity) {
+            const returnPayload = {
+                origin: destinationIata,
+                destination: originIata,
+                travel_date: finalReturnDate || finalTravelDate,
+                return_date: null,
+                ...basePaxPayload,
+            };
+            console.log("[BFF] Round-trip: dual one-way live searches", { outbound: postPayload, inbound: returnPayload });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Backend search failed with status ${response.status}: ${errorText}`);
+            const [outResult, retResult] = await Promise.all([
+                fetchBackendSearch(backendUrl, postPayload),
+                fetchBackendSearch(backendUrl, returnPayload),
+            ]);
+
+            const outboundFlights = mapAndFilterLiveFlights(outResult, filters);
+            const returnFlights = mapAndFilterLiveFlights(retResult, filters);
+
+            console.log("[BFF Flight Search API] Round-trip live counts:", {
+                outbound: outboundFlights.length,
+                return: returnFlights.length,
+            });
+
+            return NextResponse.json({
+                flights: outboundFlights,
+                returnFlights,
+                source: "api",
+            });
         }
 
-        let backendResult = await response.json();
-        
-        // Unwrap CustomRenderer success envelope if present
-        if (backendResult && backendResult.data && !backendResult.flights) {
-            backendResult = backendResult.data;
-        }
-        
-        if (!backendResult || !backendResult.flights) {
-            throw new Error(`Backend returned unsuccessful search: ${JSON.stringify(backendResult)}`);
-        }
+        const backendResult = await fetchBackendSearch(backendUrl, postPayload);
+        const mapped = mapAndFilterLiveFlights(backendResult, filters);
 
-        const searchKey = backendResult.search_key;
-
-        // Map ALL fares first (one entry per fare bucket)
-        let allFaresMapped: any[] = [];
-        backendResult.flights.forEach((flight: any, idx: number) => {
-            if (flight.fares && flight.fares.length > 0) {
-                flight.fares.forEach((fare: any) => {
-                    allFaresMapped.push(mapBackendFlight(flight, fare, idx, searchKey));
-                });
-            } else {
-                allFaresMapped.push(mapBackendFlight(flight, {}, idx, searchKey));
-            }
-        });
-
-        // Deduplicate: per unique flight id (airline + number) + route keep lowest-price fare only.
-        // This prevents the same flight appearing multiple times or GDS/Agent duplicates showing up.
-        // We split f.id (e.g. "6E-2012-PUB") to get the airline and flight number parts, ignoring the fare type suffix.
-        const cheapestByFlightKey = new Map<string, any>();
-        for (const f of allFaresMapped) {
-            const parts = (f.id || "").split("-");
-            const key = `${parts[0]}-${parts[1]}-${f.origin}-${f.destination}`;
-            const existing = cheapestByFlightKey.get(key);
-            if (!existing || f.price < existing.price) {
-                cheapestByFlightKey.set(key, f);
-            }
-        }
-        let outboundMapped: any[] = Array.from(cheapestByFlightKey.values());
-
-        console.log("[BFF Flight Search API] outboundMapped after dedup (unique flights):", outboundMapped.length, "(was", allFaresMapped.length, "fares)");
-        const fareTypeCounts = outboundMapped.reduce((acc: any, f: any) => {
-            acc[f.fare_type] = (acc[f.fare_type] || 0) + 1;
-            return acc;
-        }, {});
-        console.log("[BFF Flight Search API] fare_type counts after dedup:", fareTypeCounts);
-
-
-        // Filter live fares based on search parameters, allowing local agent flights to bypass GDS fare filters.
-        if (studentFareSearch) {
-            outboundMapped = outboundMapped.filter((f: any) => f.is_agent_flight || f.fare_type === "STU");
-            console.log("[BFF Flight Search API] filtered by STU, remaining:", outboundMapped.length);
-        } else if (defenceFareSearch) {
-            outboundMapped = outboundMapped.filter((f: any) => f.is_agent_flight || f.fare_type === "DEF");
-            console.log("[BFF Flight Search API] filtered by DEF, remaining:", outboundMapped.length);
-        } else if (corporateFareSearch) {
-            outboundMapped = outboundMapped.filter((f: any) => f.is_agent_flight || f.fare_type === "CORP");
-            console.log("[BFF Flight Search API] filtered by CORP, remaining:", outboundMapped.length);
-        } else if (isB2b) {
-            outboundMapped = outboundMapped.filter((f: any) => f.is_agent_flight || f.fare_type === "CORP" || f.fare_type === "PUB");
-            console.log("[BFF Flight Search API] filtered by CORP/PUB (B2B), remaining:", outboundMapped.length);
-        } else {
-            outboundMapped = outboundMapped.filter((f: any) => f.is_agent_flight || f.fare_type === "PUB");
-            console.log("[BFF Flight Search API] filtered by PUB, remaining:", outboundMapped.length);
-        }
-
-        if (nonStop) {
-            outboundMapped = outboundMapped.filter((f: any) => f.stops === 0);
-        }
-        if (baggageFaresOnly) {
-            outboundMapped = outboundMapped.filter((f: any) => f.has_baggage);
-        }
-        if (airlineCodeParam) {
-            outboundMapped = outboundMapped.filter(
-                (f: any) => f.airline_code?.toUpperCase() === airlineCodeParam
-            );
-        }
-
-        // For round-trip, we split the backend results. The backend normalization returns return flights mixed in or separate.
-        // Let's check segments of the returned flights: if a flight has return_flight: true in segments, it's a return flight.
-        let outboundFlights = outboundMapped.filter((f: any) => {
-            // Find backend flight structure for this flight
+        // Multi-city / one-way: if provider marks return segments, split (rare for one-way).
+        let outboundFlights = mapped.filter((f: any) => {
             const origFlight = backendResult.flights.find((of: any) => of.flight_key === f.flight_key);
-            if (!origFlight) {
-                console.log("[BFF Flight Search API] WARNING: origFlight not found for flight_key:", f.flight_key);
-                return false;
-            }
-            const isOut = origFlight.segments.every((s: any) => !s.return_flight);
-            return isOut;
+            if (!origFlight?.segments) return true;
+            return origFlight.segments.every((s: any) => !s.return_flight);
         });
 
-        let returnFlights = outboundMapped.filter((f: any) => {
-            const origFlight = backendResult.flights.find((of: any) => of.flight_key === f.flight_key);
-            if (!origFlight) return false;
-            const isRet = origFlight.segments.some((s: any) => s.return_flight);
-            return isRet;
-        });
+        if (outboundFlights.length === 0) outboundFlights = mapped;
 
-        console.log("[BFF Flight Search API] outboundFlights count:", outboundFlights.length, "returnFlights count:", returnFlights.length);
-
-        // Fallback: If return flights list is empty but trip type is round-trip, let's auto-generate some mock return flights using search
-        if (tripType === "round-trip" && returnFlights.length === 0) {
-            returnFlights = generateMockFlights(destinationStr, originStr, 3, studentFareSearch, defenceFareSearch, corporateFareSearch, isB2b, finalReturnDate || undefined);
-        }
-
-        const liveResponse = {
-            flights: outboundFlights.length > 0 ? outboundFlights : outboundMapped,
-            returnFlights: tripType === "round-trip" ? returnFlights : undefined
-        };
-        console.log("[BFF Flight Search API] Successfully fetched and mapped live flights from backend:", {
+        console.log("[BFF Flight Search API] Successfully fetched live flights:", {
             origin: originIata,
             destination: destinationIata,
             tripType,
             departureDate,
-            outboundCount: liveResponse.flights.length,
-            returnCount: liveResponse.returnFlights?.length || 0,
-            sampleOutbound: liveResponse.flights[0] || null
+            outboundCount: outboundFlights.length,
+            sampleOutbound: outboundFlights[0] || null,
         });
-        return NextResponse.json(liveResponse);
+
+        return NextResponse.json({
+            flights: outboundFlights,
+            source: "api",
+        });
 
     } catch (error) {
-        console.error("[BFF Flight Search API] Failed to fetch live flights, falling back to mock flights. Error:", error);
-        
-        let outboundMock = generateMockFlights(originStr, destinationStr, 5, studentFareSearch, defenceFareSearch, corporateFareSearch, isB2b, finalTravelDate || undefined);
-        if (nonStop) outboundMock = outboundMock.filter((f) => f.stops === 0);
-        if (baggageFaresOnly) outboundMock = outboundMock.filter((f) => f.has_baggage);
-        if (airlineCodeParam) {
-            outboundMock = outboundMock.filter(
-                (f) => f.airline_code?.toUpperCase() === airlineCodeParam
-            );
-        }
-
-        let returnMock: any[] = [];
-        if (tripType === "round-trip") {
-            returnMock = generateMockFlights(destinationStr, originStr, 4, studentFareSearch, defenceFareSearch, corporateFareSearch, isB2b, finalReturnDate || undefined);
-            if (nonStop) returnMock = returnMock.filter((f) => f.stops === 0);
-            if (baggageFaresOnly) returnMock = returnMock.filter((f) => f.has_baggage);
-            if (airlineCodeParam) {
-                returnMock = returnMock.filter(
-                    (f) => f.airline_code?.toUpperCase() === airlineCodeParam
-                );
-            }
-        }
-
-        const mockResponse = {
-            flights: outboundMock,
-            returnFlights: tripType === "round-trip" ? returnMock : undefined
-        };
-        console.log("[BFF Flight Search API] Returning simulated/mock flight results fallback:", {
-            origin: originIata,
-            destination: destinationIata,
-            tripType,
-            departureDate,
-            outboundCount: mockResponse.flights.length,
-            returnCount: mockResponse.returnFlights?.length || 0,
-            sampleOutbound: mockResponse.flights[0] || null
-        });
-        return NextResponse.json(mockResponse);
+        const message = error instanceof Error ? error.message : "Unknown search error";
+        console.error("[BFF Flight Search API] Live search failed (no mock fallback):", message);
+        return NextResponse.json(
+            {
+                flights: [],
+                returnFlights: tripType === "round-trip" ? [] : undefined,
+                source: "api",
+                error: "Unable to load live flights from the airline provider. Please try again.",
+                detail: message,
+            },
+            { status: 502 }
+        );
     }
 }

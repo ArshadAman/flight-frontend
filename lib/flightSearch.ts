@@ -25,13 +25,13 @@ export type FlightSearchFormData = {
 };
 
 
-export function cabinToClassCode(cabin: string): string {
+export function cabinToClassCode(cabin: string): number {
   if (cabin === "Prem. Economy" || cabin === "Premium Economy" || cabin === "Premium") {
-    return "1";
+    return 1;
   }
-  if (cabin === "Business") return "2";
-  if (cabin === "First" || cabin === "First Class") return "3";
-  return "0";
+  if (cabin === "Business") return 2;
+  if (cabin === "First" || cabin === "First Class") return 3;
+  return 0; // Economy
 }
 
 export function formatDateParam(date?: Date): string | undefined {

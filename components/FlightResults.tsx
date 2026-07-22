@@ -304,23 +304,11 @@ export function FlightResults({
   const [selectedBaggageOption, setSelectedBaggageOption] = useState<AddOnBaggage | null>(null);
   const [selectedOutboundId, setSelectedOutboundId] = useState<string | null>(null);
   const [selectedReturnId, setSelectedReturnId] = useState<string | null>(null);
+  /** Mobile: Yatra-style Outbound | Return tabs for round-trip. */
+  const [rtMobileTab, setRtMobileTab] = useState<"outbound" | "return">("outbound");
 
   // B2C Consumer Booking States
   const [selectionError, setSelectionError] = useState<string | null>(null);
-
-  const selectedOutbound = useMemo(() => {
-    if (!selectedOutboundId) return null;
-    const found = flights.find((f, idx) => `${f.flight_key || f.id}-${idx}` === selectedOutboundId);
-    if (found) return found;
-    return flights.find(f => f.id === selectedOutboundId || f.flight_key === selectedOutboundId) || null;
-  }, [flights, selectedOutboundId]);
-
-  const selectedReturn = useMemo(() => {
-    if (!selectedReturnId) return null;
-    const found = returnFlights.find((f, idx) => `${f.flight_key || f.id}-${idx}` === selectedReturnId);
-    if (found) return found;
-    return returnFlights.find(f => f.id === selectedReturnId || f.flight_key === selectedReturnId) || null;
-  }, [returnFlights, selectedReturnId]);
 
   // Accordion active state trackers
   const [filtersOpen, setFiltersOpen] = useState({
@@ -493,6 +481,63 @@ export function FlightResults({
 
   const filteredOutbound = useMemo(() => processFlights(flights), [flights, processFlights]);
   const filteredReturn = useMemo(() => processFlights(returnFlights), [returnFlights, processFlights]);
+
+  // Resolve against the same filtered lists used for card keys (sort/filter changes indices).
+  const resolveSelectedFlight = (
+    list: Flight[],
+    selectedId: string | null
+  ): Flight | null => {
+    if (!selectedId) return null;
+    const byKey = list.find((f, idx) => `${f.flight_key || f.id}-${idx}` === selectedId);
+    if (byKey) return byKey;
+    const bare = selectedId.replace(/-\d+$/, "");
+    return (
+      list.find((f) => f.flight_key === selectedId || f.id === selectedId) ||
+      list.find((f) => f.flight_key === bare || f.id === bare) ||
+      null
+    );
+  };
+
+  const selectedOutbound = useMemo(
+    () => resolveSelectedFlight(filteredOutbound, selectedOutboundId),
+    [filteredOutbound, selectedOutboundId]
+  );
+
+  const selectedReturn = useMemo(
+    () => resolveSelectedFlight(filteredReturn, selectedReturnId),
+    [filteredReturn, selectedReturnId]
+  );
+
+  // Pre-select first flight in each leg (Yatra-style) when lists load / filters clear selection
+  useEffect(() => {
+    if (!isRoundTrip) return;
+    if (filteredOutbound.length === 0) {
+      setSelectedOutboundId(null);
+      return;
+    }
+    const stillValid = filteredOutbound.some(
+      (f, idx) => `${f.flight_key || f.id}-${idx}` === selectedOutboundId
+    );
+    if (!stillValid) {
+      const f = filteredOutbound[0];
+      setSelectedOutboundId(`${f.flight_key || f.id}-0`);
+    }
+  }, [isRoundTrip, filteredOutbound, selectedOutboundId]);
+
+  useEffect(() => {
+    if (!isRoundTrip) return;
+    if (filteredReturn.length === 0) {
+      setSelectedReturnId(null);
+      return;
+    }
+    const stillValid = filteredReturn.some(
+      (f, idx) => `${f.flight_key || f.id}-${idx}` === selectedReturnId
+    );
+    if (!stillValid) {
+      const f = filteredReturn[0];
+      setSelectedReturnId(`${f.flight_key || f.id}-0`);
+    }
+  }, [isRoundTrip, filteredReturn, selectedReturnId]);
 
   // Handle book click
   const persistDraftAndNavigate = (outbound: Flight, returnFlight?: Flight) => {
@@ -861,9 +906,158 @@ export function FlightResults({
     );
   };
 
+  /** Yatra-style compact cards for side-by-side / tabbed round-trip. */
+  const renderRoundTripColumn = (
+    flightList: Flight[],
+    isReturnFlight: boolean,
+    columnTitle: string,
+    columnSub: string
+  ) => {
+    const currentSelectedId = isReturnFlight ? selectedReturnId : selectedOutboundId;
+    const setCurrentSelectedId = isReturnFlight ? setSelectedReturnId : setSelectedOutboundId;
+
+    return (
+      <div className="flex min-h-0 flex-col">
+        <div className="mb-3 sticky top-0 z-10 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <p className="text-[15px] font-black text-[#121121]">{columnTitle}</p>
+          <p className="text-[12px] font-semibold text-slate-500">{columnSub}</p>
+        </div>
+
+        {flightList.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-10 text-center text-sm font-bold text-slate-400">
+            No flights match filters
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {flightList.map((flight, idx) => {
+              const uniqueKey = `${flight.flight_key || flight.id}-${idx}`;
+              const isSelected = currentSelectedId === uniqueKey;
+              const airlineCode = flight.airline_code || flight.id.split("-")[0];
+              const flightNo = flight.id.includes("-")
+                ? flight.id
+                : `${airlineCode}-${flight.id}`;
+              const travelDate = flight.travel_date || (isReturnFlight ? returnDate : departureDate);
+              let dateLabel = "—";
+              if (travelDate) {
+                try {
+                  dateLabel = format(parseISO(travelDate), "d MMM");
+                } catch {
+                  dateLabel = travelDate;
+                }
+              }
+              const stopsLabel =
+                flight.stops === 0 ? "Non Stop" : flight.stops === 1 ? "1 Stop" : `${flight.stops} Stops`;
+
+              return (
+                <button
+                  key={uniqueKey}
+                  type="button"
+                  onClick={() => setCurrentSelectedId(uniqueKey)}
+                  className={cn(
+                    "w-full text-left bg-white rounded-xl border overflow-hidden transition-all shadow-sm hover:shadow-md",
+                    isSelected
+                      ? "border-[#377BD7] ring-1 ring-[#377BD7]"
+                      : "border-slate-200"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3 px-3.5 pt-3.5 pb-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center">
+                        <img
+                          src={`/airlines/${airlineCode}.png`}
+                          alt={flight.airline}
+                          className="max-h-full max-w-full object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-[13px] font-bold text-[#121121]">{flight.airline}</p>
+                        <p className="truncate text-[11px] font-semibold text-slate-500">{flightNo}</p>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2.5">
+                      <span className="text-[18px] font-black tracking-tight text-[#121121]">
+                        ₹{flight.price.toLocaleString("en-IN")}
+                      </span>
+                      <span
+                        className={cn(
+                          "flex h-[18px] w-[18px] items-center justify-center rounded-full border-2",
+                          isSelected ? "border-[#D60D26]" : "border-slate-300"
+                        )}
+                        aria-hidden
+                      >
+                        <span
+                          className={cn(
+                            "h-[10px] w-[10px] rounded-full",
+                            isSelected ? "bg-[#D60D26]" : "bg-transparent"
+                          )}
+                        />
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3.5 pb-3.5 pt-1">
+                    <div className="min-w-0">
+                      <p className="truncate text-[12px] font-bold text-[#121121]">
+                        {flight.origin}
+                      </p>
+                      <p className="text-[20px] font-black leading-tight text-[#121121]">
+                        {flight.departureTime}
+                      </p>
+                      <p className="text-[11px] font-semibold text-slate-500">{dateLabel}</p>
+                    </div>
+
+                    <div className="flex flex-col items-center px-1">
+                      <span className="text-[11px] font-bold text-slate-500">{flight.duration}</span>
+                      <div className="my-1 h-px w-14 bg-slate-300" />
+                      <span className="text-[11px] font-semibold text-slate-400">{stopsLabel}</span>
+                    </div>
+
+                    <div className="min-w-0 text-right">
+                      <p className="truncate text-[12px] font-bold text-[#121121]">
+                        {flight.destination}
+                      </p>
+                      <p className="text-[20px] font-black leading-tight text-[#121121]">
+                        {flight.arrivalTime}
+                      </p>
+                      <p className="text-[11px] font-semibold text-slate-500">{dateLabel}</p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const canContinue = Boolean(selectedOutbound && (!isRoundTrip || selectedReturn));
   const totalSelectedPrice =
     (selectedOutbound?.price ?? 0) + (selectedReturn?.price ?? 0) + priorLegsFareTotal;
+
+  const outboundColumnTitle = `${searchOrigin || filteredOutbound[0]?.origin || "Outbound"} → ${searchDestination || filteredOutbound[0]?.destination || ""}`;
+  const returnColumnTitle = `${searchDestination || filteredReturn[0]?.origin || "Return"} → ${searchOrigin || filteredReturn[0]?.destination || ""}`;
+  const outboundColumnSub = departureDate
+    ? (() => {
+        try {
+          return format(parseISO(departureDate), "EEE, d MMM yyyy");
+        } catch {
+          return departureDate;
+        }
+      })()
+    : "Departure";
+  const returnColumnSub = returnDate
+    ? (() => {
+        try {
+          return format(parseISO(returnDate), "EEE, d MMM yyyy");
+        } catch {
+          return returnDate;
+        }
+      })()
+    : "Return";
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1440px] mx-auto select-none mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -1133,20 +1327,75 @@ export function FlightResults({
           </div>
         </div>
 
-        {/* Flight Lists Grid */}
-        <div className="flex flex-col gap-8">
+        {/* Flight Lists — round-trip: Yatra side-by-side (desktop) + tabs (mobile) */}
+        {isRoundTrip ? (
+          <div className="flex flex-col gap-4">
+            {/* Mobile tabs */}
+            <div className="lg:hidden">
+              <div className="mb-3 grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setRtMobileTab("outbound")}
+                  className={cn(
+                    "rounded-lg px-3 py-2.5 text-[13px] font-bold transition-colors",
+                    rtMobileTab === "outbound"
+                      ? "bg-[#377BD7] text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-50"
+                  )}
+                >
+                  Outbound
+                  {selectedOutbound ? " ✓" : ""}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRtMobileTab("return")}
+                  className={cn(
+                    "rounded-lg px-3 py-2.5 text-[13px] font-bold transition-colors",
+                    rtMobileTab === "return"
+                      ? "bg-[#377BD7] text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-50"
+                  )}
+                >
+                  Return
+                  {selectedReturn ? " ✓" : ""}
+                </button>
+              </div>
+              {rtMobileTab === "outbound"
+                ? renderRoundTripColumn(
+                    filteredOutbound,
+                    false,
+                    outboundColumnTitle,
+                    outboundColumnSub
+                  )
+                : renderRoundTripColumn(
+                    filteredReturn,
+                    true,
+                    returnColumnTitle,
+                    returnColumnSub
+                  )}
+            </div>
 
-          {/* Outbound Flights list */}
-          {renderFlightCards(
-            filteredOutbound,
-            false,
-            listTitle || (isRoundTrip ? "Outbound Flights" : undefined)
-          )}
-
-          {/* Return Flights list */}
-          {isRoundTrip && renderFlightCards(filteredReturn, true, "Return Flights")}
-
-        </div>
+            {/* Desktop: two columns like Yatra */}
+            <div className="hidden lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
+              {renderRoundTripColumn(
+                filteredOutbound,
+                false,
+                outboundColumnTitle,
+                outboundColumnSub
+              )}
+              {renderRoundTripColumn(
+                filteredReturn,
+                true,
+                returnColumnTitle,
+                returnColumnSub
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-8">
+            {renderFlightCards(filteredOutbound, false, listTitle)}
+          </div>
+        )}
 
         {selectionError && (
           <p className="text-sm font-bold text-[#D60D26] mt-4">{selectionError}</p>
@@ -1155,27 +1404,38 @@ export function FlightResults({
       </section>
 
       {!hideStickyBar &&
-        ((!isB2bRoute && selectMode) || (isB2bRoute && forceSelectMode)) && (
+        (selectMode || forceSelectMode || isRoundTrip) && (
         <div className="fixed bottom-0 left-0 right-0 z-[90] bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-4 py-4">
           <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm">
+            <div className="text-sm w-full sm:w-auto min-w-0">
               {forceSelectMode ? (
                 <p className="font-semibold text-slate-700">
                   {selectionHint || "Select a flight for this sector"}
                   {selectedOutbound ? " · ✓ Selected" : ""}
                 </p>
               ) : isRoundTrip ? (
-                <p className="font-semibold text-slate-700">
-                  {selectedOutbound ? "✓ Outbound selected" : "Select outbound"}
-                  {" · "}
-                  {selectedReturn ? "✓ Return selected" : "Select return"}
-                </p>
+                <div className="flex flex-col gap-0.5">
+                  <p className="font-semibold text-slate-700">
+                    {selectedOutbound
+                      ? `${selectedOutbound.origin} → ${selectedOutbound.destination} · ${selectedOutbound.departureTime}`
+                      : "Select outbound"}
+                    {"  ·  "}
+                    {selectedReturn
+                      ? `${selectedReturn.origin} → ${selectedReturn.destination} · ${selectedReturn.departureTime}`
+                      : "Select return"}
+                  </p>
+                  {canContinue && (
+                    <p className="text-xs text-slate-500">
+                      Combined from ₹{(totalSelectedPrice * (adults + children)).toLocaleString("en-IN")}
+                    </p>
+                  )}
+                </div>
               ) : (
                 <p className="font-semibold text-slate-700">
                   {selectedOutbound ? "Flight selected" : "Select a flight to continue"}
                 </p>
               )}
-              {canContinue && (
+              {canContinue && !isRoundTrip && (
                 <p className="text-xs text-slate-500 mt-0.5">
                   Total from ₹{(totalSelectedPrice * (adults + children)).toLocaleString("en-IN")} (excl. taxes on booking page)
                 </p>
@@ -1193,14 +1453,14 @@ export function FlightResults({
               )}
             >
               {continueButtonLabel ||
-                (isRoundTrip ? "Continue — book both flights" : "Continue to booking")}
+                (isRoundTrip ? "Book Now" : "Continue to booking")}
               <ArrowUpRight className="w-5 h-5" strokeWidth={2.5} />
             </button>
           </div>
         </div>
       )}
 
-      {(selectMode || forceSelectMode) && !hideStickyBar && <div className="h-24" />}
+      {(selectMode || forceSelectMode || isRoundTrip) && !hideStickyBar && <div className="h-24" />}
 
       {/* Render QuoteModal for B2B */}
       <QuoteModal isOpen={quoteModalOpen} onClose={() => setQuoteModalOpen(false)} />

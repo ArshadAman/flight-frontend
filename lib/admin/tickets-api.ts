@@ -308,3 +308,98 @@ export function isAdminSession(user: {
   if (!user) return false;
   return Boolean(user.is_superuser || user.is_staff || user.role === "ADMIN");
 }
+
+export function travelTypeLabel(travelType: number | undefined | null): string {
+  if (travelType === 1) return "Round Trip";
+  if (travelType === 2) return "Multi City";
+  return "One Way";
+}
+
+/** Pull multi-city group id + full sector list from SSR / segments payload. */
+export function getMultiCityItinerary(ticket: ApiTicket): {
+  groupId: string | null;
+  bookingRef: string | null;
+  sectors: Array<Record<string, unknown>>;
+} {
+  const ssr = (ticket.ssr_data || {}) as Record<string, unknown>;
+  const details = Array.isArray(ssr.BookingSSRDetails)
+    ? (ssr.BookingSSRDetails as Array<Record<string, unknown>>)
+    : Array.isArray(ssr.booking_ssr_details)
+      ? (ssr.booking_ssr_details as Array<Record<string, unknown>>)
+      : [];
+
+  const meta = details.find(
+    (d) =>
+      String(d.SSR_Type || d.ssr_type || "").toUpperCase() === "MULTI_CITY_ITINERARY" ||
+      Boolean(d.multi_city_group_id)
+  );
+
+  const groupId =
+    (meta && typeof meta.multi_city_group_id === "string" && meta.multi_city_group_id) ||
+    (typeof ssr.multi_city_group_id === "string" ? ssr.multi_city_group_id : null) ||
+    null;
+
+  const bookingRef =
+    (meta && typeof meta.booking_ref === "string" && meta.booking_ref) ||
+    ticket.booking_ref ||
+    null;
+
+  const fromMeta = Array.isArray(meta?.sectors)
+    ? (meta!.sectors as Array<Record<string, unknown>>)
+    : [];
+
+  const segments = Array.isArray(ticket.segments_data) ? ticket.segments_data : [];
+  const looksLikeFullItinerary =
+    segments.length > 1 ||
+    segments.some((s) => typeof s.leg_label === "string" && String(s.leg_label).startsWith("Flight"));
+
+  return {
+    groupId,
+    bookingRef,
+    sectors: fromMeta.length > 1 ? fromMeta : looksLikeFullItinerary ? segments : fromMeta.length ? fromMeta : segments,
+  };
+}
+
+/** Related multi-city tickets (other legs) booked together. */
+export function findRelatedMultiCityTickets(
+  current: ApiTicket,
+  all: ApiTicket[]
+): ApiTicket[] {
+  const { groupId, bookingRef } = getMultiCityItinerary(current);
+  const createdMs = Date.parse(current.created_at);
+
+  return all
+    .filter((t) => {
+      if (t.id === current.id) return false;
+      if (String(t.user) !== String(current.user)) return false;
+
+      const other = getMultiCityItinerary(t);
+      if (groupId && other.groupId && other.groupId === groupId) return true;
+      if (
+        bookingRef &&
+        current.booking_ref &&
+        t.booking_ref &&
+        t.booking_ref === current.booking_ref &&
+        (current.travel_type === 2 || t.travel_type === 2)
+      ) {
+        return true;
+      }
+
+      // Heuristic for older multi-city bookings (separate tickets, no group id):
+      // same user, created within 15 minutes, different route, travel_type multi or one-way legs.
+      if (Number.isNaN(createdMs)) return false;
+      const otherMs = Date.parse(t.created_at);
+      if (Number.isNaN(otherMs)) return false;
+      const within = Math.abs(otherMs - createdMs) <= 15 * 60 * 1000;
+      if (!within) return false;
+      const differentRoute =
+        t.origin !== current.origin || t.destination !== current.destination;
+      const multiHint =
+        current.travel_type === 2 ||
+        t.travel_type === 2 ||
+        Boolean(groupId) ||
+        Boolean(other.groupId);
+      return differentRoute && multiHint;
+    })
+    .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
+}
