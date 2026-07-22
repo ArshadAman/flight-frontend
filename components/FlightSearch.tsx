@@ -85,7 +85,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
     // Multi-city legs state
     const defaultLegs = [
         { origin: "New Delhi", destination: "Mumbai", date: new Date() },
-        { origin: "Mumbai", destination: "Bangalore", date: new Date() },
+        { origin: "Mumbai", destination: "", date: (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; })() },
     ];
     const [multiCityLegs, setMultiCityLegs] = React.useState(defaultLegs);
     const [activeLegDropdown, setActiveLegDropdown] = React.useState<{ legIdx: number; field: 'origin' | 'destination' } | null>(null);
@@ -144,7 +144,8 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
         const city = GLOBAL_CITIES.find(
             (c) => c.name.toLowerCase() === name.toLowerCase() || c.code.toLowerCase() === name.toLowerCase()
         );
-        return city ? `${city.code}, ${city.country}` : name || "City or Airport";
+        if (!city) return name ? "" : "Select a city";
+        return `${city.code}, ${city.name}`;
     };
 
     const filterCities = (query: string) => {
@@ -198,7 +199,7 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
         if (multiCityLegs.length >= 5) return;
         const prev = multiCityLegs[multiCityLegs.length - 1];
         const nextDate = new Date(prev.date);
-        nextDate.setDate(nextDate.getDate() + 2);
+        nextDate.setDate(nextDate.getDate() + 1);
         setMultiCityLegs([
             ...multiCityLegs,
             { origin: prev.destination, destination: "", date: nextDate },
@@ -440,18 +441,18 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
                                         date: date || new Date(),
                                     };
                                     const leg2Date = new Date(leg1.date);
-                                    leg2Date.setDate(leg2Date.getDate() + 2);
+                                    leg2Date.setDate(leg2Date.getDate() + 1);
                                     const legs = [
                                         leg1,
                                         {
                                             origin: leg1.destination,
-                                            destination: multiCityLegs[1]?.destination || "Bangalore",
+                                            destination: "",
                                             date: multiCityLegs[1]?.date || leg2Date,
                                         },
                                     ];
                                     setMultiCityLegs(legs);
                                     setLegSearchValues(legs.map((l) => l.origin));
-                                    setLegDestSearchValues(legs.map((l) => l.destination));
+                                    setLegDestSearchValues(["", ""]);
                                 }
                             }}
                         >
@@ -473,296 +474,300 @@ export function FlightSearch({ onSearch }: FlightSearchProps) {
 
                 {tripType === 'multi-city' ? (
                     /* --------------------------------- */
-                    /* MULTI CITY — Yatra-style legs     */
+                    /* MULTI CITY — Yatra-style rows     */
                     /* --------------------------------- */
-                    <div className="flex flex-col gap-4 mt-2 relative" ref={searchRef}>
-                        {multiCityLegs.map((leg, idx) => {
-                            const originQuery = legSearchValues[idx] ?? leg.origin;
-                            const destQuery = legDestSearchValues[idx] ?? leg.destination;
-                            const originMatches = filterCities(originQuery);
-                            const destMatches = filterCities(destQuery);
-                            const minDate =
-                                idx > 0 && multiCityLegs[idx - 1]?.date
-                                    ? startOfDay(multiCityLegs[idx - 1].date)
-                                    : startOfToday();
+                    <div className="flex flex-col gap-0 mt-1 relative" ref={searchRef}>
+                        <div className="flex flex-col xl:flex-row xl:items-start gap-4 xl:gap-5">
+                            <div className="flex-1 min-w-0 flex flex-col">
+                                {multiCityLegs.map((leg, idx) => {
+                                    const originQuery = legSearchValues[idx] ?? leg.origin;
+                                    const destQuery = legDestSearchValues[idx] ?? leg.destination;
+                                    const originMatches = filterCities(originQuery);
+                                    const destMatches = filterCities(destQuery);
+                                    const minDate =
+                                        idx > 0 && multiCityLegs[idx - 1]?.date
+                                            ? startOfDay(multiCityLegs[idx - 1].date)
+                                            : startOfToday();
 
-                            return (
-                                <div
-                                    key={idx}
-                                    className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-5 w-full relative border-b border-slate-100 pb-4 last:border-0 last:pb-0"
-                                >
-                                    <div className="w-full lg:w-16 shrink-0 text-[12px] font-extrabold uppercase tracking-wider text-[#D60D26] pt-1">
-                                        Flight {idx + 1}
-                                    </div>
-
-                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full min-w-0">
-                                        <label className="text-[14px] font-bold text-slate-400 mb-1 block">Leaving From</label>
-                                        <input
-                                            type="text"
-                                            className="bg-transparent border-none outline-none font-extrabold text-slate-900 tracking-tight text-[20px] p-0 placeholder:text-slate-300 leading-none w-full"
-                                            value={originQuery}
-                                            onChange={(e) => {
-                                                const v = e.target.value;
-                                                setLegSearchValues((prev) => {
-                                                    const copy = [...prev];
-                                                    copy[idx] = v;
-                                                    return copy;
-                                                });
-                                                updateLeg(idx, "origin", v);
-                                                setActiveLegDropdown({ legIdx: idx, field: "origin" });
-                                            }}
-                                            onFocus={() => setActiveLegDropdown({ legIdx: idx, field: "origin" })}
-                                            placeholder="City or Airport"
-                                        />
-                                        <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">{cityHint(leg.origin)}</p>
-                                        <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                                        {activeLegDropdown?.legIdx === idx &&
-                                            activeLegDropdown.field === "origin" &&
-                                            originMatches.length > 0 && (
-                                                <div className="absolute top-[100%] left-0 w-full lg:w-[120%] bg-white rounded-2xl shadow-2xl z-[100] mt-2 border border-slate-100 max-h-[260px] overflow-y-auto">
-                                                    <ul className="py-2">
-                                                        {originMatches.map((city) => (
-                                                            <li
-                                                                key={city.code}
-                                                                className="px-5 py-3 hover:bg-slate-50 cursor-pointer flex items-center justify-between border-b border-slate-50 last:border-0"
-                                                                onClick={() => {
-                                                                    updateLeg(idx, "origin", city.name);
-                                                                    setLegSearchValues((prev) => {
-                                                                        const copy = [...prev];
-                                                                        copy[idx] = city.name;
-                                                                        return copy;
-                                                                    });
-                                                                    setActiveLegDropdown(null);
-                                                                }}
-                                                            >
-                                                                <div className="flex flex-col">
-                                                                    <span className="font-bold text-slate-800 text-[14px]">{city.name}</span>
-                                                                    <span className="text-slate-400 text-[12px]">{city.country}</span>
-                                                                </div>
-                                                                <span className="font-bold text-slate-300 bg-slate-100 px-2 py-1 rounded text-[12px]">{city.code}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className={cn(
+                                                "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.15fr_1.15fr_1fr_1.05fr] gap-x-6 gap-y-4 py-4",
+                                                idx > 0 && "border-t border-slate-200/80"
                                             )}
-                                    </div>
-
-                                    <div className="hidden lg:flex w-8 h-8 shrink-0 rounded-full border border-[#D60D26] text-[#D60D26] items-center justify-center relative mt-3">
-                                        <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
-                                    </div>
-
-                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full min-w-0">
-                                        <label className="text-[14px] font-bold text-slate-400 mb-1 block">Going To</label>
-                                        <input
-                                            type="text"
-                                            className="bg-transparent border-none outline-none font-extrabold text-slate-900 tracking-tight text-[20px] p-0 placeholder:text-slate-300 leading-none w-full"
-                                            value={destQuery}
-                                            onChange={(e) => {
-                                                const v = e.target.value;
-                                                setLegDestSearchValues((prev) => {
-                                                    const copy = [...prev];
-                                                    copy[idx] = v;
-                                                    return copy;
-                                                });
-                                                updateLeg(idx, "destination", v);
-                                                setActiveLegDropdown({ legIdx: idx, field: "destination" });
-                                            }}
-                                            onFocus={() => setActiveLegDropdown({ legIdx: idx, field: "destination" })}
-                                            placeholder="City or Airport"
-                                        />
-                                        <p className="text-[13px] text-slate-500 mt-1 truncate font-medium">{cityHint(leg.destination)}</p>
-                                        <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                                        {activeLegDropdown?.legIdx === idx &&
-                                            activeLegDropdown.field === "destination" &&
-                                            destMatches.length > 0 && (
-                                                <div className="absolute top-[100%] left-0 w-full lg:w-[120%] bg-white rounded-2xl shadow-2xl z-[100] mt-2 border border-slate-100 max-h-[260px] overflow-y-auto">
-                                                    <ul className="py-2">
-                                                        {destMatches.map((city) => (
-                                                            <li
-                                                                key={city.code}
-                                                                className="px-5 py-3 hover:bg-slate-50 cursor-pointer flex items-center justify-between border-b border-slate-50 last:border-0"
-                                                                onClick={() => {
-                                                                    updateLeg(idx, "destination", city.name);
-                                                                    setLegDestSearchValues((prev) => {
-                                                                        const copy = [...prev];
-                                                                        copy[idx] = city.name;
-                                                                        return copy;
-                                                                    });
-                                                                    setActiveLegDropdown(null);
-                                                                }}
-                                                            >
-                                                                <div className="flex flex-col">
-                                                                    <span className="font-bold text-slate-800 text-[14px]">{city.name}</span>
-                                                                    <span className="text-slate-400 text-[12px]">{city.country}</span>
-                                                                </div>
-                                                                <span className="font-bold text-slate-300 bg-slate-100 px-2 py-1 rounded text-[12px]">{city.code}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-                                    </div>
-
-                                    <Popover
-                                        open={openLegCalendar === idx}
-                                        onOpenChange={(open) => setOpenLegCalendar(open ? idx : null)}
-                                    >
-                                        <PopoverTrigger asChild>
-                                            <div className="flex flex-col flex-1 group relative h-[70px] w-full cursor-pointer max-w-full lg:max-w-[180px]">
-                                                <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">
-                                                    Departure <ChevronDown className="w-3.5 h-3.5" />
-                                                </label>
-                                                <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">
-                                                    {format(leg.date || new Date(), "dd MMM yy")}
-                                                </div>
-                                                <p className="text-[13px] text-slate-500 mt-1 font-medium">
-                                                    {format(leg.date || new Date(), "EEEE")}
+                                        >
+                                            {/* From */}
+                                            <div className="flex flex-col relative min-h-[68px]">
+                                                <label className="text-[12px] font-semibold text-slate-400 mb-0.5">From</label>
+                                                <input
+                                                    type="text"
+                                                    className="bg-transparent border-none outline-none font-extrabold text-[#1a1a1a] tracking-tight text-[22px] md:text-[24px] p-0 placeholder:text-slate-400 leading-tight w-full"
+                                                    value={originQuery}
+                                                    onChange={(e) => {
+                                                        const v = e.target.value;
+                                                        setLegSearchValues((prev) => {
+                                                            const copy = [...prev];
+                                                            copy[idx] = v;
+                                                            return copy;
+                                                        });
+                                                        updateLeg(idx, "origin", v);
+                                                        setActiveLegDropdown({ legIdx: idx, field: "origin" });
+                                                    }}
+                                                    onFocus={() => setActiveLegDropdown({ legIdx: idx, field: "origin" })}
+                                                    placeholder="Select City"
+                                                />
+                                                <p className="text-[12px] text-slate-500 mt-0.5 truncate font-medium leading-snug">
+                                                    {cityHint(leg.origin)}
                                                 </p>
-                                                <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
+                                                {activeLegDropdown?.legIdx === idx &&
+                                                    activeLegDropdown.field === "origin" &&
+                                                    originMatches.length > 0 && (
+                                                        <div className="absolute top-[100%] left-0 w-full lg:w-[130%] bg-white rounded-2xl shadow-2xl z-[100] mt-1 border border-slate-100 max-h-[260px] overflow-y-auto">
+                                                            <ul className="py-2">
+                                                                {originMatches.map((city) => (
+                                                                    <li
+                                                                        key={city.code}
+                                                                        className="px-5 py-3 hover:bg-slate-50 cursor-pointer flex items-center justify-between border-b border-slate-50 last:border-0"
+                                                                        onClick={() => {
+                                                                            updateLeg(idx, "origin", city.name);
+                                                                            setLegSearchValues((prev) => {
+                                                                                const copy = [...prev];
+                                                                                copy[idx] = city.name;
+                                                                                return copy;
+                                                                            });
+                                                                            setActiveLegDropdown(null);
+                                                                        }}
+                                                                    >
+                                                                        <div className="flex flex-col">
+                                                                            <span className="font-bold text-slate-800 text-[14px]">{city.name}</span>
+                                                                            <span className="text-slate-400 text-[12px]">{city.country}</span>
+                                                                        </div>
+                                                                        <span className="font-bold text-slate-300 bg-slate-100 px-2 py-1 rounded text-[12px]">{city.code}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
                                             </div>
-                                        </PopoverTrigger>
-                                        <PopoverContent
-                                            className="w-auto p-0 bg-white rounded-3xl shadow-2xl border-none overflow-hidden z-[110]"
-                                            align="center"
-                                            side="bottom"
-                                            sideOffset={8}
-                                            avoidCollisions={false}
-                                        >
-                                            <Calendar
-                                                mode="single"
-                                                selected={leg.date}
-                                                onSelect={(d) => {
-                                                    if (d) {
-                                                        updateLeg(idx, "date", d);
-                                                        setOpenLegCalendar(null);
-                                                    }
-                                                }}
-                                                numberOfMonths={2}
-                                                defaultMonth={leg.date && !isBeforeToday(leg.date) ? leg.date : minDate}
-                                                fromDate={minDate}
-                                                toDate={maxFlightBookingDate()}
-                                                disabled={(d) => startOfDay(d) < minDate}
-                                                classNames={calendarClassNames}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
 
-                                    <div className="flex items-center justify-end lg:justify-center h-[70px] shrink-0 min-w-[72px]">
-                                        {multiCityLegs.length > 2 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => removeMultiCityLeg(idx)}
-                                                className="text-slate-400 hover:text-[#D60D26] font-bold text-[13px]"
+                                            {/* To */}
+                                            <div className="flex flex-col relative min-h-[68px]">
+                                                <label className="text-[12px] font-semibold text-slate-400 mb-0.5">To</label>
+                                                <input
+                                                    type="text"
+                                                    className="bg-transparent border-none outline-none font-extrabold text-[#1a1a1a] tracking-tight text-[22px] md:text-[24px] p-0 placeholder:text-slate-400 leading-tight w-full"
+                                                    value={destQuery}
+                                                    onChange={(e) => {
+                                                        const v = e.target.value;
+                                                        setLegDestSearchValues((prev) => {
+                                                            const copy = [...prev];
+                                                            copy[idx] = v;
+                                                            return copy;
+                                                        });
+                                                        updateLeg(idx, "destination", v);
+                                                        setActiveLegDropdown({ legIdx: idx, field: "destination" });
+                                                    }}
+                                                    onFocus={() => setActiveLegDropdown({ legIdx: idx, field: "destination" })}
+                                                    placeholder="Select City"
+                                                />
+                                                <p className="text-[12px] text-slate-500 mt-0.5 truncate font-medium leading-snug">
+                                                    {leg.destination ? cityHint(leg.destination) : ""}
+                                                </p>
+                                                {activeLegDropdown?.legIdx === idx &&
+                                                    activeLegDropdown.field === "destination" &&
+                                                    destMatches.length > 0 && (
+                                                        <div className="absolute top-[100%] left-0 w-full lg:w-[130%] bg-white rounded-2xl shadow-2xl z-[100] mt-1 border border-slate-100 max-h-[260px] overflow-y-auto">
+                                                            <ul className="py-2">
+                                                                {destMatches.map((city) => (
+                                                                    <li
+                                                                        key={city.code}
+                                                                        className="px-5 py-3 hover:bg-slate-50 cursor-pointer flex items-center justify-between border-b border-slate-50 last:border-0"
+                                                                        onClick={() => {
+                                                                            updateLeg(idx, "destination", city.name);
+                                                                            setLegDestSearchValues((prev) => {
+                                                                                const copy = [...prev];
+                                                                                copy[idx] = city.name;
+                                                                                return copy;
+                                                                            });
+                                                                            setActiveLegDropdown(null);
+                                                                        }}
+                                                                    >
+                                                                        <div className="flex flex-col">
+                                                                            <span className="font-bold text-slate-800 text-[14px]">{city.name}</span>
+                                                                            <span className="text-slate-400 text-[12px]">{city.country}</span>
+                                                                        </div>
+                                                                        <span className="font-bold text-slate-300 bg-slate-100 px-2 py-1 rounded text-[12px]">{city.code}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                            </div>
+
+                                            {/* Departure Date */}
+                                            <Popover
+                                                open={openLegCalendar === idx}
+                                                onOpenChange={(open) => setOpenLegCalendar(open ? idx : null)}
                                             >
-                                                Remove
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-
-                        {/* Shared travellers + Add City + Search (Yatra layout) */}
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2 border-t border-slate-100 mt-1">
-                            <Popover open={isTravellerOpen} onOpenChange={setIsTravellerOpen}>
-                                <PopoverTrigger asChild>
-                                    <div className="flex flex-col flex-1 group relative h-[70px] w-full cursor-pointer max-w-full sm:max-w-[220px]">
-                                        <label className="text-[14px] font-bold text-slate-400 mb-1 flex items-center gap-1">
-                                            Traveller & Class <ChevronDown className="w-3.5 h-3.5" />
-                                        </label>
-                                        <div className="font-extrabold text-slate-900 tracking-tight text-[20px] leading-none">
-                                            {travellers.adults + travellers.children + travellers.infants} Traveller
-                                        </div>
-                                        <p className="text-[13px] text-slate-500 mt-1 font-medium">{cabinClass}</p>
-                                        <div className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-200" />
-                                    </div>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                    className="w-[320px] p-5 bg-white rounded-xl shadow-2xl border-none z-[110]"
-                                    align="start"
-                                    side="bottom"
-                                    sideOffset={8}
-                                    avoidCollisions={false}
-                                >
-                                    <div className="space-y-5">
-                                        {[
-                                            { label: "Adults", age: "(12+ Years)", key: "adults" as const },
-                                            { label: "Children", age: "(2-12 Years)", key: "children" as const },
-                                            { label: "Infant", age: "(0-2 Years)", key: "infants" as const },
-                                        ].map((item) => (
-                                            <div key={item.key} className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="font-bold text-slate-800 text-[16px]">{item.label}</p>
-                                                    <p className="text-[12px] text-slate-500 font-medium">{item.age}</p>
-                                                </div>
-                                                <div className="flex items-center border border-slate-200 rounded-md h-[36px]">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => updateTravellers(item.key, "sub")}
-                                                        className="px-3 text-slate-600 font-bold border-r border-slate-200"
-                                                    >
-                                                        -
-                                                    </button>
-                                                    <span className="px-4 font-bold text-slate-800 min-w-[36px] text-center">
-                                                        {travellers[item.key]}
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => updateTravellers(item.key, "add")}
-                                                        className="px-3 text-slate-600 font-bold border-l border-slate-200"
-                                                    >
-                                                        +
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        <hr className="border-slate-100" />
-                                        <div className="space-y-2.5">
-                                            {["Economy", "Prem. Economy", "Business", "First"].map((cabin) => (
-                                                <label
-                                                    key={cabin}
-                                                    className="flex items-center gap-3 cursor-pointer group"
-                                                    onClick={() => setCabinClass(cabin)}
-                                                >
-                                                    <div
-                                                        className={cn(
-                                                            "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                                                            cabinClass === cabin ? "border-[#888]" : "border-slate-300"
-                                                        )}
-                                                    >
-                                                        {cabinClass === cabin && (
-                                                            <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                                                        )}
+                                                <PopoverTrigger asChild>
+                                                    <div className="flex flex-col relative min-h-[68px] cursor-pointer">
+                                                        <label className="text-[12px] font-semibold text-slate-400 mb-0.5 flex items-center gap-1">
+                                                            Departure Date <ChevronDown className="w-3 h-3" />
+                                                        </label>
+                                                        <div className="font-extrabold text-[#1a1a1a] tracking-tight text-[22px] md:text-[24px] leading-tight">
+                                                            {format(leg.date || new Date(), "dd MMM'' yy")}
+                                                        </div>
+                                                        <p className="text-[12px] text-slate-500 mt-0.5 font-medium">
+                                                            {format(leg.date || new Date(), "EEEE")}
+                                                        </p>
                                                     </div>
-                                                    <span className="text-[14px] font-semibold text-slate-700">{cabin}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                        <Button
-                                            className="w-full mt-2 py-5 bg-white border-2 border-[#888] text-[#888] hover:bg-blue-50 font-bold text-[16px] rounded-xl shadow-none"
-                                            onClick={() => setIsTravellerOpen(false)}
-                                        >
-                                            Done
-                                        </Button>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
+                                                </PopoverTrigger>
+                                                <PopoverContent
+                                                    className="w-auto p-0 bg-white rounded-3xl shadow-2xl border-none overflow-hidden z-[110]"
+                                                    align="start"
+                                                    side="bottom"
+                                                    sideOffset={8}
+                                                    avoidCollisions={false}
+                                                >
+                                                    <Calendar
+                                                        mode="single"
+                                                        selected={leg.date}
+                                                        onSelect={(d) => {
+                                                            if (d) {
+                                                                updateLeg(idx, "date", d);
+                                                                setOpenLegCalendar(null);
+                                                            }
+                                                        }}
+                                                        numberOfMonths={2}
+                                                        defaultMonth={leg.date && !isBeforeToday(leg.date) ? leg.date : minDate}
+                                                        fromDate={minDate}
+                                                        toDate={maxFlightBookingDate()}
+                                                        disabled={(d) => startOfDay(d) < minDate}
+                                                        classNames={calendarClassNames}
+                                                    />
+                                                </PopoverContent>
+                                            </Popover>
 
-                            <div className="flex flex-1 flex-wrap items-center justify-end gap-3 sm:gap-4">
+                                            {/* Travellers only on first row; remove on extra legs */}
+                                            {idx === 0 ? (
+                                                <Popover open={isTravellerOpen} onOpenChange={setIsTravellerOpen}>
+                                                    <PopoverTrigger asChild>
+                                                        <div className="flex flex-col relative min-h-[68px] cursor-pointer">
+                                                            <label className="text-[12px] font-semibold text-slate-400 mb-0.5 flex items-center gap-1">
+                                                                Travellers & Class <ChevronDown className="w-3 h-3" />
+                                                            </label>
+                                                            <div className="font-extrabold text-[#1a1a1a] tracking-tight text-[22px] md:text-[24px] leading-tight">
+                                                                {travellers.adults + travellers.children + travellers.infants} Traveller
+                                                                {travellers.adults + travellers.children + travellers.infants !== 1 ? "s" : ""}
+                                                            </div>
+                                                            <p className="text-[12px] text-slate-500 mt-0.5 font-medium">{cabinClass}</p>
+                                                        </div>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent
+                                                        className="w-[320px] p-5 bg-white rounded-xl shadow-2xl border-none z-[110]"
+                                                        align="end"
+                                                        side="bottom"
+                                                        sideOffset={8}
+                                                        avoidCollisions={false}
+                                                    >
+                                                        <div className="space-y-5">
+                                                            {[
+                                                                { label: "Adults", age: "(12+ Years)", key: "adults" as const },
+                                                                { label: "Children", age: "(2-12 Years)", key: "children" as const },
+                                                                { label: "Infant", age: "(0-2 Years)", key: "infants" as const },
+                                                            ].map((item) => (
+                                                                <div key={item.key} className="flex items-center justify-between">
+                                                                    <div>
+                                                                        <p className="font-bold text-slate-800 text-[16px]">{item.label}</p>
+                                                                        <p className="text-[12px] text-slate-500 font-medium">{item.age}</p>
+                                                                    </div>
+                                                                    <div className="flex items-center border border-slate-200 rounded-md h-[36px]">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => updateTravellers(item.key, "sub")}
+                                                                            className="px-3 text-slate-600 font-bold border-r border-slate-200"
+                                                                        >
+                                                                            -
+                                                                        </button>
+                                                                        <span className="px-4 font-bold text-slate-800 min-w-[36px] text-center">
+                                                                            {travellers[item.key]}
+                                                                        </span>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => updateTravellers(item.key, "add")}
+                                                                            className="px-3 text-slate-600 font-bold border-l border-slate-200"
+                                                                        >
+                                                                            +
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                            <hr className="border-slate-100" />
+                                                            <div className="space-y-2.5">
+                                                                {["Economy", "Prem. Economy", "Business", "First"].map((cabin) => (
+                                                                    <label
+                                                                        key={cabin}
+                                                                        className="flex items-center gap-3 cursor-pointer group"
+                                                                        onClick={() => setCabinClass(cabin)}
+                                                                    >
+                                                                        <div
+                                                                            className={cn(
+                                                                                "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                                                                cabinClass === cabin ? "border-[#888]" : "border-slate-300"
+                                                                            )}
+                                                                        >
+                                                                            {cabinClass === cabin && (
+                                                                                <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                                                                            )}
+                                                                        </div>
+                                                                        <span className="text-[14px] font-semibold text-slate-700">{cabin}</span>
+                                                                    </label>
+                                                                ))}
+                                                            </div>
+                                                            <Button
+                                                                className="w-full mt-2 py-5 bg-white border-2 border-[#888] text-[#888] hover:bg-blue-50 font-bold text-[16px] rounded-xl shadow-none"
+                                                                onClick={() => setIsTravellerOpen(false)}
+                                                            >
+                                                                Done
+                                                            </Button>
+                                                        </div>
+                                                    </PopoverContent>
+                                                </Popover>
+                                            ) : (
+                                                <div className="flex items-end justify-end min-h-[68px] pb-1">
+                                                    {multiCityLegs.length > 2 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeMultiCityLeg(idx)}
+                                                            className="text-slate-400 hover:text-[#D60D26] font-semibold text-[13px]"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+
                                 {multiCityLegs.length < 5 && (
                                     <button
                                         type="button"
                                         onClick={addMultiCityLeg}
-                                        className="text-[#D60D26] font-bold text-[15px] hover:underline flex items-center gap-1"
+                                        className="mt-1 mb-1 w-full sm:w-auto sm:min-w-[280px] lg:max-w-[420px] h-[44px] rounded-md border border-[#4A90E2] text-[#4A90E2] font-bold text-[13px] tracking-wide hover:bg-[#4A90E2]/5 transition-colors"
                                     >
-                                        <Plus className="w-4 h-4" strokeWidth={3} /> Add City (up to 5)
+                                        + ADD ANOTHER CITY
                                     </button>
                                 )}
+                            </div>
+
+                            <div className="xl:pt-6 shrink-0 w-full xl:w-auto">
                                 <Button
                                     onClick={handleSearch}
-                                    className="bg-[#D60D26] hover:bg-[#D60D26] text-white rounded-full px-8 py-5 h-[48px] text-[15px] font-bold shadow-md flex items-center justify-center gap-1 transition-transform active:scale-95"
+                                    className="w-full xl:w-[150px] h-[48px] xl:h-[52px] rounded-md bg-[#D60D26] hover:bg-[#b80b20] text-white text-[16px] font-bold tracking-wide shadow-sm"
                                 >
-                                    Search <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+                                    Search
                                 </Button>
                             </div>
                         </div>
