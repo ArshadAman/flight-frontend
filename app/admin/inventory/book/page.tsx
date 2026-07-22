@@ -36,8 +36,12 @@ export default function AdminInventoryBookPage() {
     }
     setDraft(d);
     setPassengers(buildInitialPassengers(d.adults, d.children, d.infants));
-    if (user?.email) setEmail(user.email);
-  }, [router, user?.email]);
+  }, [router]);
+
+  useEffect(() => {
+    if (!user?.email) return;
+    setEmail((prev) => prev.trim() || user.email || "");
+  }, [user?.email]);
 
   if (!draft) {
     return <div className="p-6 text-sm text-slate-500">Loading draft…</div>;

@@ -2,6 +2,7 @@ import { getPublicApiUrl } from "@/lib/apiConfig";
 import { mealOptionsForFlight, type Flight } from "@/lib/flight";
 
 export const BOOKING_DRAFT_KEY = "flight_booking_draft";
+export const BOOKING_FORM_PROGRESS_KEY = "flight_booking_form_progress";
 
 export type BookingPassenger = {
   id: string;
@@ -16,6 +17,12 @@ export type BookingPassenger = {
   return_meal: string;
   passport_number?: string;
   passport_expiry?: string;
+};
+
+export type BookingFormProgress = {
+  passengers: BookingPassenger[];
+  contactMobile: string;
+  contactEmail: string;
 };
 
 export type BookingDraft = {
@@ -54,6 +61,27 @@ export function loadBookingDraft(): BookingDraft | null {
 export function clearBookingDraft(): void {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem(BOOKING_DRAFT_KEY);
+  sessionStorage.removeItem(BOOKING_FORM_PROGRESS_KEY);
+}
+
+export function saveBookingFormProgress(progress: BookingFormProgress): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(BOOKING_FORM_PROGRESS_KEY, JSON.stringify(progress));
+  } catch {
+    /* ignore quota */
+  }
+}
+
+export function loadBookingFormProgress(): BookingFormProgress | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(BOOKING_FORM_PROGRESS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as BookingFormProgress;
+  } catch {
+    return null;
+  }
 }
 
 export function buildInitialPassengers(

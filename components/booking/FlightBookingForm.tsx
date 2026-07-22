@@ -10,6 +10,8 @@ import {
   clearBookingDraft,
   computeBookingTotal,
   loadBookingDraft,
+  loadBookingFormProgress,
+  saveBookingFormProgress,
   submitFlightBooking,
 } from "@/lib/booking";
 import { validatePassengerDob, validatePassportExpiry } from "@/lib/passengerAge";
@@ -27,7 +29,9 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [successPnrs, setSuccessPnrs] = useState<string[]>([]);
+  const [formReady, setFormReady] = useState(false);
 
+  // Load draft + any in-progress passenger details once (do not reset on login).
   useEffect(() => {
     const d = loadBookingDraft();
     if (!d) {
@@ -35,9 +39,36 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
       return;
     }
     setDraft(d);
-    setPassengers(buildInitialPassengers(d.adults, d.children, d.infants));
-    setContactEmail(user?.email || "");
-  }, [b2b, router, user?.email]);
+    const saved = loadBookingFormProgress();
+    const expectedCount = d.adults + d.children + d.infants;
+    if (saved?.passengers?.length === expectedCount) {
+      setPassengers(saved.passengers);
+      setContactMobile(saved.contactMobile || "");
+      setContactEmail(saved.contactEmail || "");
+    } else {
+      setPassengers(buildInitialPassengers(d.adults, d.children, d.infants));
+    }
+    setFormReady(true);
+  }, [b2b, router]);
+
+  // After login: only fill empty contact fields — never wipe passenger inputs.
+  useEffect(() => {
+    if (!user || !formReady) return;
+    setContactEmail((prev) => prev.trim() || user.email || "");
+    const mobile =
+      (user as { mobile?: string; phone?: string }).mobile ||
+      (user as { mobile?: string; phone?: string }).phone ||
+      "";
+    if (mobile) {
+      setContactMobile((prev) => prev.trim() || mobile);
+    }
+  }, [user, formReady]);
+
+  // Persist form progress so login / remount keeps filled details.
+  useEffect(() => {
+    if (!formReady || !draft || passengers.length === 0) return;
+    saveBookingFormProgress({ passengers, contactMobile, contactEmail });
+  }, [formReady, draft, passengers, contactMobile, contactEmail]);
 
   const pricing = useMemo(
     () => (draft ? computeBookingTotal(draft, passengers) : null),
