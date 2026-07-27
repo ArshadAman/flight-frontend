@@ -154,7 +154,7 @@ export default function SaleReportsPage() {
           </div>
           <button
             type="button"
-            onClick={() => (access ? void load() : openAuthModal("login"))}
+            onClick={() => (access ? void load() : openAuthModal())}
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -232,7 +232,7 @@ export default function SaleReportsPage() {
             type="button"
             className="text-sm font-bold text-[#D60D26] hover:underline"
             onClick={() => {
-              if (!access) return openAuthModal("login");
+              if (!access) return openAuthModal();
               void (async () => {
                 const apiBase = getPublicApiUrl();
                 const res = await fetch(`${apiBase}/flights/inventory/export/?format=csv`, {

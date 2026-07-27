@@ -421,7 +421,7 @@ export default function InventoryPage() {
 
     const patchInventory = async (flightId: string, body: Record<string, unknown>) => {
         if (!access) {
-            openAuthModal("login");
+            openAuthModal();
             throw new Error("Please sign in as an agent.");
         }
         const apiBase = getPublicApiUrl();

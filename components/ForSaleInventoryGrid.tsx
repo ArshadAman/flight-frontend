@@ -110,7 +110,7 @@ export function ForSaleInventoryGrid({
 
   const createHold = async (item: ForSaleInventoryItem, preferWaitlist: boolean) => {
     if (!access) {
-      openAuthModal("login");
+      openAuthModal();
       return;
     }
     setActionMsg(null);

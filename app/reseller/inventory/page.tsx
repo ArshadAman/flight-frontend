@@ -86,7 +86,7 @@ export default function ResellerInventoryPage() {
         {!access && (
           <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
             <p className="text-slate-600 mb-4">Sign in as an agent/partner to publish inventory.</p>
-            <Button onClick={() => openAuthModal("login")}>Sign in</Button>
+            <Button onClick={() => openAuthModal()}>Sign in</Button>
           </div>
         )}
 

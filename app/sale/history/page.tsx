@@ -84,7 +84,7 @@ export default function HistoryPage() {
           </div>
           <button
             type="button"
-            onClick={() => (access ? void load() : openAuthModal("login"))}
+            onClick={() => (access ? void load() : openAuthModal())}
             className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-bold"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
