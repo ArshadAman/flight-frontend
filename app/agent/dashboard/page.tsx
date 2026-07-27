@@ -39,6 +39,7 @@ interface InventoryItem {
   is_refundable: boolean;
   baggage_check_in: string;
   baggage_hand: string;
+  is_published?: boolean;
   agent_username: string;
 }
 
@@ -216,6 +217,26 @@ export default function AgentDashboardPage() {
       is_refundable: isRefundable,
       baggage_check_in: baggageCheckIn.trim(),
       baggage_hand: baggageHand.trim(),
+      is_published: true,
+      segments: [
+        {
+          segment_id: 0,
+          airline_code: airlineCode.trim().toUpperCase(),
+          airline_name: airlineName.trim(),
+          flight_number: flightNumber.trim(),
+          origin: origin.trim().toUpperCase(),
+          origin_city: origin.trim().toUpperCase(),
+          origin_terminal: "",
+          destination: destination.trim().toUpperCase(),
+          destination_city: destination.trim().toUpperCase(),
+          destination_terminal: "",
+          departure_datetime: new Date(departureDatetime).toISOString(),
+          arrival_datetime: new Date(arrivalDatetime).toISOString(),
+          duration: duration.trim() || "2h 0m",
+          stop_over: null,
+          return_flight: false,
+        },
+      ],
     };
 
     try {
@@ -289,6 +310,27 @@ export default function AgentDashboardPage() {
     setIsRefundable(item.is_refundable);
     setBaggageCheckIn(item.baggage_check_in);
     setBaggageHand(item.baggage_hand);
+  };
+
+  const handleTogglePublish = async (item: InventoryItem) => {
+    setInventoryError(null);
+    setInventorySuccess(null);
+    try {
+      const next = !(item.is_published !== false);
+      const res = await fetch(`${apiBase}/flights/inventory/${item.id}/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${access}`,
+        },
+        body: JSON.stringify({ is_published: next }),
+      });
+      if (!res.ok) throw new Error("Failed to update publish status");
+      setInventorySuccess(next ? "Published to For Sale." : "Unpublished from For Sale.");
+      fetchInventory();
+    } catch (err: any) {
+      setInventoryError(err.message || "Publish update failed");
+    }
   };
 
   const handleDeleteClick = async (id: number) => {
@@ -890,11 +932,27 @@ export default function AgentDashboardPage() {
                             Non-Refundable
                           </span>
                         )}
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                            item.is_published === false
+                              ? "bg-amber-50 border-amber-100 text-amber-700"
+                              : "bg-emerald-50 border-emerald-100 text-emerald-700"
+                          }`}
+                        >
+                          {item.is_published === false ? "Unpublished" : "Published"}
+                        </span>
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+                      <Button
+                        onClick={() => handleTogglePublish(item)}
+                        variant="outline"
+                        className="border-slate-200 text-slate-600 hover:bg-slate-50 rounded-full font-bold px-4 py-1.5 text-xs h-auto"
+                      >
+                        {item.is_published === false ? "Publish" : "Unpublish"}
+                      </Button>
                       <Button
                         onClick={() => handleEditClick(item)}
                         variant="outline"

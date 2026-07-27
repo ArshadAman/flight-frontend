@@ -42,6 +42,7 @@ type InventoryFlight = {
     is_refundable: boolean;
     baggage_check_in: string;
     baggage_hand: string;
+    is_published?: boolean;
     apis_required?: boolean;
     policies?: Record<string, string>;
     segments_data: InventorySegment[];
@@ -315,6 +316,9 @@ export default function InventoryPage() {
     const [drawerDataLoading, setDrawerDataLoading] = useState(true);
     const [drawerDataError, setDrawerDataError] = useState<string | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editSeats, setEditSeats] = useState("");
+    const [editPrice, setEditPrice] = useState("");
+    const [inventorySaving, setInventorySaving] = useState(false);
 
     // Booking actions state
     const [pnrNumber, setPnrNumber] = useState("");
@@ -412,6 +416,94 @@ export default function InventoryPage() {
             setRefreshTrigger(prev => prev + 1);
         } catch (err: any) {
             setActionError(err.message || "Cancellation failed");
+        }
+    };
+
+    const patchInventory = async (flightId: string, body: Record<string, unknown>) => {
+        if (!access) {
+            openAuthModal("login");
+            throw new Error("Please sign in as an agent.");
+        }
+        const apiBase = getPublicApiUrl();
+        const res = await fetch(`${apiBase}/flights/inventory/${flightId}/`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${access}`,
+            },
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(
+                (errData as { detail?: string }).detail || `Update failed (${res.status})`
+            );
+        }
+        return res.json();
+    };
+
+    const handleTogglePublish = async (flight: InventoryFlight) => {
+        setActionError(null);
+        setActionSuccess(null);
+        setInventorySaving(true);
+        try {
+            const next = !(flight.is_published !== false);
+            const updated = await patchInventory(flight.id, { is_published: next });
+            setInventoryFlights((prev) =>
+                prev.map((f) =>
+                    f.id === flight.id
+                        ? { ...f, is_published: updated.is_published ?? next }
+                        : f
+                )
+            );
+            setSelectedFlight((prev) =>
+                prev && prev.id === flight.id
+                    ? { ...prev, is_published: updated.is_published ?? next }
+                    : prev
+            );
+            setActionSuccess(next ? "Listing published to For Sale." : "Listing unpublished.");
+        } catch (err: any) {
+            setActionError(err.message || "Failed to update publish status");
+        } finally {
+            setInventorySaving(false);
+        }
+    };
+
+    const handleSaveInventoryEdits = async () => {
+        if (!selectedFlight) return;
+        const seats = Number(editSeats);
+        const price = Number(editPrice);
+        if (!Number.isFinite(seats) || seats < 0) {
+            setActionError("Enter a valid seat count.");
+            return;
+        }
+        if (!Number.isFinite(price) || price < 0) {
+            setActionError("Enter a valid price.");
+            return;
+        }
+        setActionError(null);
+        setActionSuccess(null);
+        setInventorySaving(true);
+        try {
+            const updated = await patchInventory(selectedFlight.id, {
+                seats_available: seats,
+                price,
+            });
+            const nextFlight: InventoryFlight = {
+                ...selectedFlight,
+                seats_available: updated.seats_available ?? seats,
+                price: String(updated.price ?? price),
+            };
+            setInventoryFlights((prev) =>
+                prev.map((f) => (f.id === selectedFlight.id ? nextFlight : f))
+            );
+            setSelectedFlight(nextFlight);
+            setIsEditModalOpen(false);
+            setActionSuccess("Inventory seats/price updated.");
+        } catch (err: any) {
+            setActionError(err.message || "Failed to update inventory");
+        } finally {
+            setInventorySaving(false);
         }
     };
 
@@ -618,9 +710,15 @@ export default function InventoryPage() {
                 <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold border ${
                     flight.seats_available <= 0
                         ? "bg-slate-100 text-slate-500 border-slate-200"
-                        : "bg-green-50 text-emerald-600 border-green-200"
+                        : flight.is_published === false
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : "bg-green-50 text-emerald-600 border-green-200"
                 }`}>
-                    {flight.seats_available <= 0 ? "Sold out" : "Open"}
+                    {flight.seats_available <= 0
+                        ? "Sold out"
+                        : flight.is_published === false
+                          ? "Unpublished"
+                          : "Published"}
                 </span>
             </div>
             <div className="text-slate-400 hover:text-slate-600 transition-colors flex justify-end">
@@ -823,6 +921,32 @@ export default function InventoryPage() {
 
                     {activeDrawerTab === "Inventory" && (
                         <div className="flex-1 overflow-y-auto p-6 space-y-10 bg-white">
+                            <div>
+                                <div className="font-bold text-[15px] text-slate-800 mb-3">For Sale visibility</div>
+                                <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-4">
+                                    <div>
+                                        <div className="text-sm font-bold text-slate-800">
+                                            {selectedFlight.is_published === false ? "Unpublished" : "Published"}
+                                        </div>
+                                        <div className="text-xs text-slate-500 mt-1">
+                                            Published listings appear on For Sale and in flight search.
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        disabled={inventorySaving}
+                                        onClick={() => void handleTogglePublish(selectedFlight)}
+                                        className={`rounded-full px-4 py-2 text-xs font-bold ${
+                                            selectedFlight.is_published === false
+                                                ? "bg-[#0C2342] text-white"
+                                                : "bg-slate-100 text-slate-700"
+                                        }`}
+                                    >
+                                        {selectedFlight.is_published === false ? "Publish" : "Unpublish"}
+                                    </button>
+                                </div>
+                            </div>
+
                             {/* Baggage */}
                             <div>
                                 <div className="font-bold text-[15px] text-slate-800 mb-4">Baggage</div>
@@ -842,7 +966,14 @@ export default function InventoryPage() {
                             <div>
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="font-bold text-[15px] text-slate-800">Tickets Volume</div>
-                                    <button onClick={() => setIsEditModalOpen(true)} className="flex items-center gap-1 text-[13px] font-bold text-slate-400 hover:text-slate-600">
+                                    <button
+                                        onClick={() => {
+                                            setEditSeats(String(selectedFlight.seats_available));
+                                            setEditPrice(String(selectedFlight.price));
+                                            setIsEditModalOpen(true);
+                                        }}
+                                        className="flex items-center gap-1 text-[13px] font-bold text-slate-400 hover:text-slate-600"
+                                    >
                                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg> Edit
                                     </button>
                                 </div>
@@ -1187,27 +1318,43 @@ export default function InventoryPage() {
             )}
 
             {/* Edit Modal */}
-            {isEditModalOpen && (
+            {isEditModalOpen && selectedFlight && (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 p-4">
                     <div className="bg-white rounded-2xl w-full max-w-[450px] shadow-2xl overflow-hidden flex flex-col">
                         <div className="bg-rose-50 p-5 relative shrink-0">
                             <button onClick={() => setIsEditModalOpen(false)} className="absolute top-5 right-5 text-slate-500 hover:bg-white/50 p-1 rounded-full transition-colors"><X className="w-5 h-5" /></button>
-                            <h2 className="font-extrabold text-[18px] text-slate-800">Change seats volume</h2>
+                            <h2 className="font-extrabold text-[18px] text-slate-800">Edit seats & price</h2>
                         </div>
-                        <div className="p-6">
-                            <div className="mb-6">
-                                <div className="font-bold text-slate-800 text-[14px] mb-1">If you want go with new GPNR</div>
-                                <div className="text-[13px] text-slate-500 flex items-center gap-1.5">
-                                    To change the seat volume: <button className="text-[#D60D26] font-bold hover:underline">Add booking ref</button>
-                                </div>
-                            </div>
-                            <div className="w-full h-px bg-slate-200 mb-6"></div>
-                            <div>
-                                <div className="font-bold text-slate-800 text-[14px] mb-1">If you want go with same GPNR</div>
-                                <div className="text-[13px] text-slate-500 flex items-center gap-1.5">
-                                    To change the seat volume: <button className="text-blue-600 font-bold hover:underline">Edit now</button>
-                                </div>
-                            </div>
+                        <div className="p-6 space-y-4">
+                            <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">
+                                Seats available
+                                <input
+                                    type="number"
+                                    min={0}
+                                    value={editSeats}
+                                    onChange={(e) => setEditSeats(e.target.value)}
+                                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
+                                />
+                            </label>
+                            <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">
+                                Price (INR)
+                                <input
+                                    type="number"
+                                    min={0}
+                                    step="0.01"
+                                    value={editPrice}
+                                    onChange={(e) => setEditPrice(e.target.value)}
+                                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
+                                />
+                            </label>
+                            <button
+                                type="button"
+                                disabled={inventorySaving}
+                                onClick={() => void handleSaveInventoryEdits()}
+                                className="w-full rounded-full bg-[#D60D26] hover:bg-[#b80b20] text-white font-bold py-3 disabled:opacity-60"
+                            >
+                                {inventorySaving ? "Saving…" : "Save changes"}
+                            </button>
                         </div>
                     </div>
                 </div>

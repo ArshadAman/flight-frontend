@@ -21,6 +21,7 @@ export const adminNavSections: AdminNavSection[] = [
     icon: "Plug",
     children: [
       { label: "Supplier Inventory", href: "/admin/inventory/search" },
+      { label: "Offline Inventory", href: "/admin/inventory/manage" },
       { label: "Supplier Booking", href: "/admin/bookings" },
       { label: "Supplier Manage API", href: "/admin/api/managed" },
       { label: "Agent API", href: "/admin/api/agent" },
@@ -41,6 +42,9 @@ export const adminNavSections: AdminNavSection[] = [
     children: [
       { label: "Agent list", href: "/admin/agents" },
       { label: "Add Agent", href: "/admin/agents/add" },
+      { label: "Block Airlines", href: "/admin/agents/block-airlines" },
+      { label: "Block Routes", href: "/admin/agents/block-routes" },
+      { label: "Reseller Portal", href: "/reseller/inventory" },
     ],
   },
   {
@@ -95,6 +99,8 @@ export function getAdminBreadcrumb(pathname: string): string {
   if (pathname.includes("/api/agent/")) return "Agent API Profile";
   if (pathname.includes("/api/customer")) return "Customer API";
   if (pathname.includes("/customers")) return "Customer";
+  if (pathname.includes("/inventory/manage")) return "Offline Inventory";
   if (pathname.includes("/inventory/results")) return "Supplier Inventory Results";
+  if (pathname.includes("/reseller/inventory")) return "Reseller Inventory";
   return "Admin";
 }

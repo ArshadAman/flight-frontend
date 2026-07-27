@@ -161,6 +161,8 @@ export function B2BNavbar() {
                 ]}
               />
 
+              <NavLink href="/b2b/for-sale">For Sale</NavLink>
+
               {/* Custom High-Fidelity My Account Dropdown */}
               <div className="relative flex items-center h-full" ref={myAccountRef}>
                 <button
@@ -479,6 +481,7 @@ export function B2BNavbar() {
           </div>
 
           <NavLink href="/b2b/my-booking" isMobile onClick={() => setIsMobileMenuOpen(false)}>My Booking</NavLink>
+          <NavLink href="/b2b/for-sale" isMobile onClick={() => setIsMobileMenuOpen(false)}>For Sale</NavLink>
 
           <div className="flex flex-col w-full my-3 bg-slate-50/50 rounded-2xl border border-slate-100 p-2">
             <div className="flex items-center gap-2 px-3 py-2 mb-1">

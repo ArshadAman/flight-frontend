@@ -150,7 +150,7 @@ export function Navbar() {
               </div>
 
               <NavLink href="/about">About Us</NavLink>
-              <NavLink href="/sale/inventory">For Sale</NavLink>
+              <NavLink href="/for-sale">For Sale</NavLink>
             </nav>
 
             {/* Desktop Action Button */}
@@ -339,7 +339,7 @@ export function Navbar() {
           </div>
 
           <NavLink href="/about" isMobile onClick={() => setIsMobileMenuOpen(false)}>About Us</NavLink>
-          <NavLink href="/sale/inventory" isMobile onClick={() => setIsMobileMenuOpen(false)}>For Sale</NavLink>
+          <NavLink href="/for-sale" isMobile onClick={() => setIsMobileMenuOpen(false)}>For Sale</NavLink>
         </nav>
 
         <div className="mt-auto px-6 pt-6 pb-8 w-full border-t border-slate-100">
