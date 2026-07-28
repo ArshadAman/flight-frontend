@@ -1,5 +1,5 @@
 /** Production backend — used when env vars are unset (no localhost fallback). */
-const PROD_BACKEND_URL = "https://portion-wiley-events-flow.trycloudflare.com";
+const PROD_BACKEND_URL = "https://api.occ.services";
 const PROD_PUBLIC_API_URL = `${PROD_BACKEND_URL}/api/v1`;
 
 /** Server-side BFF routes: `BACKEND_API_URL` */
