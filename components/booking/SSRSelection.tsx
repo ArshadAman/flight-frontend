@@ -169,9 +169,8 @@ export default function SSRSelection({
       }
 
       try {
-        const apiBase = getPublicApiUrl();
         const ticketId = ticket?.id || id;
-        const res = await fetch(`${apiBase}/tickets/${ticketId}/ssr/`, {
+        const res = await fetch(`/api/tickets/${ticketId}/ssr/`, {
           headers: {
             "Authorization": `Bearer ${token}`
           }
@@ -679,9 +678,8 @@ export default function SSRSelection({
     }
 
     try {
-      const apiBase = getPublicApiUrl();
       const ticketId = ticket?.id || id;
-      const res = await fetch(`${apiBase}/tickets/${ticketId}/ssr/add/`, {
+      const res = await fetch(`/api/tickets/${ticketId}/ssr/add/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
