@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getPublicApiUrl } from "@/lib/apiConfig";
 import { 
   Armchair, 
   Utensils, 
