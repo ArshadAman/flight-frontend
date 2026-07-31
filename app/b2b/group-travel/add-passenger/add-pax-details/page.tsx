@@ -6,35 +6,41 @@ import { Footer } from "@/components/Footer";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGroupTravel } from "@/context/GroupTravelContext";
+import { isDomesticRoute } from "@/lib/domesticRoute";
 import { CalendarIcon, ChevronDown, Plus, CheckCircle2, X } from "lucide-react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
 // ---- Validation Schema ----
-const passengerSchema = z.object({
+// Passport / nationality is only mandatory on international itineraries.
+const makePassengerSchema = (requirePassport: boolean) => z.object({
   id: z.number().optional(),
   firstName: z.string().min(1, "First Name is required"),
   lastName: z.string().min(1, "Last Name is required"),
   dob: z.string().min(1, "Date Of Birth is required"),
   gender: z.string().min(1, "Gender is required"),
-  nationality: z.string().min(1, "Nationality is required"),
-  passportNumber: z.string().min(1, "Passport Number is required").regex(/^[A-Z0-9]{6,9}$/i, "Invalid Passport Format"),
-  issuingCountry: z.string().min(1, "Issuing Country is required"),
-  passportExpiry: z.string().min(1, "Passport Expiry is required").refine((date) => {
-    const expiry = new Date(date);
-    const today = new Date();
-    // Expiry must be at least 6 months from today roughly
-    const sixMonthsFromNow = new Date(today.setMonth(today.getMonth() + 6));
-    return expiry >= sixMonthsFromNow;
-  }, { message: "Passport must be valid for at least 6 months" }),
+  nationality: requirePassport ? z.string().min(1, "Nationality is required") : z.string(),
+  passportNumber: requirePassport
+    ? z.string().min(1, "Passport Number is required").regex(/^[A-Z0-9]{6,9}$/i, "Invalid Passport Format")
+    : z.string(),
+  issuingCountry: requirePassport ? z.string().min(1, "Issuing Country is required") : z.string(),
+  passportExpiry: requirePassport
+    ? z.string().min(1, "Passport Expiry is required").refine((date) => {
+        const expiry = new Date(date);
+        const today = new Date();
+        // Expiry must be at least 6 months from today roughly
+        const sixMonthsFromNow = new Date(today.setMonth(today.getMonth() + 6));
+        return expiry >= sixMonthsFromNow;
+      }, { message: "Passport must be valid for at least 6 months" })
+    : z.string(),
 });
 
-const formSchema = z.object({
-  passengers: z.array(passengerSchema).min(1, "At least one passenger is required")
+const makeFormSchema = (requirePassport: boolean) => z.object({
+  passengers: z.array(makePassengerSchema(requirePassport)).min(1, "At least one passenger is required")
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof makeFormSchema>>;
 
 // ---- Types ----
 interface Passenger {
@@ -121,6 +127,7 @@ function AddPaxDetailsContent() {
   const { requests, uploadPassengers } = useGroupTravel();
   const requestId = searchParams.get("id") || "";
   const req = requests.find((r) => r.requestId === requestId || r.id === requestId);
+  const isDomestic = isDomesticRoute([req?.origin, req?.destination]);
 
   // ---- Toast state ----
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -136,7 +143,7 @@ function AddPaxDetailsContent() {
 
   // ---- React Hook Form Setup ----
   const { register, control, handleSubmit, watch, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(makeFormSchema(!isDomestic)),
     defaultValues: {
       passengers: [{
         firstName: "",
@@ -395,7 +402,13 @@ function AddPaxDetailsContent() {
                       </div>
                     </div>
 
-                    {/* Row 2: Passport details */}
+                    {/* Row 2: Passport details — international itineraries only */}
+                    {isDomestic ? (
+                      <p className="text-[13px] text-gray-500">
+                        Domestic sector — passport details are not required. Passengers must carry a
+                        government photo ID.
+                      </p>
+                    ) : (
                     <div>
                       <h3 className="text-[14px] font-bold text-gray-800 mb-4">Passenger passport details:</h3>
                       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 md:gap-6">
@@ -439,6 +452,7 @@ function AddPaxDetailsContent() {
                         </div>
                       </div>
                     </div>
+                    )}
 
                   </div>
                 </Section>

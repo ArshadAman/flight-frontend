@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { Fragment, use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -20,6 +20,7 @@ import {
   type ApiTicket,
   type ApiTicketStatus,
 } from "@/lib/admin/tickets-api";
+import { layoversFromSegments, normalizeSegments, stopsLabel } from "@/lib/journey";
 import { AdminBadge } from "@/components/admin/AdminBadge";
 import { AdminConfirmModal } from "@/components/admin/AdminConfirmModal";
 import { Button } from "@/components/ui/button";
@@ -260,6 +261,14 @@ export default function ApiBookingDetailPage({
                 displaySectors.length > 1 ||
                 relatedLegs.length > 0;
 
+              // Multi-city sectors are separate tickets, so the gap between them is not a layover.
+              const connectionLayovers = isMultiCity
+                ? []
+                : layoversFromSegments(
+                    normalizeSegments(displaySectors as Array<Record<string, unknown>>)
+                  );
+              const stopCount = isMultiCity ? 0 : Math.max(0, displaySectors.length - 1);
+
               return (
                 <>
             <div className="grid gap-4 lg:grid-cols-3">
@@ -348,7 +357,10 @@ export default function ApiBookingDetailPage({
               title={
                 isMultiCity
                   ? `Multi-city itinerary (${displaySectors.length} sector${displaySectors.length === 1 ? "" : "s"})`
-                  : "Segments"
+                  : `Segments · ${stopsLabel(
+                      stopCount,
+                      displaySectors.slice(0, -1).map((s) => String(s.destination || ""))
+                    )}`
               }
             >
               {isMultiCity && relatedLegs.length > 0 && (
@@ -381,7 +393,8 @@ export default function ApiBookingDetailPage({
                   </thead>
                   <tbody>
                     {displaySectors.map((s, i) => (
-                      <tr key={i} className="border-t border-[#e8ebef]">
+                      <Fragment key={i}>
+                      <tr className="border-t border-[#e8ebef]">
                         <td className="px-3 py-2 text-slate-500">
                           {String(s.leg_label || i + 1)}
                         </td>
@@ -401,6 +414,16 @@ export default function ApiBookingDetailPage({
                         </td>
                         <td className="px-3 py-2">{String(s.duration || "—")}</td>
                       </tr>
+                      {i < displaySectors.length - 1 && connectionLayovers[i] && (
+                        <tr className="bg-amber-50/70">
+                          <td colSpan={8} className="px-3 py-1.5 text-xs font-semibold text-amber-700">
+                            Layover {connectionLayovers[i].label || "—"} at{" "}
+                            {connectionLayovers[i].airport}
+                            {connectionLayovers[i].city ? ` (${connectionLayovers[i].city})` : ""}
+                          </td>
+                        </tr>
+                      )}
+                      </Fragment>
                     ))}
                     {!displaySectors.length && (
                       <tr>

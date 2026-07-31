@@ -1,5 +1,6 @@
 import type { Flight } from "@/lib/flight";
 import { formatBaggageLabel } from "@/lib/flight";
+import { layoversFromSegments, normalizeSegments, viaAirports } from "@/lib/journey";
 
 export type ForSaleInventoryItem = {
   id: string;
@@ -54,6 +55,7 @@ export function forSaleItemToFlight(item: ForSaleInventoryItem): Flight {
   const travelDate = item.departure_datetime
     ? new Date(item.departure_datetime).toISOString().slice(0, 10)
     : new Date().toISOString().slice(0, 10);
+  const segments = normalizeSegments(item.segments_data);
 
   return {
     id: `${item.airline_code || "XX"}-${item.flight_number || item.id}`,
@@ -68,6 +70,9 @@ export function forSaleItemToFlight(item: ForSaleInventoryItem): Flight {
     tax_amount: 0,
     base_amount: price,
     stops: Math.max(0, (item.segments_data?.length || 1) - 1),
+    segments: segments.length ? segments : undefined,
+    layovers: layoversFromSegments(segments),
+    via: viaAirports(segments),
     fare_type: "PUB",
     has_baggage: Boolean(item.baggage_check_in || item.baggage_hand),
     baggage_label: baggage || undefined,

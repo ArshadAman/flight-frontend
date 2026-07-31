@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, Filter, Plane, Utensils, Usb, Armchair } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Flight } from "@/lib/flight";
+import { SegmentTimeline, StopsInline } from "@/components/flights/JourneyDetails";
 import { saveBookingDraft } from "@/lib/booking";
 import { useAuth } from "@/context/AuthContext";
 
@@ -204,12 +205,19 @@ function ResultsInner() {
                     {flight.departureTime} - {flight.arrivalTime}
                   </p>
                   <p className="text-sm text-slate-600">{flight.duration}</p>
+                  <StopsInline flight={flight} className="text-sm font-medium text-slate-600" />
                   <div className="ml-auto flex items-center gap-2 text-slate-400">
                     <Armchair className="h-3.5 w-3.5" />
                     <Usb className="h-3.5 w-3.5" />
                     <Utensils className="h-3.5 w-3.5" />
                   </div>
                 </label>
+
+                {(flight.segments?.length || 0) > 1 && (
+                  <div className="mt-3 rounded-lg border border-[#eef1f5] px-3">
+                    <SegmentTimeline flight={flight} />
+                  </div>
+                )}
               </div>
             ))}
 

@@ -8,6 +8,13 @@ import {
     parseFoodOnboardFromApi,
     parseMealOptionsFromApi,
 } from "@/lib/flight";
+import {
+    formatDurationMinutes,
+    layoversFromSegments,
+    normalizeSegments,
+    parseDurationMinutes,
+    viaAirports,
+} from "@/lib/journey";
 
 const CITY_TO_IATA: Record<string, string> = {
     "new delhi": "DEL",
@@ -85,6 +92,9 @@ function mapBackendFlight(flight: any, fare: any, idx: number, searchKey: string
     const lastSeg = flight.segments?.[flight.segments.length - 1];
     const depDate = firstSeg ? parseUatDateTime(firstSeg.departure_datetime) : new Date();
     const arrDate = lastSeg ? parseUatDateTime(lastSeg.arrival_datetime) : new Date();
+    const segments = normalizeSegments(flight.segments || []);
+    const layovers = layoversFromSegments(segments);
+    const via = viaAirports(segments);
 
     const priceDetails = fare.price_details || {};
     const totalPrice = priceDetails.total_amount || 3500;
@@ -142,7 +152,17 @@ function mapBackendFlight(flight: any, fare: any, idx: number, searchKey: string
         firstSeg?.aircraft ||
         null;
 
-    const durationStr = firstSeg?.duration || "2h 30m";
+    // Total journey time (flights + layovers), not just the first leg.
+    const journeyMinutes = Math.round((arrDate.getTime() - depDate.getTime()) / 60000);
+    const summedMinutes =
+        segments.reduce((total, seg) => total + (seg.duration_minutes || 0), 0) +
+        layovers.reduce((total, l) => total + l.minutes, 0);
+    const totalMinutes =
+        (journeyMinutes > 0 ? journeyMinutes : 0) ||
+        (summedMinutes > 0 ? summedMinutes : 0) ||
+        parseDurationMinutes(firstSeg?.duration) ||
+        0;
+    const durationStr = formatDurationMinutes(totalMinutes) || "2h 30m";
     const cabinClass =
         firstSeg?.cabin_class ||
         fare.cabin_class ||
@@ -175,13 +195,16 @@ function mapBackendFlight(flight: any, fare: any, idx: number, searchKey: string
         departureTime: formatTime12h(depDate),
         arrivalTime: formatTime12h(arrDate),
         duration: durationStr,
-        duration_minutes: parseDurationToMinutes(durationStr),
+        duration_minutes: totalMinutes > 0 ? totalMinutes : parseDurationToMinutes(durationStr),
         departure_minutes: depDate.getHours() * 60 + depDate.getMinutes(),
         arrival_minutes: arrDate.getHours() * 60 + arrDate.getMinutes(),
         price: totalPrice,
         tax_amount: taxAmount,
         base_amount: baseAmount,
         stops: Math.max(0, (flight.segments?.length || 1) - 1),
+        segments,
+        layovers,
+        via,
         fare_type: normalizedFare,
         has_baggage: hasBaggage,
         baggage_label: baggageStr || undefined,

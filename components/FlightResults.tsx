@@ -22,6 +22,7 @@ import AddOnModal, { BaggageOption as AddOnBaggage } from "./AddOnModal";
 import { RulesModal } from "./RulesModal";
 import { cn } from "@/lib/utils";
 import { saveBookingDraft, type BookingDraft } from "@/lib/booking";
+import { layoversFromSegments, stopsLabel, viaAirports, type FlightSegment, type Layover } from "@/lib/journey";
 
 export type Flight = {
   id: string;
@@ -53,6 +54,9 @@ export type Flight = {
   travel_date?: string;
   is_agent_flight?: boolean;
   agent_flight_id?: string;
+  segments?: FlightSegment[];
+  layovers?: Layover[];
+  via?: string[];
 };
 
 interface FlightResultsProps {
@@ -631,17 +635,36 @@ export function FlightResults({
               ? format(parseISO(effectiveTravelDate), "EEE, d MMM yy")
               : "—";
             const routeLabel = `${flight.origin} ➔ ${flight.destination}`;
-            const segments = [
-              {
-                code: flight.id,
-                date: displayDate,
-                route: routeLabel,
-                class: "E1/Economy",
-                timing: `${flight.departureTime} - ${flight.arrivalTime}`,
-                duration: flight.duration,
-                seatsCode: flight.stops === 0 ? "Non-stop" : `${flight.stops} stop(s)`,
-              },
-            ];
+            const legs = flight.segments || [];
+            const legLayovers = flight.layovers?.length ? flight.layovers : layoversFromSegments(legs);
+            const viaCodes = flight.via?.length ? flight.via : viaAirports(legs);
+            const stopsText = stopsLabel(flight.stops, viaCodes);
+            // One row per real leg so connections are visible; fall back to the whole journey.
+            const segments =
+              legs.length > 1
+                ? legs.map((leg, legIdx) => ({
+                    code: leg.flight_number || flight.id,
+                    date: displayDate,
+                    route: `${leg.origin} ➔ ${leg.destination}`,
+                    class: flight.cabin_class || "E1/Economy",
+                    timing: `${leg.departureTime || "—"} - ${leg.arrivalTime || "—"}`,
+                    duration: leg.duration || "",
+                    seatsCode:
+                      legIdx < legs.length - 1 && legLayovers[legIdx]
+                        ? `Layover ${legLayovers[legIdx].label || "—"}`
+                        : "Final leg",
+                  }))
+                : [
+                    {
+                      code: flight.id,
+                      date: displayDate,
+                      route: routeLabel,
+                      class: flight.cabin_class || "E1/Economy",
+                      timing: `${flight.departureTime} - ${flight.arrivalTime}`,
+                      duration: flight.duration,
+                      seatsCode: stopsText,
+                    },
+                  ];
 
             return (
               <div
@@ -723,10 +746,13 @@ export function FlightResults({
                   </div>
 
                   {/* Stop Indicator */}
-                  <div className="flex items-center px-6 py-4 border-r border-slate-200 min-w-[140px] justify-center">
-                    <span className="text-[#121121] text-[13px] font-[800]">
-                      {flight.stops === 0 ? "Non-Stop" : `Stops: ${flight.stops}`}
-                    </span>
+                  <div className="flex flex-col items-center justify-center px-6 py-4 border-r border-slate-200 min-w-[160px] text-center">
+                    <span className="text-[#121121] text-[13px] font-[800]">{stopsText}</span>
+                    {legLayovers.length > 0 && (
+                      <span className="text-[11px] font-semibold text-slate-400 mt-0.5">
+                        Layover {legLayovers.map((l) => l.label || "—").join(" + ")}
+                      </span>
+                    )}
                   </div>
 
                 {/* Right aligned Badges */}
@@ -808,11 +834,15 @@ export function FlightResults({
                       className="grid grid-cols-[auto_1fr_1.2fr_1fr_1fr_1.5fr_1fr_1fr_auto] gap-x-4 gap-y-2 items-center px-6 py-5 border-b border-slate-100 hover:bg-slate-50/60 transition-colors last:border-b-0 cursor-pointer"
                     >
 
-                      {/* Radio circle selector */}
+                      {/* Radio circle selector — one per flight, not per leg */}
                       <div className="flex items-center justify-center pr-2">
-                        <div className={cn("w-[15px] h-[15px] rounded-full border flex items-center justify-center transition-colors", isSelected ? "border-[#D60D26]" : "border-slate-300")}>
-                          <div className={cn("w-[9px] h-[9px] rounded-full transition-colors", isSelected ? "bg-[#D60D26]" : "bg-transparent")}></div>
-                        </div>
+                        {sIdx === 0 ? (
+                          <div className={cn("w-[15px] h-[15px] rounded-full border flex items-center justify-center transition-colors", isSelected ? "border-[#D60D26]" : "border-slate-300")}>
+                            <div className={cn("w-[9px] h-[9px] rounded-full transition-colors", isSelected ? "bg-[#D60D26]" : "bg-transparent")}></div>
+                          </div>
+                        ) : (
+                          <div className="w-[15px] h-[15px]" />
+                        )}
                       </div>
 
                       <span className="text-[12px] font-[600] text-slate-600 truncate">{seg.code}</span>
@@ -945,8 +975,11 @@ export function FlightResults({
                   dateLabel = travelDate;
                 }
               }
-              const stopsLabel =
-                flight.stops === 0 ? "Non Stop" : flight.stops === 1 ? "1 Stop" : `${flight.stops} Stops`;
+              const cardVia = flight.via?.length ? flight.via : viaAirports(flight.segments);
+              const cardLayovers = flight.layovers?.length
+                ? flight.layovers
+                : layoversFromSegments(flight.segments);
+              const cardStopsLabel = stopsLabel(flight.stops, cardVia);
 
               return (
                 <button
@@ -1009,10 +1042,15 @@ export function FlightResults({
                       <p className="text-[11px] font-semibold text-slate-500">{dateLabel}</p>
                     </div>
 
-                    <div className="flex flex-col items-center px-1">
+                    <div className="flex flex-col items-center px-1 text-center">
                       <span className="text-[11px] font-bold text-slate-500">{flight.duration}</span>
                       <div className="my-1 h-px w-14 bg-slate-300" />
-                      <span className="text-[11px] font-semibold text-slate-400">{stopsLabel}</span>
+                      <span className="text-[11px] font-semibold text-slate-400">{cardStopsLabel}</span>
+                      {cardLayovers.length > 0 && (
+                        <span className="text-[10px] font-semibold text-slate-400">
+                          Layover {cardLayovers.map((l) => l.label || "—").join(" + ")}
+                        </span>
+                      )}
                     </div>
 
                     <div className="min-w-0 text-right">

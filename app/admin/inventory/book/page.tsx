@@ -15,6 +15,7 @@ import {
 } from "@/lib/booking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SegmentTimeline, StopsInline } from "@/components/flights/JourneyDetails";
 import { ArrowLeft } from "lucide-react";
 
 export default function AdminInventoryBookPage() {
@@ -94,7 +95,8 @@ export default function AdminInventoryBookPage() {
             <h1 className="text-xl font-bold text-[#1c304a]">API Book · Confirm passengers</h1>
             <p className="text-xs text-slate-500">
               {draft.origin} → {draft.destination} · {draft.outbound.airline} · ₹
-              {draft.outbound.price.toLocaleString("en-IN")}
+              {draft.outbound.price.toLocaleString("en-IN")} ·{" "}
+              <StopsInline flight={draft.outbound} />
             </p>
           </div>
         </div>
@@ -129,6 +131,13 @@ export default function AdminInventoryBookPage() {
           </div>
         ) : (
           <>
+            <section className="rounded-xl border border-[#e8ebef] bg-white p-5">
+              <h3 className="mb-3 text-sm font-semibold">
+                Itinerary · <StopsInline flight={draft.outbound} className="font-normal text-slate-500" />
+              </h3>
+              <SegmentTimeline flight={draft.outbound} />
+            </section>
+
             <section className="rounded-xl border border-[#e8ebef] bg-white p-5">
               <h3 className="mb-3 text-sm font-semibold">Contact</h3>
               <div className="grid gap-3 sm:grid-cols-2">

@@ -17,6 +17,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { BookingDraft } from "@/lib/booking";
 import type { Flight } from "@/lib/flight";
+import { StopsSummary } from "@/components/flights/JourneyDetails";
 
 function formatLegDate(date?: string) {
   if (!date) return "—";
@@ -60,9 +61,10 @@ function FlightLegSummary({
       <div className="text-sm font-semibold text-foreground shrink-0">
         {flight.departureTime} – {flight.arrivalTime}
       </div>
-      <div className="text-xs font-medium text-muted-foreground shrink-0 hidden md:block">
-        {flight.stops === 0 ? "Non-stop" : `${flight.stops} stop(s)`}
-      </div>
+      <StopsSummary
+        flight={flight}
+        className="text-xs font-medium text-muted-foreground shrink-0 hidden md:block"
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
   submitFlightBooking,
 } from "@/lib/booking";
 import { validatePassengerDob, validatePassportExpiry } from "@/lib/passengerAge";
+import { isDomesticItinerary } from "@/lib/domesticRoute";
 import { useAuth } from "@/context/AuthContext";
 import { BookingPassengerDataPanel } from "./BookingPassengerDataPanel";
 import { BookingConfirmation } from "./BookingConfirmation";
@@ -75,6 +76,17 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
     [draft, passengers]
   );
 
+  const isDomestic = useMemo(
+    () =>
+      draft
+        ? isDomesticItinerary(
+            [draft.outbound, draft.returnFlight, ...(draft.multiCityFlights || [])],
+            [draft.origin, draft.destination]
+          )
+        : false,
+    [draft]
+  );
+
   const updatePax = (id: string, field: keyof BookingPassenger, value: string) => {
     setPassengers((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
   };
@@ -105,12 +117,14 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
         setError(dobErr);
         return;
       }
-      const passportErr = validatePassportExpiry(p.passport_expiry, draft.departureDate, p.label, {
-        required: Boolean(p.passport_number?.trim()),
-      });
-      if (passportErr) {
-        setError(passportErr);
-        return;
+      if (!isDomestic) {
+        const passportErr = validatePassportExpiry(p.passport_expiry, draft.departureDate, p.label, {
+          required: Boolean(p.passport_number?.trim()),
+        });
+        if (passportErr) {
+          setError(passportErr);
+          return;
+        }
       }
     }
 

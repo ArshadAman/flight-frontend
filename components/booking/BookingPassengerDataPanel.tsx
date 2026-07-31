@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { COUNTRIES } from "@/lib/data/countries";
 import type { BookingDraft, BookingPassenger } from "@/lib/booking";
 import type { Flight } from "@/lib/flight";
+import { isDomesticItinerary } from "@/lib/domesticRoute";
+import { StopsSummary, SegmentTimeline } from "@/components/flights/JourneyDetails";
 import { BookingDateField } from "@/components/booking/BookingDateField";
 import { dobBoundsForPaxType, passportExpiryBounds, validatePassengerDob, validatePassportExpiry } from "@/lib/passengerAge";
 
@@ -93,6 +95,7 @@ function ItineraryRow({ flight, date }: { flight: Flight; date?: string }) {
           {flight.departureTime} - {flight.arrivalTime}
         </span>
         <span className="text-[13px] font-semibold text-slate-600">{flight.duration}</span>
+        <StopsSummary flight={flight} className="text-[13px] font-semibold text-slate-600" />
         <span className="text-[13px] font-semibold text-slate-600">0/32N</span>
         <div className="flex items-center gap-2 text-slate-400 ml-auto">
           <Armchair className="w-4 h-4" strokeWidth={2.5} />
@@ -120,6 +123,11 @@ function ItineraryRow({ flight, date }: { flight: Flight; date?: string }) {
           TKT Ordered {format(new Date(), "ddMMM/yy, hh:mma").toUpperCase()}
         </span>
       </div>
+      {(flight.segments?.length || 0) > 1 && (
+        <div className="mt-3 rounded-lg border border-slate-200 bg-white px-3">
+          <SegmentTimeline flight={flight} />
+        </div>
+      )}
     </>
   );
 }
@@ -169,6 +177,11 @@ export function BookingPassengerDataPanel({
   const pax = passengers[activePaxIndex] || passengers[0];
   const dobBounds = dobBoundsForPaxType(pax?.pax_type ?? 0, draft.departureDate);
   const passportBounds = passportExpiryBounds(draft.departureDate);
+  // Travel documents (APIS) are only collected for international itineraries.
+  const isDomestic = isDomesticItinerary(
+    [draft.outbound, draft.returnFlight, ...(draft.multiCityFlights || [])],
+    [draft.origin, draft.destination]
+  );
   const payingPax = draft.adults + draft.children;
   const basePerPax = payingPax > 0 && pricing ? pricing.subtotal / payingPax : 0;
   const taxPerPax = payingPax > 0 && pricing ? pricing.tax / payingPax : 0;
@@ -186,11 +199,13 @@ export function BookingPassengerDataPanel({
       if (!p.last_name.trim()) return `${p.label}: Last name is required.`;
       const dobErr = validatePassengerDob(p.dob, p.pax_type, draft.departureDate, p.label);
       if (dobErr) return dobErr;
-      const hasPassportNo = Boolean(p.passport_number?.trim());
-      const passportErr = validatePassportExpiry(p.passport_expiry, draft.departureDate, p.label, {
-        required: hasPassportNo,
-      });
-      if (passportErr) return passportErr;
+      if (!isDomestic) {
+        const hasPassportNo = Boolean(p.passport_number?.trim());
+        const passportErr = validatePassportExpiry(p.passport_expiry, draft.departureDate, p.label, {
+          required: hasPassportNo,
+        });
+        if (passportErr) return passportErr;
+      }
     }
     if (!contactMobile.trim()) return "Contact mobile is required (open CTC tab).";
     if (!contactEmail.trim()) return "Contact email is required (open CTC tab).";
@@ -459,6 +474,17 @@ export function BookingPassengerDataPanel({
                     <div className="bg-background/40 rounded-b-xl border border-slate-100 p-6 md:p-8">
                       {activeTab === "APIS" && pax && (
                         <div className="flex flex-col gap-8">
+                          {isDomestic ? (
+                            <div className="rounded-lg border border-slate-200 bg-white px-4 py-3">
+                              <h4 className="text-[13px] font-bold text-slate-800">
+                                Travel document (DOCS)
+                              </h4>
+                              <p className="mt-1 text-[12px] font-medium text-slate-500">
+                                Not required for domestic flights. Carry any government photo ID at
+                                the airport.
+                              </p>
+                            </div>
+                          ) : (
                           <div className="flex flex-col gap-4">
                             <h4 className="text-[13px] font-bold text-slate-800">
                               Primary data of the travel document (DOCS)
@@ -533,6 +559,7 @@ export function BookingPassengerDataPanel({
                             </div>
                             <p className="text-[11px] text-slate-500 -mt-2">{passportBounds.hint}</p>
                           </div>
+                          )}
 
                           <div className="flex flex-col gap-4">
                             <h4 className="text-[13px] font-bold text-slate-800">Passenger contact address (DOCA)</h4>

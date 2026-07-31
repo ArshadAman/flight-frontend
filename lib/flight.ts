@@ -1,3 +1,7 @@
+import type { FlightSegment, Layover } from "@/lib/journey";
+
+export type { FlightSegment, Layover };
+
 export type MealOption = {
   id: string;
   name: string;
@@ -129,6 +133,11 @@ export type Flight = {
   tax_amount?: number;
   base_amount?: number;
   stops: number;
+  /** Per-leg detail for connecting flights (single entry for non-stop). */
+  segments?: FlightSegment[];
+  layovers?: Layover[];
+  /** Connection airport codes, in order. */
+  via?: string[];
   fare_type?: string;
   has_baggage?: boolean;
   baggage_label?: string;

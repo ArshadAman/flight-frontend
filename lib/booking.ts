@@ -204,6 +204,9 @@ function flightSnapshot(leg: Flight): Record<string, unknown> {
     arrival_datetime: arrivalDatetime,
     cabin_class: undefined,
     stops: leg.stops,
+    segments: leg.segments,
+    layovers: leg.layovers,
+    via: leg.via,
   };
 }
 
