@@ -122,8 +122,12 @@ export function normalizeSegments(raw?: Array<Record<string, unknown>> | null): 
 
   return raw.map((entry) => {
     const seg = (entry || {}) as Record<string, any>;
-    const departure = parseFlightDateTime(seg.departure_datetime || seg.departure);
-    const arrival = parseFlightDateTime(seg.arrival_datetime || seg.arrival);
+    const departure = parseFlightDateTime(
+      seg.departure_datetime || seg.departure_iso || seg.departure
+    );
+    const arrival = parseFlightDateTime(
+      seg.arrival_datetime || seg.arrival_iso || seg.arrival
+    );
     const gapMinutes =
       departure && arrival
         ? Math.max(0, Math.round((arrival.getTime() - departure.getTime()) / 60000))
@@ -151,8 +155,8 @@ export function normalizeSegments(raw?: Array<Record<string, unknown>> | null): 
       destination_terminal: seg.destination_terminal || undefined,
       departure_iso: departure?.toISOString(),
       arrival_iso: arrival?.toISOString(),
-      departureTime: formatTime12h(departure),
-      arrivalTime: formatTime12h(arrival),
+      departureTime: formatTime12h(departure) || seg.departureTime || undefined,
+      arrivalTime: formatTime12h(arrival) || seg.arrivalTime || undefined,
       duration: formatDurationMinutes(minutes) || undefined,
       duration_minutes: minutes,
     };

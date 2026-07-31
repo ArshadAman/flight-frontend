@@ -78,9 +78,11 @@ export default function B2BBookingDetailsPage({ params }: PageProps) {
                     }
                 });
                 if (response.ok) {
-                    const data = await response.json();
-                    console.log("[B2B BookingDetails Page] Direct UUID ticket lookup succeeded:", data);
-                    setTicket(data);
+                    const payload = await response.json();
+                    const ticketData =
+                        payload?.data && !Array.isArray(payload.data) ? payload.data : payload;
+                    console.log("[B2B BookingDetails Page] Direct UUID ticket lookup succeeded:", ticketData);
+                    setTicket(ticketData);
                     return;
                 }
             }
@@ -94,7 +96,11 @@ export default function B2BBookingDetailsPage({ params }: PageProps) {
             });
             if (listResponse.ok) {
                 const listData = await listResponse.json();
-                const tickets = listData.results || listData;
+                const tickets = Array.isArray(listData)
+                    ? listData
+                    : Array.isArray(listData?.data)
+                      ? listData.data
+                      : (listData?.results ?? []);
                 const matched = tickets.find((t: any) => 
                     t.id === id || 
                     t.pnr_number === id || 
