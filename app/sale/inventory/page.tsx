@@ -720,8 +720,9 @@ export default function InventoryPage() {
                                 onClick={() => {
                                     if (!access) { openAuthModal(); return; }
                                     const api = getPublicApiUrl();
-                                    const url = `${api}/flights/inventory/export/?format=csv`;
+                                    const url = `${api}/flights/inventory/export/`;
                                     const a = document.createElement("a");
+
                                     a.href = url;
                                     a.setAttribute("download", `inventory-${new Date().toISOString().slice(0,10)}.csv`);
                                     // attach auth token as header isn't possible for anchor — open in new tab with token in URL if supported, else use fetch
