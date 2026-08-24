@@ -15,7 +15,7 @@ import {
   submitFlightBooking,
 } from "@/lib/booking";
 import { validatePassengerDob, validatePassportExpiry } from "@/lib/passengerAge";
-import { isDomesticItinerary } from "@/lib/domesticRoute";
+import { isDomesticItinerary, itineraryRequiresTravelDocs } from "@/lib/domesticRoute";
 import { useAuth } from "@/context/AuthContext";
 import { BookingPassengerDataPanel } from "./BookingPassengerDataPanel";
 import { BookingConfirmation } from "./BookingConfirmation";
@@ -87,6 +87,18 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
     [draft]
   );
 
+  const requiresTravelDocs = useMemo(
+    () =>
+      draft
+        ? itineraryRequiresTravelDocs(isDomestic, [
+            draft.outbound,
+            draft.returnFlight,
+            ...(draft.multiCityFlights || []),
+          ])
+        : false,
+    [draft, isDomestic]
+  );
+
   const updatePax = (id: string, field: keyof BookingPassenger, value: string) => {
     setPassengers((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
   };
@@ -117,9 +129,13 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
         setError(dobErr);
         return;
       }
-      if (!isDomestic) {
+      if (requiresTravelDocs) {
+        if (!p.passport_number?.trim()) {
+          setError(`${p.label}: Passport / travel document number is required.`);
+          return;
+        }
         const passportErr = validatePassportExpiry(p.passport_expiry, draft.departureDate, p.label, {
-          required: Boolean(p.passport_number?.trim()),
+          required: true,
         });
         if (passportErr) {
           setError(passportErr);
@@ -213,7 +229,8 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
       { mobile: contactMobile, email: contactEmail },
       passengers,
       token,
-      bookingSSRDetails
+      bookingSSRDetails,
+      draft.inventoryHoldId ? { holdId: draft.inventoryHoldId } : undefined
     );
 
     if (result.ok) {
@@ -292,6 +309,17 @@ export function FlightBookingForm({ b2b = false }: { b2b?: boolean }) {
       loading={loading}
       onSearchAgain={() => router.push(b2b ? "/b2b/search" : "/search")}
       formError={error}
+      extraSections={
+        draft.inventoryHoldId ? (
+          <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-900 font-medium">
+            Seat hold is active
+            {draft.holdExpiresAt
+              ? ` until ${new Date(draft.holdExpiresAt).toLocaleString("en-IN")}`
+              : " (24 hours)"}
+            . Completing this booking converts the hold into a ticket request.
+          </div>
+        ) : null
+      }
     />
   );
 }

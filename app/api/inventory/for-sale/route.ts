@@ -31,7 +31,13 @@ export async function GET(request: NextRequest) {
         { status: res.status }
       );
     }
-    return NextResponse.json(data);
+    const envelope =
+      data && typeof data === "object"
+        ? (data as { success?: boolean; data?: { results?: unknown[]; count?: number } })
+        : {};
+    const inner = envelope.success && envelope.data ? envelope.data : (data as { results?: unknown[]; count?: number });
+    const results = Array.isArray(inner?.results) ? inner.results : Array.isArray(data) ? data : [];
+    return NextResponse.json({ results, count: inner?.count ?? results.length });
   } catch (err) {
     const message = err instanceof Error ? err.message : "For Sale inventory unavailable";
     return NextResponse.json({ detail: message, results: [], count: 0 }, { status: 502 });

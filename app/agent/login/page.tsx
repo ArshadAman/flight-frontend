@@ -23,7 +23,7 @@ export default function AgentLoginPage() {
   useEffect(() => {
     if (user) {
       if (user.role === "AGENT" || user.role === "ADMIN") {
-        router.push("/agent/dashboard");
+        router.push("/sale/flight/all");
       }
     }
   }, [user, router]);
@@ -51,7 +51,7 @@ export default function AgentLoginPage() {
         return;
       }
 
-      router.push("/agent/dashboard");
+      router.push("/sale/flight/all");
     } catch (err: any) {
       setError(err.message || "Invalid credentials. Please try again.");
     } finally {

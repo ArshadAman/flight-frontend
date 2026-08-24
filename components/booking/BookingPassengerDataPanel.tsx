@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { COUNTRIES } from "@/lib/data/countries";
 import type { BookingDraft, BookingPassenger } from "@/lib/booking";
 import type { Flight } from "@/lib/flight";
-import { isDomesticItinerary } from "@/lib/domesticRoute";
+import { isDomesticItinerary, itineraryRequiresTravelDocs } from "@/lib/domesticRoute";
 import { StopsSummary, SegmentTimeline } from "@/components/flights/JourneyDetails";
 import { BookingDateField } from "@/components/booking/BookingDateField";
 import { dobBoundsForPaxType, passportExpiryBounds, validatePassengerDob, validatePassportExpiry } from "@/lib/passengerAge";
@@ -149,6 +149,10 @@ type Props = {
   onSearchAgain?: () => void;
   extraSections?: React.ReactNode;
   formError?: string | null;
+  /** Offline portal: passengers step only — payment is a separate route. */
+  flowMode?: "full" | "passengers-only";
+  onProceedToPayment?: () => void;
+  showTripHeader?: boolean;
 };
 
 export function BookingPassengerDataPanel({
@@ -166,6 +170,9 @@ export function BookingPassengerDataPanel({
   onSearchAgain,
   extraSections,
   formError,
+  flowMode = "full",
+  onProceedToPayment,
+  showTripHeader = true,
 }: Props) {
   const [activeStep, setActiveStep] = useState<"details" | "payment">("details");
   const [activeTab, setActiveTab] = useState<"APIS" | "CTC" | "FFN">("APIS");
@@ -182,6 +189,11 @@ export function BookingPassengerDataPanel({
     [draft.outbound, draft.returnFlight, ...(draft.multiCityFlights || [])],
     [draft.origin, draft.destination]
   );
+  const requiresTravelDocs = itineraryRequiresTravelDocs(isDomestic, [
+    draft.outbound,
+    draft.returnFlight,
+    ...(draft.multiCityFlights || []),
+  ]);
   const payingPax = draft.adults + draft.children;
   const basePerPax = payingPax > 0 && pricing ? pricing.subtotal / payingPax : 0;
   const taxPerPax = payingPax > 0 && pricing ? pricing.tax / payingPax : 0;
@@ -199,10 +211,10 @@ export function BookingPassengerDataPanel({
       if (!p.last_name.trim()) return `${p.label}: Last name is required.`;
       const dobErr = validatePassengerDob(p.dob, p.pax_type, draft.departureDate, p.label);
       if (dobErr) return dobErr;
-      if (!isDomestic) {
-        const hasPassportNo = Boolean(p.passport_number?.trim());
+      if (requiresTravelDocs) {
+        if (!p.passport_number?.trim()) return `${p.label}: Passport / travel document number is required.`;
         const passportErr = validatePassportExpiry(p.passport_expiry, draft.departureDate, p.label, {
-          required: hasPassportNo,
+          required: true,
         });
         if (passportErr) return passportErr;
       }
@@ -227,6 +239,10 @@ export function BookingPassengerDataPanel({
       return;
     }
     setLocalError(null);
+    if (flowMode === "passengers-only" && onProceedToPayment) {
+      onProceedToPayment();
+      return;
+    }
     setActiveStep("payment");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -252,6 +268,7 @@ export function BookingPassengerDataPanel({
   return (
     <div className="w-full flex flex-col min-h-screen bg-white">
       {/* Top split header */}
+      {showTripHeader && (
       <div className="flex flex-col md:flex-row w-full select-none">
         <div className="w-full md:flex-1 bg-primary text-white flex flex-col justify-center px-4 md:pl-10 py-3 md:py-4">
           <div className="flex items-center gap-2 font-bold text-sm md:text-[15px]">
@@ -269,6 +286,7 @@ export function BookingPassengerDataPanel({
           </Button>
         </div>
       </div>
+      )}
 
       <div className="w-full max-w-[1280px] mx-auto py-8 px-4 flex flex-col">
         <div className="flex flex-col gap-4">
@@ -474,13 +492,13 @@ export function BookingPassengerDataPanel({
                     <div className="bg-background/40 rounded-b-xl border border-slate-100 p-6 md:p-8">
                       {activeTab === "APIS" && pax && (
                         <div className="flex flex-col gap-8">
-                          {isDomestic ? (
+                          {!requiresTravelDocs ? (
                             <div className="rounded-lg border border-slate-200 bg-white px-4 py-3">
                               <h4 className="text-[13px] font-bold text-slate-800">
                                 Travel document (DOCS)
                               </h4>
                               <p className="mt-1 text-[12px] font-medium text-slate-500">
-                                Not required for domestic flights. Carry any government photo ID at
+                                Not required for this itinerary. Carry any government photo ID at
                                 the airport.
                               </p>
                             </div>
@@ -519,7 +537,7 @@ export function BookingPassengerDataPanel({
                                   <option value="passport">Passport</option>
                                 </select>
                               </Field>
-                              <Field label="Document Number">
+                              <Field label="Document Number" required={requiresTravelDocs}>
                                 <input
                                   type="text"
                                   placeholder="Passport / ID number"
@@ -546,7 +564,7 @@ export function BookingPassengerDataPanel({
                               </Field>
                               <BookingDateField
                                 label="Passport Validity / Expiry"
-                                required={Boolean(pax.passport_number?.trim())}
+                                required={requiresTravelDocs}
                                 value={pax.passport_expiry || ""}
                                 onChange={(iso) => {
                                   setLocalError(null);
@@ -687,6 +705,7 @@ export function BookingPassengerDataPanel({
           </div>
 
           {/* PAYMENT */}
+          {flowMode !== "passengers-only" && (
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm mb-16">
             <button
               type="button"
@@ -763,6 +782,7 @@ export function BookingPassengerDataPanel({
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
     </div>

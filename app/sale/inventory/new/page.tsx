@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getPublicApiUrl } from "@/lib/apiConfig";
 import { RouteMapBackground } from "@/components/sale/RouteMapBackground";
+import { formatDurationMinutes } from "@/lib/journey";
 
 type Airport = {
     code: string;
@@ -39,6 +40,19 @@ const POLICY_FIELDS: { key: PolicyKey; label: string; placeholder: string }[] = 
     { key: "change", label: "Change policy", placeholder: "Add change policy details..." },
     { key: "refund", label: "Refund policy", placeholder: "Add refund policy details..." },
 ];
+
+function minutesFromClock(time: string): number {
+    const [hours, minutes] = String(time || "00:00").split(":").map(Number);
+    return (hours || 0) * 60 + (minutes || 0);
+}
+
+function layoverBetween(current: Segment, next: Segment): string {
+    let arrival = minutesFromClock(current.toTime);
+    let departure = minutesFromClock(next.fromTime);
+    if (current.plusOneDay) arrival += 24 * 60;
+    if (departure < arrival) departure += 24 * 60;
+    return formatDurationMinutes(departure - arrival) || "—";
+}
 
 const TERMINAL_OPTIONS = ["Terminal 1", "Terminal 2", "Terminal 3"];
 
@@ -423,9 +437,16 @@ export default function AddPNRPage() {
                         departure_datetime: currentDepDate.toISOString(),
                         arrival_datetime: currentArrDate.toISOString(),
                         duration: seg.duration,
-                        stop_over: i < segments.length - 1 ? "2h 15m" : null,
+                        stop_over: null as string | null,
                         return_flight: false
                     });
+                }
+
+                for (let i = 0; i < apiSegments.length - 1; i++) {
+                    const arriveMs = new Date(apiSegments[i].arrival_datetime).getTime();
+                    const departMs = new Date(apiSegments[i + 1].departure_datetime).getTime();
+                    const gapMin = Math.round((departMs - arriveMs) / 60000);
+                    apiSegments[i].stop_over = formatDurationMinutes(gapMin) || null;
                 }
 
                 const firstSegDep = apiSegments[0].departure_datetime;
@@ -1233,7 +1254,7 @@ export default function AddPNRPage() {
                                                 {/* Below-card badges */}
                                                 {index < segments.length - 1 && (
                                                     <div className="mt-2 bg-rose-50 border border-rose-100 rounded-xl px-4 py-2.5 flex justify-between items-center">
-                                                        <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5"><Clock className="w-4 h-4" /> Layover 02 h 15 min</div>
+                                                        <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5"><Clock className="w-4 h-4" /> Layover {layoverBetween(seg, segments[index + 1])} at {seg.toCode}</div>
                                                         <button onClick={handleDeleteStop} className="text-[12px] font-bold text-slate-500 flex items-center gap-1 hover:text-[#D60D26] transition-colors"><Trash2 className="w-3.5 h-3.5" /> Delete stop</button>
                                                     </div>
                                                 )}

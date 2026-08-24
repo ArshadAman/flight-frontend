@@ -87,3 +87,15 @@ export function isDomesticItinerary(
   ];
   return isDomesticRoute(codes);
 }
+
+/**
+ * Passport / APIS capture is required for international itineraries, and also
+ * when the agent marked the For Sale listing as APIS-required (even domestic).
+ */
+export function itineraryRequiresTravelDocs(
+  isDomestic: boolean,
+  flights: Array<{ apis_required?: boolean } | null | undefined> = []
+): boolean {
+  if (flights.some((flight) => Boolean(flight?.apis_required))) return true;
+  return !isDomestic;
+}

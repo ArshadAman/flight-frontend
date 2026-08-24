@@ -21,31 +21,28 @@ function Field({
   file?: boolean;
   className?: string;
 }) {
+  const placeholder = `${label}${required ? "*" : ""}`;
   return (
     <div className={cn("min-w-0", className)}>
-      <label className="mb-1 block text-[11px] font-medium text-[#5b6b7c]">
-        {label}
-        {required && <span className="text-[#c61324]">*</span>}
-      </label>
       {file ? (
         <div className="flex h-9 items-center gap-2 rounded border border-[#e8ebef] bg-white px-2">
           <button
             type="button"
-            className="rounded bg-[#006aec] px-2.5 py-1 text-[10px] font-medium text-white"
+            className="rounded border border-[#006aec] px-2.5 py-1 text-[10px] font-medium text-[#006aec]"
           >
             Choose File
           </button>
-          <span className="truncate text-[11px] text-slate-400">No file chosen</span>
+          <span className="truncate text-[11px] text-slate-400">{placeholder}</span>
         </div>
       ) : dropdown ? (
         <div className="relative">
-          <select className="h-9 w-full appearance-none rounded border border-[#e8ebef] bg-white px-3 pr-8 text-sm text-[#1c304a]">
-            <option value="">Select</option>
+          <select className="h-9 w-full appearance-none rounded border border-[#e8ebef] bg-white px-3 pr-8 text-sm text-[#5b6b7c]">
+            <option value="">{placeholder}</option>
           </select>
           <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-slate-400" />
         </div>
       ) : (
-        <Input type={type} className="h-9 border-[#e8ebef] text-sm" />
+        <Input type={type} placeholder={placeholder} className="h-9 border-[#e8ebef] text-sm placeholder:text-[#5b6b7c]" />
       )}
     </div>
   );
@@ -70,7 +67,7 @@ function Section({
 
 export default function AddAgentPage() {
   return (
-    <div className="flex min-h-full flex-col bg-white">
+    <div className="flex min-h-full flex-col bg-[#f4f7fa]">
       <AdminPageHeader title="Add Agent" showSearch={false} showFilter={false} />
       <div className="flex-1 space-y-5 p-6">
         <Section title="Agency Information">
@@ -88,13 +85,13 @@ export default function AddAgentPage() {
           <Field label="Login ID" required />
           <Field label="Class" required dropdown />
           <Field label="Currency" required dropdown />
-          <Field label="Add Role (B2B/B2C)" required dropdown />
+          <Field label="Add Role (B2b/b2C)" required dropdown />
         </Section>
 
         <Section title="Tax Information">
           <Field label="Aadhar Number" required />
           <Field label="PAN Number" required />
-          <Field label="PAN Name Holder" required />
+          <Field label="PAN Number" required />
           <Field label="Aadhar Document" file />
           <Field label="PAN Document" file />
         </Section>

@@ -74,7 +74,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 }
                 onClose();
                 if (loggedInUser && loggedInUser.role === "AGENT") {
-                    router.push(pathname?.startsWith("/sale") ? "/sale/inventory" : "/agent/dashboard");
+                    router.push("/sale/flight/all");
                 } else if (isAdminSession(loggedInUser)) {
                     router.push("/admin/dashboard");
                 }
@@ -95,7 +95,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 if (portal === "agent") {
                     await registerAgent(payload);
                     onClose();
-                    router.push(pathname?.startsWith("/sale") ? "/sale/inventory" : "/agent/dashboard");
+                    router.push("/sale/flight/all");
                 } else {
                     await register(payload);
                     onClose();

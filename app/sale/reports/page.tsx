@@ -3,10 +3,36 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { SaleNavbar } from "@/components/SaleNavbar";
 import { Footer } from "@/components/Footer";
-import { BarChart3, FileText, RefreshCw, TrendingUp } from "lucide-react";
+import { BarChart3, CalendarDays, FileText, RefreshCw, TrendingUp } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { getPublicApiUrl } from "@/lib/apiConfig";
+import { unwrapList } from "@/lib/apiEnvelope";
 
+type HoldRow = {
+  id: string;
+  inventory: string;
+  status: string;
+  seats: number;
+  contact_name?: string;
+  contact_email?: string;
+  expires_at?: string | null;
+  created_at?: string;
+  inventory_route?: string;
+};
+
+type InventoryRow = {
+  id: string;
+  origin: string;
+  destination: string;
+  flight_number: string;
+  airline_code?: string;
+  departure_datetime: string;
+  seats_available?: number;
+  seats_held?: number;
+  waitlist_count?: number;
+  sellable_seats?: number;
+  price?: string | number;
+};
 type TicketRow = {
   id: string;
   status: string;
@@ -34,8 +60,10 @@ function money(amount: unknown) {
 
 export default function SaleReportsPage() {
   const { access, openAuthModal } = useAuth();
-  const [activeSubTab, setActiveSubTab] = useState<"overview" | "bookings">("overview");
+  const [activeSubTab, setActiveSubTab] = useState<"overview" | "bookings" | "seats">("overview");
   const [tickets, setTickets] = useState<TicketRow[]>([]);
+  const [holds, setHolds] = useState<HoldRow[]>([]);
+  const [inventoryRows, setInventoryRows] = useState<InventoryRow[]>([]);
   const [inventoryAnalytics, setInventoryAnalytics] = useState<{
     listings?: number;
     published?: number;
@@ -57,7 +85,7 @@ export default function SaleReportsPage() {
     setError(null);
     try {
       const apiBase = getPublicApiUrl();
-      const [ticketsRes, analyticsRes, exportHint] = await Promise.all([
+      const [ticketsRes, analyticsRes, inventoryRes, holdsRes] = await Promise.all([
         fetch(`${apiBase}/tickets/`, {
           headers: { Authorization: `Bearer ${access}` },
           cache: "no-store",
@@ -66,15 +94,18 @@ export default function SaleReportsPage() {
           headers: { Authorization: `Bearer ${access}` },
           cache: "no-store",
         }),
-        Promise.resolve(true),
+        fetch(`${apiBase}/flights/inventory/`, {
+          headers: { Authorization: `Bearer ${access}` },
+          cache: "no-store",
+        }),
+        fetch(`${apiBase}/flights/holds/`, {
+          headers: { Authorization: `Bearer ${access}` },
+          cache: "no-store",
+        }),
       ]);
       if (!ticketsRes.ok) throw new Error(`Failed to load tickets (${ticketsRes.status})`);
       const json = await ticketsRes.json();
-      const rows: TicketRow[] = Array.isArray(json)
-        ? json
-        : Array.isArray(json?.results)
-          ? json.results
-          : [];
+      const rows: TicketRow[] = unwrapList<TicketRow>(json);
       const agentRows = rows.filter(
         (t) => t.is_agent_booking || Boolean(t.agent_flight_inventory)
       );
@@ -83,7 +114,12 @@ export default function SaleReportsPage() {
         const a = await analyticsRes.json();
         setInventoryAnalytics(a?.data || a);
       }
-      void exportHint;
+      if (inventoryRes.ok) {
+        setInventoryRows(unwrapList<InventoryRow>(await inventoryRes.json()));
+      }
+      if (holdsRes.ok) {
+        setHolds(unwrapList<HoldRow>(await holdsRes.json()));
+      }
     } catch (err) {
       setTickets([]);
       setError(err instanceof Error ? err.message : "Failed to load reports");
@@ -96,6 +132,14 @@ export default function SaleReportsPage() {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [access]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab === "seats" || tab === "bookings" || tab === "overview") {
+      setActiveSubTab(tab);
+    }
+  }, []);
 
   const stats = useMemo(() => {
     const confirmed = tickets.filter((t) => t.status === "CONFIRMED");
@@ -112,6 +156,23 @@ export default function SaleReportsPage() {
       pendingValue,
     };
   }, [tickets]);
+
+  const seatCalendar = useMemo(() => {
+    return inventoryRows
+      .slice()
+      .sort(
+        (a, b) =>
+          new Date(a.departure_datetime).getTime() - new Date(b.departure_datetime).getTime()
+      )
+      .map((inv) => {
+        const invHolds = holds.filter((h) => String(h.inventory) === String(inv.id));
+        const booked = tickets.filter(
+          (t) =>
+            String(t.agent_flight_inventory) === String(inv.id) && t.status !== "CANCELLED"
+        );
+        return { inv, holds: invHolds, booked };
+      });
+  }, [inventoryRows, holds, tickets]);
 
   return (
     <div className="w-full min-h-screen bg-background flex flex-col font-sans">
@@ -135,6 +196,7 @@ export default function SaleReportsPage() {
               [
                 { id: "overview", label: "Overview", icon: BarChart3 },
                 { id: "bookings", label: "Bookings", icon: FileText },
+                { id: "seats", label: "Seat calendar", icon: CalendarDays },
               ] as const
             ).map((tab) => (
               <button
@@ -301,6 +363,77 @@ export default function SaleReportsPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+        {activeSubTab === "seats" && (
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            {loading && <div className="p-8 text-center text-slate-500">Loading seat calendar…</div>}
+            {!loading && seatCalendar.length === 0 && (
+              <div className="p-8 text-center text-slate-400">No inventory listings yet.</div>
+            )}
+            {!loading && seatCalendar.length > 0 && (
+              <div className="divide-y divide-slate-100">
+                {seatCalendar.map(({ inv, holds: invHolds, booked }) => {
+                  const held = invHolds.filter((h) => h.status === "HOLD");
+                  const waitlisted = invHolds.filter((h) => h.status === "WAITLIST");
+                  const sellable =
+                    inv.sellable_seats ??
+                    Math.max(0, (inv.seats_available || 0) - (inv.seats_held || 0));
+                  return (
+                    <div key={inv.id} className="px-5 py-5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <div className="font-bold text-slate-800">
+                            {inv.origin} → {inv.destination} · {inv.flight_number}
+                          </div>
+                          <div className="text-xs text-slate-500 mt-1">
+                            {inv.departure_datetime
+                              ? new Date(inv.departure_datetime).toLocaleString("en-IN")
+                              : "—"}
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-wider">
+                          <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            {sellable} open
+                          </span>
+                          <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-100">
+                            {held.reduce((n, h) => n + (h.seats || 0), 0)} held
+                          </span>
+                          <span className="px-2.5 py-1 rounded-full bg-sky-50 text-sky-800 border border-sky-100">
+                            {booked.length} booked
+                          </span>
+                          <span className="px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 border border-slate-200">
+                            {waitlisted.reduce((n, h) => n + (h.seats || 0), 0)} waitlist
+                          </span>
+                        </div>
+                      </div>
+                      {(held.length > 0 || waitlisted.length > 0 || booked.length > 0) && (
+                        <div className="mt-3 grid gap-1 text-xs text-slate-600">
+                          {booked.map((t) => (
+                            <div key={t.id}>
+                              Booked · {t.pnr_number || t.booking_ref || t.id.slice(0, 8)} · {t.status}
+                            </div>
+                          ))}
+                          {held.map((h) => (
+                            <div key={h.id}>
+                              Held · {h.contact_name || h.contact_email || "Passenger"} ·{" "}
+                              {h.expires_at
+                                ? `until ${new Date(h.expires_at).toLocaleString("en-IN")}`
+                                : "24h"}
+                            </div>
+                          ))}
+                          {waitlisted.map((h) => (
+                            <div key={h.id}>
+                              Waitlist · {h.contact_name || h.contact_email || "Passenger"}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Plane, RefreshCw, Search } from "lucide-react";
 import { saveBookingDraft, type BookingDraft } from "@/lib/booking";
+import { unwrapData, unwrapList } from "@/lib/apiEnvelope";
 import { forSaleItemToFlight, type ForSaleInventoryItem } from "@/lib/forSale";
+import { layoverLabels, stopsLabel } from "@/lib/journey";
 import { useAuth } from "@/context/AuthContext";
 import { getPublicApiUrl } from "@/lib/apiConfig";
 
@@ -51,6 +53,8 @@ export function ForSaleInventoryGrid({
   const [destFilter, setDestFilter] = useState("");
   const [query, setQuery] = useState({ origin: "", destination: "" });
   const [actionMsg, setActionMsg] = useState<string | null>(null);
+  const [heldItemId, setHeldItemId] = useState<string | null>(null);
+  const [activeHold, setActiveHold] = useState<{ id: string; expiresAt?: string } | null>(null);
 
   const load = async (origin?: string, destination?: string) => {
     setLoading(true);
@@ -64,8 +68,7 @@ export function ForSaleInventoryGrid({
       const res = await fetch(`/api/inventory/for-sale${suffix}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`Failed to load For Sale inventory (${res.status})`);
       const json = await res.json();
-      const results = Array.isArray(json?.results) ? json.results : [];
-      setItems(results);
+      setItems(unwrapList<ForSaleInventoryItem>(json));
     } catch (err) {
       setItems([]);
       setError(err instanceof Error ? err.message : "Failed to load inventory");
@@ -90,7 +93,7 @@ export function ForSaleInventoryGrid({
     });
   }, [items, originFilter, destFilter]);
 
-  const handleBook = (item: ForSaleInventoryItem) => {
+  const handleBook = (item: ForSaleInventoryItem, hold?: { id: string; expiresAt?: string } | null) => {
     const flight = forSaleItemToFlight(item);
     const draft: BookingDraft = {
       tripType: "one-way",
@@ -103,6 +106,8 @@ export function ForSaleInventoryGrid({
       infants: 0,
       outbound: flight,
       createdAt: new Date().toISOString(),
+      inventoryHoldId: hold?.id,
+      holdExpiresAt: hold?.expiresAt,
     };
     saveBookingDraft(draft);
     router.push(bookPath);
@@ -130,11 +135,23 @@ export function ForSaleInventoryGrid({
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error((json as { detail?: string }).detail || `Request failed (${res.status})`);
-      setActionMsg(
-        (json as { status?: string }).status === "WAITLIST"
-          ? "Added to waitlist. The agent will contact you if seats open."
-          : "Seats held for 24 hours. Complete booking soon."
-      );
+      const hold = unwrapData<{ id?: string; status?: string; expires_at?: string }>(json);
+      if (hold.status === "WAITLIST") {
+        setHeldItemId(null);
+        setActiveHold(null);
+        setActionMsg("Added to waitlist. If a seat opens, it is held for you for 24 hours.");
+      } else {
+        const nextHold = hold.id
+          ? { id: String(hold.id), expiresAt: hold.expires_at || undefined }
+          : null;
+        setHeldItemId(item.id);
+        setActiveHold(nextHold);
+        setActionMsg(
+          hold.expires_at
+            ? `Seats held until ${new Date(hold.expires_at).toLocaleString("en-IN")}. Complete booking to convert the hold into a ticket.`
+            : "Seats held for 24 hours. Complete booking to convert the hold into a ticket."
+        );
+      }
       void load(query.origin, query.destination);
     } catch (err) {
       setActionMsg(err instanceof Error ? err.message : "Hold failed");
@@ -146,6 +163,9 @@ export function ForSaleInventoryGrid({
       <div className="text-center max-w-2xl mx-auto">
         <h2 className="text-2xl font-bold text-slate-800 mb-2">{title}</h2>
         <p className="text-slate-600">{subtitle}</p>
+        <p className="mt-2 text-xs font-medium text-slate-400">
+          Hold a seat for 24 hours, then complete booking. Sold-out flights can be waitlisted — a freed seat is offered automatically.
+        </p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
@@ -218,6 +238,14 @@ export function ForSaleInventoryGrid({
           {filtered.map((item) => {
             const sellable = item.sellable_seats ?? item.seats_available;
             const soldOut = sellable <= 0;
+            const flight = forSaleItemToFlight(item);
+            const stopText = stopsLabel(flight.stops, flight.via);
+            const layoverText = layoverLabels(flight.layovers).join(" · ");
+            const policyBits = item.policies
+              ? Object.entries(item.policies)
+                  .filter(([, value]) => String(value || "").trim())
+                  .map(([key]) => key)
+              : [];
             return (
               <div
                 key={item.id}
@@ -240,6 +268,11 @@ export function ForSaleInventoryGrid({
                           Waitlist
                         </span>
                       )}
+                      {item.apis_required && (
+                        <span className="text-[11px] font-black uppercase tracking-wider text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5">
+                          APIS
+                        </span>
+                      )}
                     </div>
                     <div className="mt-1 text-sm text-slate-600 font-medium">
                       {item.airline_name || item.airline_code} · {item.flight_number} ·{" "}
@@ -249,10 +282,13 @@ export function ForSaleInventoryGrid({
                     <div className="mt-1 text-xs text-slate-500">
                       {formatWhen(item.departure_datetime)} → {formatWhen(item.arrival_datetime)}
                       {item.duration ? ` · ${item.duration}` : ""}
+                      {` · ${stopText}`}
+                      {layoverText ? ` · ${layoverText}` : ""}
                     </div>
                     <div className="mt-1 text-xs text-slate-500">
                       {sellable} sellable · held {item.seats_held ?? 0} · waitlist {item.waitlist_count ?? 0}
                       {item.baggage_check_in ? ` · Check-in ${item.baggage_check_in}` : ""}
+                      {policyBits.length ? ` · ${policyBits.join(" / ")} policy` : ""}
                     </div>
                   </div>
                 </div>
@@ -273,11 +309,20 @@ export function ForSaleInventoryGrid({
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleBook(item)}
+                        onClick={() => handleBook(item, heldItemId === item.id ? activeHold : undefined)}
                         className="rounded-full bg-[#D60D26] hover:bg-[#b80b20] text-white font-bold text-sm px-6 py-2.5"
                       >
                         Book Now
                       </button>
+                      {heldItemId === item.id && activeHold && (
+                        <button
+                          type="button"
+                          onClick={() => handleBook(item, activeHold)}
+                          className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-5 py-2.5"
+                        >
+                          Complete booking
+                        </button>
+                      )}
                     </>
                   ) : (
                     <button

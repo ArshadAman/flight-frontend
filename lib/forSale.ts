@@ -1,5 +1,6 @@
 import type { Flight } from "@/lib/flight";
 import { formatBaggageLabel } from "@/lib/flight";
+import { unwrapList } from "@/lib/apiEnvelope";
 import { layoversFromSegments, normalizeSegments, viaAirports } from "@/lib/journey";
 
 export type ForSaleInventoryItem = {
@@ -85,6 +86,8 @@ export function forSaleItemToFlight(item: ForSaleInventoryItem): Flight {
     travel_date: travelDate,
     is_agent_flight: true,
     agent_flight_id: String(item.id),
+    apis_required: Boolean(item.apis_required),
+    seats_available: item.sellable_seats ?? item.seats_available,
   };
 }
 
@@ -102,6 +105,5 @@ export async function fetchForSaleInventory(params?: {
     throw new Error(text || `Failed to load For Sale inventory (${res.status})`);
   }
   const json = await res.json();
-  const results = Array.isArray(json?.results) ? json.results : Array.isArray(json) ? json : [];
-  return results as ForSaleInventoryItem[];
+  return unwrapList<ForSaleInventoryItem>(json);
 }

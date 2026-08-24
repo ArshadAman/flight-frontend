@@ -1,21 +1,21 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { agents } from "@/lib/admin/mock-data";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Download, ExternalLink, Filter, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  AddSuppliersModal,
+  AgentDiscountModal,
+  BlockAirlinesModal,
+  BlockRoutesModal,
+  CustomerMarkupModal,
+  SalesPromotionModal,
+} from "@/components/admin/modals";
 
-const leftLinks = [
-  { label: "Name of Suppliers Activate", value: "Add Supplier", href: "/admin/agents/suppliers" },
-  { label: "Block Airlines", value: "Select Airlines", href: "/admin/agents/block-airlines" },
-  { label: "Block Route", value: "Select Route", href: "/admin/agents/block-routes" },
-  { label: "Updated Markup", value: "Add Markup", href: "/admin/agents/markup" },
-  { label: "Updated Discount", value: "Add Discount", href: "/admin/agents/discounts" },
-  { label: "Sales Promotion", value: "Add", href: "/admin/agents/promotions" },
-];
+type ModalKey = "suppliers" | "airlines" | "routes" | "markup" | "discount" | "promo" | null;
 
 export default function AgentApiGeneratedPage({
   params,
@@ -23,10 +23,28 @@ export default function AgentApiGeneratedPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const agent = agents.find((a) => a.id === id);
-  if (!agent) notFound();
+  const agent = agents.find((a) => a.id === id) || {
+    id,
+    name: id.replace("AGT-", "Agent "),
+    email: "",
+    phone: "",
+    status: "active" as const,
+    balance: 45000,
+    bookings: 0,
+    joined: "22, Dec 2021",
+  };
 
+  const [modal, setModal] = useState<ModalKey>(null);
   const first = agent.name.split(" ")[0].toUpperCase();
+
+  const leftLinks: { label: string; value: string; modal: ModalKey }[] = [
+    { label: "Name of Suppliers Activate", value: "Add Supplier", modal: "suppliers" },
+    { label: "Block Airlines", value: "Select Airlines", modal: "airlines" },
+    { label: "Block Route", value: "Select Route", modal: "routes" },
+    { label: "Updated Markup", value: "Add Markup", modal: "markup" },
+    { label: "Updated Discount", value: "Add Discount", modal: "discount" },
+    { label: "Sales Promotion", value: "Add", modal: "promo" },
+  ];
 
   return (
     <div className="flex min-h-full flex-col">
@@ -70,11 +88,15 @@ export default function AgentApiGeneratedPage({
             <Row label="No. of Supplier Activate" value="Flight" />
             {leftLinks.map((item) => (
               <div key={item.label} className="flex items-center gap-3 text-sm">
-                <span className="w-52 text-slate-500">{item.label}</span>
+                <span className="w-52 shrink-0 text-slate-500">{item.label}</span>
                 <span className="text-slate-300">→</span>
-                <Link href={item.href} className="font-medium text-[#006aec] hover:underline">
+                <button
+                  type="button"
+                  onClick={() => setModal(item.modal)}
+                  className="font-medium text-[#006aec] hover:underline"
+                >
                   {item.value}
-                </Link>
+                </button>
               </div>
             ))}
           </div>
@@ -112,9 +134,16 @@ export default function AgentApiGeneratedPage({
           <Button variant="outline" className="border-[#006aec] text-[#006aec]" asChild>
             <Link href={`/admin/api/agent/${id}`}>Cancel</Link>
           </Button>
-          <Button className="flex-1 bg-[#006aec] hover:bg-[#006aec]/90">Send To The Agent</Button>
+          <Button className="flex-1 bg-[#006aec] hover:bg-[#006aec]/90">Send To The Customer</Button>
         </div>
       </div>
+
+      <AddSuppliersModal open={modal === "suppliers"} onOpenChange={(v) => !v && setModal(null)} />
+      <BlockAirlinesModal open={modal === "airlines"} onOpenChange={(v) => !v && setModal(null)} />
+      <BlockRoutesModal open={modal === "routes"} onOpenChange={(v) => !v && setModal(null)} />
+      <CustomerMarkupModal open={modal === "markup"} onOpenChange={(v) => !v && setModal(null)} />
+      <AgentDiscountModal open={modal === "discount"} onOpenChange={(v) => !v && setModal(null)} />
+      <SalesPromotionModal open={modal === "promo"} onOpenChange={(v) => !v && setModal(null)} />
     </div>
   );
 }

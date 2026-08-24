@@ -42,9 +42,6 @@ export const adminNavSections: AdminNavSection[] = [
     children: [
       { label: "Agent list", href: "/admin/agents" },
       { label: "Add Agent", href: "/admin/agents/add" },
-      { label: "Block Airlines", href: "/admin/agents/block-airlines" },
-      { label: "Block Routes", href: "/admin/agents/block-routes" },
-      { label: "Reseller Portal", href: "/reseller/inventory" },
     ],
   },
   {

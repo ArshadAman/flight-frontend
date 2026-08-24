@@ -1,10 +1,32 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ForSaleInventoryGrid } from "@/components/ForSaleInventoryGrid";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ForSalePage() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  const isAgent = user?.role === "AGENT" || user?.role === "ADMIN";
+
+  useEffect(() => {
+    if (!isLoading && isAgent) {
+      router.replace("/sale/flight/all");
+    }
+  }, [isLoading, isAgent, router]);
+
+  if (isLoading || isAgent) {
+    return (
+      <div className="w-full min-h-screen bg-background flex items-center justify-center text-slate-500 font-medium">
+        Loading…
+      </div>
+    );
+  }
+
   return (
     <div className="w-full min-h-screen bg-background flex flex-col">
       <Navbar />

@@ -3,10 +3,21 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { SaleNavbar } from "@/components/SaleNavbar";
 import { Footer } from "@/components/Footer";
-import { Filter, Plus, ArrowRight, X, Plane, ChevronDown, MoreVertical } from "lucide-react";
+import { Filter, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { getPublicApiUrl } from "@/lib/apiConfig";
+import { listingStatus } from "@/lib/sale/offlinePortal";
+import { OfflinePortalSubNav } from "@/components/sale/OfflinePortalSubNav";
+import { OfflineFlightListTable } from "@/components/sale/OfflineFlightListTable";
+import { OfflineFlightDetailDrawer } from "@/components/sale/OfflineFlightDetailDrawer";
+import {
+    OfflinePortalFiltersModal,
+    countActiveFilters,
+    emptyOfflineFilters,
+    type OfflineFilters,
+} from "@/components/sale/OfflinePortalFilters";
+import type { OfflineTicketRow } from "@/lib/sale/offlinePortal";
 
 type InventorySegment = {
     segment_id: number;
@@ -37,6 +48,7 @@ type InventoryFlight = {
     arrival_datetime: string;
     price: string;
     seats_available: number;
+    seats_held?: number;
     cabin_class: string;
     duration: string;
     is_refundable: boolean;
@@ -100,6 +112,7 @@ type TicketApi = {
     passengers_data?: any[];
     cancellation_data?: any;
     agent_cancellation_reason?: string;
+    agent_flight_inventory?: string | null;
 };
 
 type DrawerDetail = {
@@ -169,10 +182,6 @@ function formatFare(amount: string) {
     const value = Number(amount);
     if (Number.isNaN(value)) return `INR ${amount}`;
     return `INR ${value.toFixed(2)}`;
-}
-
-function getInventoryReference(id: string) {
-    return `INV-${id.slice(0, 8).toUpperCase()}`;
 }
 
 function normalizeApiList(data: unknown) {
@@ -306,15 +315,11 @@ function extractInventoryErrorMessage(data: unknown): string | null {
 export default function InventoryPage() {
     const { access, refreshAccess, openAuthModal } = useAuth();
     const [inventoryFlights, setInventoryFlights] = useState<InventoryFlight[]>([]);
-    const [groupBookings, setGroupBookings] = useState<GroupBookingApi[]>([]);
     const [tickets, setTickets] = useState<TicketApi[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [selectedFlight, setSelectedFlight] = useState<InventoryFlight | null>(null);
-    const [activeDrawerTab, setActiveDrawerTab] = useState("Segment");
     const [selectedBooking, setSelectedBooking] = useState<DrawerRecord | null>(null);
-    const [drawerDataLoading, setDrawerDataLoading] = useState(true);
-    const [drawerDataError, setDrawerDataError] = useState<string | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editSeats, setEditSeats] = useState("");
     const [editPrice, setEditPrice] = useState("");
@@ -329,6 +334,9 @@ export default function InventoryPage() {
     const [actionError, setActionError] = useState<string | null>(null);
     const [actionSuccess, setActionSuccess] = useState<string | null>(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [inventoryTab, setInventoryTab] = useState("All PNR");
+    const [filtersOpen, setFiltersOpen] = useState(false);
+    const [filters, setFilters] = useState<OfflineFilters>(emptyOfflineFilters);
 
     const handleFulfillSubmit = async (ticketId: string) => {
         setActionError(null);
@@ -580,156 +588,111 @@ export default function InventoryPage() {
 
     useEffect(() => {
         if (!access) {
-            setGroupBookings([]);
             setTickets([]);
-            setDrawerDataLoading(false);
             return;
         }
 
         const controller = new AbortController();
 
-        const fetchAuthedJson = async (path: string) => {
-            const apiBase = getPublicApiUrl();
-            const request = (token: string | null) => fetch(`${apiBase}${path}`, {
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                },
-                signal: controller.signal,
-            });
-
-            let response = await request(access);
-
-            if (response.status === 401) {
-                const refreshed = await refreshAccess();
-                if (refreshed) {
-                    const retryToken = window.localStorage.getItem("access_token") || access;
-                    response = await request(retryToken);
-                }
-            }
-
-            const body = await response.json().catch(() => null);
-            if (!response.ok) {
-                const message = extractInventoryErrorMessage(body) || `Failed to load drawer data (${response.status}).`;
-                throw new Error(message);
-            }
-
-            return body;
-        };
-
-        const loadDrawerData = async () => {
-            setDrawerDataLoading(true);
-            setDrawerDataError(null);
-
+        const loadTickets = async () => {
             try {
-                const [bookingsResult, ticketsResult] = await Promise.allSettled([
-                    fetchAuthedJson("/bookings/group-bookings/"),
-                    fetchAuthedJson("/tickets/"),
-                ]);
+                const apiBase = getPublicApiUrl();
+                const request = (token: string | null) => fetch(`${apiBase}/tickets/`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                    signal: controller.signal,
+                });
 
-                if (bookingsResult.status === "fulfilled") {
-                    setGroupBookings(normalizeApiList(bookingsResult.value) as GroupBookingApi[]);
-                } else {
-                    setGroupBookings([]);
-                }
-
-                if (ticketsResult.status === "fulfilled") {
-                    setTickets(normalizeApiList(ticketsResult.value) as TicketApi[]);
-                } else {
-                    setTickets([]);
+                let response = await request(access);
+                if (response.status === 401) {
+                    const refreshed = await refreshAccess();
+                    if (refreshed) {
+                        const retryToken = window.localStorage.getItem("access_token") || access;
+                        response = await request(retryToken);
+                    }
                 }
 
-                if (bookingsResult.status === "rejected" && ticketsResult.status === "rejected") {
-                    throw new Error(bookingsResult.reason instanceof Error ? bookingsResult.reason.message : "Failed to load drawer data.");
-                }
-            } catch (error: unknown) {
-                if (controller.signal.aborted) return;
-                const errorMessage = error instanceof Error ? error.message : "Failed to load drawer data.";
-                setDrawerDataError(errorMessage);
-                setGroupBookings([]);
-                setTickets([]);
-            } finally {
-                if (!controller.signal.aborted) {
-                    setDrawerDataLoading(false);
-                }
+                const body = await response.json().catch(() => null);
+                if (!response.ok) return;
+                setTickets(normalizeApiList(body) as TicketApi[]);
+            } catch {
+                if (!controller.signal.aborted) setTickets([]);
             }
         };
 
-        loadDrawerData();
-
+        void loadTickets();
         return () => controller.abort();
     }, [access, refreshAccess, refreshTrigger]);
 
-    const groupedFlights = useMemo(() => {
-        return inventoryFlights.reduce((groups, flight) => {
-            const monthKey = formatMonthYear(flight.departure_datetime);
-            groups[monthKey] = groups[monthKey] || [];
-            groups[monthKey].push(flight);
-            return groups;
-        }, {} as Record<string, InventoryFlight[]>);
-    }, [inventoryFlights]);
+    const bookedByInventory = useMemo(() => {
+        const map = new Map<string, number>();
+        for (const ticket of tickets) {
+            if (!ticket.agent_flight_inventory || ticket.status === "CANCELLED") continue;
+            const key = String(ticket.agent_flight_inventory);
+            map.set(key, (map.get(key) || 0) + 1);
+        }
+        return map;
+    }, [tickets]);
 
-    const selectedFlightDate = selectedFlight ? toIsoDate(selectedFlight.departure_datetime) : null;
+    const inventoryTabCounts = useMemo(() => {
+        let open = 0;
+        for (const flight of inventoryFlights) {
+            const booked = bookedByInventory.get(String(flight.id)) || 0;
+            if (listingStatus(flight, booked) === "Open") open += 1;
+        }
+        return { all: inventoryFlights.length, open };
+    }, [inventoryFlights, bookedByInventory]);
 
-    const drawerBookingRecords = useMemo(() => {
-        if (!selectedFlightDate || !selectedFlight) return [];
+    const visibleFlights = useMemo(() => {
+        if (inventoryTab !== "Open for sale") return inventoryFlights;
+        return inventoryFlights.filter((flight) => {
+            const booked = bookedByInventory.get(String(flight.id)) || 0;
+            return listingStatus(flight, booked) === "Open";
+        });
+    }, [inventoryFlights, inventoryTab, bookedByInventory]);
 
-        const bookingsFiltered = groupBookings
-            .filter((booking) => booking.origin === selectedFlight.origin && booking.destination === selectedFlight.destination && booking.departure_date === selectedFlightDate)
-            .map(buildBookingRecord);
+    const filteredInventoryRows = useMemo(() => {
+        return visibleFlights.filter((flight) => {
+            const booked = bookedByInventory.get(String(flight.id)) || 0;
+            const status = listingStatus(flight, booked);
+            if (filters.origin && flight.origin.toUpperCase() !== filters.origin.trim().toUpperCase()) return false;
+            if (filters.destination && flight.destination.toUpperCase() !== filters.destination.trim().toUpperCase()) return false;
+            if (filters.status === "open" && status !== "Open") return false;
+            if (filters.status === "closed" && status !== "Closed") return false;
+            return true;
+        });
+    }, [visibleFlights, filters, bookedByInventory]);
 
-        const ticketsFiltered = tickets
-            .filter((ticket) => ticket.origin === selectedFlight.origin && ticket.destination === selectedFlight.destination && toIsoDate(ticket.departure_datetime) === selectedFlightDate)
-            .map(buildTicketRecord);
-
-        return [...bookingsFiltered, ...ticketsFiltered];
-    }, [groupBookings, tickets, selectedFlight, selectedFlightDate]);
-
-    const selectedSegments = selectedFlight?.segments_data?.length
-        ? selectedFlight.segments_data
-        : [];
-
-    const renderFlightRow = (flight: InventoryFlight) => (
-        <div 
-            key={flight.id}
-            onClick={() => { setSelectedFlight(flight); setActiveDrawerTab("Segment"); }}
-            className={`grid grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 items-center py-4 border-b border-slate-100 text-[13px] font-medium transition-colors px-6 cursor-pointer ${selectedFlight === flight ? 'bg-rose-50 border-l-2 border-l-[#D60D26]' : 'text-slate-700 hover:bg-slate-50'}`}
-        >
-            <div className="font-bold text-slate-800">{getInventoryReference(flight.id)}</div>
-            <div className="flex items-center gap-1">
-                <span className="font-bold">{flight.origin}</span>
-                <ArrowRight className="w-3 h-3 text-slate-400" />
-                <span className="font-bold">{flight.destination}</span>
-                <span className="text-slate-400 text-[12px] font-medium">({Math.max(0, (flight.segments_data?.length || 1) - 1)})</span>
-            </div>
-            <div className="text-slate-800">{formatDisplayDate(flight.departure_datetime)}</div>
-            <div className="text-slate-800">{formatTimeRange(flight.departure_datetime, flight.arrival_datetime)}</div>
-            <div className="font-bold text-slate-800">{flight.flight_number}</div>
-            <div className="flex items-center gap-1 font-bold text-slate-700"><span className="text-slate-400">💺</span> {flight.seats_available}</div>
-            <div className="font-bold text-slate-800">{formatFare(flight.price)}</div>
-            <div>
-                <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold border ${
-                    flight.seats_available <= 0
-                        ? "bg-slate-100 text-slate-500 border-slate-200"
-                        : flight.is_published === false
-                          ? "bg-amber-50 text-amber-700 border-amber-200"
-                          : "bg-green-50 text-emerald-600 border-green-200"
-                }`}>
-                    {flight.seats_available <= 0
-                        ? "Sold out"
-                        : flight.is_published === false
-                          ? "Unpublished"
-                          : "Published"}
-                </span>
-            </div>
-            <div className="text-slate-400 hover:text-slate-600 transition-colors flex justify-end">
-                <MoreVertical className="w-5 h-5" />
-            </div>
-        </div>
+    const offlineTickets = useMemo<OfflineTicketRow[]>(
+        () =>
+            tickets.map((t) => ({
+                id: t.id,
+                status: t.status,
+                origin: t.origin,
+                destination: t.destination,
+                flight_number: t.flight_number,
+                pnr_number: t.pnr_number,
+                booking_ref: t.booking_ref,
+                departure_datetime: t.departure_datetime,
+                passengers_data: t.passengers_data,
+                agent_flight_inventory: t.agent_flight_inventory,
+                total_amount: t.total_amount,
+            })),
+        [tickets]
     );
 
     return (
         <div className="w-full min-h-screen bg-background flex flex-col font-sans">
             <SaleNavbar />
+
+            <OfflinePortalSubNav
+                variant="inventory"
+                activeTab={inventoryTab}
+                onTabChange={setInventoryTab}
+                inventoryTabs={[
+                    { name: "All PNR", count: inventoryTabCounts.all },
+                    { name: "Open for sale", count: inventoryTabCounts.open },
+                ]}
+            />
 
             {/* Main Content with Drawer Flex */}
             <div className="flex-1 w-full flex overflow-hidden relative">
@@ -738,323 +701,108 @@ export default function InventoryPage() {
                     
                     {/* Header Controls */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 w-full">
-                        <button className="flex items-center gap-2 text-[#D60D26] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto justify-center border border-rose-100 sm:border-transparent">
+                        <button
+                            type="button"
+                            onClick={() => setFiltersOpen(true)}
+                            className="flex items-center gap-2 text-[#D60D26] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto justify-center border border-rose-100 sm:border-transparent"
+                        >
                             <Filter className="w-5 h-5" /> Filters
+                            {countActiveFilters(filters) > 0 && (
+                                <span className="bg-[#D60D26] text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
+                                    {countActiveFilters(filters)}
+                                </span>
+                            )}
                         </button>
                         
-                        <Link href="/sale/inventory/new" className="bg-[#D60D26] hover:bg-[#D60D26] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
-                            <Plus className="w-4 h-4" /> Add Inventory
-                        </Link>
-                    </div>
-
-                    {/* Flights Table */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-                        <div className="overflow-x-auto no-scrollbar">
-                            <div className="w-full min-w-[1000px]">
-                                {/* Table Header */}
-                                <div className="grid grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-4 border-b border-slate-100 bg-white text-slate-400 text-[13px] font-bold">
-                                    <div>Inventory Ref</div>
-                                    <div>Route</div>
-                                    <div>Dep. Date</div>
-                                    <div>Dep. & Arr.</div>
-                                    <div>Flight number</div>
-                                    <div>No. of seats</div>
-                                    <div>Ticket price</div>
-                                    <div>Status</div>
-                                    <div className="w-5"></div>
-                                </div>
-
-                                {isLoading && (
-                                    <div className="px-6 py-10 text-center text-slate-500 font-medium">
-                                        Loading real inventory...
-                                    </div>
-                                )}
-
-                                {!isLoading && loadError && (
-                                    <div className="px-6 py-10 text-center text-rose-600 font-medium">
-                                        {loadError}
-                                    </div>
-                                )}
-
-                                {!isLoading && !access && (
-                                    <div className="px-6 py-10 text-center">
-                                        <p className="text-slate-600 font-medium mb-4">
-                                            Sign in as an agent to view and manage your flight inventory.
-                                        </p>
-                                        <button
-                                            type="button"
-                                            onClick={openAuthModal}
-                                            className="bg-[#D60D26] hover:bg-[#b00b1d] text-white font-bold px-8 py-3 rounded-full transition-colors"
-                                        >
-                                            Log in
-                                        </button>
-                                    </div>
-                                )}
-
-                                {!isLoading && access && !loadError && inventoryFlights.length === 0 && (
-                                    <div className="px-6 py-10 text-center text-slate-500 font-medium">
-                                        No inventory flights found yet.
-                                    </div>
-                                )}
-
-                                {!isLoading && access && !loadError && Object.entries(groupedFlights).map(([monthLabel, flights]) => (
-                                    <div key={monthLabel}>
-                                        <div className="bg-[#F2FBFF] px-6 py-3 font-bold text-slate-700 text-[14px]">
-                                            {monthLabel}
-                                        </div>
-                                        <div className="flex flex-col">
-                                            {flights.map((flight) => renderFlightRow(flight))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Pagination Footer */}
-                        <div className="px-6 py-4 flex items-center justify-between border-t border-slate-100 bg-white">
-                            <div className="text-slate-500 text-[13px]">
-                                <span className="font-bold text-slate-700">{inventoryFlights.length}</span> real inventory results
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <button className="text-slate-400 font-bold text-[14px] hover:text-slate-600 cursor-not-allowed">Prev</button>
-                                <button className="text-slate-800 font-bold text-[14px] border border-slate-300 rounded-full px-6 py-1.5 hover:bg-slate-50 transition-colors">Next</button>
-                            </div>
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!access) { openAuthModal(); return; }
+                                    const api = getPublicApiUrl();
+                                    const url = `${api}/flights/inventory/export/?format=csv`;
+                                    const a = document.createElement("a");
+                                    a.href = url;
+                                    a.setAttribute("download", `inventory-${new Date().toISOString().slice(0,10)}.csv`);
+                                    // attach auth token as header isn't possible for anchor — open in new tab with token in URL if supported, else use fetch
+                                    fetch(url, { headers: { Authorization: `Bearer ${access}` } })
+                                        .then(r => r.blob())
+                                        .then(blob => {
+                                            const blobUrl = URL.createObjectURL(blob);
+                                            const link = document.createElement("a");
+                                            link.href = blobUrl;
+                                            link.download = `inventory-${new Date().toISOString().slice(0,10)}.csv`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            link.remove();
+                                            URL.revokeObjectURL(blobUrl);
+                                        })
+                                        .catch(() => alert("Export failed."));
+                                }}
+                                className="flex items-center gap-2 border border-slate-300 text-slate-700 hover:bg-slate-50 px-5 py-2.5 rounded-full font-bold text-[14px] transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" /></svg>
+                                Export
+                            </button>
+                            <Link href="/sale/inventory/new" className="bg-[#D60D26] hover:bg-[#b80b20] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center justify-center gap-2">
+                                <Plus className="w-4 h-4" /> New flight
+                            </Link>
                         </div>
                     </div>
+
+                    {!isLoading && !access && (
+                        <div className="rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 text-amber-800 text-sm font-medium mb-6 w-full">
+                            <button type="button" className="underline font-bold" onClick={openAuthModal}>Sign in</button> as an agent to manage inventory.
+                        </div>
+                    )}
+
+                    {loadError && (
+                        <div className="rounded-xl border border-rose-100 bg-rose-50 px-5 py-4 text-rose-700 text-sm font-medium mb-6 w-full">{loadError}</div>
+                    )}
+
+                    {isLoading ? (
+                        <div className="py-16 text-center text-slate-500 font-medium w-full">Loading inventory…</div>
+                    ) : (
+                        <OfflineFlightListTable
+                            rows={filteredInventoryRows}
+                            variant="inventory"
+                            seatDisplay="compact"
+                            selectedId={selectedFlight?.id}
+                            onSelect={(row) => setSelectedFlight(row as InventoryFlight)}
+                            bookedByInventory={bookedByInventory}
+                        />
+                    )}
 
                 </div>
             </main>
 
-            {/* Right Drawer */}
             {selectedFlight && (
-                <div className="w-full xl:w-[450px] bg-white border-l border-slate-200 fixed top-0 xl:top-[96px] right-0 bottom-0 z-50 xl:z-40 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
-                    <div className="p-6 bg-slate-50 border-b border-slate-200 flex items-start justify-between shrink-0">
-                        <div>
-                            <div className="font-bold text-[16px] text-slate-800 flex items-center gap-2">
-                                {selectedFlight.origin} <ArrowRight className="w-4 h-4 text-[#D60D26]" /> {selectedFlight.destination}
-                            </div>
-                            <div className="text-[13px] text-slate-500 mt-1">{formatDisplayDateLong(selectedFlight.departure_datetime)}</div>
-                        </div>
-                        <button onClick={() => setSelectedFlight(null)} className="hover:bg-slate-200 p-1 rounded-full transition-colors"><X className="w-5 h-5 text-slate-700" /></button>
-                    </div>
-                    
-                    <div className="flex items-center border-b border-slate-200 shrink-0 bg-white px-2 overflow-x-auto no-scrollbar">
-                        {[
-                            { key: "Segment", label: "Segment" },
-                            { key: "Inventory", label: "Inventory" },
-                            { key: "Bookings", label: `Bookings (${drawerBookingRecords.length})` },
-                        ].map((tab) => (
-                            <button 
-                                key={tab.key} 
-                                onClick={() => setActiveDrawerTab(tab.key)} 
-                                className={`flex-1 px-4 py-4 font-bold text-[13px] whitespace-nowrap transition-colors ${activeDrawerTab === tab.key ? 'text-[#D60D26] bg-rose-50 border-b-2 border-[#D60D26]' : 'text-slate-600 hover:bg-slate-50'}`}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    {activeDrawerTab === "Segment" && (
-                        <>
-                            <div className="flex-1 overflow-y-auto p-6 bg-white">
-                                {selectedSegments.map((segment, index) => (
-                                    <div key={`${selectedFlight.id}-${segment.segment_id}`} className="mb-8">
-                                        <div className="font-bold text-[16px] text-slate-800 mb-6">
-                                            {segment.origin} <span className="text-slate-400 font-medium">{segment.origin_city || ""}</span>
-                                        </div>
-
-                                        <div className="flex gap-4 relative mb-6">
-                                            <div className="w-px bg-slate-300 absolute left-1.5 top-2 bottom-2"></div>
-                                            <div className="w-3 h-3 rounded-full bg-slate-800 relative z-10 shrink-0 mt-1"></div>
-                                            <div className="flex-1">
-                                                <div className="text-[13px] text-slate-700 font-bold mb-4">
-                                                    {new Date(segment.departure_datetime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}
-                                                    <span className="text-[#D60D26] mx-1">•</span>
-                                                    {segment.origin}
-                                                    <span className="text-[#D60D26] mx-1">•</span>
-                                                    {segment.origin_terminal || "Terminal"}
-                                                </div>
-
-                                                <div className="flex items-center gap-4 py-6">
-                                                    <div className="w-8 h-8 bg-[#D60D26] rounded flex items-center justify-center shrink-0 shadow-sm relative -ml-[22px]">
-                                                        <Plane className="w-4 h-4 text-white -rotate-45" />
-                                                    </div>
-                                                    <div className="flex items-center gap-4 text-[13px] font-bold text-blue-600">
-                                                        <span>{segment.duration || selectedFlight.duration}</span>
-                                                        {segment.stop_over && (
-                                                            <button className="flex items-center gap-1 text-[#D60D26] underline underline-offset-2">
-                                                                {segment.stop_over} <ChevronDown className="w-4 h-4" />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-4 relative mb-8">
-                                            <div className="w-3 h-3 rounded-full border-2 border-slate-800 bg-white relative z-10 shrink-0 mt-1"></div>
-                                            <div className="flex-1">
-                                                <div className="text-[13px] text-slate-700 font-bold">
-                                                    {new Date(segment.arrival_datetime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}
-                                                    <span className="text-[#D60D26] mx-1">•</span>
-                                                    {segment.destination}
-                                                    <span className="text-[#D60D26] mx-1">•</span>
-                                                    {segment.destination_terminal || "Terminal"}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="font-bold text-[16px] text-slate-800 mt-2">
-                                            {segment.destination} <span className="text-slate-400 font-medium">{segment.destination_city || ""}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-col items-center gap-2 shrink-0">
-                                <button className="text-slate-400 font-bold flex items-center gap-2 text-[14px] cursor-not-allowed">
-                                    Cancel Flight <X className="w-4 h-4" />
-                                </button>
-                                <div className="text-[12px] text-slate-400">Only open & pending flight can be cancel</div>
-                            </div>
-                        </>
-                    )}
-
-                    {activeDrawerTab === "Inventory" && (
-                        <div className="flex-1 overflow-y-auto p-6 space-y-10 bg-white">
-                            <div>
-                                <div className="font-bold text-[15px] text-slate-800 mb-3">For Sale visibility</div>
-                                <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-4">
-                                    <div>
-                                        <div className="text-sm font-bold text-slate-800">
-                                            {selectedFlight.is_published === false ? "Unpublished" : "Published"}
-                                        </div>
-                                        <div className="text-xs text-slate-500 mt-1">
-                                            Published listings appear on For Sale and in flight search.
-                                        </div>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        disabled={inventorySaving}
-                                        onClick={() => void handleTogglePublish(selectedFlight)}
-                                        className={`rounded-full px-4 py-2 text-xs font-bold ${
-                                            selectedFlight.is_published === false
-                                                ? "bg-[#0C2342] text-white"
-                                                : "bg-slate-100 text-slate-700"
-                                        }`}
-                                    >
-                                        {selectedFlight.is_published === false ? "Publish" : "Unpublish"}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Baggage */}
-                            <div>
-                                <div className="font-bold text-[15px] text-slate-800 mb-4">Baggage</div>
-                                <div className="text-[13px] font-bold text-slate-700 mb-2 flex items-center gap-2">
-                                    <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                                    Checked baggage options
-                                </div>
-                                <input 
-                                    type="text" 
-                                    value={`${selectedFlight.baggage_check_in || "23 kg"}, ${selectedFlight.baggage_hand || "7 kg"} hand, ${selectedFlight.is_refundable ? "Refundable" : "Non-refundable"}`} 
-                                    readOnly 
-                                    className="w-full border border-slate-200 rounded-lg p-3 text-[14px] font-bold text-slate-600 bg-white shadow-sm outline-none" 
-                                />
-                            </div>
-
-                            {/* Tickets Volume */}
-                            <div>
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="font-bold text-[15px] text-slate-800">Tickets Volume</div>
-                                    <button
-                                        onClick={() => {
-                                            setEditSeats(String(selectedFlight.seats_available));
-                                            setEditPrice(String(selectedFlight.price));
-                                            setIsEditModalOpen(true);
-                                        }}
-                                        className="flex items-center gap-1 text-[13px] font-bold text-slate-400 hover:text-slate-600"
-                                    >
-                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg> Edit
-                                    </button>
-                                </div>
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-white shadow-sm">
-                                        <div className="font-bold text-[#D60D26] text-[18px]">{selectedFlight.seats_available}</div>
-                                        <div className="text-[12px] font-medium text-slate-500 mt-1">Available</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Price */}
-                            <div>
-                                <div className="font-bold text-[15px] text-slate-800 mb-4">Price</div>
-                                <div className="flex items-center gap-2 text-[#D60D26] font-bold text-[13px] mb-4">
-                                    <ArrowRight className="w-4 h-4" /> ONE WAY
-                                </div>
-                                <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Price (INR)</label>
-                                <div className="relative">
-                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
-                                    <input type="text" value={Number(selectedFlight.price).toFixed(2)} readOnly className="w-full border border-slate-200 rounded-lg p-3.5 pl-8 text-[14px] font-bold text-slate-600 bg-white shadow-sm outline-none" />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeDrawerTab === "Bookings" && (
-                        <div className="flex-1 overflow-y-auto p-6 bg-white">
-                            <div className="font-bold text-[15px] text-slate-800 mb-4">Bookings</div>
-                            {drawerDataLoading && (
-                                <div className="text-slate-500 font-medium text-[13px]">Loading live bookings...</div>
-                            )}
-                            {!drawerDataLoading && drawerDataError && (
-                                <div className="text-rose-600 font-medium text-[13px]">{drawerDataError}</div>
-                            )}
-                            {!drawerDataLoading && !drawerDataError && drawerBookingRecords.length === 0 && (
-                                <div className="text-slate-500 font-medium text-[13px]">No live bookings found for this route.</div>
-                            )}
-                            <div className="space-y-4">
-                                {!drawerDataLoading && !drawerDataError && drawerBookingRecords.map((record) => (
-                                    <button
-                                        key={record.id}
-                                        onClick={() => {
-                                            setSelectedBooking(record);
-                                            setActionError(null);
-                                            setActionSuccess(null);
-                                            setFulfillingTicketId(null);
-                                            setCancellingTicketId(null);
-                                        }}
-                                        className="w-full text-left cursor-pointer hover:bg-slate-50 p-3 rounded-xl transition-colors border border-transparent hover:border-slate-100"
-                                    >
-                                        <div className="flex items-center justify-between gap-3 mb-1.5">
-                                            <div className="flex items-center gap-2 font-bold text-slate-700 text-[14px]">
-                                                {record.title}
-                                                <span className="text-slate-500 font-normal">({record.subtitle})</span>
-                                            </div>
-                                            <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${
-                                                record.status === "CONFIRMED" || record.status === "SUCCESS"
-                                                    ? "bg-emerald-50 text-emerald-600 border-emerald-200"
-                                                    : record.status === "PENDING"
-                                                    ? "bg-amber-50 text-amber-600 border-amber-200"
-                                                    : "bg-slate-50 text-slate-500 border-slate-200"
-                                            }`}>
-                                                {record.status}
-                                            </span>
-                                        </div>
-                                        <div className="text-[13px] font-medium text-slate-500 flex flex-wrap items-center gap-x-2 gap-y-1">
-                                            <span>{record.referenceLabel}: {record.referenceValue}</span>
-                                            {record.amountValue && (
-                                                <>
-                                                    <span className="text-slate-300">•</span>
-                                                    <span>{record.amountValue}</span>
-                                                </>
-                                            )}
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
+                <OfflineFlightDetailDrawer
+                    flight={selectedFlight}
+                    tickets={offlineTickets}
+                    bookedCount={bookedByInventory.get(String(selectedFlight.id)) || 0}
+                    onClose={() => setSelectedFlight(null)}
+                    onPublishToggle={() => void handleTogglePublish(selectedFlight)}
+                    publishing={inventorySaving}
+                    drawerVariant="inventory"
+                    allowBookNow={inventoryTab === "Open for sale"}
+                    onEditInventory={() => {
+                        setEditSeats(String(selectedFlight.seats_available));
+                        setEditPrice(String(selectedFlight.price));
+                        setIsEditModalOpen(true);
+                    }}
+                    onTicketSelect={(ticket) => {
+                        const full = tickets.find((t) => t.id === ticket.id);
+                        if (full) {
+                            setSelectedBooking(buildTicketRecord(full));
+                            setActionError(null);
+                            setActionSuccess(null);
+                            setFulfillingTicketId(null);
+                            setCancellingTicketId(null);
+                        }
+                    }}
+                    onInventoryUpdated={() => setRefreshTrigger((p) => p + 1)}
+                />
             )}
             </div>
 
@@ -1361,6 +1109,12 @@ export default function InventoryPage() {
             )}
 
             <Footer />
+            <OfflinePortalFiltersModal
+                open={filtersOpen}
+                onClose={() => setFiltersOpen(false)}
+                value={filters}
+                onApply={setFilters}
+            />
         </div>
     );
 }

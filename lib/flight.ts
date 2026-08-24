@@ -154,4 +154,8 @@ export type Flight = {
   leg?: "outbound" | "return";
   is_agent_flight?: boolean;
   agent_flight_id?: string;
+  /** Agent inventory flagged that passport / APIS details are required. */
+  apis_required?: boolean;
+  /** Sellable seats when mapped from agent inventory. */
+  seats_available?: number;
 };

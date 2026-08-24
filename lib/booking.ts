@@ -40,6 +40,9 @@ export type BookingDraft = {
   /** All selected sectors when tripType is multi-city (includes outbound as [0]). */
   multiCityFlights?: Flight[];
   createdAt: string;
+  /** For Sale seat hold to convert on buy. */
+  inventoryHoldId?: string;
+  holdExpiresAt?: string;
 };
 
 export function saveBookingDraft(draft: BookingDraft): void {
@@ -171,12 +174,15 @@ type BuyPayload = {
     last_name: string;
     gender: number;
     dob: string;
+    passport_number?: string;
+    passport_expiry?: string;
     outbound_meal?: string;
     return_meal?: string;
   }>;
   return_flight_key?: string;
   return_fare_id?: string;
   flight_snapshot?: Record<string, unknown>;
+  hold_id?: string;
 };
 
 function flightSnapshot(leg: Flight): Record<string, unknown> {
@@ -222,6 +228,7 @@ export async function submitFlightBooking(
     itineraryFlights?: Flight[];
     travelType?: number;
     bookingRef?: string;
+    holdId?: string;
   }
 ): Promise<{ ok: true; tickets: unknown[] } | { ok: false; error: string }> {
   const apiBase = getPublicApiUrl();
@@ -240,6 +247,8 @@ export async function submitFlightBooking(
     last_name: p.last_name,
     gender: p.gender === "Male" ? 0 : 1,
     dob: p.dob,
+    ...(p.passport_number?.trim() ? { passport_number: p.passport_number.trim() } : {}),
+    ...(p.passport_expiry?.trim() ? { passport_expiry: p.passport_expiry.trim() } : {}),
     ...(p.outbound_meal && p.outbound_meal !== "none"
       ? { outbound_meal: p.outbound_meal, meal_code: p.outbound_meal }
       : {}),
@@ -281,6 +290,7 @@ export async function submitFlightBooking(
   if (extras?.travelType != null) body.travel_type = extras.travelType;
   if (extras?.bookingRef) body.booking_ref = extras.bookingRef;
   if (extras?.multiCityGroupId) body.multi_city_group_id = extras.multiCityGroupId;
+  if (extras?.holdId) body.hold_id = extras.holdId;
   if (extras?.itineraryFlights?.length) {
     body.itinerary_segments = extras.itineraryFlights.map((f, i) => flightToSegment(f, i));
   }
