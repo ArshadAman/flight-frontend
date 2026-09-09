@@ -234,6 +234,7 @@ export default function SaleAllFlightsPage() {
             onPublishToggle={() => void handlePublishToggle()}
             publishing={publishing}
             allowBookNow={activeTab === "Bookable"}
+            onInventoryUpdated={() => void reload()}
           />
         )}
       </div>

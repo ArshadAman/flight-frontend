@@ -59,6 +59,13 @@ export default function AddFlightPage() {
     const [hasScheduledFlight, setHasScheduledFlight] = useState(false);
     const [modalTab, setModalTab] = useState(1);
     const [isSegmentConfirmed, setIsSegmentConfirmed] = useState(false);
+    const [seriesMode, setSeriesMode] = useState(false);
+    const [seriesInfoOpen, setSeriesInfoOpen] = useState(false);
+    const [editingAirport, setEditingAirport] = useState<{
+        segmentId: number;
+        field: "from" | "to";
+        query: string;
+    } | null>(null);
 
     // Baggage State
     const [maxWeight, setMaxWeight] = useState("Weight");
@@ -89,6 +96,21 @@ export default function AddFlightPage() {
 
     const updateSegment = (id: number, field: string, value: any) => {
         setSegments(segments.map(seg => seg.id === id ? { ...seg, [field]: value } : seg));
+    };
+
+    const applyAirportToSegment = (airport: Airport) => {
+        if (!editingAirport) return;
+        const { segmentId, field } = editingAirport;
+        setSegments((prev) =>
+            prev.map((seg) =>
+                seg.id === segmentId
+                    ? field === "from"
+                        ? { ...seg, fromCode: airport.code, fromCity: airport.city }
+                        : { ...seg, toCode: airport.code, toCity: airport.city }
+                    : seg
+            )
+        );
+        setEditingAirport(null);
     };
 
     const filteredAirports = AIRPORTS.filter(airport => 
@@ -369,8 +391,16 @@ export default function AddFlightPage() {
                             )}
                         </div>
 
-                        <div className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 flex items-center justify-center gap-3 text-[#D60D26] font-bold text-[16px]">
-                            <ArrowRightLeft className="w-5 h-5" /> No return flight
+                        <div
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setStep(2)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") setStep(2);
+                            }}
+                            className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 flex items-center justify-center gap-3 text-[#D60D26] font-bold text-[16px] cursor-pointer hover:bg-rose-50 transition-colors"
+                        >
+                            <ArrowRightLeft className="w-5 h-5" /> Add return flight
                         </div>
                     </div>
                 </div>
@@ -430,11 +460,26 @@ export default function AddFlightPage() {
                         <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
                             {step > 0 && (
                                 <>
-                                    <button className="w-full sm:w-auto flex items-center justify-center gap-2 text-[#D60D26] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors text-[15px]">
-                                        <X className="w-4 h-4" /> Add flight series
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSeriesMode(true);
+                                            setIsModalOpen(true);
+                                            setModalTab(4);
+                                        }}
+                                        className={`w-full sm:w-auto flex items-center justify-center gap-2 font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors text-[15px] ${
+                                            seriesMode ? "text-emerald-600" : "text-[#D60D26]"
+                                        }`}
+                                    >
+                                        {seriesMode ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}{" "}
+                                        {seriesMode ? "Flight series on" : "Add flight series"}
                                     </button>
                                     <div className="hidden sm:block w-px h-6 bg-slate-300"></div>
-                                    <button className="w-full sm:w-auto text-slate-500 font-bold hover:text-slate-700 underline underline-offset-4 text-[15px] decoration-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSeriesInfoOpen(true)}
+                                        className="w-full sm:w-auto text-slate-500 font-bold hover:text-slate-700 underline underline-offset-4 text-[15px] decoration-2"
+                                    >
                                         How flight series work
                                     </button>
                                 </>
@@ -558,9 +603,54 @@ export default function AddFlightPage() {
                                                                     <input type="text" className="w-full font-bold text-slate-700 outline-none bg-transparent" value={seg.fromTime} onChange={(e) => updateSegment(seg.id, 'fromTime', e.target.value)} />
                                                                 </div>
                                                             </div>
-                                                            <div className="flex-1">
+                                                            <div className="flex-1 relative">
                                                                 <label className="text-[12px] font-bold text-slate-500 mb-1 block">Airport</label>
-                                                                <input type="text" className="w-full border border-slate-200 rounded-lg p-3 bg-slate-50 font-bold text-slate-500 outline-none shadow-sm" value={`${seg.fromCode} (${seg.fromCity})`} readOnly />
+                                                                <input
+                                                                    type="text"
+                                                                    className="w-full border border-slate-200 rounded-lg p-3 bg-white font-bold text-slate-700 outline-none shadow-sm focus:border-[#D60D26]"
+                                                                    value={
+                                                                        editingAirport?.segmentId === seg.id && editingAirport.field === "from"
+                                                                            ? editingAirport.query
+                                                                            : `${seg.fromCode} (${seg.fromCity})`
+                                                                    }
+                                                                    onFocus={() =>
+                                                                        setEditingAirport({
+                                                                            segmentId: seg.id,
+                                                                            field: "from",
+                                                                            query: `${seg.fromCode} ${seg.fromCity}`,
+                                                                        })
+                                                                    }
+                                                                    onChange={(e) =>
+                                                                        setEditingAirport({
+                                                                            segmentId: seg.id,
+                                                                            field: "from",
+                                                                            query: e.target.value,
+                                                                        })
+                                                                    }
+                                                                />
+                                                                {editingAirport?.segmentId === seg.id && editingAirport.field === "from" && (
+                                                                    <div className="absolute z-30 left-0 right-0 mt-1 max-h-40 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                                                                        {AIRPORTS.filter((a) => {
+                                                                            const q = editingAirport.query.toLowerCase();
+                                                                            return (
+                                                                                a.code.toLowerCase().includes(q) ||
+                                                                                a.city.toLowerCase().includes(q) ||
+                                                                                a.name.toLowerCase().includes(q)
+                                                                            );
+                                                                        })
+                                                                            .slice(0, 8)
+                                                                            .map((airport) => (
+                                                                                <button
+                                                                                    key={`fn-from-${airport.code}`}
+                                                                                    type="button"
+                                                                                    onClick={() => applyAirportToSegment(airport)}
+                                                                                    className="w-full text-left px-3 py-2 hover:bg-rose-50 text-[13px]"
+                                                                                >
+                                                                                    {airport.city} ({airport.code})
+                                                                                </button>
+                                                                            ))}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
                                                         <div>
@@ -589,9 +679,54 @@ export default function AddFlightPage() {
                                                     {/* Right Form */}
                                                     <div className="flex-1 space-y-6">
                                                         <div className="flex gap-4">
-                                                            <div className="flex-1">
+                                                            <div className="flex-1 relative">
                                                                 <label className="text-[12px] font-bold text-slate-500 mb-1 block">Airport</label>
-                                                                <input type="text" className="w-full border border-slate-200 rounded-lg p-3 bg-slate-50 font-bold text-slate-500 outline-none shadow-sm" value={`${seg.toCode} (${seg.toCity})`} readOnly />
+                                                                <input
+                                                                    type="text"
+                                                                    className="w-full border border-slate-200 rounded-lg p-3 bg-white font-bold text-slate-700 outline-none shadow-sm focus:border-[#D60D26]"
+                                                                    value={
+                                                                        editingAirport?.segmentId === seg.id && editingAirport.field === "to"
+                                                                            ? editingAirport.query
+                                                                            : `${seg.toCode} (${seg.toCity})`
+                                                                    }
+                                                                    onFocus={() =>
+                                                                        setEditingAirport({
+                                                                            segmentId: seg.id,
+                                                                            field: "to",
+                                                                            query: `${seg.toCode} ${seg.toCity}`,
+                                                                        })
+                                                                    }
+                                                                    onChange={(e) =>
+                                                                        setEditingAirport({
+                                                                            segmentId: seg.id,
+                                                                            field: "to",
+                                                                            query: e.target.value,
+                                                                        })
+                                                                    }
+                                                                />
+                                                                {editingAirport?.segmentId === seg.id && editingAirport.field === "to" && (
+                                                                    <div className="absolute z-30 left-0 right-0 mt-1 max-h-40 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                                                                        {AIRPORTS.filter((a) => {
+                                                                            const q = editingAirport.query.toLowerCase();
+                                                                            return (
+                                                                                a.code.toLowerCase().includes(q) ||
+                                                                                a.city.toLowerCase().includes(q) ||
+                                                                                a.name.toLowerCase().includes(q)
+                                                                            );
+                                                                        })
+                                                                            .slice(0, 8)
+                                                                            .map((airport) => (
+                                                                                <button
+                                                                                    key={`fn-to-${airport.code}`}
+                                                                                    type="button"
+                                                                                    onClick={() => applyAirportToSegment(airport)}
+                                                                                    className="w-full text-left px-3 py-2 hover:bg-rose-50 text-[13px]"
+                                                                                >
+                                                                                    {airport.city} ({airport.code})
+                                                                                </button>
+                                                                            ))}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                             <div className="w-32">
                                                                 <label className="text-[12px] font-bold text-slate-500 mb-1 block">{seg.toCode} local time</label>
@@ -933,6 +1068,37 @@ export default function AddFlightPage() {
                                 className="flex-1 bg-[#D60D26] text-white font-bold py-3.5 rounded-xl hover:bg-[#30060F] transition-colors flex items-center justify-center gap-2 shadow-sm"
                             >
                                 Confirm Flight <ArrowRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {seriesInfoOpen && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-[520px] shadow-2xl overflow-hidden">
+                        <div className="bg-rose-50 px-6 py-4 flex items-start justify-between">
+                            <h3 className="font-extrabold text-[17px] text-slate-800">How flight series work</h3>
+                            <button type="button" onClick={() => setSeriesInfoOpen(false)} className="p-1 rounded-full hover:bg-white/70">
+                                <X className="w-5 h-5 text-slate-600" />
+                            </button>
+                        </div>
+                        <div className="px-6 py-5 text-[14px] text-slate-600 space-y-3 leading-relaxed">
+                            <p>A flight series creates the same schedule on multiple operating dates.</p>
+                            <p>Enable series, then choose dates in the schedule modal Dates tab.</p>
+                        </div>
+                        <div className="px-6 pb-6">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSeriesInfoOpen(false);
+                                    setSeriesMode(true);
+                                    setIsModalOpen(true);
+                                    setModalTab(4);
+                                }}
+                                className="w-full bg-[#D60D26] hover:bg-[#30060F] text-white font-bold py-3 rounded-full"
+                            >
+                                Enable flight series
                             </button>
                         </div>
                     </div>

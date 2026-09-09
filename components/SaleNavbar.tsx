@@ -8,9 +8,11 @@ import { Menu, X, ChevronDown, ChevronRight, User as UserIcon, LogOut } from "lu
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { useAgentWallet } from "@/hooks/useAgentWallet";
 
 export function SaleNavbar() {
-  const { openAuthModal, user, logout } = useAuth();
+  const { openAuthModal, user, logout, access } = useAuth();
+  const { wallet } = useAgentWallet(access);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -150,7 +152,7 @@ export function SaleNavbar() {
                 name="For sale"
                 options={[
                   { label: "All Flights", href: "/sale/flight/all", icon: <CurvedArrowIcon /> },
-                  { label: "New Flight", href: "/sale/inventory/new", icon: <CurvedArrowIcon /> },
+                  { label: "Add PNR", href: "/sale/inventory/new", icon: <CurvedArrowIcon /> },
                   { label: "Bookings", href: "/sale/booking", icon: <CurvedArrowIcon /> },
                   { label: "Inventory", href: "/sale/inventory", icon: <CurvedArrowIcon /> },
                   { label: "History", href: "/sale/history", icon: <CurvedArrowIcon /> },
@@ -277,14 +279,15 @@ export function SaleNavbar() {
                     )}
                   </div>
 
-                  {/* Balance Pill */}
+                  {/* Balance Pill — Figma: Balance XXXX when hidden */}
                   <button
                     onClick={() => setBalanceHidden(!balanceHidden)}
                     className="border-[2px] border-primary hover:bg-primary/5 text-primary rounded-full px-5 py-2 text-[15px] font-[800] tracking-wide transition-all active:scale-95 flex items-center gap-2 select-none"
+                    title={wallet?.source === "derived" ? "Estimated from bookings" : "Wallet balance"}
                   >
                     <span>Balance</span>
-                    <span className="font-extrabold uppercase tracking-widest text-[16px]">
-                      {balanceHidden ? "XXXX" : "₹ 1,24,500"}
+                    <span className="font-extrabold tracking-widest text-[16px]">
+                      {balanceHidden ? "XXXX" : wallet?.formatted || "₹ 0"}
                     </span>
                   </button>
 
@@ -342,7 +345,7 @@ export function SaleNavbar() {
             <div className="flex flex-col gap-1">
               {[
                 { label: "All Flights", href: "/sale/flight/all" },
-                { label: "New Flight", href: "/sale/inventory/new" },
+                { label: "Add PNR", href: "/sale/inventory/new" },
                 { label: "Bookings", href: "/sale/booking" },
                 { label: "Inventory", href: "/sale/inventory" },
                 { label: "History", href: "/sale/history" },
@@ -401,8 +404,8 @@ export function SaleNavbar() {
                   className="border-[2px] border-primary hover:bg-primary/5 text-primary rounded-full px-4 py-1.5 text-[14px] font-[800] tracking-wide transition-all w-full flex items-center justify-center gap-2"
                 >
                   <span>Balance</span>
-                  <span className="font-extrabold uppercase tracking-widest">
-                    {balanceHidden ? "XXXX" : "₹ 1,24,500"}
+                  <span className="font-extrabold tracking-widest">
+                    {balanceHidden ? "XXXX" : wallet?.formatted || "₹ 0"}
                   </span>
                 </button>
               </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, MoreVertical } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import {
   formatFareInr,
   formatFarePortal,
@@ -49,7 +49,7 @@ export function OfflineFlightListTable({
           >
             {variant === "inventory" && <div>Group PNR</div>}
             <div>Route</div>
-            <div>{variant === "inventory" ? "Departure Date" : "Date"}</div>
+            <div>{variant === "inventory" ? "Departure Date" : "Departure Date"}</div>
             <div>Dep. &amp; Arr. Time</div>
             <div>Flight number</div>
             <div>Number of seats</div>
@@ -81,11 +81,14 @@ export function OfflineFlightListTable({
                     {variant === "inventory" && (
                       <div className="font-bold text-slate-800">{groupPnrFromId(row.id)}</div>
                     )}
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold">{row.origin}</span>
-                      <ArrowRight className="w-3 h-3 text-slate-400" />
-                      <span className="font-bold">{row.destination}</span>
-                      <span className="text-slate-400 text-[12px]">({stops} Stops)</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-bold text-slate-800">{row.origin}</span>
+                      <span className="text-slate-500 text-[13px]">➝</span>
+                      <span className="font-bold text-slate-800">{row.destination}</span>
+                      <span className="text-[#D60D26] text-[12px] font-bold leading-none">•</span>
+                      <span className="text-slate-400 text-[12px] font-medium">
+                        ({stops} {stops === 1 ? "Stop" : "Stops"})
+                      </span>
                     </div>
                     <div>{formatShortDate(row.departure_datetime)}</div>
                     <div>{formatTimeRange(row.departure_datetime, row.arrival_datetime)}</div>

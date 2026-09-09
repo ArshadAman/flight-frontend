@@ -323,6 +323,11 @@ export default function InventoryPage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editSeats, setEditSeats] = useState("");
     const [editPrice, setEditPrice] = useState("");
+    const [editPolicies, setEditPolicies] = useState<Record<string, string>>({
+        cancellation: "",
+        change: "",
+        refund: "",
+    });
     const [inventorySaving, setInventorySaving] = useState(false);
 
     // Booking actions state
@@ -493,14 +498,21 @@ export default function InventoryPage() {
         setActionSuccess(null);
         setInventorySaving(true);
         try {
+            const policies: Record<string, string> = {};
+            for (const key of ["cancellation", "change", "refund"] as const) {
+                const val = (editPolicies[key] || "").trim();
+                if (val) policies[key] = val;
+            }
             const updated = await patchInventory(selectedFlight.id, {
                 seats_available: seats,
                 price,
+                policies,
             });
             const nextFlight: InventoryFlight = {
                 ...selectedFlight,
                 seats_available: updated.seats_available ?? seats,
                 price: String(updated.price ?? price),
+                policies: updated.policies ?? policies,
             };
             setInventoryFlights((prev) =>
                 prev.map((f) => (f.id === selectedFlight.id ? nextFlight : f))
@@ -746,7 +758,7 @@ export default function InventoryPage() {
                                 Export
                             </button>
                             <Link href="/sale/inventory/new" className="bg-[#D60D26] hover:bg-[#b80b20] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center justify-center gap-2">
-                                <Plus className="w-4 h-4" /> New flight
+                                <Plus className="w-4 h-4" /> Add PNR
                             </Link>
                         </div>
                     </div>
@@ -767,7 +779,7 @@ export default function InventoryPage() {
                         <OfflineFlightListTable
                             rows={filteredInventoryRows}
                             variant="inventory"
-                            seatDisplay="compact"
+                            seatDisplay="full"
                             selectedId={selectedFlight?.id}
                             onSelect={(row) => setSelectedFlight(row as InventoryFlight)}
                             bookedByInventory={bookedByInventory}
@@ -790,6 +802,11 @@ export default function InventoryPage() {
                     onEditInventory={() => {
                         setEditSeats(String(selectedFlight.seats_available));
                         setEditPrice(String(selectedFlight.price));
+                        setEditPolicies({
+                            cancellation: selectedFlight.policies?.cancellation || "",
+                            change: selectedFlight.policies?.change || "",
+                            refund: selectedFlight.policies?.refund || "",
+                        });
                         setIsEditModalOpen(true);
                     }}
                     onTicketSelect={(ticket) => {
@@ -1072,7 +1089,7 @@ export default function InventoryPage() {
                     <div className="bg-white rounded-2xl w-full max-w-[450px] shadow-2xl overflow-hidden flex flex-col">
                         <div className="bg-rose-50 p-5 relative shrink-0">
                             <button onClick={() => setIsEditModalOpen(false)} className="absolute top-5 right-5 text-slate-500 hover:bg-white/50 p-1 rounded-full transition-colors"><X className="w-5 h-5" /></button>
-                            <h2 className="font-extrabold text-[18px] text-slate-800">Edit seats & price</h2>
+                            <h2 className="font-extrabold text-[18px] text-slate-800">Edit seats, price & policies</h2>
                         </div>
                         <div className="p-6 space-y-4">
                             <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -1096,6 +1113,20 @@ export default function InventoryPage() {
                                     className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800"
                                 />
                             </label>
+                            {(["cancellation", "change", "refund"] as const).map((key) => (
+                                <label key={key} className="block text-xs font-bold uppercase tracking-wide text-slate-500">
+                                    {key} policy
+                                    <textarea
+                                        value={editPolicies[key] || ""}
+                                        onChange={(e) =>
+                                            setEditPolicies((prev) => ({ ...prev, [key]: e.target.value }))
+                                        }
+                                        rows={2}
+                                        className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-800"
+                                        placeholder={`Add ${key} policy...`}
+                                    />
+                                </label>
+                            ))}
                             <button
                                 type="button"
                                 disabled={inventorySaving}

@@ -9,10 +9,12 @@ import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { NotificationModal } from "@/components/NotificationModal";
+import { useAgentWallet } from "@/hooks/useAgentWallet";
 
 export function B2BNavbar() {
-  const { openAuthModal, user: authUser, logout } = useAuth();
+  const { openAuthModal, user: authUser, logout, access } = useAuth();
   const user = authUser;
+  const { wallet } = useAgentWallet(access);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -279,7 +281,7 @@ export function B2BNavbar() {
                   >
                     <span>Balance</span>
                     <span className="font-extrabold uppercase tracking-widest text-[16px]">
-                      {balanceHidden ? "XXXX" : "₹ 1,24,500"}
+                      {balanceHidden ? "XXXX" : wallet?.formatted || "₹ 0"}
                     </span>
                   </button>
 
@@ -569,7 +571,7 @@ export function B2BNavbar() {
                 >
                   <span>Balance</span>
                   <span className="font-extrabold uppercase tracking-widest">
-                    {balanceHidden ? "XXXX" : "₹ 1,24,500"}
+                    {balanceHidden ? "XXXX" : wallet?.formatted || "₹ 0"}
                   </span>
                 </button>
               </div>

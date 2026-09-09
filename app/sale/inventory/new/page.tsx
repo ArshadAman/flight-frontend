@@ -152,12 +152,21 @@ export default function AddPNRPage() {
     const [calendarMonth, setCalendarMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
     const [returnCalendarMonth, setReturnCalendarMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 1); });
     const [selectedReturnDate, setSelectedReturnDate] = useState<string | null>(null);
+    const [seriesMode, setSeriesMode] = useState(false);
+    const [seriesInfoOpen, setSeriesInfoOpen] = useState(false);
+    const [editingAirport, setEditingAirport] = useState<{
+        segmentId: number;
+        field: "from" | "to";
+        query: string;
+    } | null>(null);
     
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [hasScheduledFlight, setHasScheduledFlight] = useState(false);
+    const [hasScheduledReturnFlight, setHasScheduledReturnFlight] = useState(false);
     const [modalTab, setModalTab] = useState(1);
+    const [schedulingLeg, setSchedulingLeg] = useState<"outbound" | "return">("outbound");
 
     // Baggage State
     const [maxWeight, setMaxWeight] = useState("Weight");
@@ -262,6 +271,59 @@ export default function AddPNRPage() {
 
     const updateSegment = (id: number, field: keyof Segment, value: Segment[keyof Segment]) => {
         setSegments(segments.map(seg => seg.id === id ? { ...seg, [field]: value } : seg));
+    };
+
+    const applyAirportToSegment = (airport: Airport) => {
+        if (!editingAirport) return;
+        const { segmentId, field } = editingAirport;
+        setSegments((prev) =>
+            prev.map((seg) =>
+                seg.id === segmentId
+                    ? field === "from"
+                        ? { ...seg, fromCode: airport.code, fromCity: airport.city }
+                        : { ...seg, toCode: airport.code, toCity: airport.city }
+                    : seg
+            )
+        );
+        setEditingAirport(null);
+    };
+
+    const handleAddFlightSeries = () => {
+        setSeriesMode(true);
+        if (!selectedDate) {
+            setStep(1);
+            return;
+        }
+        if (step < 3) {
+            setIsModalOpen(true);
+            setModalTab(4);
+            setSchedulingLeg("outbound");
+            return;
+        }
+        setIsModalOpen(true);
+        setModalTab(4);
+        setSchedulingLeg("outbound");
+    };
+
+    const handleAddReturnFlight = () => {
+        if (!origin || !destination) {
+            alert("Select origin and destination first.");
+            return;
+        }
+        if (!selectedDate) {
+            setStep(1);
+            return;
+        }
+        setStep(2);
+        setReturnCalendarMonth(
+            selectedDate
+                ? new Date(
+                      Number(selectedDate.slice(0, 4)),
+                      Number(selectedDate.slice(5, 7)) - 1,
+                      1
+                  )
+                : returnCalendarMonth
+        );
     };
 
     const handleAddStopover = () => {
@@ -818,16 +880,32 @@ export default function AddPNRPage() {
                         </div>
                     </div>
 
-                    {/* Header Tabs */}
-                    <div className="w-full bg-white px-6 sm:px-10 flex items-center gap-8 sm:gap-12 border-b border-slate-200 mt-6 shrink-0 overflow-x-auto whitespace-nowrap no-scrollbar">
-                        {(selectedWeekdayLabels.length > 0 ? selectedWeekdayLabels : ["Select operating dates"]).map((label, index) => (
-                            <div
+                    {/* Header Tabs — Figma: full weekday row */}
+                    <div className="w-full bg-white px-6 sm:px-10 flex items-center gap-6 sm:gap-10 border-b border-slate-200 mt-6 shrink-0 overflow-x-auto whitespace-nowrap no-scrollbar">
+                        {(
+                          ["Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays"] as const
+                        ).map((label) => {
+                            const weekdayName = label.slice(0, -1); // Sunday, Monday, ...
+                            const isActive =
+                              selectedWeekdayLabels.length === 0
+                                ? label === "Sundays"
+                                : selectedWeekdayLabels.some((w) => w === weekdayName);
+                            const hasDates = selectedWeekdayLabels.some((w) => w === weekdayName);
+                            return (
+                              <div
                                 key={label}
-                                className={`font-bold py-4 ${index === 0 ? "text-[#D60D26] border-b-4 border-[#D60D26]" : "text-slate-400"}`}
-                            >
+                                className={`font-bold py-4 text-[14px] ${
+                                  isActive
+                                    ? "text-[#D60D26] border-b-4 border-[#D60D26]"
+                                    : hasDates
+                                      ? "text-slate-700"
+                                      : "text-slate-300"
+                                }`}
+                              >
                                 {label}
-                            </div>
-                        ))}
+                              </div>
+                            );
+                        })}
                     </div>
 
                     <div className="w-full max-w-[1100px] px-4 sm:px-10 mt-10 pb-20">
@@ -845,10 +923,18 @@ export default function AddPNRPage() {
                                         {selectedDate ? String(new Date(selectedDate + 'T00:00:00').getDate()).padStart(2, '0') : '--'}
                                     </div>
                                 </div>
+                                {seriesMode && (
+                                    <span className="rounded-full bg-rose-50 border border-rose-100 text-[#D60D26] text-[12px] font-bold px-3 py-1">
+                                        Series · {selectedOperatingDates.length} date{selectedOperatingDates.length === 1 ? "" : "s"}
+                                    </span>
+                                )}
                             </div>
 
                             <div 
-                                onClick={() => setIsModalOpen(true)}
+                                onClick={() => {
+                                    setSchedulingLeg("outbound");
+                                    setIsModalOpen(true);
+                                }}
                                 className="w-full bg-[#0C2342] rounded-[12px] p-5 flex items-center justify-between text-white cursor-pointer hover:bg-[#0C2342] transition-colors border-2 border-[#090001]"
                             >
                                 <div className="flex items-center gap-4">
@@ -883,9 +969,46 @@ export default function AddPNRPage() {
                             )}
                         </div>
 
-                        <div className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 flex items-center justify-center gap-3 text-[#D60D26] font-bold text-[16px]">
-                            <ArrowRightLeft className="w-5 h-5" /> No return flight
-                        </div>
+                        {selectedReturnDate ? (
+                            <div className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 mb-6">
+                                <div className="flex flex-wrap items-center gap-4 mb-2">
+                                    <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-4 py-2 font-bold text-slate-700 text-[14px]">
+                                        {destination?.code || "---"} <ArrowRight className="w-4 h-4 text-[#D60D26]" /> {origin?.code || "---"}
+                                    </div>
+                                    <div className="flex items-center border border-[#D60D26] rounded-xl overflow-hidden font-bold">
+                                        <div className="bg-[#D60D26] text-white px-3 py-2 text-[14px]">
+                                            {new Date(selectedReturnDate + "T00:00:00").toLocaleString("default", { month: "short" }).toUpperCase()}
+                                        </div>
+                                        <div className="bg-white text-[#D60D26] px-3 py-2 text-[14px]">
+                                            {String(new Date(selectedReturnDate + "T00:00:00").getDate()).padStart(2, "0")}
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSchedulingLeg("return");
+                                            setIsModalOpen(true);
+                                        }}
+                                        className="ml-auto text-[#D60D26] font-bold text-[14px] inline-flex items-center gap-2 hover:underline underline-offset-2"
+                                    >
+                                        <ArrowRightLeft className="w-4 h-4" /> Check return flight
+                                    </button>
+                                </div>
+                                {hasScheduledReturnFlight && (
+                                    <div className="mt-3 text-[13px] font-bold text-emerald-600">
+                                        Return flight scheduled for {selectedReturnDate}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleAddReturnFlight}
+                                className="w-full bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 flex items-center justify-center gap-3 text-[#D60D26] font-bold text-[16px] hover:bg-rose-50 transition-colors"
+                            >
+                                <ArrowRightLeft className="w-5 h-5" /> Add return flight
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
@@ -958,11 +1081,22 @@ export default function AddPNRPage() {
                         <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
                             {step > 0 && (
                                 <>
-                                    <button className="w-full sm:w-auto flex items-center justify-center gap-2 text-[#D60D26] font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors text-[15px]">
-                                        <X className="w-4 h-4" /> Add flight series
+                                    <button
+                                        type="button"
+                                        onClick={handleAddFlightSeries}
+                                        className={`w-full sm:w-auto flex items-center justify-center gap-2 font-bold hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors text-[15px] ${
+                                            seriesMode ? "text-emerald-600 bg-emerald-50" : "text-[#D60D26]"
+                                        }`}
+                                    >
+                                        {seriesMode ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}{" "}
+                                        {seriesMode ? "Flight series on" : "Add flight series"}
                                     </button>
                                     <div className="hidden sm:block w-px h-6 bg-slate-300"></div>
-                                    <button className="w-full sm:w-auto text-slate-500 font-bold hover:text-slate-700 underline underline-offset-4 text-[15px] decoration-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSeriesInfoOpen(true)}
+                                        className="w-full sm:w-auto text-slate-500 font-bold hover:text-slate-700 underline underline-offset-4 text-[15px] decoration-2"
+                                    >
                                         How flight series work
                                     </button>
                                 </>
@@ -971,7 +1105,7 @@ export default function AddPNRPage() {
                         <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto mt-2 sm:mt-0">
                             {step >= 1 && !selectedReturnDate && (
                                 <button
-                                    onClick={() => setStep(2)}
+                                    onClick={handleAddReturnFlight}
                                     className="w-full sm:w-auto justify-center border border-[#D60D26] text-[#D60D26] hover:bg-rose-50 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[14px] sm:text-[15px] flex items-center gap-2 transition-colors"
                                 >
                                     <ArrowRightLeft className="w-4 h-4" /> Add return flight
@@ -1035,7 +1169,10 @@ export default function AddPNRPage() {
                             <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 hover:bg-white/20 p-1 rounded-full transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
-                            <div className="font-bold text-[16px] mb-1">New flights</div>
+                            <div className="font-bold text-[16px] mb-1">
+                                {schedulingLeg === "return" ? "Return flight" : "New flights"}
+                                {seriesMode ? " · Series" : ""}
+                            </div>
                             <div className="font-extrabold text-[18px] flex items-center gap-2">
                                 {origin?.city || "New Delhi"} ({origin?.code || "DEL"}) 
                                 <div className="w-5 h-5 rounded-full border border-white flex items-center justify-center mx-1">
@@ -1121,9 +1258,59 @@ export default function AddPNRPage() {
                                                                         <input type="text" className="w-full font-bold text-slate-700 outline-none bg-transparent text-[14px]" value={seg.fromTime} onChange={(e) => updateSegment(seg.id, 'fromTime', e.target.value)} />
                                                                     </div>
                                                                 </div>
-                                                                <div className="flex-1">
+                                                                <div className="flex-1 relative">
                                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Airport</label>
-                                                                    <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 font-semibold text-slate-500 outline-none shadow-sm text-[14px]" value={`${seg.fromCode} (${seg.fromCity})`} readOnly />
+                                                                    <input
+                                                                        type="text"
+                                                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-white font-semibold text-slate-700 outline-none shadow-sm text-[14px] focus:border-[#D60D26]"
+                                                                        value={
+                                                                            editingAirport?.segmentId === seg.id && editingAirport.field === "from"
+                                                                                ? editingAirport.query
+                                                                                : `${seg.fromCode} (${seg.fromCity})`
+                                                                        }
+                                                                        onFocus={() =>
+                                                                            setEditingAirport({
+                                                                                segmentId: seg.id,
+                                                                                field: "from",
+                                                                                query: `${seg.fromCode} ${seg.fromCity}`,
+                                                                            })
+                                                                        }
+                                                                        onChange={(e) =>
+                                                                            setEditingAirport({
+                                                                                segmentId: seg.id,
+                                                                                field: "from",
+                                                                                query: e.target.value,
+                                                                            })
+                                                                        }
+                                                                        placeholder="Search airport..."
+                                                                    />
+                                                                    {editingAirport?.segmentId === seg.id && editingAirport.field === "from" && (
+                                                                        <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                                                                            {AIRPORTS.filter((a) => {
+                                                                                const q = editingAirport.query.toLowerCase();
+                                                                                return (
+                                                                                    a.code.toLowerCase().includes(q) ||
+                                                                                    a.city.toLowerCase().includes(q) ||
+                                                                                    a.name.toLowerCase().includes(q)
+                                                                                );
+                                                                            })
+                                                                                .slice(0, 8)
+                                                                                .map((airport) => (
+                                                                                    <button
+                                                                                        key={`from-${airport.code}`}
+                                                                                        type="button"
+                                                                                        onClick={() => applyAirportToSegment(airport)}
+                                                                                        className="w-full text-left px-3 py-2.5 hover:bg-rose-50 text-[13px]"
+                                                                                    >
+                                                                                        <span className="font-bold text-slate-800">
+                                                                                            {airport.city}{" "}
+                                                                                            <span className="text-[#D60D26]">({airport.code})</span>
+                                                                                        </span>
+                                                                                        <div className="text-[11px] text-slate-500">{airport.name}</div>
+                                                                                    </button>
+                                                                                ))}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                             <div className="flex gap-3">
@@ -1156,9 +1343,59 @@ export default function AddPNRPage() {
                                                         {/* RIGHT: arrival */}
                                                         <div className="flex-1 space-y-5">
                                                             <div className="flex gap-3">
-                                                                <div className="flex-1">
+                                                                <div className="flex-1 relative">
                                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Airport</label>
-                                                                    <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 font-semibold text-slate-500 outline-none shadow-sm text-[14px]" value={`${seg.toCode} (${seg.toCity})`} readOnly />
+                                                                    <input
+                                                                        type="text"
+                                                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-white font-semibold text-slate-700 outline-none shadow-sm text-[14px] focus:border-[#D60D26]"
+                                                                        value={
+                                                                            editingAirport?.segmentId === seg.id && editingAirport.field === "to"
+                                                                                ? editingAirport.query
+                                                                                : `${seg.toCode} (${seg.toCity})`
+                                                                        }
+                                                                        onFocus={() =>
+                                                                            setEditingAirport({
+                                                                                segmentId: seg.id,
+                                                                                field: "to",
+                                                                                query: `${seg.toCode} ${seg.toCity}`,
+                                                                            })
+                                                                        }
+                                                                        onChange={(e) =>
+                                                                            setEditingAirport({
+                                                                                segmentId: seg.id,
+                                                                                field: "to",
+                                                                                query: e.target.value,
+                                                                            })
+                                                                        }
+                                                                        placeholder="Search airport..."
+                                                                    />
+                                                                    {editingAirport?.segmentId === seg.id && editingAirport.field === "to" && (
+                                                                        <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                                                                            {AIRPORTS.filter((a) => {
+                                                                                const q = editingAirport.query.toLowerCase();
+                                                                                return (
+                                                                                    a.code.toLowerCase().includes(q) ||
+                                                                                    a.city.toLowerCase().includes(q) ||
+                                                                                    a.name.toLowerCase().includes(q)
+                                                                                );
+                                                                            })
+                                                                                .slice(0, 8)
+                                                                                .map((airport) => (
+                                                                                    <button
+                                                                                        key={`to-${airport.code}`}
+                                                                                        type="button"
+                                                                                        onClick={() => applyAirportToSegment(airport)}
+                                                                                        className="w-full text-left px-3 py-2.5 hover:bg-rose-50 text-[13px]"
+                                                                                    >
+                                                                                        <span className="font-bold text-slate-800">
+                                                                                            {airport.city}{" "}
+                                                                                            <span className="text-[#D60D26]">({airport.code})</span>
+                                                                                        </span>
+                                                                                        <div className="text-[11px] text-slate-500">{airport.name}</div>
+                                                                                    </button>
+                                                                                ))}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                                 <div className="w-[130px] shrink-0">
                                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">{seg.toCode} local time</label>
@@ -1537,7 +1774,12 @@ export default function AddPNRPage() {
                                 onClick={() => {
                                     setIsConfirmModalOpen(false);
                                     setIsModalOpen(false);
-                                    setHasScheduledFlight(true);
+                                    if (schedulingLeg === "return") {
+                                        setHasScheduledReturnFlight(true);
+                                    } else {
+                                        setHasScheduledFlight(true);
+                                    }
+                                    setEditingAirport(null);
                                 }} 
                                 className="flex-1 bg-[#D60D26] text-white font-bold py-3.5 rounded-xl hover:bg-[#30060F] transition-colors flex items-center justify-center gap-2 shadow-sm"
                             >
@@ -1546,6 +1788,51 @@ export default function AddPNRPage() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {seriesInfoOpen && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-[520px] shadow-2xl overflow-hidden">
+                        <div className="bg-rose-50 px-6 py-4 flex items-start justify-between">
+                            <h3 className="font-extrabold text-[17px] text-slate-800">How flight series work</h3>
+                            <button type="button" onClick={() => setSeriesInfoOpen(false)} className="p-1 rounded-full hover:bg-white/70">
+                                <X className="w-5 h-5 text-slate-600" />
+                            </button>
+                        </div>
+                        <div className="px-6 py-5 text-[14px] text-slate-600 space-y-3 leading-relaxed">
+                            <p>
+                                A flight series creates the same schedule across multiple operating dates
+                                (for example every Monday for the next 8 weeks).
+                            </p>
+                            <p>
+                                Click <span className="font-bold text-[#D60D26]">Add flight series</span>, then open
+                                schedule details and choose dates under the <span className="font-bold">Dates</span> tab.
+                            </p>
+                            <p>
+                                Each selected date becomes its own inventory row with the same seats, fare, and policies.
+                            </p>
+                        </div>
+                        <div className="px-6 pb-6">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSeriesInfoOpen(false);
+                                    handleAddFlightSeries();
+                                }}
+                                className="w-full bg-[#D60D26] hover:bg-[#30060F] text-white font-bold py-3 rounded-full"
+                            >
+                                Enable flight series
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {editingAirport && (
+                <div
+                    className="fixed inset-0 z-20"
+                    onClick={() => setEditingAirport(null)}
+                />
             )}
         </div>
     );

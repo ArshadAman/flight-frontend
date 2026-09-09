@@ -15,7 +15,7 @@ import {
 } from "@/components/sale/OfflinePortalFilters";
 import { useAuth } from "@/context/AuthContext";
 import { useAgentOfflineData } from "@/hooks/useAgentOfflineData";
-import { formatShortDate } from "@/lib/sale/offlinePortal";
+import { formatPortalDayMonthYear } from "@/lib/sale/offlinePortal";
 
 function passengerLabel(ticket: {
   passengers_data?: { first_name?: string; last_name?: string }[];
@@ -73,7 +73,11 @@ export default function SaleBookingPage() {
     const needle = q.trim().toLowerCase();
     if (!needle) return rows;
     return rows.filter((t) => {
-      const hay = `${t.pnr_number} ${t.booking_ref} ${t.origin} ${t.destination} ${t.flight_number}`.toLowerCase();
+      const paxNames = (t.passengers_data || [])
+        .map((p) => `${p.first_name || ""} ${p.last_name || ""}`.trim())
+        .join(" ");
+      const hay =
+        `${t.pnr_number} ${t.booking_ref} ${t.origin} ${t.destination} ${t.flight_number} ${paxNames}`.toLowerCase();
       return hay.includes(needle);
     });
   }, [tickets, activeTab, q, filters]);
@@ -150,23 +154,17 @@ export default function SaleBookingPage() {
                 href={`/my-booking/${t.id}`}
                 className="grid grid-cols-1 md:grid-cols-7 gap-2 md:gap-4 px-6 py-4 border-b border-slate-100 text-[13px] font-medium hover:bg-slate-50 transition-colors"
               >
-                <div className="font-bold text-[#D60D26] underline underline-offset-2">
+                <div className="font-bold text-slate-600 underline underline-offset-2 decoration-slate-400">
                   {t.pnr_number || t.booking_ref || t.id.slice(0, 6).toUpperCase()}
                 </div>
                 <div>
-                  {t.created_at
-                    ? new Date(t.created_at).toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                        year: "2-digit",
-                      })
-                    : "—"}
+                  {t.created_at ? formatPortalDayMonthYear(t.created_at) : "—"}
                 </div>
                 <div className="font-bold text-slate-800">{passengerLabel(t)}</div>
                 <div className="font-bold">
-                  {t.origin} → {t.destination}
+                  {t.origin} ➝ {t.destination}
                 </div>
-                <div>{t.departure_datetime ? formatShortDate(t.departure_datetime) : "—"}</div>
+                <div>{t.departure_datetime ? formatPortalDayMonthYear(t.departure_datetime) : "—"}</div>
                 <div>
                   {t.departure_datetime
                     ? new Date(t.departure_datetime).toLocaleTimeString("en-GB", {
@@ -188,6 +186,17 @@ export default function SaleBookingPage() {
             <div className="text-slate-500 text-[13px]">
               <span className="font-bold text-slate-700">1-{Math.min(50, filtered.length)}</span> on{" "}
               {filtered.length} results
+            </div>
+            <div className="flex items-center gap-4">
+              <button type="button" className="text-slate-400 font-bold text-[14px] cursor-not-allowed">
+                Prev
+              </button>
+              <button
+                type="button"
+                className="text-slate-800 font-bold text-[14px] border border-slate-300 rounded-full px-6 py-1.5 hover:bg-slate-50 transition-colors"
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>

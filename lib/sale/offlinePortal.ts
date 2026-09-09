@@ -55,26 +55,114 @@ export type OfflineHoldRow = {
   inventory: string;
   status: string;
   seats: number;
+  created_at?: string;
+  updated_at?: string;
+  expires_at?: string | null;
+  inventory_route?: string;
 };
 
 export type FlightListStatus = "Open" | "Closed";
+
+const CITY_BY_CODE: Record<string, { city: string; country: string }> = {
+  DEL: { city: "New Delhi", country: "India" },
+  BOM: { city: "Mumbai", country: "India" },
+  MUM: { city: "Mumbai", country: "India" },
+  BLR: { city: "Bangalore", country: "India" },
+  MAA: { city: "Chennai", country: "India" },
+  CCU: { city: "Kolkata", country: "India" },
+  HYD: { city: "Hyderabad", country: "India" },
+  PNQ: { city: "Pune", country: "India" },
+  AMD: { city: "Ahmedabad", country: "India" },
+  GOI: { city: "Goa", country: "India" },
+  JAI: { city: "Jaipur", country: "India" },
+  COK: { city: "Cochin", country: "India" },
+  LKO: { city: "Lucknow", country: "India" },
+  GAU: { city: "Guwahati", country: "India" },
+  BKK: { city: "Bangkok", country: "Thailand" },
+  DXB: { city: "Dubai", country: "United Arab Emirates" },
+  SIN: { city: "Singapore", country: "Singapore" },
+  LHR: { city: "London", country: "United Kingdom" },
+  JFK: { city: "New York", country: "United States" },
+};
+
+export function cityLabelFromCode(code?: string | null, fallbackCity?: string | null) {
+  const key = String(code || "").toUpperCase();
+  if (fallbackCity && fallbackCity.length > 3) return fallbackCity;
+  return CITY_BY_CODE[key]?.city || key || "—";
+}
+
+export function cityCountryFromCode(code?: string | null, fallbackCity?: string | null) {
+  const key = String(code || "").toUpperCase();
+  const known = CITY_BY_CODE[key];
+  const city = (fallbackCity && fallbackCity.length > 3 ? fallbackCity : known?.city) || key || "—";
+  const country = known?.country || "";
+  return country ? `${key} ${city}, ${country}` : `${key} ${city}`;
+}
+
+export function formatInrPortal(amount: string | number) {
+  const value = Number(amount);
+  if (Number.isNaN(value)) return `₹ ${amount}`;
+  return `₹ ${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+export function passengerBookingLabel(
+  passengers?: { first_name?: string; last_name?: string }[] | null
+) {
+  const pax = passengers || [];
+  if (!pax.length) return { count: 1, names: "PASSENGER" };
+  const first = `${pax[0]?.first_name || ""}`.trim().toUpperCase() || "PASSENGER";
+  if (pax.length === 1) return { count: 1, names: first };
+  if (pax.length === 2) {
+    const second = `${pax[1]?.first_name || ""}`.trim().toUpperCase() || "PAX";
+    return { count: 2, names: `${first} / ${second}` };
+  }
+  return { count: pax.length, names: `${first}(+${pax.length - 1})` };
+}
 
 export function groupPnrFromId(id: string) {
   const clean = id.replace(/-/g, "").toUpperCase();
   return `UYS${clean.slice(0, 5)}`;
 }
 
+const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
+const MONTH_FULL = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
 export function formatMonthGroupLabel(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${MONTH_FULL[d.getMonth()]}, ${d.getFullYear()}`;
 }
 
+/** Figma inventory list: `Wed, 26 Jul 25` */
 export function formatShortDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "2-digit",
-  });
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${WEEKDAY_SHORT[d.getDay()]}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]} ${yy}`;
+}
+
+/** Figma booking list: `26July, 25` / `13Dec, 25` (day + month, no space) */
+export function formatPortalDayMonthYear(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const yy = String(d.getFullYear()).slice(-2);
+  // Exact Figma casing: July stays "July"; most others use 3-letter short form (Dec).
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "July", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
+  return `${d.getDate()}${months[d.getMonth()]}, ${yy}`;
 }
 
 export function formatDisplayDateLong(iso: string) {
