@@ -24,6 +24,7 @@ export type ForSaleInventoryItem = {
   baggage_hand?: string;
   apis_required?: boolean;
   policies?: Record<string, string> | null;
+  sales_closing_datetime?: string | null;
   segments_data?: Array<Record<string, unknown>> | null;
   flight_key?: string;
   fare_id?: string;

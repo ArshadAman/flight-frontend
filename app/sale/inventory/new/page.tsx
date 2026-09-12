@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getPublicApiUrl } from "@/lib/apiConfig";
 import { RouteMapBackground } from "@/components/sale/RouteMapBackground";
 import { formatDurationMinutes } from "@/lib/journey";
+import { salesClosingFromEnding } from "@/lib/sale/offlinePortal";
 
 type Airport = {
     code: string;
@@ -33,6 +34,7 @@ type Segment = {
     isEditing: boolean;
     /** Optional technical stop airport (Figma: + add technical stop) */
     technicalStop?: string | null;
+    aircraftType?: string;
 };
 
 type PolicyKey = "cancellation" | "change" | "refund";
@@ -196,13 +198,17 @@ export default function AddPNRPage() {
 
     // Baggage State
     const [maxWeight, setMaxWeight] = useState("Weight");
+    const [handBaggage, setHandBaggage] = useState("7 kg");
     const [baggagePrice, setBaggagePrice] = useState("");
-    const [isFreeBaggage, setIsFreeBaggage] = useState(false);
+    const [isFreeBaggage, setIsFreeBaggage] = useState(true);
 
     // Seats State
     const [availableSeats, setAvailableSeats] = useState("");
     const [seatPrice, setSeatPrice] = useState("");
     const [isRefundable, setIsRefundable] = useState(true);
+    const [cabinClass, setCabinClass] = useState("Economy");
+    const [salesEndHours, setSalesEndHours] = useState("56");
+    const [salesEndUnit, setSalesEndUnit] = useState<"hours" | "days">("hours");
 
     // Operating Dates State
     const [selectedOperatingDates, setSelectedOperatingDates] = useState<string[]>([]);
@@ -547,7 +553,7 @@ export default function AddPNRPage() {
                         ).toUpperCase().trim(),
                         airline_name: (seg.airlineName || "").trim(),
                         flight_number: (seg.flightNumber || "").toUpperCase().trim(),
-                        aircraft_type: "Airbus A320",
+                        aircraft_type: (seg.aircraftType || "Airbus A320").trim(),
                         origin: seg.fromCode,
                         origin_city: seg.fromCity,
                         origin_terminal: seg.fromTerminal,
@@ -558,6 +564,9 @@ export default function AddPNRPage() {
                         arrival_datetime: currentArrDate.toISOString(),
                         duration: seg.duration,
                         stop_over: null as string | null,
+                        technical_stop: seg.technicalStop?.trim()
+                            ? seg.technicalStop.trim().toUpperCase()
+                            : null,
                         return_flight: false
                     });
                 }
@@ -583,6 +592,17 @@ export default function AddPNRPage() {
                 const filledPolicies = Object.fromEntries(
                     Object.entries(policyTexts).filter(([, value]) => value.trim())
                 );
+                if (!isFreeBaggage && baggagePrice.trim()) {
+                    filledPolicies.baggage_price = baggagePrice.trim();
+                }
+
+                const checkInBaggage =
+                    maxWeight !== "Weight" ? maxWeight : "15 kg";
+                const salesClosing = salesClosingFromEnding(
+                    firstSegDep,
+                    Number(salesEndHours) || 0,
+                    salesEndUnit
+                );
 
                 const payload = {
                     airline_code: mainAirlineCode,
@@ -594,13 +614,14 @@ export default function AddPNRPage() {
                     arrival_datetime: lastSegArr,
                     price: parseFloat(seatPrice || "150"),
                     seats_available: parseInt(availableSeats || "10", 10),
-                    cabin_class: "Economy",
+                    cabin_class: cabinClass || "Economy",
                     duration: totalDurStr,
                     is_refundable: isRefundable,
-                    baggage_check_in: maxWeight !== "Weight" ? maxWeight : "15 kg",
-                    baggage_hand: "7 kg",
+                    baggage_check_in: checkInBaggage,
+                    baggage_hand: handBaggage || "7 kg",
                     apis_required: requiresApis,
                     policies: filledPolicies,
+                    sales_closing_datetime: salesClosing,
                     segments: apiSegments
                 };
 
@@ -1500,6 +1521,18 @@ export default function AddPNRPage() {
                                                                     <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-700 outline-none shadow-sm text-[14px] uppercase" value={seg.flightNumber || ""} onChange={(e) => updateSegment(seg.id, 'flightNumber', e.target.value.toUpperCase())} placeholder="----" />
                                                                 </div>
                                                                 <div className="flex-1">
+                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Aircraft</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]"
+                                                                        value={seg.aircraftType || ""}
+                                                                        onChange={(e) => updateSegment(seg.id, "aircraftType", e.target.value)}
+                                                                        placeholder="Airbus A320"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-3">
+                                                                <div className="flex-1">
                                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Terminal</label>
                                                                     <input
                                                                         type="text"
@@ -1720,6 +1753,18 @@ export default function AddPNRPage() {
                                                 />
                                                 <span className="text-[14px] font-bold text-slate-600 select-none">Free checked baggage</span>
                                             </label>
+                                            <div className="mt-5">
+                                                <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Hand baggage</label>
+                                                <select
+                                                    value={handBaggage}
+                                                    onChange={(e) => setHandBaggage(e.target.value)}
+                                                    className="w-full border border-slate-200 rounded-lg p-3.5 text-slate-700 font-medium outline-none bg-white shadow-sm"
+                                                >
+                                                    <option>7 kg</option>
+                                                    <option>8 kg</option>
+                                                    <option>10 kg</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1763,6 +1808,40 @@ export default function AddPNRPage() {
                                                             className="w-full border border-slate-200 rounded-lg p-3.5 pl-8 text-slate-700 font-medium outline-none shadow-sm"
                                                         />
                                                     </div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-4">
+                                                <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Cabin class</label>
+                                                <select
+                                                    value={cabinClass}
+                                                    onChange={(e) => setCabinClass(e.target.value)}
+                                                    className="w-full border border-slate-200 rounded-lg p-3.5 text-slate-700 font-medium outline-none bg-white shadow-sm"
+                                                >
+                                                    <option>Economy</option>
+                                                    <option>Premium Economy</option>
+                                                    <option>Business</option>
+                                                    <option>First</option>
+                                                </select>
+                                            </div>
+                                            <div className="mt-4">
+                                                <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Sales ending</label>
+                                                <div className="text-[12px] text-slate-500 mb-2">End selling before departure</div>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        value={salesEndHours}
+                                                        onChange={(e) => setSalesEndHours(e.target.value)}
+                                                        className="w-20 border border-slate-200 rounded-lg px-3 py-2.5 text-[13px] font-bold text-slate-800"
+                                                    />
+                                                    <select
+                                                        value={salesEndUnit}
+                                                        onChange={(e) => setSalesEndUnit(e.target.value as "hours" | "days")}
+                                                        className="border border-slate-200 rounded-lg px-3 py-2.5 text-[13px] font-bold text-slate-700 bg-white"
+                                                    >
+                                                        <option value="hours">hours</option>
+                                                        <option value="days">days</option>
+                                                    </select>
                                                 </div>
                                             </div>
                                             <label className="mt-5 flex items-center gap-2.5 cursor-pointer">

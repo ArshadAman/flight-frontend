@@ -25,6 +25,8 @@ import {
   groupPnrBookingRows,
   listingStatus,
   passengerBookingLabel,
+  salesClosingFromEnding,
+  salesEndingFromClosing,
   seatStats,
   stopCount,
   type OfflineInventoryRow,
@@ -124,7 +126,20 @@ export function OfflineFlightDetailDrawer({
       change: flight.policies?.change || "",
       refund: flight.policies?.refund || "",
     });
-  }, [flight.id, flight.price, flight.seats_available, flight.policies]);
+    const ending = salesEndingFromClosing(
+      flight.departure_datetime,
+      flight.sales_closing_datetime
+    );
+    setSalesEndHours(ending.amount);
+    setSalesEndUnit(ending.unit);
+  }, [
+    flight.id,
+    flight.price,
+    flight.seats_available,
+    flight.policies,
+    flight.departure_datetime,
+    flight.sales_closing_datetime,
+  ]);
 
   const segments = useMemo(() => {
     if (flight.segments_data?.length) return flight.segments_data;
@@ -243,7 +258,10 @@ export function OfflineFlightDetailDrawer({
     });
   }, [flight.departure_datetime, salesEndHours, salesEndUnit]);
 
-  const saveSeatsAndPrice = async (extra?: { policies?: Record<string, string> }) => {
+  const saveSeatsAndPrice = async (extra?: {
+    policies?: Record<string, string>;
+    includeSalesClosing?: boolean;
+  }) => {
     if (!access) {
       openAuthModal();
       return;
@@ -264,6 +282,14 @@ export function OfflineFlightDetailDrawer({
       const api = getPublicApiUrl();
       const body: Record<string, unknown> = { seats_available: seats, price };
       if (extra?.policies) body.policies = extra.policies;
+      if (extra?.includeSalesClosing !== false) {
+        const closing = salesClosingFromEnding(
+          flight.departure_datetime,
+          Number(salesEndHours) || 0,
+          salesEndUnit
+        );
+        body.sales_closing_datetime = closing;
+      }
       const res = await fetch(`${api}/flights/inventory/${flight.id}/`, {
         method: "PATCH",
         headers: {
@@ -283,6 +309,10 @@ export function OfflineFlightDetailDrawer({
     } finally {
       setSaving(false);
     }
+  };
+
+  const saveSalesEnding = async () => {
+    await saveSeatsAndPrice({ includeSalesClosing: true });
   };
 
   const savePolicy = async (key: "cancellation" | "change" | "refund") => {
@@ -587,6 +617,14 @@ export function OfflineFlightDetailDrawer({
                   <option value="hours">hours</option>
                   <option value="days">days</option>
                 </select>
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => void saveSalesEnding()}
+                  className="ml-auto text-[11px] font-bold text-[#2B7BB9] hover:underline disabled:opacity-50"
+                >
+                  {saving ? "Saving…" : "Save"}
+                </button>
               </div>
               <div className="flex items-start gap-1.5 text-[11px] text-slate-500 font-medium leading-snug">
                 <Clock className="w-3.5 h-3.5 mt-0.5 shrink-0 text-slate-400" />
@@ -693,7 +731,17 @@ export function OfflineFlightDetailDrawer({
               <input
                 type="text"
                 readOnly
-                value={`${flight.baggage_check_in || "23 kg"}, Included`}
+                value={`${flight.baggage_check_in || "15 kg"}, Included`}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-[12px] font-bold text-slate-600 bg-slate-50 mb-2"
+              />
+              <div className="flex items-center gap-2 text-[12px] font-bold text-slate-600 mb-1.5">
+                <Luggage className="w-3.5 h-3.5 text-slate-400" />
+                Hand baggage
+              </div>
+              <input
+                type="text"
+                readOnly
+                value={`${flight.baggage_hand || "7 kg"}, Included`}
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-[12px] font-bold text-slate-600 bg-slate-50"
               />
             </div>

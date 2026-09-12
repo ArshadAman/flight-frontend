@@ -18,6 +18,8 @@ export type OfflineInventoryRow = {
   cabin_class?: string;
   apis_required?: boolean;
   policies?: Record<string, string>;
+  /** ISO datetime when sales close (backend `sales_closing_datetime`). */
+  sales_closing_datetime?: string | null;
   segments_data?: {
     segment_id?: number;
     origin?: string;
@@ -30,6 +32,8 @@ export type OfflineInventoryRow = {
     arrival_datetime?: string;
     duration?: string;
     stop_over?: string | null;
+    technical_stop?: string | null;
+    aircraft_type?: string;
     flight_number?: string;
   }[];
 };
@@ -307,7 +311,51 @@ export function listingStatus(
   const { available } = seatStats(row, bookedCount);
   if (row.is_published === false) return "Closed";
   if (available <= 0) return "Closed";
+  if (row.sales_closing_datetime) {
+    const closeAt = new Date(row.sales_closing_datetime).getTime();
+    if (!Number.isNaN(closeAt) && Date.now() >= closeAt) return "Closed";
+  }
   return "Open";
+}
+
+/** Derive sales-ending amount/unit from closing datetime vs departure. */
+export function salesEndingFromClosing(
+  departureIso?: string | null,
+  closingIso?: string | null
+): { amount: string; unit: "hours" | "days" } {
+  if (!departureIso || !closingIso) return { amount: "56", unit: "hours" };
+  const dep = new Date(departureIso).getTime();
+  const close = new Date(closingIso).getTime();
+  if (Number.isNaN(dep) || Number.isNaN(close) || close >= dep) {
+    return { amount: "56", unit: "hours" };
+  }
+  const hours = Math.max(0, Math.round((dep - close) / (60 * 60 * 1000)));
+  if (hours >= 48 && hours % 24 === 0) {
+    return { amount: String(hours / 24), unit: "days" };
+  }
+  return { amount: String(hours), unit: "hours" };
+}
+
+/** Compute sales_closing_datetime ISO from departure − amount/unit. */
+export function salesClosingFromEnding(
+  departureIso: string,
+  amount: number,
+  unit: "hours" | "days"
+): string | null {
+  const dep = new Date(departureIso);
+  if (Number.isNaN(dep.getTime()) || !Number.isFinite(amount) || amount < 0) return null;
+  const ms = unit === "days" ? amount * 24 * 60 * 60 * 1000 : amount * 60 * 60 * 1000;
+  return new Date(dep.getTime() - ms).toISOString();
+}
+
+export function formatGenderLabel(gender?: string | number | null) {
+  if (gender === 0 || gender === "0" || gender === "M" || gender === "m" || gender === "Male") {
+    return "Male";
+  }
+  if (gender === 1 || gender === "1" || gender === "F" || gender === "f" || gender === "Female") {
+    return "Female";
+  }
+  return gender != null && String(gender).trim() ? String(gender) : "—";
 }
 
 export function groupInventoryByMonth<T extends { departure_datetime: string }>(rows: T[]) {

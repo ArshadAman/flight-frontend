@@ -167,12 +167,14 @@ function formatPassengerBorn(dob?: string | null) {
     return `${dd}/${mm}/${yy}`;
 }
 
-function passengerGenderLabel(gender?: string | null) {
-    if (!gender) return null;
-    const g = gender.toUpperCase();
+function passengerGenderLabel(gender?: string | number | null) {
+    if (gender === 0 || gender === "0") return "Male";
+    if (gender === 1 || gender === "1") return "Female";
+    if (gender == null || gender === "") return null;
+    const g = String(gender).toUpperCase();
     if (g === "M" || g === "MALE") return "Male";
     if (g === "F" || g === "FEMALE") return "Female";
-    return gender;
+    return String(gender);
 }
 
 function formatMonthYear(dateString: string) {
@@ -424,11 +426,17 @@ export default function InventoryPage() {
             setTicketNumber("");
             setSelectedBooking(prev => {
                 if (!prev) return null;
+                const issued = ticketNumber.trim();
+                const passengers = (prev.passengers || []).map((pax: Record<string, unknown>) => ({
+                    ...pax,
+                    ticket_number: (pax.ticket_number as string) || issued,
+                }));
                 return {
                     ...prev,
                     status: "CONFIRMED",
                     title: pnrNumber.trim(),
-                    details: prev.details.map(d => d.label === "Ticket number" ? { ...d, value: ticketNumber.trim() } : d)
+                    passengers,
+                    details: prev.details.map(d => d.label === "Ticket number" ? { ...d, value: issued } : d)
                 };
             });
             setRefreshTrigger(prev => prev + 1);
@@ -1069,6 +1077,20 @@ export default function InventoryPage() {
                                         </div>
                                         <div className="font-bold text-[#2B7BB9] text-[12px] tracking-wide">INCLUDED</div>
                                     </div>
+                                    {selectedBooking.baggageHand && (
+                                        <div className="flex items-center justify-between py-2">
+                                            <div className="flex items-center gap-3">
+                                                <Luggage className="w-5 h-5 text-slate-500" />
+                                                <div>
+                                                    <div className="font-bold text-slate-700 text-[14px]">Hand baggage</div>
+                                                    <div className="text-[12px] text-slate-400 font-medium mt-0.5">
+                                                        {`${Math.max(selectedBooking.passengers?.length || 1, 1)} * ${selectedBooking.baggageHand} • Free`}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="font-bold text-[#2B7BB9] text-[12px] tracking-wide">INCLUDED</div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
