@@ -4,7 +4,7 @@ import { MoreVertical } from "lucide-react";
 import {
   formatFareInr,
   formatFarePortal,
-  formatShortDate,
+  formatInventoryListDate,
   formatTimeRange,
   flightNumberLabel,
   groupInventoryByMonth,
@@ -34,11 +34,11 @@ export function OfflineFlightListTable({
   fareFormat?: "portal" | "inr";
 }) {
   const groups = groupInventoryByMonth(rows);
+  const isInventory = variant === "inventory";
 
-  const gridCols =
-    variant === "inventory"
-      ? "grid-cols-[1fr_1.2fr_1fr_1fr_1fr_1.2fr_1fr_1fr_auto]"
-      : "grid-cols-7";
+  const gridCols = isInventory
+    ? "grid-cols-[1fr_1.1fr_1fr_1fr_1fr_1fr_1fr_0.9fr_auto]"
+    : "grid-cols-7";
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
@@ -47,15 +47,15 @@ export function OfflineFlightListTable({
           <div
             className={`hidden md:grid ${gridCols} gap-4 px-6 py-4 border-b border-slate-100 bg-white text-slate-400 text-[13px] font-bold`}
           >
-            {variant === "inventory" && <div>Group PNR</div>}
+            {isInventory && <div>Group PNR</div>}
             <div>Route</div>
-            <div>{variant === "inventory" ? "Departure Date" : "Departure Date"}</div>
-            <div>Dep. &amp; Arr. Time</div>
+            <div>{isInventory ? "Dep. Date" : "Departure Date"}</div>
+            <div>{isInventory ? "Dep. & Arr." : "Dep. & Arr. Time"}</div>
             <div>Flight number</div>
-            <div>Number of seats</div>
-            <div>Ticket fare</div>
+            <div>{isInventory ? "No. of seats" : "Number of seats"}</div>
+            <div>{isInventory ? "Ticket price" : "Ticket fare"}</div>
             <div>Status</div>
-            {variant === "inventory" && <div className="w-5" />}
+            {isInventory && <div className="w-5" />}
           </div>
 
           {groups.map(([month, monthRows]) => (
@@ -78,23 +78,26 @@ export function OfflineFlightListTable({
                         : "text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    {variant === "inventory" && (
+                    {isInventory && (
                       <div className="font-bold text-slate-800">{groupPnrFromId(row.id)}</div>
                     )}
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-bold text-slate-800">{row.origin}</span>
-                      <span className="text-slate-500 text-[13px]">➝</span>
-                      <span className="font-bold text-slate-800">{row.destination}</span>
-                      <span className="text-[#D60D26] text-[12px] font-bold leading-none">•</span>
-                      <span className="text-slate-400 text-[12px] font-medium">
-                        ({stops} {stops === 1 ? "Stop" : "Stops"})
-                      </span>
+                    <div className="flex items-center gap-1 flex-wrap font-bold text-slate-800">
+                      <span>{row.origin}</span>
+                      <span className="text-slate-400 font-medium">→</span>
+                      <span>{row.destination}</span>
+                      <span className="text-slate-400 font-medium">({stops})</span>
                     </div>
-                    <div>{formatShortDate(row.departure_datetime)}</div>
-                    <div>{formatTimeRange(row.departure_datetime, row.arrival_datetime)}</div>
+                    <div>{formatInventoryListDate(row.departure_datetime)}</div>
+                    <div>
+                      {formatTimeRange(
+                        row.departure_datetime,
+                        row.arrival_datetime,
+                        isInventory
+                      )}
+                    </div>
                     <div className="font-bold">{flightNumberLabel(row)}</div>
                     <SeatAccounting
-                      compact={seatDisplay === "compact"}
+                      compact={isInventory || seatDisplay === "compact"}
                       total={stats.total}
                       held={stats.held}
                       available={stats.available}
@@ -113,7 +116,7 @@ export function OfflineFlightListTable({
                         {status}
                       </span>
                     </div>
-                    {variant === "inventory" && (
+                    {isInventory && (
                       <div className="text-slate-400 flex justify-end">
                         <MoreVertical className="w-5 h-5" />
                       </div>

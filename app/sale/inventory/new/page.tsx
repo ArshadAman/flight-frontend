@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, ArrowRightLeft, X, Plane, ChevronLeft, ChevronRight, Check, Clock, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -31,6 +31,8 @@ type Segment = {
     duration: string;
     plusOneDay: boolean;
     isEditing: boolean;
+    /** Optional technical stop airport (Figma: + add technical stop) */
+    technicalStop?: string | null;
 };
 
 type PolicyKey = "cancellation" | "change" | "refund";
@@ -40,6 +42,12 @@ const POLICY_FIELDS: { key: PolicyKey; label: string; placeholder: string }[] = 
     { key: "change", label: "Change policy", placeholder: "Add change policy details..." },
     { key: "refund", label: "Refund policy", placeholder: "Add refund policy details..." },
 ];
+
+/** Derive IATA-style code from flight number when Flight code field is not shown (e.g. AI-121 → AI). */
+function airlineCodeFromFlightNumber(flightNumber: string) {
+    const match = flightNumber.trim().toUpperCase().match(/^([A-Z0-9]{2})/);
+    return match?.[1] || "";
+}
 
 function minutesFromClock(time: string): number {
     const [hours, minutes] = String(time || "00:00").split(":").map(Number);
@@ -53,8 +61,6 @@ function layoverBetween(current: Segment, next: Segment): string {
     if (departure < arrival) departure += 24 * 60;
     return formatDurationMinutes(departure - arrival) || "—";
 }
-
-const TERMINAL_OPTIONS = ["Terminal 1", "Terminal 2", "Terminal 3"];
 
 const AIRPORT_COORDS: Record<string, { lat: number; lng: number }> = {
     DEL: { lat: 28.5562, lng: 77.1 },
@@ -139,6 +145,22 @@ function getOperatingDateOptions(baseDate: string | null, count = 8) {
     return dates;
 }
 
+/** Weekly occurrences of the FROM weekday between series start and end (inclusive). */
+function getSeriesOperatingDates(startIso: string, endIso: string) {
+    const startDate = new Date(`${startIso}T00:00:00`);
+    const endDate = new Date(`${endIso}T00:00:00`);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return [];
+    if (endDate < startDate) return [startIso];
+
+    const dates: string[] = [];
+    const cursor = new Date(startDate);
+    while (cursor <= endDate) {
+        dates.push(cursor.toISOString().slice(0, 10));
+        cursor.setDate(cursor.getDate() + 7);
+    }
+    return dates;
+}
+
 export default function AddPNRPage() {
     const router = useRouter();
     const { access } = useAuth();
@@ -153,6 +175,8 @@ export default function AddPNRPage() {
     const [returnCalendarMonth, setReturnCalendarMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 1); });
     const [selectedReturnDate, setSelectedReturnDate] = useState<string | null>(null);
     const [seriesMode, setSeriesMode] = useState(false);
+    /** Round-trip: show second calendar + schedule return leg. Independent of series. */
+    const [returnMode, setReturnMode] = useState(false);
     const [seriesInfoOpen, setSeriesInfoOpen] = useState(false);
     const [editingAirport, setEditingAirport] = useState<{
         segmentId: number;
@@ -167,6 +191,8 @@ export default function AddPNRPage() {
     const [hasScheduledReturnFlight, setHasScheduledReturnFlight] = useState(false);
     const [modalTab, setModalTab] = useState(1);
     const [schedulingLeg, setSchedulingLeg] = useState<"outbound" | "return">("outbound");
+    const outboundSegmentsRef = useRef<Segment[] | null>(null);
+    const returnSegmentsRef = useRef<Segment[] | null>(null);
 
     // Baggage State
     const [maxWeight, setMaxWeight] = useState("Weight");
@@ -230,11 +256,18 @@ export default function AddPNRPage() {
     useEffect(() => {
         if (!selectedDate) return;
 
+        if (seriesMode && selectedReturnDate) {
+            setSelectedOperatingDates(getSeriesOperatingDates(selectedDate, selectedReturnDate));
+            return;
+        }
+
         setSelectedOperatingDates((currentDates) => {
-            if (currentDates.length > 0) return currentDates;
+            if (currentDates.length > 0 && !seriesMode) return currentDates;
             return [selectedDate];
         });
-    }, [selectedDate]);
+    }, [selectedDate, selectedReturnDate, seriesMode]);
+
+    const showBothCalendars = seriesMode || returnMode;
 
     useEffect(() => {
         if (isFreeBaggage) {
@@ -289,20 +322,43 @@ export default function AddPNRPage() {
     };
 
     const handleAddFlightSeries = () => {
+        if (!origin || !destination) {
+            alert("Select origin and destination first.");
+            return;
+        }
+
+        if (seriesMode) {
+            setSeriesMode(false);
+            if (!returnMode) {
+                setSelectedReturnDate(null);
+                if (step === 2) setStep(1);
+            }
+            if (selectedDate) {
+                setSelectedOperatingDates([selectedDate]);
+            }
+            return;
+        }
+
+        // One-way → series: reveal both FROM + TO calendars (Figma dual-calendar state)
         setSeriesMode(true);
-        if (!selectedDate) {
-            setStep(1);
-            return;
+        if (step < 1) setStep(1);
+        else if (step >= 3) {
+            // Stay on schedule; Dates tab is available in the modal if needed
+        } else {
+            setStep(Math.max(step, 1));
         }
-        if (step < 3) {
-            setIsModalOpen(true);
-            setModalTab(4);
-            setSchedulingLeg("outbound");
-            return;
+        setReturnCalendarMonth(
+            selectedDate
+                ? new Date(
+                      Number(selectedDate.slice(0, 4)),
+                      Number(selectedDate.slice(5, 7)) - 1,
+                      1
+                  )
+                : returnCalendarMonth
+        );
+        if (selectedDate && selectedReturnDate) {
+            setSelectedOperatingDates(getSeriesOperatingDates(selectedDate, selectedReturnDate));
         }
-        setIsModalOpen(true);
-        setModalTab(4);
-        setSchedulingLeg("outbound");
     };
 
     const handleAddReturnFlight = () => {
@@ -310,6 +366,9 @@ export default function AddPNRPage() {
             alert("Select origin and destination first.");
             return;
         }
+
+        // One-way → return: reveal both FROM + TO calendars
+        setReturnMode(true);
         if (!selectedDate) {
             setStep(1);
             return;
@@ -430,10 +489,6 @@ export default function AddPNRPage() {
                 alert(`Please enter the airline name for segment ${i + 1}.`);
                 return;
             }
-            if (!seg.airlineCode?.trim()) {
-                alert(`Please enter the airline code (e.g. 6E) for segment ${i + 1}.`);
-                return;
-            }
             if (!seg.flightNumber?.trim()) {
                 alert(`Please enter the flight number for segment ${i + 1}.`);
                 return;
@@ -486,7 +541,10 @@ export default function AddPNRPage() {
 
                     apiSegments.push({
                         segment_id: i,
-                        airline_code: (seg.airlineCode || "").toUpperCase().trim(),
+                        airline_code: (
+                            seg.airlineCode ||
+                            airlineCodeFromFlightNumber(seg.flightNumber || "")
+                        ).toUpperCase().trim(),
                         airline_name: (seg.airlineName || "").trim(),
                         flight_number: (seg.flightNumber || "").toUpperCase().trim(),
                         aircraft_type: "Airbus A320",
@@ -592,6 +650,53 @@ export default function AddPNRPage() {
                 setStep(1);
             }
         }
+    };
+
+    const openScheduleModal = (leg: "outbound" | "return") => {
+        // Persist the other leg's segments before switching form data
+        if (schedulingLeg === "outbound") {
+            outboundSegmentsRef.current = segments;
+        } else {
+            returnSegmentsRef.current = segments;
+        }
+
+        setSchedulingLeg(leg);
+        setModalTab(1); // always start at Flight detail (avoid landing on Policies)
+        setEditingAirport(null);
+
+        if (leg === "return" && origin && destination) {
+            const saved = returnSegmentsRef.current;
+            if (saved?.length) {
+                setSegments(saved.map((s) => ({ ...s, isEditing: true })));
+            } else {
+                setSegments([
+                    {
+                        id: 1,
+                        fromCode: destination.code,
+                        fromCity: destination.city,
+                        fromTerminal: "Terminal 3",
+                        fromTime: "23:00",
+                        toCode: origin.code,
+                        toCity: origin.city,
+                        toTerminal: "Terminal 3",
+                        toTime: "11:00",
+                        airlineName: "",
+                        airlineCode: "",
+                        flightNumber: "",
+                        duration: "12h 0m",
+                        plusOneDay: false,
+                        isEditing: true,
+                    },
+                ]);
+            }
+        } else if (leg === "outbound") {
+            const saved = outboundSegmentsRef.current;
+            if (saved?.length) {
+                setSegments(saved);
+            }
+        }
+
+        setIsModalOpen(true);
     };
 
     const handleAddFlightDetails = () => {
@@ -847,20 +952,37 @@ export default function AddPNRPage() {
                                 () => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)),
                                 () => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)),
                                 selectedDate,
-                                (iso) => setSelectedDate(iso)
-                            )}
-                            {renderCalendar(
-                                "TO",
-                                returnCalendarMonth,
-                                () => setReturnCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)),
-                                () => setReturnCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)),
-                                selectedReturnDate,
                                 (iso) => {
-                                    setSelectedReturnDate(iso);
-                                    setStep(2);
-                                },
-                                step === 2
+                                    setSelectedDate(iso);
+                                    if (seriesMode && selectedReturnDate && selectedReturnDate >= iso) {
+                                        setSelectedOperatingDates(getSeriesOperatingDates(iso, selectedReturnDate));
+                                    } else if (!seriesMode) {
+                                        setSelectedOperatingDates([iso]);
+                                    }
+                                }
                             )}
+                            {showBothCalendars &&
+                                renderCalendar(
+                                    "TO",
+                                    returnCalendarMonth,
+                                    () => setReturnCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)),
+                                    () => setReturnCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)),
+                                    selectedReturnDate,
+                                    (iso) => {
+                                        setSelectedReturnDate(iso);
+                                        if (returnMode) setStep(2);
+                                        if (seriesMode && selectedDate) {
+                                            const start = selectedDate <= iso ? selectedDate : iso;
+                                            const end = selectedDate <= iso ? iso : selectedDate;
+                                            if (selectedDate > iso) {
+                                                setSelectedDate(start);
+                                                setSelectedReturnDate(end);
+                                            }
+                                            setSelectedOperatingDates(getSeriesOperatingDates(start, end));
+                                        }
+                                    },
+                                    returnMode || seriesMode
+                                )}
                         </div>
                     )}
                 </div>
@@ -931,10 +1053,7 @@ export default function AddPNRPage() {
                             </div>
 
                             <div 
-                                onClick={() => {
-                                    setSchedulingLeg("outbound");
-                                    setIsModalOpen(true);
-                                }}
+                                onClick={() => openScheduleModal("outbound")}
                                 className="w-full bg-[#0C2342] rounded-[12px] p-5 flex items-center justify-between text-white cursor-pointer hover:bg-[#0C2342] transition-colors border-2 border-[#090001]"
                             >
                                 <div className="flex items-center gap-4">
@@ -950,7 +1069,7 @@ export default function AddPNRPage() {
                                     <div className="w-24 bg-[#D60D26] shrink-0"></div>
                                     <div className="flex-1 flex items-center px-4 sm:px-8 font-bold text-slate-600 text-[14px] justify-between min-w-[500px]">
                                         <div className="w-[180px]">
-                                            {segments.map((seg) => `${seg.airlineCode || "-"} ${seg.flightNumber || "-"}`).join(" / ")}
+                                            {segments.map((seg) => seg.flightNumber || "-").join(" / ")}
                                         </div>
                                         <div className="w-[150px] text-center">
                                             {segments.map((seg) => seg.airlineName || seg.airlineCode || "-").join(" / ")}
@@ -969,9 +1088,9 @@ export default function AddPNRPage() {
                             )}
                         </div>
 
-                        {selectedReturnDate ? (
+                        {returnMode && selectedReturnDate ? (
                             <div className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 mb-6">
-                                <div className="flex flex-wrap items-center gap-4 mb-2">
+                                <div className="flex flex-wrap items-center gap-4">
                                     <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-4 py-2 font-bold text-slate-700 text-[14px]">
                                         {destination?.code || "---"} <ArrowRight className="w-4 h-4 text-[#D60D26]" /> {origin?.code || "---"}
                                     </div>
@@ -983,22 +1102,12 @@ export default function AddPNRPage() {
                                             {String(new Date(selectedReturnDate + "T00:00:00").getDate()).padStart(2, "0")}
                                         </div>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setSchedulingLeg("return");
-                                            setIsModalOpen(true);
-                                        }}
-                                        className="ml-auto text-[#D60D26] font-bold text-[14px] inline-flex items-center gap-2 hover:underline underline-offset-2"
-                                    >
-                                        <ArrowRightLeft className="w-4 h-4" /> Check return flight
-                                    </button>
+                                    {hasScheduledReturnFlight && (
+                                        <span className="text-[13px] font-bold text-emerald-600">
+                                            Return flight scheduled
+                                        </span>
+                                    )}
                                 </div>
-                                {hasScheduledReturnFlight && (
-                                    <div className="mt-3 text-[13px] font-bold text-emerald-600">
-                                        Return flight scheduled for {selectedReturnDate}
-                                    </div>
-                                )}
                             </div>
                         ) : (
                             <button
@@ -1103,12 +1212,29 @@ export default function AddPNRPage() {
                             )}
                         </div>
                         <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto mt-2 sm:mt-0">
-                            {step >= 1 && !selectedReturnDate && (
+                            {step >= 1 && !returnMode && (
                                 <button
+                                    type="button"
                                     onClick={handleAddReturnFlight}
                                     className="w-full sm:w-auto justify-center border border-[#D60D26] text-[#D60D26] hover:bg-rose-50 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[14px] sm:text-[15px] flex items-center gap-2 transition-colors"
                                 >
                                     <ArrowRightLeft className="w-4 h-4" /> Add return flight
+                                </button>
+                            )}
+                            {step >= 1 && returnMode && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setReturnMode(false);
+                                        setHasScheduledReturnFlight(false);
+                                        if (!seriesMode) {
+                                            setSelectedReturnDate(null);
+                                            if (step === 2) setStep(1);
+                                        }
+                                    }}
+                                    className="w-full sm:w-auto justify-center border border-emerald-500 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[14px] sm:text-[15px] flex items-center gap-2 transition-colors"
+                                >
+                                    <Check className="w-4 h-4" /> Return flight on
                                 </button>
                             )}
                             <button 
@@ -1129,14 +1255,26 @@ export default function AddPNRPage() {
                             Change The Route
                         </button>
                         {step === 3 ? (
-                            <button 
-                                onClick={() => { if (hasScheduledFlight) setStep(4); }}
-                                className={`w-full sm:w-auto justify-center px-4 sm:px-10 py-3.5 rounded-full font-bold text-[14px] sm:text-[15px] transition-colors flex items-center gap-2 ${
-                                    hasScheduledFlight ? 'bg-[#D60D26] text-white hover:bg-[#30060F] shadow-md' : 'bg-[#FFA8B3] text-white cursor-not-allowed'
-                                }`}
-                            >
-                                Check And Confirm <ArrowRight className="w-5 h-5" />
-                            </button>
+                            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                                {returnMode && selectedReturnDate && (
+                                    <button
+                                        type="button"
+                                        onClick={() => openScheduleModal("return")}
+                                        className="w-full sm:w-auto justify-center border border-[#D60D26] text-[#D60D26] hover:bg-rose-50 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[14px] sm:text-[15px] flex items-center gap-2 transition-colors"
+                                    >
+                                        <ArrowRightLeft className="w-4 h-4" /> Check return flight
+                                    </button>
+                                )}
+                                <button 
+                                    type="button"
+                                    onClick={() => { if (hasScheduledFlight) setStep(4); }}
+                                    className={`w-full sm:w-auto justify-center px-4 sm:px-10 py-3.5 rounded-full font-bold text-[14px] sm:text-[15px] transition-colors flex items-center gap-2 ${
+                                        hasScheduledFlight ? 'bg-[#D60D26] text-white hover:bg-[#30060F] shadow-md' : 'bg-[#FFA8B3] text-white cursor-not-allowed'
+                                    }`}
+                                >
+                                    Check And Confirm <ArrowRight className="w-5 h-5" />
+                                </button>
+                            </div>
                         ) : (
                             <button 
                                 onClick={handleCreateFlights}
@@ -1174,11 +1312,21 @@ export default function AddPNRPage() {
                                 {seriesMode ? " · Series" : ""}
                             </div>
                             <div className="font-extrabold text-[18px] flex items-center gap-2">
-                                {origin?.city || "New Delhi"} ({origin?.code || "DEL"}) 
+                                {schedulingLeg === "return"
+                                    ? (destination?.city || "Destination")
+                                    : (origin?.city || "New Delhi")}{" "}
+                                ({schedulingLeg === "return"
+                                    ? (destination?.code || "---")
+                                    : (origin?.code || "DEL")})
                                 <div className="w-5 h-5 rounded-full border border-white flex items-center justify-center mx-1">
                                     <ArrowRight className="w-3 h-3 text-white" />
-                                </div> 
-                                {destination?.city || "Destination"} ({destination?.code || "---"})
+                                </div>
+                                {schedulingLeg === "return"
+                                    ? (origin?.city || "Origin")
+                                    : (destination?.city || "Destination")}{" "}
+                                ({schedulingLeg === "return"
+                                    ? (origin?.code || "---")
+                                    : (destination?.code || "---")})
                             </div>
                         </div>
 
@@ -1313,29 +1461,53 @@ export default function AddPNRPage() {
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            <div className="flex gap-3">
-                                                                <div className="flex-[2]">
-                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Airline</label>
-                                                                    <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]" value={seg.airlineName || ""} onChange={(e) => updateSegment(seg.id, 'airlineName', e.target.value)} placeholder="Airline" />
-                                                                </div>
-                                                                <div className="flex-1">
-                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Flight code</label>
-                                                                    <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-700 outline-none shadow-sm text-[14px] uppercase" value={seg.airlineCode || ""} onChange={(e) => updateSegment(seg.id, 'airlineCode', e.target.value.toUpperCase())} placeholder="e.g. 6E" />
-                                                                </div>
+                                                            <div>
+                                                                <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Airline</label>
+                                                                <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]" value={seg.airlineName || ""} onChange={(e) => updateSegment(seg.id, 'airlineName', e.target.value)} placeholder="Airline" />
                                                             </div>
-                                                            <div className="text-[12px] font-bold text-slate-400 mt-0.5 cursor-pointer hover:text-slate-600">+ add technical stop</div>
+                                                            {seg.technicalStop != null ? (
+                                                                <div className="space-y-1.5">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <label className="text-[12px] font-bold text-slate-500">Technical stop</label>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="text-[12px] font-bold text-[#2B7BB9] hover:underline"
+                                                                            onClick={() => updateSegment(seg.id, "technicalStop", null)}
+                                                                        >
+                                                                            − remove
+                                                                        </button>
+                                                                    </div>
+                                                                    <input
+                                                                        type="text"
+                                                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]"
+                                                                        value={seg.technicalStop}
+                                                                        onChange={(e) => updateSegment(seg.id, "technicalStop", e.target.value)}
+                                                                        placeholder="Airport code e.g. DOH"
+                                                                    />
+                                                                </div>
+                                                            ) : (
+                                                                <button
+                                                                    type="button"
+                                                                    className="text-[12px] font-bold text-[#2B7BB9] mt-0.5 hover:underline text-left"
+                                                                    onClick={() => updateSegment(seg.id, "technicalStop", "")}
+                                                                >
+                                                                    + add technical stop
+                                                                </button>
+                                                            )}
                                                             <div className="flex gap-3">
                                                                 <div className="flex-1">
                                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Flight number</label>
-                                                                    <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-700 outline-none shadow-sm text-[14px] uppercase" value={seg.flightNumber || ""} onChange={(e) => updateSegment(seg.id, 'flightNumber', e.target.value.toUpperCase())} placeholder="– – – –" />
+                                                                    <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-700 outline-none shadow-sm text-[14px] uppercase" value={seg.flightNumber || ""} onChange={(e) => updateSegment(seg.id, 'flightNumber', e.target.value.toUpperCase())} placeholder="----" />
                                                                 </div>
                                                                 <div className="flex-1">
                                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Terminal</label>
-                                                                    <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 appearance-none bg-white outline-none shadow-sm text-[14px]" value={seg.fromTerminal} onChange={(e) => updateSegment(seg.id, 'fromTerminal', e.target.value)}>
-                                                                        {TERMINAL_OPTIONS.map((terminal) => (
-                                                                            <option key={terminal}>{terminal}</option>
-                                                                        ))}
-                                                                    </select>
+                                                                    <input
+                                                                        type="text"
+                                                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]"
+                                                                        value={seg.fromTerminal}
+                                                                        onChange={(e) => updateSegment(seg.id, "fromTerminal", e.target.value)}
+                                                                        placeholder="Terminal 3"
+                                                                    />
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1351,7 +1523,7 @@ export default function AddPNRPage() {
                                                                         value={
                                                                             editingAirport?.segmentId === seg.id && editingAirport.field === "to"
                                                                                 ? editingAirport.query
-                                                                                : `${seg.toCode} (${seg.toCity})`
+                                                                                : `${seg.toCode} ${seg.toCity}`
                                                                         }
                                                                         onFocus={() =>
                                                                             setEditingAirport({
@@ -1405,32 +1577,29 @@ export default function AddPNRPage() {
                                                                     </div>
                                                                     <label className="flex items-center gap-2 mt-2 cursor-pointer">
                                                                         <input type="checkbox" checked={!!seg.plusOneDay} onChange={(e) => updateSegment(seg.id, 'plusOneDay', e.target.checked)} className="w-4 h-4 rounded border-slate-300 accent-[#D60D26] cursor-pointer" />
-                                                                        <span className="text-[12px] font-bold text-slate-600">+1 day</span>
+                                                                        <span className="text-[12px] font-bold text-slate-600">+ 1 day</span>
                                                                     </label>
                                                                 </div>
                                                             </div>
                                                             <div>
                                                                 <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Terminal</label>
-                                                                <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 appearance-none bg-white outline-none shadow-sm text-[14px]" value={seg.toTerminal} onChange={(e) => updateSegment(seg.id, 'toTerminal', e.target.value)}>
-                                                                    {TERMINAL_OPTIONS.map((terminal) => (
-                                                                        <option key={terminal}>{terminal}</option>
-                                                                    ))}
-                                                                </select>
+                                                                <input
+                                                                    type="text"
+                                                                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]"
+                                                                    value={seg.toTerminal}
+                                                                    onChange={(e) => updateSegment(seg.id, "toTerminal", e.target.value)}
+                                                                    placeholder="Terminal 3"
+                                                                />
                                                             </div>
                                                             <div>
                                                                 {isConfirmable ? (
-                                                                    <div className="space-y-2">
-                                                                        <div className="text-[12px] font-bold text-blue-500 flex items-center gap-1.5">
-                                                                            <Clock className="w-3.5 h-3.5" /> Calculated flight duration : <span className="text-blue-600">{calculatedDuration}</span>
-                                                                        </div>
-                                                                        <button onClick={() => setSegments(segments.map(s => s.id === seg.id ? { ...s, isEditing: false, duration: calculatedDuration } : s))} className="w-full bg-green-50 text-green-600 border border-green-100 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-[14px] hover:bg-green-100 transition-colors">
-                                                                            <Check className="w-4 h-4" /> Confirm segment
-                                                                        </button>
-                                                                    </div>
+                                                                    <button onClick={() => setSegments(segments.map(s => s.id === seg.id ? { ...s, isEditing: false, duration: calculatedDuration } : s))} className="w-full bg-[#E8F4FC] text-[#2B7BB9] border border-[#D0E8F7] font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-[14px] hover:bg-[#D9EEF9] transition-colors">
+                                                                        <Check className="w-4 h-4" /> Confirm segment
+                                                                    </button>
                                                                 ) : (
                                                                     <div className="space-y-2">
                                                                         <div className="text-[12px] font-bold text-amber-500">It seems that the arrival is the day after. Just click on <span className="underline cursor-pointer" onClick={() => updateSegment(seg.id, 'plusOneDay', true)}>+1 day to correct it</span></div>
-                                                                        <button className="w-full bg-slate-100 text-slate-400 font-bold py-3.5 rounded-xl text-[14px] cursor-not-allowed">Confirm segment</button>
+                                                                        <button type="button" disabled className="w-full bg-[#E8F4FC] text-[#A8C9DE] font-bold py-3.5 rounded-xl text-[14px] cursor-not-allowed">Confirm segment</button>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -1472,7 +1641,7 @@ export default function AddPNRPage() {
                                                                 <div className="w-9 h-9 bg-[#D60D26] rounded-xl mb-1 flex items-center justify-center shrink-0">
                                                                     <Plane className="w-5 h-5 text-white" />
                                                                 </div>
-                                                                <div className="text-[11px] text-slate-600 font-bold text-center">{seg.airlineName || "–"} ({seg.airlineCode} {seg.flightNumber})</div>
+                                                                <div className="text-[11px] text-slate-600 font-bold text-center">{seg.airlineName || "–"} ({seg.flightNumber || "—"})</div>
                                                                 <div className="text-[12px] text-blue-500 font-bold mt-0.5 flex items-center gap-1"><Clock className="w-3 h-3" />{seg.duration}</div>
                                                             </div>
                                                             <div className="text-right">
@@ -1775,11 +1944,18 @@ export default function AddPNRPage() {
                                     setIsConfirmModalOpen(false);
                                     setIsModalOpen(false);
                                     if (schedulingLeg === "return") {
+                                        returnSegmentsRef.current = segments;
                                         setHasScheduledReturnFlight(true);
+                                        if (outboundSegmentsRef.current) {
+                                            setSegments(outboundSegmentsRef.current);
+                                            setSchedulingLeg("outbound");
+                                        }
                                     } else {
+                                        outboundSegmentsRef.current = segments;
                                         setHasScheduledFlight(true);
                                     }
                                     setEditingAirport(null);
+                                    setModalTab(1);
                                 }} 
                                 className="flex-1 bg-[#D60D26] text-white font-bold py-3.5 rounded-xl hover:bg-[#30060F] transition-colors flex items-center justify-center gap-2 shadow-sm"
                             >
@@ -1802,14 +1978,15 @@ export default function AddPNRPage() {
                         <div className="px-6 py-5 text-[14px] text-slate-600 space-y-3 leading-relaxed">
                             <p>
                                 A flight series creates the same schedule across multiple operating dates
-                                (for example every Monday for the next 8 weeks).
+                                (for example every Monday between your FROM and TO dates).
                             </p>
                             <p>
-                                Click <span className="font-bold text-[#D60D26]">Add flight series</span>, then open
-                                schedule details and choose dates under the <span className="font-bold">Dates</span> tab.
+                                On a one-way route, click <span className="font-bold text-[#D60D26]">Add flight series</span> to
+                                show both calendars. Pick the series start on <span className="font-bold">FROM</span> and the
+                                series end on <span className="font-bold">TO</span>.
                             </p>
                             <p>
-                                Each selected date becomes its own inventory row with the same seats, fare, and policies.
+                                Each matching weekday in that range becomes its own inventory row with the same seats, fare, and policies.
                             </p>
                         </div>
                         <div className="px-6 pb-6">

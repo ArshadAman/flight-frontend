@@ -42,10 +42,16 @@ export type OfflineTicketRow = {
   flight_number?: string;
   pnr_number?: string | null;
   booking_ref?: string | null;
+  ticket_number?: string | null;
   created_at?: string;
   updated_at?: string;
   departure_datetime?: string;
-  passengers_data?: { first_name?: string; last_name?: string }[];
+  passengers_data?: {
+    title?: string;
+    first_name?: string;
+    last_name?: string;
+    ticket_number?: string;
+  }[];
   agent_flight_inventory?: string | null;
   total_amount?: string | number;
 };
@@ -147,6 +153,14 @@ export function formatMonthGroupLabel(iso: string) {
   return `${MONTH_FULL[d.getMonth()]}, ${d.getFullYear()}`;
 }
 
+/** Figma inventory list (drawer open): `Wed, 26Jul25` */
+export function formatInventoryListDate(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${WEEKDAY_SHORT[d.getDay()]}, ${d.getDate()}${MONTH_SHORT[d.getMonth()]}${yy}`;
+}
+
 /** Figma inventory list: `Wed, 26 Jul 25` */
 export function formatShortDate(iso: string) {
   const d = new Date(iso);
@@ -174,7 +188,7 @@ export function formatDisplayDateLong(iso: string) {
   });
 }
 
-export function formatTimeRange(start: string, end: string) {
+export function formatTimeRange(start: string, end: string, compact = false) {
   const startDate = new Date(start);
   const endDate = new Date(end);
   const startTime = startDate.toLocaleTimeString("en-US", {
@@ -188,7 +202,68 @@ export function formatTimeRange(start: string, end: string) {
     hour12: false,
   });
   const plusDay = endDate.toDateString() !== startDate.toDateString() ? "(+1)" : "";
+  if (compact) return `${startTime}-${endTime}${plusDay}`;
   return `${startTime} - ${endTime}${plusDay}`;
+}
+
+export function formatPassengerDisplayName(pax?: {
+  title?: string;
+  first_name?: string;
+  last_name?: string;
+} | null) {
+  if (!pax) return "Passenger";
+  const title = (pax.title || "").trim();
+  const first = (pax.first_name || "").trim();
+  const last = (pax.last_name || "").trim();
+  const name = [first, last].filter(Boolean).join(" ");
+  if (!name) return "Passenger";
+  if (!title) return name;
+  const normalized = /[.]$/.test(title) ? title : `${title}.`;
+  return `${normalized} ${name}`;
+}
+
+/** Group tickets into Figma PNR Booking rows keyed by MTDPNR (booking_ref). */
+export function groupPnrBookingRows(tickets: OfflineTicketRow[]) {
+  const groups = new Map<
+    string,
+    {
+      mtdPnr: string;
+      rows: {
+        key: string;
+        name: string;
+        airlinePnr: string;
+        ticketNo: string;
+        ticket: OfflineTicketRow;
+      }[];
+    }
+  >();
+
+  for (const ticket of tickets) {
+    const mtdPnr =
+      ticket.booking_ref ||
+      ticket.id.replace(/-/g, "").slice(0, 6).toUpperCase();
+    const airlinePnr = ticket.pnr_number || "—";
+    const ticketNo = ticket.ticket_number || "—";
+    const passengers = ticket.passengers_data?.length
+      ? ticket.passengers_data
+      : [{ first_name: "Passenger", last_name: "" }];
+
+    if (!groups.has(mtdPnr)) {
+      groups.set(mtdPnr, { mtdPnr, rows: [] });
+    }
+    const group = groups.get(mtdPnr)!;
+    passengers.forEach((pax, idx) => {
+      group.rows.push({
+        key: `${ticket.id}-${idx}`,
+        name: formatPassengerDisplayName(pax),
+        airlinePnr,
+        ticketNo: pax.ticket_number || ticketNo,
+        ticket,
+      });
+    });
+  }
+
+  return Array.from(groups.values());
 }
 
 export function formatFareInr(amount: string | number) {

@@ -6,11 +6,14 @@ import {
   ArrowRight,
   Plane,
   X,
-  Plus,
   Pencil,
   Luggage,
   ChevronDown,
   ChevronUp,
+  Clock,
+  Ban,
+  RefreshCw,
+  CircleDollarSign,
 } from "lucide-react";
 import {
   cityCountryFromCode,
@@ -19,6 +22,7 @@ import {
   formatInrPortal,
   formatShortDate,
   groupPnrFromId,
+  groupPnrBookingRows,
   listingStatus,
   passengerBookingLabel,
   seatStats,
@@ -98,14 +102,14 @@ export function OfflineFlightDetailDrawer({
   const [editPrice, setEditPrice] = useState(String(Number(flight.price).toFixed(2)));
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
-
-  const [pnrInput, setPnrInput] = useState("");
-  const [passengerName, setPassengerName] = useState("");
-  const [pnrAmount, setPnrAmount] = useState("");
-  const [ticketNumber, setTicketNumber] = useState("");
-  const [addingPnr, setAddingPnr] = useState(false);
-  const [pnrMsg, setPnrMsg] = useState<string | null>(null);
-  const [pnrSuccess, setPnrSuccess] = useState(false);
+  const [salesEndHours, setSalesEndHours] = useState("56");
+  const [salesEndUnit, setSalesEndUnit] = useState<"hours" | "days">("hours");
+  const [policyTexts, setPolicyTexts] = useState({
+    cancellation: "",
+    change: "",
+    refund: "",
+  });
+  const [openPolicy, setOpenPolicy] = useState<"cancellation" | "change" | "refund" | null>(null);
 
   useEffect(() => {
     setEditSeats(String(flight.seats_available ?? 0));
@@ -114,7 +118,13 @@ export function OfflineFlightDetailDrawer({
     setSaveMsg(null);
     setShowFlightDetails(false);
     setSeatsModalOpen(false);
-  }, [flight.id, flight.price, flight.seats_available]);
+    setOpenPolicy(null);
+    setPolicyTexts({
+      cancellation: flight.policies?.cancellation || "",
+      change: flight.policies?.change || "",
+      refund: flight.policies?.refund || "",
+    });
+  }, [flight.id, flight.price, flight.seats_available, flight.policies]);
 
   const segments = useMemo(() => {
     if (flight.segments_data?.length) return flight.segments_data;
@@ -159,6 +169,11 @@ export function OfflineFlightDetailDrawer({
           t.status !== "CANCELLED"
       ),
     [tickets, flight.id]
+  );
+
+  const pnrBookingGroups = useMemo(
+    () => groupPnrBookingRows(flightTickets),
+    [flightTickets]
   );
 
   const bookNow = async () => {
@@ -210,7 +225,25 @@ export function OfflineFlightDetailDrawer({
     }
   };
 
-  const saveSeatsAndPrice = async () => {
+  const salesCloseLabel = useMemo(() => {
+    const dep = new Date(flight.departure_datetime);
+    if (Number.isNaN(dep.getTime())) return "—";
+    const amount = Number(salesEndHours) || 0;
+    const ms = salesEndUnit === "days" ? amount * 24 * 60 * 60 * 1000 : amount * 60 * 60 * 1000;
+    const closeAt = new Date(dep.getTime() - ms);
+    return closeAt.toLocaleString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZoneName: "short",
+    });
+  }, [flight.departure_datetime, salesEndHours, salesEndUnit]);
+
+  const saveSeatsAndPrice = async (extra?: { policies?: Record<string, string> }) => {
     if (!access) {
       openAuthModal();
       return;
@@ -229,18 +262,21 @@ export function OfflineFlightDetailDrawer({
     setSaveMsg(null);
     try {
       const api = getPublicApiUrl();
+      const body: Record<string, unknown> = { seats_available: seats, price };
+      if (extra?.policies) body.policies = extra.policies;
       const res = await fetch(`${api}/flights/inventory/${flight.id}/`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${access}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ seats_available: seats, price }),
+        body: JSON.stringify(body),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error((json as { detail?: string }).detail || `Save failed (${res.status})`);
       setSaveMsg("Saved.");
       setEditingSeats(false);
+      setOpenPolicy(null);
       onInventoryUpdated?.();
     } catch (err) {
       setSaveMsg(err instanceof Error ? err.message : "Save failed");
@@ -249,48 +285,13 @@ export function OfflineFlightDetailDrawer({
     }
   };
 
-  const submitAddPnr = async () => {
-    if (!pnrInput.trim()) {
-      setPnrMsg("PNR number is required.");
-      return;
+  const savePolicy = async (key: "cancellation" | "change" | "refund") => {
+    const policies: Record<string, string> = {};
+    for (const k of ["cancellation", "change", "refund"] as const) {
+      const val = (policyTexts[k] || "").trim();
+      if (val) policies[k] = val;
     }
-    if (!access) {
-      openAuthModal();
-      return;
-    }
-    setAddingPnr(true);
-    setPnrMsg(null);
-    setPnrSuccess(false);
-    try {
-      const api = getPublicApiUrl();
-      const res = await fetch(`${api}/tickets/add-pnr/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${access}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          inventory_id: flight.id,
-          pnr_number: pnrInput.trim().toUpperCase(),
-          passenger_name: passengerName.trim(),
-          total_amount: pnrAmount ? Number(pnrAmount) : 0,
-          ticket_number: ticketNumber.trim(),
-        }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error((json as { detail?: string }).detail || `Failed to add PNR (${res.status})`);
-      setPnrSuccess(true);
-      setPnrMsg(`PNR ${pnrInput.trim().toUpperCase()} added successfully.`);
-      setPnrInput("");
-      setPassengerName("");
-      setPnrAmount("");
-      setTicketNumber("");
-      onInventoryUpdated?.();
-    } catch (err) {
-      setPnrMsg(err instanceof Error ? err.message : "Failed to add PNR");
-    } finally {
-      setAddingPnr(false);
-    }
+    await saveSeatsAndPrice({ policies });
   };
 
   const bumpSeats = (delta: number) => {
@@ -298,25 +299,33 @@ export function OfflineFlightDetailDrawer({
     setEditSeats(String(next));
   };
 
+  const policyRows = [
+    { key: "cancellation" as const, label: "Cancellation policy", Icon: Ban },
+    { key: "change" as const, label: "Change policy", Icon: RefreshCw },
+    { key: "refund" as const, label: "Refund policy", Icon: CircleDollarSign },
+  ];
+
   return (
     <>
-      <div className="w-full xl:w-[420px] bg-white border-l border-slate-200 fixed top-0 xl:top-[96px] right-0 bottom-0 z-50 xl:z-40 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
-        {/* Header — Figma: city names + long date */}
-        <div className="p-5 bg-[#F5F6F8] border-b border-slate-200 flex items-start justify-between shrink-0">
-          <div>
-            <div className="font-bold text-[16px] text-slate-800 flex items-center gap-2">
-              {originCity} <ArrowRight className="w-4 h-4 text-[#D60D26]" /> {destCity}
+      <div className="w-full xl:w-[360px] bg-white border-l border-slate-200 fixed top-0 xl:top-[96px] right-0 bottom-0 z-50 xl:z-40 flex flex-col shadow-xl animate-in slide-in-from-right duration-300">
+        {/* Header — compact Figma slider */}
+        <div className="px-4 py-3.5 bg-white border-b border-slate-200 flex items-start justify-between shrink-0">
+          <div className="min-w-0 pr-2">
+            <div className="font-bold text-[15px] text-slate-800 flex items-center gap-1.5">
+              <span className="truncate">{originCity}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-[#D60D26] shrink-0" />
+              <span className="truncate">{destCity}</span>
             </div>
-            <div className="text-[13px] text-slate-500 mt-1">
+            <div className="text-[12px] text-slate-500 mt-0.5 truncate">
               {formatDisplayDateLong(flight.departure_datetime)}
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="hover:bg-slate-200 p-1 rounded-full transition-colors"
+            className="hover:bg-slate-100 p-1 rounded-full transition-colors shrink-0"
           >
-            <X className="w-5 h-5 text-slate-700" />
+            <X className="w-4 h-4 text-slate-700" />
           </button>
         </div>
 
@@ -326,9 +335,9 @@ export function OfflineFlightDetailDrawer({
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 px-2 py-3.5 font-bold text-[12px] whitespace-nowrap transition-colors ${
+              className={`flex-1 px-1.5 py-2.5 font-bold text-[11px] whitespace-nowrap transition-colors ${
                 activeTab === tab
-                  ? "text-[#D60D26] border-b-2 border-[#D60D26]"
+                  ? "text-[#D60D26] border-b-2 border-[#D60D26] bg-[#FBE6E8]/60"
                   : "text-slate-500 hover:bg-slate-50"
               }`}
             >
@@ -340,26 +349,26 @@ export function OfflineFlightDetailDrawer({
         {/* ─── SEGMENT (Figma timeline) ─── */}
         {activeTab === "Segment" && (
           <>
-            <div className="flex-1 overflow-y-auto p-6 bg-white">
+            <div className="flex-1 overflow-y-auto p-4 bg-white">
               {segments.map((segment, index) => {
                 const isLast = index === segments.length - 1;
                 return (
-                  <div key={`${flight.id}-seg-${index}`} className="mb-2">
-                    <div className="font-bold text-[15px] text-slate-800 mb-3">
+                  <div key={`${flight.id}-seg-${index}`} className="mb-1">
+                    <div className="font-bold text-[14px] text-slate-800 mb-2">
                       {cityCountryFromCode(segment.origin, segment.origin_city)}
                     </div>
 
-                    <div className="flex gap-4 relative">
+                    <div className="flex gap-3 relative">
                       <div className="flex flex-col items-center relative">
-                        <div className="w-3 h-3 rounded-full bg-slate-800 relative z-10 shrink-0" />
-                        <div className="w-px flex-1 border-l border-dashed border-slate-300 my-1 min-h-[80px]" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-slate-800 relative z-10 shrink-0" />
+                        <div className="w-px flex-1 border-l border-dashed border-slate-300 my-1 min-h-[64px]" />
                         {isLast && (
-                          <div className="w-3 h-3 rounded-full border-2 border-slate-800 bg-white relative z-10 shrink-0" />
+                          <div className="w-2.5 h-2.5 rounded-full border-2 border-slate-800 bg-white relative z-10 shrink-0" />
                         )}
                       </div>
 
-                      <div className="flex-1 pb-4">
-                        <div className="text-[13px] text-slate-700 font-bold">
+                      <div className="flex-1 pb-3">
+                        <div className="text-[12px] text-slate-700 font-bold">
                           {formatClock(segment.departure_datetime)}{" "}
                           <span className="text-slate-400 font-medium">
                             ({utcOffsetLabel(segment.departure_datetime)})
@@ -370,39 +379,39 @@ export function OfflineFlightDetailDrawer({
                           {segment.origin_terminal || "Terminal"}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3 py-5">
-                          <div className="w-8 h-8 bg-[#D60D26] rounded flex items-center justify-center shrink-0">
-                            <Plane className="w-4 h-4 text-white -rotate-45" />
+                        <div className="flex flex-wrap items-center gap-2 py-3">
+                          <div className="w-7 h-7 bg-[#D60D26] rounded flex items-center justify-center shrink-0">
+                            <Plane className="w-3.5 h-3.5 text-white -rotate-45" />
                           </div>
                           <img
                             src={`/airlines/${flight.airline_code || "AI"}.png`}
                             alt={flight.airline_name || flight.airline_code}
-                            className="h-6 w-6 object-contain"
+                            className="h-5 w-5 object-contain"
                             onError={(e) => {
                               e.currentTarget.style.display = "none";
                             }}
                           />
                           {stops > 0 && (
-                            <span className="bg-[#377BD7] text-white text-[11px] font-black px-2.5 py-1 rounded">
+                            <span className="bg-[#377BD7] text-white text-[10px] font-black px-2 py-0.5 rounded">
                               {stops} stop{stops > 1 ? "s" : ""}
                             </span>
                           )}
                           <button
                             type="button"
                             onClick={() => setShowFlightDetails((v) => !v)}
-                            className="text-[#D60D26] font-bold text-[13px] underline underline-offset-2 inline-flex items-center gap-1"
+                            className="text-[#D60D26] font-bold text-[12px] underline underline-offset-2 inline-flex items-center gap-1"
                           >
                             See flight details
                             {showFlightDetails ? (
-                              <ChevronUp className="w-3.5 h-3.5" />
+                              <ChevronUp className="w-3 h-3" />
                             ) : (
-                              <ChevronDown className="w-3.5 h-3.5" />
+                              <ChevronDown className="w-3 h-3" />
                             )}
                           </button>
                         </div>
 
                         {showFlightDetails && (
-                          <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[12px] text-slate-600 space-y-1">
+                          <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-[11px] text-slate-600 space-y-1">
                             <div>
                               <span className="font-bold text-slate-800">Airline:</span>{" "}
                               {flight.airline_name || flight.airline_code} · {flight.flight_number}
@@ -424,7 +433,7 @@ export function OfflineFlightDetailDrawer({
 
                         {isLast && (
                           <>
-                            <div className="text-[13px] text-slate-700 font-bold mb-3">
+                            <div className="text-[12px] text-slate-700 font-bold mb-2">
                               {formatClock(
                                 segment.arrival_datetime,
                                 true,
@@ -438,7 +447,7 @@ export function OfflineFlightDetailDrawer({
                               <span className="text-[#D60D26] mx-1">•</span>
                               {segment.destination_terminal || "Terminal"}
                             </div>
-                            <div className="font-bold text-[15px] text-slate-800">
+                            <div className="font-bold text-[14px] text-slate-800">
                               {cityCountryFromCode(segment.destination, segment.destination_city)}
                             </div>
                           </>
@@ -450,14 +459,14 @@ export function OfflineFlightDetailDrawer({
               })}
             </div>
 
-            <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-col items-center gap-2 shrink-0">
+            <div className="px-4 py-3 border-t border-slate-100 bg-slate-50 flex flex-col items-center gap-1.5 shrink-0">
               {allowBookNow ? (
                 <>
                   <button
                     type="button"
                     disabled={bookingBusy}
                     onClick={() => void bookNow()}
-                    className="w-full bg-[#D60D26] hover:bg-[#30060F] text-white font-bold py-3 rounded-full text-[14px] disabled:opacity-50"
+                    className="w-full bg-[#D60D26] hover:bg-[#30060F] text-white font-bold py-2.5 rounded-full text-[13px] disabled:opacity-50"
                   >
                     {bookingBusy ? "Starting…" : stats.available > 0 ? "Book Now" : "Join Waitlist"}
                   </button>
@@ -468,11 +477,11 @@ export function OfflineFlightDetailDrawer({
                   <button
                     type="button"
                     disabled={!canCancel}
-                    className="text-slate-400 font-bold flex items-center gap-2 text-[14px] cursor-not-allowed"
+                    className="text-slate-400 font-bold flex items-center gap-2 text-[13px] cursor-not-allowed"
                   >
-                    Cancel Flight <X className="w-4 h-4" />
+                    Cancel Flight <X className="w-3.5 h-3.5" />
                   </button>
-                  <div className="text-[12px] text-slate-400">
+                  <div className="text-[11px] text-slate-400">
                     Only open &amp; pending flight can be canceled
                   </div>
                 </>
@@ -481,22 +490,22 @@ export function OfflineFlightDetailDrawer({
           </>
         )}
 
-        {/* ─── INVENTORY (Figma) ─── */}
+        {/* ─── INVENTORY (Figma: Price + Sales ending + Policies) ─── */}
         {activeTab === "Inventory" && (
-          <div className="flex-1 overflow-y-auto p-6 space-y-7 bg-white">
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 bg-white">
             {onPublishToggle && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3">
+              <div className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2">
                 <div>
-                  <div className="text-sm font-bold text-slate-800">
+                  <div className="text-[13px] font-bold text-slate-800">
                     {flight.is_published === false ? "Closed" : "Open for sale"}
                   </div>
-                  <div className="text-[11px] text-slate-500">Toggle marketplace listing</div>
+                  <div className="text-[10px] text-slate-500">Marketplace listing</div>
                 </div>
                 <button
                   type="button"
                   disabled={publishing}
                   onClick={onPublishToggle}
-                  className={`rounded-full px-4 py-2 text-xs font-bold ${
+                  className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${
                     flight.is_published === false
                       ? "bg-[#D60D26] text-white"
                       : "bg-slate-100 text-slate-700"
@@ -508,144 +517,29 @@ export function OfflineFlightDetailDrawer({
             )}
 
             <div>
-              <div className="font-bold text-[15px] text-slate-800 mb-3">Baggage</div>
-              <div className="flex items-center gap-2 text-[13px] font-bold text-slate-600 mb-2">
-                <Luggage className="w-4 h-4 text-slate-400" />
-                Checked baggage options
+              <div className="flex items-center justify-between mb-2">
+                <div className="font-bold text-[14px] text-slate-800">Price</div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (editingSeats) void saveSeatsAndPrice();
+                    else setEditingSeats(true);
+                  }}
+                  className="inline-flex items-center gap-1 text-[12px] font-bold text-[#D60D26]"
+                >
+                  <Pencil className="w-3 h-3" /> {editingSeats ? (saving ? "Saving…" : "Save") : "Edit"}
+                </button>
               </div>
-              <input
-                type="text"
-                readOnly
-                value={`${flight.baggage_check_in || "23 kg"}, Included`}
-                className="w-full border border-slate-200 rounded-lg p-3 text-[14px] font-bold text-slate-600 bg-white"
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="font-bold text-[15px] text-slate-800">Tickets Volume</div>
-                {editingSeats ? (
-                  <button
-                    type="button"
-                    onClick={() => void saveSeatsAndPrice()}
-                    disabled={saving}
-                    className="text-[13px] font-bold text-blue-600 hover:text-blue-800"
-                  >
-                    {saving ? "Saving…" : "Save"}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (onEditInventory) {
-                        setSeatsModalOpen(true);
-                        return;
-                      }
-                      setSeatsModalOpen(true);
-                    }}
-                    className="inline-flex items-center gap-1 text-[13px] font-bold text-[#D60D26]"
-                  >
-                    <Pencil className="w-3.5 h-3.5" /> Edit
-                  </button>
-                )}
-              </div>
-
-              {/* Figma: 5 metric boxes — number on top, label below */}
-              <div className="grid grid-cols-5 gap-2 mb-4">
-                {(
-                  [
-                    ["Total", stats.total],
-                    ["Open for sale", stats.available],
-                    ["Sold", stats.sold],
-                    ["Available", stats.available],
-                    ["Reserved", stats.held],
-                  ] as const
-                ).map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="rounded-lg border border-slate-200 bg-slate-50 px-1.5 py-2.5 text-center"
-                  >
-                    <div className="text-[16px] font-black text-[#D60D26] leading-none mb-1">
-                      {String(value).padStart(2, "0")}
-                    </div>
-                    <div className="text-[9px] font-bold text-slate-400 leading-tight">{label}</div>
-                  </div>
-                ))}
-              </div>
-
-              {editingSeats ? (
-                <div className="space-y-3 rounded-xl border border-slate-200 p-3">
-                  <div className="flex items-center justify-between text-[13px] font-bold">
-                    <span className="text-slate-600">Total seats</span>
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => bumpSeats(-1)}
-                        className="text-[#D60D26] font-black text-lg leading-none"
-                      >
-                        ‹
-                      </button>
-                      <span className="w-8 text-center text-slate-800">{editSeats}</span>
-                      <button
-                        type="button"
-                        onClick={() => bumpSeats(1)}
-                        className="text-[#D60D26] font-black text-lg leading-none"
-                      >
-                        ›
-                      </button>
-                    </div>
-                  </div>
-                  <label className="block text-[12px] font-bold text-slate-500">
-                    Price (INR)
-                    <div className="relative mt-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
-                      <input
-                        type="number"
-                        value={editPrice}
-                        onChange={(e) => setEditPrice(e.target.value)}
-                        className="w-full border border-slate-200 rounded-lg p-2.5 pl-7 text-[14px] font-bold"
-                      />
-                    </div>
-                  </label>
-                </div>
-              ) : (
-                <div className="space-y-2.5 text-[13px]">
-                  <div className="flex justify-between border-b border-slate-100 py-2">
-                    <span className="text-slate-500">Total seats</span>
-                    <span className="font-bold text-slate-800">{stats.total}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 py-2">
-                    <span className="text-slate-500">Open for sale</span>
-                    <span className="font-bold text-slate-800">{stats.available}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 py-2">
-                    <span className="text-slate-500">Sold seats</span>
-                    <span className="font-bold text-slate-800">{stats.sold}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 py-2">
-                    <span className="text-slate-500">Available seats</span>
-                    <span className="font-bold text-slate-800">{stats.available}</span>
-                  </div>
-                  <div className="flex justify-between py-2">
-                    <span className="text-slate-500">Reserved seats</span>
-                    <span className="font-bold text-slate-800">{stats.held}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="font-bold text-[15px] text-slate-800 mb-2">Price</div>
-              <label className="flex items-center gap-2 text-[#D60D26] font-bold text-[12px] mb-2 cursor-default">
-                <span className="relative flex h-4 w-4 items-center justify-center">
+              <label className="flex items-center gap-2 text-[#D60D26] font-bold text-[11px] mb-2 cursor-default">
+                <span className="relative flex h-3.5 w-3.5 items-center justify-center">
                   <span className="absolute inset-0 rounded-full border-2 border-[#D60D26]" />
-                  <span className="h-2 w-2 rounded-full bg-[#D60D26]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#D60D26]" />
                 </span>
                 ONE WAY
               </label>
-              <div className="text-[12px] font-bold text-slate-500 mb-1">Price (INR)</div>
+              <div className="text-[11px] font-bold text-slate-500 mb-1">Price (INR)</div>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[13px]">
                   ₹
                 </span>
                 <input
@@ -653,16 +547,160 @@ export function OfflineFlightDetailDrawer({
                   readOnly={!editingSeats}
                   value={editingSeats ? editPrice : Number(flight.price).toFixed(2)}
                   onChange={(e) => setEditPrice(e.target.value)}
-                  className={`w-full border border-slate-200 rounded-lg p-3.5 pl-8 text-[14px] font-bold text-slate-800 ${
+                  className={`w-full border border-slate-200 rounded-lg py-2.5 pl-7 pr-3 text-[13px] font-bold text-slate-800 ${
                     editingSeats ? "bg-white" : "bg-slate-50"
                   }`}
                 />
               </div>
+              {editingSeats && (
+                <div className="mt-2 flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-[12px] font-bold">
+                  <span className="text-slate-600">Total seats</span>
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => bumpSeats(-1)} className="text-[#D60D26] font-black text-base">
+                      ‹
+                    </button>
+                    <span className="w-7 text-center text-slate-800">{editSeats}</span>
+                    <button type="button" onClick={() => bumpSeats(1)} className="text-[#D60D26] font-black text-base">
+                      ›
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="font-bold text-[14px] text-slate-800 mb-1">Sales ending</div>
+              <div className="text-[12px] text-slate-500 mb-2">End selling before departure</div>
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="number"
+                  min={0}
+                  value={salesEndHours}
+                  onChange={(e) => setSalesEndHours(e.target.value)}
+                  className="w-16 border border-slate-200 rounded-lg px-2.5 py-2 text-[13px] font-bold text-slate-800"
+                />
+                <select
+                  value={salesEndUnit}
+                  onChange={(e) => setSalesEndUnit(e.target.value as "hours" | "days")}
+                  className="border border-slate-200 rounded-lg px-2.5 py-2 text-[13px] font-bold text-slate-700 bg-white"
+                >
+                  <option value="hours">hours</option>
+                  <option value="days">days</option>
+                </select>
+              </div>
+              <div className="flex items-start gap-1.5 text-[11px] text-slate-500 font-medium leading-snug">
+                <Clock className="w-3.5 h-3.5 mt-0.5 shrink-0 text-slate-400" />
+                <span>Sales close at {salesCloseLabel}</span>
+              </div>
+            </div>
+
+            <div>
+              <div className="font-bold text-[14px] text-slate-800 mb-2">Policies</div>
+              <div className="rounded-lg border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                {policyRows.map(({ key, label, Icon }) => {
+                  const hasValue = Boolean(policyTexts[key]?.trim());
+                  const isOpen = openPolicy === key;
+                  return (
+                    <div key={key} className="bg-white">
+                      <div className="flex items-center gap-2.5 px-3 py-2.5 border-l-4 border-slate-900">
+                        <Icon className="w-4 h-4 text-slate-600 shrink-0" />
+                        <div className="flex-1 min-w-0 text-[13px] font-bold text-slate-700 truncate">
+                          {label}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setOpenPolicy(isOpen ? null : key)}
+                          className="inline-flex items-center gap-1 text-[#D60D26] font-bold text-[12px] shrink-0"
+                        >
+                          <span className="w-4 h-4 rounded-full bg-[#D60D26] text-white text-[12px] leading-none flex items-center justify-center">
+                            {isOpen ? "−" : "+"}
+                          </span>
+                          {hasValue ? (isOpen ? "Hide" : "Edit") : "Add"}
+                        </button>
+                      </div>
+                      {isOpen && (
+                        <div className="px-3 pb-3 space-y-2">
+                          <textarea
+                            value={policyTexts[key]}
+                            onChange={(e) =>
+                              setPolicyTexts((prev) => ({ ...prev, [key]: e.target.value }))
+                            }
+                            rows={3}
+                            placeholder={`Add ${label.toLowerCase()}...`}
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[12px] text-slate-700 outline-none"
+                          />
+                          <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => void savePolicy(key)}
+                            className="w-full rounded-full bg-[#D60D26] hover:bg-[#30060F] text-white font-bold py-2 text-[12px] disabled:opacity-50"
+                          >
+                            {saving ? "Saving…" : "Save policy"}
+                          </button>
+                        </div>
+                      )}
+                      {hasValue && !isOpen && (
+                        <p className="px-3 pb-2.5 text-[11px] text-slate-500 leading-relaxed line-clamp-2">
+                          {policyTexts[key]}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="font-bold text-[14px] text-slate-800">Tickets Volume</div>
+                <button
+                  type="button"
+                  onClick={() => setSeatsModalOpen(true)}
+                  className="inline-flex items-center gap-1 text-[12px] font-bold text-[#D60D26]"
+                >
+                  <Pencil className="w-3 h-3" /> Edit
+                </button>
+              </div>
+              <div className="grid grid-cols-5 gap-1.5">
+                {(
+                  [
+                    ["Total", stats.total],
+                    ["Open", stats.available],
+                    ["Sold", stats.sold],
+                    ["Avail.", stats.available],
+                    ["Held", stats.held],
+                  ] as const
+                ).map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="rounded-md border border-slate-200 bg-slate-50 px-1 py-2 text-center"
+                  >
+                    <div className="text-[14px] font-black text-[#D60D26] leading-none mb-1">
+                      {String(value).padStart(2, "0")}
+                    </div>
+                    <div className="text-[8px] font-bold text-slate-400 leading-tight">{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="font-bold text-[14px] text-slate-800 mb-2">Baggage</div>
+              <div className="flex items-center gap-2 text-[12px] font-bold text-slate-600 mb-1.5">
+                <Luggage className="w-3.5 h-3.5 text-slate-400" />
+                Checked baggage
+              </div>
+              <input
+                type="text"
+                readOnly
+                value={`${flight.baggage_check_in || "23 kg"}, Included`}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-[12px] font-bold text-slate-600 bg-slate-50"
+              />
             </div>
 
             {saveMsg && (
               <p
-                className={`text-xs text-center font-medium ${
+                className={`text-[11px] text-center font-medium ${
                   saveMsg.toLowerCase().includes("save") ? "text-emerald-600" : "text-rose-600"
                 }`}
               >
@@ -674,14 +712,14 @@ export function OfflineFlightDetailDrawer({
 
         {/* ─── BOOKING (Figma list format) ─── */}
         {activeTab === "Booking" && (
-          <div className="flex-1 overflow-y-auto p-6 bg-white">
-            <div className="font-bold text-[15px] text-slate-800 mb-4">
+          <div className="flex-1 overflow-y-auto p-4 bg-white">
+            <div className="font-bold text-[14px] text-slate-800 mb-3">
               Booking({flightTickets.length})
             </div>
             {flightTickets.length === 0 ? (
-              <p className="text-slate-500 text-[13px] font-medium">No bookings for this flight yet.</p>
+              <p className="text-slate-500 text-[12px] font-medium">No bookings for this flight yet.</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {flightTickets.map((t) => {
                   const pax = passengerBookingLabel(t.passengers_data);
                   const pnr =
@@ -697,17 +735,15 @@ export function OfflineFlightDetailDrawer({
                         }
                         router.push(`/my-booking/${t.id}`);
                       }}
-                      className="w-full text-left hover:bg-slate-50 p-3.5 rounded-xl border border-slate-100"
+                      className="w-full text-left hover:bg-slate-50 p-2.5 rounded-lg border border-slate-100"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="font-bold text-slate-800 text-[14px]">
-                          {pnr}{" "}
-                          <span className="text-slate-500 font-semibold">
-                            ({pax.count} PAX)
-                          </span>
-                        </div>
+                      <div className="font-bold text-slate-800 text-[13px]">
+                        {pnr}{" "}
+                        <span className="text-slate-500 font-semibold">
+                          ({pax.count} PAX)
+                        </span>
                       </div>
-                      <div className="text-[12px] text-slate-500 mt-1 uppercase tracking-wide">
+                      <div className="text-[11px] text-slate-500 mt-0.5 uppercase tracking-wide">
                         {formatInrPortal(t.total_amount || 0)} • {pax.names}
                       </div>
                     </button>
@@ -718,102 +754,48 @@ export function OfflineFlightDetailDrawer({
           </div>
         )}
 
-        {/* ─── PNR BOOKING ─── */}
+        {/* ─── PNR BOOKING (Figma: MTDPNR groups + Name / Airline PNR / Ticket No.) ─── */}
         {activeTab === "PNR Booking" && (
-          <div className="flex-1 overflow-y-auto p-6 bg-white space-y-5">
-            <div className="rounded-xl border border-slate-200 p-4 bg-slate-50">
-              <div className="text-[12px] font-bold text-slate-500 uppercase">Group PNR</div>
-              <div className="text-[18px] font-black text-slate-800 mt-1">
-                {groupPnrFromId(flight.id)}
-              </div>
-              <div className="text-[12px] text-slate-500 mt-2">
-                {flight.origin} → {flight.destination} · {formatShortDate(flight.departure_datetime)}
+          <div className="flex-1 overflow-y-auto bg-white">
+            <div className="px-4 pt-4 pb-2">
+              <div className="font-bold text-[14px] text-slate-900">
+                PNR Booking (GPNR→{groupPnrFromId(flight.id)})
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#D60D26]/20 bg-rose-50/30 p-4 space-y-3">
-              <div className="flex items-center gap-2 font-bold text-[14px] text-slate-800">
-                <Plus className="w-4 h-4 text-[#D60D26]" /> Add PNR
-              </div>
-              <input
-                type="text"
-                value={pnrInput}
-                onChange={(e) => setPnrInput(e.target.value.toUpperCase())}
-                placeholder="PNR Number *"
-                className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-[14px] font-bold"
-              />
-              <input
-                type="text"
-                value={passengerName}
-                onChange={(e) => setPassengerName(e.target.value)}
-                placeholder="Passenger Name"
-                className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-[14px]"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  value={ticketNumber}
-                  onChange={(e) => setTicketNumber(e.target.value)}
-                  placeholder="Ticket Number"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-[13px]"
-                />
-                <input
-                  type="number"
-                  value={pnrAmount}
-                  onChange={(e) => setPnrAmount(e.target.value)}
-                  placeholder="Amount (₹)"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-[13px]"
-                />
-              </div>
-              <button
-                type="button"
-                disabled={addingPnr || !pnrInput.trim()}
-                onClick={() => void submitAddPnr()}
-                className="w-full bg-[#D60D26] hover:bg-[#b80b20] disabled:opacity-50 text-white font-bold py-2.5 rounded-full text-[14px]"
-              >
-                {addingPnr ? "Adding…" : "Add PNR"}
-              </button>
-              {pnrMsg && (
-                <p
-                  className={`text-xs text-center font-medium ${
-                    pnrSuccess ? "text-emerald-600" : "text-rose-600"
-                  }`}
-                >
-                  {pnrMsg}
-                </p>
-              )}
+            <div className="grid grid-cols-[1.4fr_1fr_1.1fr] gap-2 px-4 pb-2 text-[11px] font-bold text-slate-400">
+              <div>Name</div>
+              <div>Airline PNR</div>
+              <div>Ticket No.</div>
             </div>
 
-            <div className="space-y-3">
-              <div className="text-[12px] font-bold text-slate-500 uppercase tracking-wide">
-                PNR Booking Details
+            {pnrBookingGroups.length === 0 ? (
+              <p className="px-4 py-6 text-slate-500 text-[12px] font-medium">
+                No PNR bookings linked yet.
+              </p>
+            ) : (
+              <div className="pb-4">
+                {pnrBookingGroups.map((group) => (
+                  <div key={group.mtdPnr} className="mb-0.5">
+                    <div className="bg-[#F5F6F8] px-4 py-2 text-[12px] font-bold text-slate-700">
+                      MTDPNR: {group.mtdPnr}
+                    </div>
+                    {group.rows.map((row) => (
+                      <button
+                        key={row.key}
+                        type="button"
+                        onClick={() => onTicketSelect?.(row.ticket)}
+                        className="w-full grid grid-cols-[1.4fr_1fr_1.1fr] gap-2 px-4 py-2.5 text-left text-[12px] border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="font-bold text-slate-800 truncate">{row.name}</div>
+                        <div className="font-medium text-slate-700">{row.airlinePnr}</div>
+                        <div className="font-medium text-slate-700">{row.ticketNo}</div>
+                      </button>
+                    ))}
+                  </div>
+                ))}
               </div>
-              {flightTickets.length === 0 ? (
-                <p className="text-slate-500 text-[13px]">No PNR bookings linked yet.</p>
-              ) : (
-                flightTickets.map((t) => {
-                  const pax = passengerBookingLabel(t.passengers_data);
-                  return (
-                    <button
-                      key={`pnr-${t.id}`}
-                      type="button"
-                      onClick={() => onTicketSelect?.(t)}
-                      className="w-full text-left rounded-xl border border-slate-100 p-4 hover:bg-slate-50"
-                    >
-                      <div className="font-bold text-[#D60D26] underline underline-offset-2">
-                        {t.pnr_number || t.booking_ref || "Pending PNR"}
-                      </div>
-                      <div className="text-[13px] font-bold text-slate-800 mt-1">
-                        {pax.names} ({pax.count} PAX)
-                      </div>
-                      <div className="text-[12px] text-slate-500 mt-1">
-                        {t.status} · {formatInrPortal(t.total_amount || 0)}
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
+            )}
           </div>
         )}
       </div>
@@ -846,7 +828,7 @@ export function OfflineFlightDetailDrawer({
                     type="button"
                     onClick={() => {
                       setSeatsModalOpen(false);
-                      setActiveTab("PNR Booking");
+                      router.push("/sale/inventory/new");
                     }}
                     className="text-[#d60d26] underline underline-offset-2"
                   >

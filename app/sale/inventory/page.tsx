@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { SaleNavbar } from "@/components/SaleNavbar";
 import { Footer } from "@/components/Footer";
-import { Filter, Plus, X } from "lucide-react";
+import { Filter, Plus, X, Copy, Check, ExternalLink, ChevronDown, ChevronUp, Luggage } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { getPublicApiUrl } from "@/lib/apiConfig";
@@ -126,14 +126,54 @@ type DrawerRecord = {
     title: string;
     subtitle: string;
     status: string;
+    statusLabel: string;
     referenceLabel: string;
     referenceValue: string;
+    mtdPnr?: string;
     amountLabel?: string;
     amountValue?: string;
     passengers?: any[];
     cancellationRemarks?: string;
+    baggageCheckIn?: string;
+    baggageHand?: string;
     details: DrawerDetail[];
 };
+
+function formatStatusLabel(status: string) {
+    const s = (status || "").toUpperCase();
+    if (s === "CONFIRMED") return "Confirmed";
+    if (s === "PENDING") return "Pending";
+    if (s === "CANCELLED") return "Cancelled";
+    return status || "—";
+}
+
+/** Figma ticket modal subtitle: `DEL to MUM, 2025 Jul 26, 16:30` */
+function formatTicketModalSubtitle(ticket: TicketApi) {
+    const d = new Date(ticket.departure_datetime);
+    if (Number.isNaN(d.getTime())) return `${ticket.origin} to ${ticket.destination}`;
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const datePart = `${d.getFullYear()} ${months[d.getMonth()]} ${d.getDate()}`;
+    const time = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+    return `${ticket.origin} to ${ticket.destination}, ${datePart}, ${time}`;
+}
+
+function formatPassengerBorn(dob?: string | null) {
+    if (!dob) return null;
+    const d = new Date(dob.includes("T") ? dob : `${dob}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return dob;
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yy = String(d.getFullYear()).slice(-2);
+    return `${dd}/${mm}/${yy}`;
+}
+
+function passengerGenderLabel(gender?: string | null) {
+    if (!gender) return null;
+    const g = gender.toUpperCase();
+    if (g === "M" || g === "MALE") return "Male";
+    if (g === "F" || g === "FEMALE") return "Female";
+    return gender;
+}
 
 function formatMonthYear(dateString: string) {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -228,6 +268,7 @@ function buildBookingRecord(booking: GroupBookingApi): DrawerRecord {
         title: booking.group_name,
         subtitle: `${booking.origin} → ${booking.destination}`,
         status: booking.status,
+        statusLabel: formatStatusLabel(booking.status),
         referenceLabel: "Request ID",
         referenceValue: booking.request_id,
         amountLabel: "Est. value",
@@ -245,20 +286,25 @@ function buildBookingRecord(booking: GroupBookingApi): DrawerRecord {
 }
 
 function buildTicketRecord(ticket: TicketApi): DrawerRecord {
-    const referenceValue = ticket.pnr_number || ticket.ticket_number || ticket.booking_ref || ticket.id;
+    const mtdPnr = (ticket.booking_ref || ticket.pnr_number || ticket.id.replace(/-/g, "").slice(0, 6)).toUpperCase();
+    const titlePnr = (ticket.pnr_number || ticket.booking_ref || mtdPnr).toUpperCase();
 
     return {
         id: ticket.id,
         kind: "ticket",
-        title: ticket.pnr_number || ticket.ticket_number || "Ticket",
-        subtitle: `${ticket.origin} → ${ticket.destination}`,
+        title: titlePnr,
+        subtitle: formatTicketModalSubtitle(ticket),
         status: ticket.status,
-        referenceLabel: ticket.pnr_number ? "PNR" : "Booking Ref",
-        referenceValue,
+        statusLabel: formatStatusLabel(ticket.status),
+        referenceLabel: "MTDPNR reference",
+        referenceValue: mtdPnr,
+        mtdPnr,
         amountLabel: "Total amount",
         amountValue: formatFare(ticket.total_amount),
         passengers: ticket.passengers_data || [],
         cancellationRemarks: ticket.cancellation_data?.remarks || ticket.agent_cancellation_reason || "",
+        baggageCheckIn: ticket.baggage_check_in || "",
+        baggageHand: ticket.baggage_hand || "",
         details: [
             { label: "Flight number", value: ticket.flight_number },
             { label: "Airline", value: ticket.airline_name || ticket.airline_code || "Unknown" },
@@ -342,6 +388,8 @@ export default function InventoryPage() {
     const [inventoryTab, setInventoryTab] = useState("All PNR");
     const [filtersOpen, setFiltersOpen] = useState(false);
     const [filters, setFilters] = useState<OfflineFilters>(emptyOfflineFilters);
+    const [expandedPassengerIdx, setExpandedPassengerIdx] = useState<number | null>(null);
+    const [pnrCopied, setPnrCopied] = useState(false);
 
     const handleFulfillSubmit = async (ticketId: string) => {
         setActionError(null);
@@ -779,7 +827,7 @@ export default function InventoryPage() {
                         <OfflineFlightListTable
                             rows={filteredInventoryRows}
                             variant="inventory"
-                            seatDisplay="full"
+                            seatDisplay="compact"
                             selectedId={selectedFlight?.id}
                             onSelect={(row) => setSelectedFlight(row as InventoryFlight)}
                             bookedByInventory={bookedByInventory}
@@ -817,6 +865,8 @@ export default function InventoryPage() {
                             setActionSuccess(null);
                             setFulfillingTicketId(null);
                             setCancellingTicketId(null);
+                            setExpandedPassengerIdx(null);
+                            setPnrCopied(false);
                         }
                     }}
                     onInventoryUpdated={() => setRefreshTrigger((p) => p + 1)}
@@ -824,151 +874,255 @@ export default function InventoryPage() {
             )}
             </div>
 
-            {/* Booking Details Modal */}
+            {/* Booking Details Modal — Figma Ticket */}
             {selectedBooking && (
                 <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 p-4 flex justify-center items-start md:items-center">
-                    <div className="bg-white rounded-2xl w-full max-w-[550px] shadow-2xl overflow-hidden flex flex-col my-8 md:my-auto max-h-[85vh]">
-                        <div className="bg-[#F2FBFF] p-6 relative shrink-0 border-b border-green-100">
-                            <button onClick={() => setSelectedBooking(null)} className="absolute top-6 right-6 text-slate-500 hover:bg-white/50 p-1 rounded-full"><X className="w-5 h-5" /></button>
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className="font-extrabold text-[20px] text-slate-800">{selectedBooking.title}</span>
-                                <span className="text-emerald-600 font-bold text-[14px]">{selectedBooking.status}</span>
+                    <div className="bg-white rounded-2xl w-full max-w-[520px] shadow-2xl overflow-hidden flex flex-col my-8 md:my-auto max-h-[85vh]">
+                        <div
+                            className={`p-6 relative shrink-0 border-b ${
+                                selectedBooking.status === "CONFIRMED"
+                                    ? "bg-[#EAF7EE] border-emerald-100"
+                                    : selectedBooking.status === "CANCELLED"
+                                      ? "bg-rose-50 border-rose-100"
+                                      : "bg-[#F2FBFF] border-slate-100"
+                            }`}
+                        >
+                            <button
+                                type="button"
+                                onClick={() => setSelectedBooking(null)}
+                                className="absolute top-6 right-6 text-slate-500 hover:bg-white/50 p-1 rounded-full"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                            <div className="flex items-baseline gap-2 mb-1 pr-8">
+                                <span className="font-extrabold text-[20px] text-slate-900">{selectedBooking.title}</span>
+                                <span
+                                    className={`font-bold text-[16px] ${
+                                        selectedBooking.status === "CONFIRMED"
+                                            ? "text-emerald-700"
+                                            : selectedBooking.status === "CANCELLED"
+                                              ? "text-[#D60D26]"
+                                              : "text-slate-600"
+                                    }`}
+                                >
+                                    {selectedBooking.statusLabel}
+                                </span>
                             </div>
-                            <div className="text-slate-500 font-medium text-[13px]">{selectedBooking.subtitle}</div>
+                            <div className="text-slate-600 font-medium text-[13px]">{selectedBooking.subtitle}</div>
                         </div>
-                        
-                        <div className="p-6 overflow-y-auto bg-white flex-1 space-y-8">
+
+                        <div className="p-6 overflow-y-auto bg-white flex-1 space-y-7">
+                            {/* General information */}
                             <div>
-                                <div className="font-bold text-[15px] text-slate-800 mb-4">Details</div>
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between py-2.5 border-b border-slate-100">
+                                <div className="font-bold text-[15px] text-slate-800 mb-4">General information</div>
+                                <div className="space-y-3.5">
+                                    <div className="flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-2 text-[13px] font-bold text-slate-600">
-                                            <div className="w-3 h-3 bg-slate-300 rounded-sm"></div> {selectedBooking.referenceLabel}
+                                            <span className="w-3.5 h-3.5 rounded-[3px] bg-[#D60D26] shrink-0" />
+                                            MTDPNR reference
                                         </div>
-                                        <div className="font-bold text-slate-800 text-[13px]">{selectedBooking.referenceValue}</div>
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                const value = selectedBooking.mtdPnr || selectedBooking.referenceValue;
+                                                try {
+                                                    await navigator.clipboard.writeText(value);
+                                                    setPnrCopied(true);
+                                                    window.setTimeout(() => setPnrCopied(false), 1600);
+                                                } catch {
+                                                    setActionError("Could not copy PNR");
+                                                }
+                                            }}
+                                            className="inline-flex items-center gap-1.5 font-bold text-[13px] text-[#2B7BB9] underline underline-offset-2 hover:text-[#1f5f8f]"
+                                            title="Copy PNR"
+                                        >
+                                            {selectedBooking.mtdPnr || selectedBooking.referenceValue}
+                                            {pnrCopied ? (
+                                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                            ) : (
+                                                <Copy className="w-3.5 h-3.5" />
+                                            )}
+                                        </button>
                                     </div>
-                                    {selectedBooking.amountValue && (
-                                        <div className="flex items-center justify-between py-2.5 border-b border-slate-100">
+                                    {selectedBooking.kind === "ticket" && (
+                                        <div className="flex items-center justify-between gap-3">
                                             <div className="flex items-center gap-2 text-[13px] font-bold text-slate-600">
-                                                <div className="w-3 h-3 bg-[#D60D26] rounded-sm"></div> {selectedBooking.amountLabel}
+                                                <Luggage className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                                Reservation
                                             </div>
+                                            <Link
+                                                href={`/my-booking/${selectedBooking.id}`}
+                                                className="inline-flex items-center gap-1.5 font-bold text-[13px] text-[#2B7BB9] underline underline-offset-2 hover:text-[#1f5f8f]"
+                                            >
+                                                Check reservation
+                                                <ExternalLink className="w-3.5 h-3.5" />
+                                            </Link>
+                                        </div>
+                                    )}
+                                    {selectedBooking.amountValue && (
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="text-[13px] font-bold text-slate-600">{selectedBooking.amountLabel}</div>
                                             <div className="font-bold text-slate-800 text-[13px]">{selectedBooking.amountValue}</div>
                                         </div>
                                     )}
-                                    {selectedBooking.details.map((detail) => (
-                                        <div key={detail.label} className="flex items-center justify-between py-2.5 border-b border-slate-100">
-                                            <div className="flex items-center gap-2 text-[13px] font-bold text-slate-600">
-                                                <div className="w-3 h-3 bg-slate-200 rounded-sm"></div> {detail.label}
-                                            </div>
-                                            <div className="font-bold text-slate-800 text-[13px] text-right">{detail.value}</div>
-                                        </div>
-                                    ))}
                                 </div>
                             </div>
 
-                            {/* Passenger Manifest */}
+                            {/* Passengers */}
                             {selectedBooking.passengers && selectedBooking.passengers.length > 0 && (
                                 <div>
-                                    <div className="font-bold text-[15px] text-slate-800 mb-4">Passenger Manifest</div>
+                                    <div className="font-bold text-[15px] text-slate-800 mb-4">Passengers</div>
                                     <div className="space-y-3">
-                                        {selectedBooking.passengers.map((pax: any, idx: number) => (
-                                            <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-200/60 text-xs font-semibold">
-                                                <span className="text-[#0C2342] font-black block text-[13px] mb-1">
-                                                    {pax.title} {pax.first_name} {pax.last_name}
-                                                </span>
-                                                <div className="flex flex-wrap gap-4 text-slate-500 mt-1">
-                                                    <span>Gender: {pax.gender === "M" ? "Male" : "Female"}</span>
-                                                    {pax.dob && <span>DOB: {pax.dob}</span>}
-                                                    {pax.passport_number && (
-                                                        <span>Passport: {pax.passport_number}</span>
-                                                    )}
-                                                    {pax.pancard_number && (
-                                                        <span>PAN: {pax.pancard_number}</span>
+                                        {selectedBooking.passengers.map((pax: any, idx: number) => {
+                                            const open = expandedPassengerIdx === idx;
+                                            const gender = passengerGenderLabel(pax.gender);
+                                            const born = formatPassengerBorn(pax.dob || pax.date_of_birth);
+                                            const meta = [gender, born ? `Born ${born}` : null].filter(Boolean).join(" • ");
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className="rounded-xl border border-slate-200 bg-white overflow-hidden"
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setExpandedPassengerIdx(open ? null : idx)
+                                                        }
+                                                        className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left hover:bg-slate-50"
+                                                    >
+                                                        <div>
+                                                            <div className="font-bold text-[14px] text-slate-800">
+                                                                {[pax.title, pax.first_name, pax.last_name]
+                                                                    .filter(Boolean)
+                                                                    .join(" ")}
+                                                            </div>
+                                                            {meta && (
+                                                                <div className="text-[12px] text-slate-500 font-medium mt-0.5">
+                                                                    {meta}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        {open ? (
+                                                            <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" />
+                                                        ) : (
+                                                            <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                                                        )}
+                                                    </button>
+                                                    {open && (
+                                                        <div className="px-4 pb-4 pt-0 space-y-2 text-[12px] font-medium text-slate-600 border-t border-slate-100">
+                                                            {(pax.contact_number || pax.phone) && (
+                                                                <div className="pt-3">
+                                                                    <div className="text-slate-400 mb-0.5">Contact Number</div>
+                                                                    <div className="text-slate-800 font-bold">
+                                                                        {pax.contact_number || pax.phone}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {pax.passport_number && (
+                                                                <div>
+                                                                    <div className="text-slate-400 mb-0.5">Passport</div>
+                                                                    <div className="text-slate-800 font-bold">
+                                                                        {pax.passport_number}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {pax.ticket_number && (
+                                                                <div>
+                                                                    <div className="text-slate-400 mb-0.5">Ticket No.</div>
+                                                                    <div className="text-slate-800 font-bold">
+                                                                        {pax.ticket_number}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {!pax.contact_number &&
+                                                                !pax.phone &&
+                                                                !pax.passport_number &&
+                                                                !pax.ticket_number && (
+                                                                    <div className="pt-3 text-slate-400">
+                                                                        No extra passenger details on file.
+                                                                    </div>
+                                                                )}
+                                                        </div>
                                                     )}
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}
 
-                            {/* Booking Type */}
-                            <div>
-                                <div className="font-bold text-[15px] text-slate-800 mb-4">Booking Type</div>
-                                <div className="border border-slate-200 rounded-xl p-4 flex items-center justify-between bg-slate-50 shadow-sm">
-                                    <div>
-                                        <div className="font-bold text-slate-700 text-[14px]">{selectedBooking.kind === "booking" ? "Group Booking Request" : "Individual Ticket Booking"}</div>
-                                        <div className="text-[12px] text-slate-400 mt-1 font-medium">Live data from the backend API</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Ancillaries / Status */}
-                            <div>
-                                <div className="font-bold text-[15px] text-slate-800 mb-4">Ancillaries</div>
-                                <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                                    <div className="flex items-center gap-3">
-                                        <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                                        <div>
-                                            <div className="font-bold text-slate-700 text-[14px]">Reference status</div>
-                                            <div className="text-[12px] text-slate-400 font-medium mt-0.5">{selectedBooking.status}</div>
+                            {/* Ancillaries */}
+                            {selectedBooking.kind === "ticket" && (
+                                <div>
+                                    <div className="font-bold text-[15px] text-slate-800 mb-4">Ancillaries</div>
+                                    <div className="flex items-center justify-between py-2">
+                                        <div className="flex items-center gap-3">
+                                            <Luggage className="w-5 h-5 text-slate-500" />
+                                            <div>
+                                                <div className="font-bold text-slate-700 text-[14px]">Checked baggage</div>
+                                                <div className="text-[12px] text-slate-400 font-medium mt-0.5">
+                                                    {selectedBooking.baggageCheckIn
+                                                        ? `${Math.max(selectedBooking.passengers?.length || 1, 1)} * ${selectedBooking.baggageCheckIn} • Free`
+                                                        : "Not specified"}
+                                                </div>
+                                            </div>
                                         </div>
+                                        <div className="font-bold text-[#2B7BB9] text-[12px] tracking-wide">INCLUDED</div>
                                     </div>
-                                    <div className="font-bold text-blue-600 text-[12px]">LIVE</div>
                                 </div>
-                            </div>
+                            )}
 
-                            {/* Action Feedback Messages */}
                             {actionSuccess && (
-                                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-[13px] font-semibold flex items-center gap-2">
-                                    <span>✅</span> {actionSuccess}
+                                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-[13px] font-semibold">
+                                    {actionSuccess}
                                 </div>
                             )}
                             {actionError && (
-                                <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-850 text-[13px] font-semibold flex items-center gap-2">
-                                    <span>⚠️</span> {actionError}
+                                <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-[13px] font-semibold">
+                                    {actionError}
                                 </div>
                             )}
 
-                            {/* Ticket Specific Interactive Agent Panel */}
+                            {/* Ticket agent actions (pending / cancelled) */}
                             {selectedBooking.kind === "ticket" && (
                                 <div className="space-y-4">
-                                    {/* Pending controls */}
                                     {selectedBooking.status === "PENDING" && (
                                         <div className="border-t border-slate-100 pt-4 space-y-4">
-                                            {fulfillingTicketId !== selectedBooking.id && cancellingTicketId !== selectedBooking.id && (
-                                                <div className="flex justify-end gap-3">
-                                                    <button
-                                                        onClick={() => {
-                                                            setCancellingTicketId(selectedBooking.id);
-                                                            setFulfillingTicketId(null);
-                                                            setCancelRemarks("");
-                                                            setActionError(null);
-                                                            setActionSuccess(null);
-                                                        }}
-                                                        className="border border-rose-200 text-[#D60D26] hover:bg-rose-50 rounded-xl font-bold px-6 py-2.5 text-xs transition-colors"
-                                                    >
-                                                        Reject Booking
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setFulfillingTicketId(selectedBooking.id);
-                                                            setCancellingTicketId(null);
-                                                            setPnrNumber("");
-                                                            setTicketNumber("");
-                                                            setActionError(null);
-                                                            setActionSuccess(null);
-                                                        }}
-                                                        className="bg-[#0C2342] hover:bg-slate-800 text-white rounded-xl font-bold px-8 py-2.5 text-xs transition-colors"
-                                                    >
-                                                        Fulfill Request
-                                                    </button>
-                                                </div>
-                                            )}
+                                            {fulfillingTicketId !== selectedBooking.id &&
+                                                cancellingTicketId !== selectedBooking.id && (
+                                                    <div className="flex justify-end gap-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setCancellingTicketId(selectedBooking.id);
+                                                                setFulfillingTicketId(null);
+                                                                setCancelRemarks("");
+                                                                setActionError(null);
+                                                                setActionSuccess(null);
+                                                            }}
+                                                            className="border border-rose-200 text-[#D60D26] hover:bg-rose-50 rounded-xl font-bold px-6 py-2.5 text-xs transition-colors"
+                                                        >
+                                                            Reject Booking
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFulfillingTicketId(selectedBooking.id);
+                                                                setCancellingTicketId(null);
+                                                                setPnrNumber("");
+                                                                setTicketNumber("");
+                                                                setActionError(null);
+                                                                setActionSuccess(null);
+                                                            }}
+                                                            className="bg-[#0C2342] hover:bg-slate-800 text-white rounded-xl font-bold px-8 py-2.5 text-xs transition-colors"
+                                                        >
+                                                            Fulfill Request
+                                                        </button>
+                                                    </div>
+                                                )}
 
-                                            {/* Fulfill Input Form */}
                                             {fulfillingTicketId === selectedBooking.id && (
-                                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 animate-in fade-in duration-300 space-y-4 shadow-sm">
+                                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4 shadow-sm">
                                                     <h5 className="text-xs font-black text-[#0C2342] uppercase tracking-wider">
                                                         Fulfill Seat Purchase
                                                     </h5>
@@ -1000,14 +1154,16 @@ export default function InventoryPage() {
                                                     </div>
                                                     <div className="flex justify-end gap-2 pt-2">
                                                         <button
+                                                            type="button"
                                                             onClick={() => setFulfillingTicketId(null)}
-                                                            className="text-slate-500 hover:text-slate-700 font-bold rounded-lg px-4 py-2 text-xs transition-colors"
+                                                            className="text-slate-500 hover:text-slate-700 font-bold rounded-lg px-4 py-2 text-xs"
                                                         >
                                                             Cancel
                                                         </button>
                                                         <button
+                                                            type="button"
                                                             onClick={() => handleFulfillSubmit(selectedBooking.id)}
-                                                            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold px-6 py-2 text-xs transition-colors"
+                                                            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold px-6 py-2 text-xs"
                                                         >
                                                             Issue Tickets
                                                         </button>
@@ -1015,9 +1171,8 @@ export default function InventoryPage() {
                                                 </div>
                                             )}
 
-                                            {/* Rejection Form */}
                                             {cancellingTicketId === selectedBooking.id && (
-                                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 animate-in fade-in duration-300 space-y-4 shadow-sm">
+                                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4 shadow-sm">
                                                     <h5 className="text-xs font-black text-[#0C2342] uppercase tracking-wider">
                                                         Reject Booking Request
                                                     </h5>
@@ -1035,14 +1190,16 @@ export default function InventoryPage() {
                                                     </div>
                                                     <div className="flex justify-end gap-2 pt-2">
                                                         <button
+                                                            type="button"
                                                             onClick={() => setCancellingTicketId(null)}
-                                                            className="text-slate-500 hover:text-slate-700 font-bold rounded-lg px-4 py-2 text-xs transition-colors"
+                                                            className="text-slate-500 hover:text-slate-700 font-bold rounded-lg px-4 py-2 text-xs"
                                                         >
                                                             Cancel
                                                         </button>
                                                         <button
+                                                            type="button"
                                                             onClick={() => handleCancelSubmit(selectedBooking.id)}
-                                                            className="bg-[#D60D26] hover:bg-rose-700 text-white rounded-lg font-bold px-6 py-2 text-xs transition-colors"
+                                                            className="bg-[#D60D26] hover:bg-rose-700 text-white rounded-lg font-bold px-6 py-2 text-xs"
                                                         >
                                                             Confirm Rejection
                                                         </button>
@@ -1052,20 +1209,6 @@ export default function InventoryPage() {
                                         </div>
                                     )}
 
-                                    {/* Confirmed details banner */}
-                                    {selectedBooking.status === "CONFIRMED" && (
-                                        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4">
-                                            <span className="text-emerald-600 block uppercase font-black tracking-wider text-[9px] mb-1.5">
-                                                Issued Ticket Details
-                                            </span>
-                                            <div className="space-y-1.5 mt-1 text-[#0C2342] text-xs font-bold">
-                                                <div>Airline PNR: <span className="font-extrabold text-[13px] uppercase text-slate-800">{selectedBooking.title || "N/A"}</span></div>
-                                                <div>Ticket Number: <span className="font-extrabold text-[13px] text-slate-800">{selectedBooking.details.find(d => d.label === "Ticket number")?.value || "N/A"}</span></div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Cancelled details banner */}
                                     {selectedBooking.status === "CANCELLED" && (
                                         <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-4">
                                             <span className="text-[#D60D26] block uppercase font-black tracking-wider text-[9px] mb-1.5">
