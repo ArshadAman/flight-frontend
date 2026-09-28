@@ -57,6 +57,7 @@ type InventoryFlight = {
     is_published?: boolean;
     apis_required?: boolean;
     policies?: Record<string, string>;
+    group_pnr?: string | null;
     segments_data: InventorySegment[];
 };
 
@@ -628,6 +629,11 @@ export default function InventoryPage() {
 
                 if (flights) {
                     setInventoryFlights(flights);
+                    setSelectedFlight((prev) => {
+                        if (!prev) return prev;
+                        const next = flights.find((f) => String(f.id) === String(prev.id));
+                        return next ? (next as InventoryFlight) : prev;
+                    });
                     return;
                 }
 
@@ -652,7 +658,7 @@ export default function InventoryPage() {
         loadInventory();
 
         return () => controller.abort();
-    }, [access]);
+    }, [access, refreshTrigger]);
 
     useEffect(() => {
         if (!access) {

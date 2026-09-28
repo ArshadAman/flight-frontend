@@ -20,6 +20,8 @@ export type OfflineInventoryRow = {
   policies?: Record<string, string>;
   /** ISO datetime when sales close (backend `sales_closing_datetime`). */
   sales_closing_datetime?: string | null;
+  /** Optional Group PNR entered when creating inventory. */
+  group_pnr?: string | null;
   segments_data?: {
     segment_id?: number;
     origin?: string;
@@ -44,20 +46,38 @@ export type OfflineTicketRow = {
   origin?: string;
   destination?: string;
   flight_number?: string;
+  airline_code?: string;
+  airline_name?: string;
+  cabin_class?: string | null;
   pnr_number?: string | null;
   booking_ref?: string | null;
   ticket_number?: string | null;
   created_at?: string;
   updated_at?: string;
   departure_datetime?: string;
+  arrival_datetime?: string;
+  basic_amount?: string | number | null;
+  tax_amount?: string | number | null;
   passengers_data?: {
     title?: string;
     first_name?: string;
     last_name?: string;
     ticket_number?: string;
+    gender?: string | number;
+    dob?: string;
+    date_of_birth?: string;
+    nationality?: string;
+    passport_number?: string;
+    passport_expiry?: string;
+    passport_country?: string;
+    contact_number?: string;
+    phone?: string;
   }[];
   agent_flight_inventory?: string | null;
   total_amount?: string | number;
+  baggage_check_in?: string | null;
+  baggage_hand?: string | null;
+  is_refundable?: boolean;
 };
 
 export type OfflineHoldRow = {
@@ -129,7 +149,10 @@ export function passengerBookingLabel(
   return { count: pax.length, names: `${first}(+${pax.length - 1})` };
 }
 
-export function groupPnrFromId(id: string) {
+/** Prefer stored GPNR; fall back to id-derived code for older inventory rows. */
+export function groupPnrFromId(id: string, groupPnr?: string | null) {
+  const stored = (groupPnr || "").trim().toUpperCase();
+  if (stored) return stored;
   const clean = id.replace(/-/g, "").toUpperCase();
   return `UYS${clean.slice(0, 5)}`;
 }

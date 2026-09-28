@@ -79,7 +79,7 @@ export function OfflineFlightListTable({
                     }`}
                   >
                     {isInventory && (
-                      <div className="font-bold text-slate-800">{groupPnrFromId(row.id)}</div>
+                      <div className="font-bold text-slate-800">{groupPnrFromId(row.id, row.group_pnr)}</div>
                     )}
                     <div className="flex items-center gap-1 flex-wrap font-bold text-slate-800">
                       <span>{row.origin}</span>

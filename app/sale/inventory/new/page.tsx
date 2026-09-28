@@ -51,6 +51,147 @@ function airlineCodeFromFlightNumber(flightNumber: string) {
     return match?.[1] || "";
 }
 
+/** Figma: "AI 121(+1)" — space between carrier + number, (+1) on overnight legs. */
+function formatFlightNumberLabel(seg: Segment): string {
+    const raw = (seg.flightNumber || "").trim().toUpperCase().replace(/[-_]/g, " ").replace(/\s+/g, " ");
+    const spaced =
+        raw.replace(/^([A-Z0-9]{2})\s*(\d.*)$/, "$1 $2").trim() || "—";
+    return seg.plusOneDay ? `${spaced}(+1)` : spaced;
+}
+
+function formatScheduledFlightNumbers(segs: Segment[]): string {
+    return segs.map(formatFlightNumberLabel).join(" / ");
+}
+
+function formatScheduledAirline(segs: Segment[]): string {
+    const names = segs
+        .map(
+            (s) =>
+                (s.airlineName || s.airlineCode || airlineCodeFromFlightNumber(s.flightNumber) || "").trim()
+        )
+        .filter(Boolean);
+    const unique = [...new Set(names.map((n) => n.toUpperCase()))];
+    return unique.join(" / ") || "—";
+}
+
+/** Figma: "23:00-03:00 / 05:00-11:00" */
+function formatScheduledTimes(segs: Segment[]): string {
+    return segs
+        .map((s) => `${s.fromTime || "--:--"}-${s.toTime || "--:--"}`)
+        .join(" / ");
+}
+
+type ApiSegmentPayload = {
+    segment_id: number;
+    airline_code: string;
+    airline_name: string;
+    flight_number: string;
+    aircraft_type: string;
+    origin: string;
+    origin_city: string;
+    origin_terminal: string;
+    destination: string;
+    destination_city: string;
+    destination_terminal: string;
+    departure_datetime: string;
+    arrival_datetime: string;
+    duration: string;
+    stop_over: string | null;
+    technical_stop: string | null;
+    return_flight: boolean;
+};
+
+/** Build API segment list for one operating date from UI segments. */
+function buildApiSegmentsForDate(
+    segs: Segment[],
+    dateStr: string,
+    returnFlight: boolean
+): ApiSegmentPayload[] {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const depTimeStr = segs[0]?.fromTime || "23:00";
+    const [depHour, depMin] = depTimeStr.split(":").map(Number);
+    const localDepDate = new Date(year, month - 1, day, depHour, depMin);
+    const apiSegments: ApiSegmentPayload[] = [];
+    let currentDepDate = new Date(localDepDate);
+
+    for (let i = 0; i < segs.length; i++) {
+        const seg = segs[i];
+        const [sDepH, sDepM] = (seg.fromTime || "00:00").split(":").map(Number);
+
+        if (i > 0) {
+            const prevArrDate = new Date(apiSegments[i - 1].arrival_datetime);
+            currentDepDate = new Date(prevArrDate);
+            currentDepDate.setHours(sDepH, sDepM, 0, 0);
+            if (currentDepDate < prevArrDate) {
+                currentDepDate.setDate(currentDepDate.getDate() + 1);
+            }
+        } else {
+            currentDepDate.setHours(sDepH, sDepM, 0, 0);
+        }
+
+        const [sArrH, sArrM] = (seg.toTime || "00:00").split(":").map(Number);
+        const currentArrDate = new Date(currentDepDate);
+        currentArrDate.setHours(sArrH, sArrM, 0, 0);
+        if (seg.plusOneDay) {
+            currentArrDate.setDate(currentArrDate.getDate() + 1);
+        } else if (currentArrDate < currentDepDate) {
+            currentArrDate.setDate(currentArrDate.getDate() + 1);
+        }
+
+        apiSegments.push({
+            segment_id: i,
+            airline_code: (
+                seg.airlineCode || airlineCodeFromFlightNumber(seg.flightNumber || "")
+            )
+                .toUpperCase()
+                .trim(),
+            airline_name: (seg.airlineName || "").trim(),
+            flight_number: (seg.flightNumber || "").toUpperCase().trim(),
+            aircraft_type: (seg.aircraftType || "Airbus A320").trim(),
+            origin: seg.fromCode,
+            origin_city: seg.fromCity,
+            origin_terminal: seg.fromTerminal,
+            destination: seg.toCode,
+            destination_city: seg.toCity,
+            destination_terminal: seg.toTerminal,
+            departure_datetime: currentDepDate.toISOString(),
+            arrival_datetime: currentArrDate.toISOString(),
+            duration: seg.duration,
+            stop_over: null,
+            technical_stop: seg.technicalStop?.trim()
+                ? seg.technicalStop.trim().toUpperCase()
+                : null,
+            return_flight: returnFlight,
+        });
+    }
+
+    for (let i = 0; i < apiSegments.length - 1; i++) {
+        const arriveMs = new Date(apiSegments[i].arrival_datetime).getTime();
+        const departMs = new Date(apiSegments[i + 1].departure_datetime).getTime();
+        const gapMin = Math.round((departMs - arriveMs) / 60000);
+        apiSegments[i].stop_over = formatDurationMinutes(gapMin) || null;
+    }
+
+    return apiSegments;
+}
+
+function validateSegmentsForCreate(segs: Segment[], legLabel: string): string | null {
+    if (!segs.length) return `Please schedule the ${legLabel} flight first.`;
+    for (let i = 0; i < segs.length; i++) {
+        const seg = segs[i];
+        if (!seg.fromCode?.trim() || !seg.toCode?.trim()) {
+            return `${legLabel} segment ${i + 1} is missing airports.`;
+        }
+        if (!seg.airlineName?.trim() && !airlineCodeFromFlightNumber(seg.flightNumber || "")) {
+            return `Please enter the airline name for ${legLabel} segment ${i + 1}.`;
+        }
+        if (!seg.flightNumber?.trim()) {
+            return `Please enter the flight number for ${legLabel} segment ${i + 1}.`;
+        }
+    }
+    return null;
+}
+
 function minutesFromClock(time: string): number {
     const [hours, minutes] = String(time || "00:00").split(":").map(Number);
     return (hours || 0) * 60 + (minutes || 0);
@@ -147,21 +288,42 @@ function getOperatingDateOptions(baseDate: string | null, count = 8) {
     return dates;
 }
 
-/** Weekly occurrences of the FROM weekday between series start and end (inclusive). */
-function getSeriesOperatingDates(startIso: string, endIso: string) {
+/** All dates between start and end (inclusive) that fall on selected weekdays (0=Sun … 6=Sat). */
+function getSeriesOperatingDates(
+    startIso: string,
+    endIso: string,
+    weekdays: number[] = []
+) {
     const startDate = new Date(`${startIso}T00:00:00`);
     const endDate = new Date(`${endIso}T00:00:00`);
     if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return [];
     if (endDate < startDate) return [startIso];
 
+    const allowed =
+        weekdays.length > 0 ? new Set(weekdays) : new Set([startDate.getDay()]);
     const dates: string[] = [];
     const cursor = new Date(startDate);
     while (cursor <= endDate) {
-        dates.push(cursor.toISOString().slice(0, 10));
-        cursor.setDate(cursor.getDate() + 7);
+        if (allowed.has(cursor.getDay())) {
+            const y = cursor.getFullYear();
+            const m = String(cursor.getMonth() + 1).padStart(2, "0");
+            const d = String(cursor.getDate()).padStart(2, "0");
+            dates.push(`${y}-${m}-${d}`);
+        }
+        cursor.setDate(cursor.getDate() + 1);
     }
     return dates;
 }
+
+const SERIES_WEEKDAY_OPTIONS: { label: string; day: number }[] = [
+    { label: "Sun", day: 0 },
+    { label: "Mon", day: 1 },
+    { label: "Tue", day: 2 },
+    { label: "Wed", day: 3 },
+    { label: "Thu", day: 4 },
+    { label: "Fri", day: 5 },
+    { label: "Sat", day: 6 },
+];
 
 export default function AddPNRPage() {
     const router = useRouter();
@@ -177,8 +339,12 @@ export default function AddPNRPage() {
     const [returnCalendarMonth, setReturnCalendarMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 1); });
     const [selectedReturnDate, setSelectedReturnDate] = useState<string | null>(null);
     const [seriesMode, setSeriesMode] = useState(false);
+    /** Weekdays included in a flight series (0=Sun … 6=Sat). */
+    const [seriesWeekdays, setSeriesWeekdays] = useState<number[]>([]);
     /** Round-trip: show second calendar + schedule return leg. Independent of series. */
     const [returnMode, setReturnMode] = useState(false);
+    /** Which leg is focused on the Route step when return is enabled. */
+    const [routeLeg, setRouteLeg] = useState<"outbound" | "return">("outbound");
     const [seriesInfoOpen, setSeriesInfoOpen] = useState(false);
     const [editingAirport, setEditingAirport] = useState<{
         segmentId: number;
@@ -191,6 +357,8 @@ export default function AddPNRPage() {
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [hasScheduledFlight, setHasScheduledFlight] = useState(false);
     const [hasScheduledReturnFlight, setHasScheduledReturnFlight] = useState(false);
+    const [scheduledOutbound, setScheduledOutbound] = useState<Segment[] | null>(null);
+    const [scheduledReturn, setScheduledReturn] = useState<Segment[] | null>(null);
     const [modalTab, setModalTab] = useState(1);
     const [schedulingLeg, setSchedulingLeg] = useState<"outbound" | "return">("outbound");
     const outboundSegmentsRef = useRef<Segment[] | null>(null);
@@ -205,6 +373,7 @@ export default function AddPNRPage() {
     // Seats State
     const [availableSeats, setAvailableSeats] = useState("");
     const [seatPrice, setSeatPrice] = useState("");
+    const [groupPnr, setGroupPnr] = useState("");
     const [isRefundable, setIsRefundable] = useState(true);
     const [cabinClass, setCabinClass] = useState("Economy");
     const [salesEndHours, setSalesEndHours] = useState("56");
@@ -234,36 +403,43 @@ export default function AddPNRPage() {
         }
     ]);
 
-    // Initialize segments when origin and destination are selected
+    // Initialize / refresh segments when route airports change (not on every object identity change)
     useEffect(() => {
-        if (origin && destination) {
-            setSegments([
-                {
-                    id: 1,
-                    fromCode: origin.code,
-                    fromCity: origin.city,
-                    fromTerminal: "Terminal 3",
-                    fromTime: "23:00",
-                    toCode: destination.code,
-                    toCity: destination.city,
-                    toTerminal: "Terminal 3",
-                    toTime: "11:00",
-                    airlineName: "",
-                    airlineCode: "",
-                    flightNumber: "",
-                    duration: "12h 0m",
-                    plusOneDay: false,
-                    isEditing: true
-                }
-            ]);
-        }
-    }, [origin, destination]);
+        if (!origin || !destination) return;
+        setHasScheduledFlight(false);
+        setHasScheduledReturnFlight(false);
+        setScheduledOutbound(null);
+        setScheduledReturn(null);
+        outboundSegmentsRef.current = null;
+        returnSegmentsRef.current = null;
+        setSegments([
+            {
+                id: 1,
+                fromCode: origin.code,
+                fromCity: origin.city,
+                fromTerminal: "Terminal 3",
+                fromTime: "23:00",
+                toCode: destination.code,
+                toCity: destination.city,
+                toTerminal: "Terminal 3",
+                toTime: "11:00",
+                airlineName: "",
+                airlineCode: "",
+                flightNumber: "",
+                duration: "12h 0m",
+                plusOneDay: false,
+                isEditing: true,
+            },
+        ]);
+    }, [origin?.code, destination?.code]);
 
     useEffect(() => {
         if (!selectedDate) return;
 
         if (seriesMode && selectedReturnDate) {
-            setSelectedOperatingDates(getSeriesOperatingDates(selectedDate, selectedReturnDate));
+            setSelectedOperatingDates(
+                getSeriesOperatingDates(selectedDate, selectedReturnDate, seriesWeekdays)
+            );
             return;
         }
 
@@ -271,9 +447,24 @@ export default function AddPNRPage() {
             if (currentDates.length > 0 && !seriesMode) return currentDates;
             return [selectedDate];
         });
-    }, [selectedDate, selectedReturnDate, seriesMode]);
+    }, [selectedDate, selectedReturnDate, seriesMode, seriesWeekdays]);
 
     const showBothCalendars = seriesMode || returnMode;
+
+    const seriesAvailableSet = useMemo(() => {
+        if (!seriesMode) return new Set<string>();
+        return new Set(selectedOperatingDates);
+    }, [seriesMode, selectedOperatingDates]);
+
+    const toggleSeriesWeekday = (day: number) => {
+        setSeriesWeekdays((prev) => {
+            const next = prev.includes(day)
+                ? prev.filter((d) => d !== day)
+                : [...prev, day].sort((a, b) => a - b);
+            // Keep at least one weekday selected
+            return next.length > 0 ? next : prev;
+        });
+    };
 
     useEffect(() => {
         if (isFreeBaggage) {
@@ -315,15 +506,45 @@ export default function AddPNRPage() {
     const applyAirportToSegment = (airport: Airport) => {
         if (!editingAirport) return;
         const { segmentId, field } = editingAirport;
-        setSegments((prev) =>
-            prev.map((seg) =>
-                seg.id === segmentId
-                    ? field === "from"
+        setSegments((prev) => {
+            const idx = prev.findIndex((s) => s.id === segmentId);
+            return prev.map((seg, i) => {
+                if (seg.id === segmentId) {
+                    return field === "from"
                         ? { ...seg, fromCode: airport.code, fromCity: airport.city }
-                        : { ...seg, toCode: airport.code, toCity: airport.city }
-                    : seg
-            )
-        );
+                        : { ...seg, toCode: airport.code, toCity: airport.city };
+                }
+                // Stopover Place on leg N becomes departure of leg N+1 (e.g. BOM → BOM)
+                if (field === "to" && idx >= 0 && i === idx + 1) {
+                    return { ...seg, fromCode: airport.code, fromCity: airport.city };
+                }
+                return seg;
+            });
+        });
+        setEditingAirport(null);
+    };
+
+    const confirmSegment = (segmentId: number, duration: string) => {
+        setSegments((prev) => {
+            const idx = prev.findIndex((s) => s.id === segmentId);
+            if (idx < 0) return prev;
+            const confirmed = prev[idx];
+            return prev.map((seg, i) => {
+                if (i === idx) {
+                    return { ...seg, isEditing: false, duration };
+                }
+                // Chain: next leg must depart from this leg's arrival (stopover)
+                if (i === idx + 1 && confirmed.toCode) {
+                    return {
+                        ...seg,
+                        fromCode: confirmed.toCode,
+                        fromCity: confirmed.toCity,
+                        isEditing: true,
+                    };
+                }
+                return seg;
+            });
+        });
         setEditingAirport(null);
     };
 
@@ -335,6 +556,7 @@ export default function AddPNRPage() {
 
         if (seriesMode) {
             setSeriesMode(false);
+            setSeriesWeekdays([]);
             if (!returnMode) {
                 setSelectedReturnDate(null);
                 if (step === 2) setStep(1);
@@ -348,22 +570,27 @@ export default function AddPNRPage() {
         // One-way → series: reveal both FROM + TO calendars (Figma dual-calendar state)
         setSeriesMode(true);
         if (step < 1) setStep(1);
-        else if (step >= 3) {
-            // Stay on schedule; Dates tab is available in the modal if needed
+        else setStep(Math.max(step, 1));
+
+        const seedWeekday = selectedDate
+            ? new Date(`${selectedDate}T00:00:00`).getDay()
+            : 0;
+        setSeriesWeekdays([seedWeekday]);
+
+        // Default TO month = month after FROM (or same month if FROM picked)
+        if (selectedDate) {
+            const [y, m] = selectedDate.split("-").map(Number);
+            setReturnCalendarMonth(new Date(y, m - 1, 1));
         } else {
-            setStep(Math.max(step, 1));
+            setReturnCalendarMonth(
+                new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1)
+            );
         }
-        setReturnCalendarMonth(
-            selectedDate
-                ? new Date(
-                      Number(selectedDate.slice(0, 4)),
-                      Number(selectedDate.slice(5, 7)) - 1,
-                      1
-                  )
-                : returnCalendarMonth
-        );
+
         if (selectedDate && selectedReturnDate) {
-            setSelectedOperatingDates(getSeriesOperatingDates(selectedDate, selectedReturnDate));
+            setSelectedOperatingDates(
+                getSeriesOperatingDates(selectedDate, selectedReturnDate, [seedWeekday])
+            );
         }
     };
 
@@ -373,13 +600,13 @@ export default function AddPNRPage() {
             return;
         }
 
-        // One-way → return: reveal both FROM + TO calendars
+        // Stay on Route step — show return leg UI here (Figma), not later on Flights
         setReturnMode(true);
-        if (!selectedDate) {
-            setStep(1);
-            return;
-        }
-        setStep(2);
+        setRouteLeg("return");
+        if (step < 1) setStep(1);
+        else if (step >= 3) setStep(1);
+        else setStep(1);
+
         setReturnCalendarMonth(
             selectedDate
                 ? new Date(
@@ -387,49 +614,52 @@ export default function AddPNRPage() {
                       Number(selectedDate.slice(5, 7)) - 1,
                       1
                   )
-                : returnCalendarMonth
+                : new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1)
         );
     };
 
     const handleAddStopover = () => {
-        if (segments.length === 1 && destination) {
+        if (segments.length === 1 && origin && destination) {
             const first = segments[0];
+            // First leg: origin → stopover Place (empty until user picks).
+            // Second leg: stopover → final destination (locked).
             setSegments([
                 {
                     id: 1,
-                    fromCode: first.fromCode,
-                    fromCity: first.fromCity,
-                    fromTerminal: "Terminal 3",
-                    fromTime: "23:00",
-                    toCode: destination.code,
-                    toCity: destination.city,
+                    fromCode: origin.code,
+                    fromCity: origin.city,
+                    fromTerminal: first.fromTerminal || "Terminal 3",
+                    fromTime: first.fromTime || "23:00",
+                    toCode: "",
+                    toCity: "",
                     toTerminal: "Terminal 3",
-                    toTime: "03:00",
+                    toTime: "00:00",
                     airlineName: first.airlineName || "",
                     airlineCode: first.airlineCode || "",
-                    flightNumber: "",
-                    duration: "4h 0m",
-                    plusOneDay: true,
-                    isEditing: false
+                    flightNumber: first.flightNumber || "",
+                    duration: "",
+                    plusOneDay: false,
+                    isEditing: true,
                 },
                 {
                     id: 2,
-                    fromCode: destination.code,
-                    fromCity: destination.city,
+                    fromCode: "",
+                    fromCity: "",
                     fromTerminal: "Terminal 3",
                     fromTime: "05:00",
-                    toCode: first.toCode,
-                    toCity: first.toCity,
+                    toCode: destination.code,
+                    toCity: destination.city,
                     toTerminal: "Terminal 3",
-                    toTime: "11:00",
+                    toTime: first.toTime || "11:00",
                     airlineName: "",
                     airlineCode: "",
                     flightNumber: "",
-                    duration: "4h 30m",
+                    duration: "",
                     plusOneDay: false,
-                    isEditing: true
-                }
+                    isEditing: false,
+                },
             ]);
+            setEditingAirport(null);
         }
     };
 
@@ -488,163 +718,144 @@ export default function AddPNRPage() {
             return;
         }
 
-        // Validate all segments have required fields
-        for (let i = 0; i < segments.length; i++) {
-            const seg = segments[i];
-            if (!seg.airlineName?.trim()) {
-                alert(`Please enter the airline name for segment ${i + 1}.`);
+        const outboundSegs = scheduledOutbound || outboundSegmentsRef.current || segments;
+        const outboundErr = validateSegmentsForCreate(outboundSegs, "outbound");
+        if (outboundErr) {
+            alert(outboundErr);
+            return;
+        }
+
+        const returnSegs =
+            returnMode
+                ? scheduledReturn || returnSegmentsRef.current || null
+                : null;
+
+        if (returnMode) {
+            if (!selectedReturnDate) {
+                alert("Please select a return date.");
                 return;
             }
-            if (!seg.flightNumber?.trim()) {
-                alert(`Please enter the flight number for segment ${i + 1}.`);
+            if (!hasScheduledReturnFlight || !returnSegs?.length) {
+                alert("Please schedule the return flight first.");
                 return;
             }
-            if (seg.isEditing) {
-                alert(`Segment ${i + 1} is not confirmed yet. Open Flight detail and click "Confirm segment" first.`);
+            const returnErr = validateSegmentsForCreate(returnSegs, "return");
+            if (returnErr) {
+                alert(returnErr);
                 return;
             }
         }
 
+        const filledPolicies = Object.fromEntries(
+            Object.entries(policyTexts).filter(([, value]) => value.trim())
+        );
+        if (!isFreeBaggage && baggagePrice.trim()) {
+            filledPolicies.baggage_price = baggagePrice.trim();
+        }
+        const checkInBaggage = maxWeight !== "Weight" ? maxWeight : "15 kg";
+        const sharedFare = {
+            price: parseFloat(seatPrice || "150"),
+            seats_available: parseInt(availableSeats || "10", 10),
+            cabin_class: cabinClass || "Economy",
+            is_refundable: isRefundable,
+            baggage_check_in: checkInBaggage,
+            baggage_hand: handBaggage || "7 kg",
+            apis_required: requiresApis,
+            policies: filledPolicies,
+            group_pnr: groupPnr.trim().toUpperCase(),
+        };
+
+        const apiBase = getPublicApiUrl();
+
+        const postInventory = async (
+            dateStr: string,
+            segs: Segment[],
+            routeOrigin: Airport,
+            routeDestination: Airport,
+            isReturn: boolean
+        ) => {
+            const apiSegments = buildApiSegmentsForDate(segs, dateStr, isReturn);
+            const firstSegDep = apiSegments[0].departure_datetime;
+            const lastSegArr = apiSegments[apiSegments.length - 1].arrival_datetime;
+            const firstMs = new Date(firstSegDep).getTime();
+            const lastMs = new Date(lastSegArr).getTime();
+            const diffMin = Math.round((lastMs - firstMs) / 60000);
+            const totalDurStr = `${Math.floor(diffMin / 60)}h ${diffMin % 60}m`;
+            const salesClosing = salesClosingFromEnding(
+                firstSegDep,
+                Number(salesEndHours) || 0,
+                salesEndUnit
+            );
+
+            const payload = {
+                airline_code: apiSegments[0].airline_code,
+                airline_name: apiSegments[0].airline_name,
+                flight_number: apiSegments[0].flight_number,
+                origin: routeOrigin.code,
+                destination: routeDestination.code,
+                departure_datetime: firstSegDep,
+                arrival_datetime: lastSegArr,
+                duration: totalDurStr,
+                sales_closing_datetime: salesClosing,
+                segments: apiSegments,
+                ...sharedFare,
+            };
+
+            const res = await fetch(`${apiBase}/flights/inventory/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${access}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                const leg = isReturn ? "return" : "outbound";
+                throw new Error(`Failed to save ${leg} for ${dateStr}: ${errText}`);
+            }
+        };
+
         setIsSubmitting(true);
         try {
-            const apiBase = getPublicApiUrl();
-
+            // Outbound inventory — one row per operating date
             for (const dateStr of selectedOperatingDates) {
-                const [year, month, day] = dateStr.split('-').map(Number);
-                const depTimeStr = segments[0]?.fromTime || "23:00";
-                const [depHour, depMin] = depTimeStr.split(':').map(Number);
-                
-                // Create local date object
-                const localDepDate = new Date(year, month - 1, day, depHour, depMin);
-                const apiSegments = [];
+                await postInventory(dateStr, outboundSegs, origin, destination, false);
+            }
 
-                let currentDepDate = new Date(localDepDate);
+            // Return inventory — separate row(s), swapped route, return segments
+            if (returnMode && returnSegs && selectedReturnDate) {
+                const returnDates =
+                    seriesMode && selectedOperatingDates.length > 1
+                        ? // Pair each outbound series date with the same offset from first outbound → return date
+                          (() => {
+                              const out0 = new Date(`${selectedOperatingDates[0]}T00:00:00`).getTime();
+                              const ret0 = new Date(`${selectedReturnDate}T00:00:00`).getTime();
+                              const gapDays = Math.round((ret0 - out0) / 86400000);
+                              return selectedOperatingDates.map((d) => {
+                                  const base = new Date(`${d}T00:00:00`);
+                                  base.setDate(base.getDate() + gapDays);
+                                  const y = base.getFullYear();
+                                  const m = String(base.getMonth() + 1).padStart(2, "0");
+                                  const day = String(base.getDate()).padStart(2, "0");
+                                  return `${y}-${m}-${day}`;
+                              });
+                          })()
+                        : [selectedReturnDate];
 
-                for (let i = 0; i < segments.length; i++) {
-                    const seg = segments[i];
-                    const [sDepH, sDepM] = seg.fromTime.split(':').map(Number);
-                    
-                    if (i > 0) {
-                        const prevArrStr = apiSegments[i - 1].arrival_datetime;
-                        const prevArrDate = new Date(prevArrStr);
-                        currentDepDate = new Date(prevArrDate);
-                        currentDepDate.setHours(sDepH, sDepM, 0, 0);
-                        if (currentDepDate < prevArrDate) {
-                            currentDepDate.setDate(currentDepDate.getDate() + 1);
-                        }
-                    } else {
-                        currentDepDate.setHours(sDepH, sDepM, 0, 0);
-                    }
-
-                    const [sArrH, sArrM] = seg.toTime.split(':').map(Number);
-                    const currentArrDate = new Date(currentDepDate);
-                    currentArrDate.setHours(sArrH, sArrM, 0, 0);
-                    if (seg.plusOneDay) {
-                        currentArrDate.setDate(currentArrDate.getDate() + 1);
-                    } else if (currentArrDate < currentDepDate) {
-                        currentArrDate.setDate(currentArrDate.getDate() + 1);
-                    }
-
-                    apiSegments.push({
-                        segment_id: i,
-                        airline_code: (
-                            seg.airlineCode ||
-                            airlineCodeFromFlightNumber(seg.flightNumber || "")
-                        ).toUpperCase().trim(),
-                        airline_name: (seg.airlineName || "").trim(),
-                        flight_number: (seg.flightNumber || "").toUpperCase().trim(),
-                        aircraft_type: (seg.aircraftType || "Airbus A320").trim(),
-                        origin: seg.fromCode,
-                        origin_city: seg.fromCity,
-                        origin_terminal: seg.fromTerminal,
-                        destination: seg.toCode,
-                        destination_city: seg.toCity,
-                        destination_terminal: seg.toTerminal,
-                        departure_datetime: currentDepDate.toISOString(),
-                        arrival_datetime: currentArrDate.toISOString(),
-                        duration: seg.duration,
-                        stop_over: null as string | null,
-                        technical_stop: seg.technicalStop?.trim()
-                            ? seg.technicalStop.trim().toUpperCase()
-                            : null,
-                        return_flight: false
-                    });
-                }
-
-                for (let i = 0; i < apiSegments.length - 1; i++) {
-                    const arriveMs = new Date(apiSegments[i].arrival_datetime).getTime();
-                    const departMs = new Date(apiSegments[i + 1].departure_datetime).getTime();
-                    const gapMin = Math.round((departMs - arriveMs) / 60000);
-                    apiSegments[i].stop_over = formatDurationMinutes(gapMin) || null;
-                }
-
-                const firstSegDep = apiSegments[0].departure_datetime;
-                const lastSegArr = apiSegments[apiSegments.length - 1].arrival_datetime;
-                
-                const firstMs = new Date(firstSegDep).getTime();
-                const lastMs = new Date(lastSegArr).getTime();
-                const diffMin = Math.round((lastMs - firstMs) / 60000);
-                const totalDurStr = `${Math.floor(diffMin / 60)}h ${diffMin % 60}m`;
-
-                const mainAirlineCode = apiSegments[0].airline_code;
-                const mainAirlineName = apiSegments[0].airline_name;
-                const mainFlightNumber = apiSegments[0].flight_number;
-                const filledPolicies = Object.fromEntries(
-                    Object.entries(policyTexts).filter(([, value]) => value.trim())
-                );
-                if (!isFreeBaggage && baggagePrice.trim()) {
-                    filledPolicies.baggage_price = baggagePrice.trim();
-                }
-
-                const checkInBaggage =
-                    maxWeight !== "Weight" ? maxWeight : "15 kg";
-                const salesClosing = salesClosingFromEnding(
-                    firstSegDep,
-                    Number(salesEndHours) || 0,
-                    salesEndUnit
-                );
-
-                const payload = {
-                    airline_code: mainAirlineCode,
-                    airline_name: mainAirlineName,
-                    flight_number: mainFlightNumber,
-                    origin: origin.code,
-                    destination: destination.code,
-                    departure_datetime: firstSegDep,
-                    arrival_datetime: lastSegArr,
-                    price: parseFloat(seatPrice || "150"),
-                    seats_available: parseInt(availableSeats || "10", 10),
-                    cabin_class: cabinClass || "Economy",
-                    duration: totalDurStr,
-                    is_refundable: isRefundable,
-                    baggage_check_in: checkInBaggage,
-                    baggage_hand: handBaggage || "7 kg",
-                    apis_required: requiresApis,
-                    policies: filledPolicies,
-                    sales_closing_datetime: salesClosing,
-                    segments: apiSegments
-                };
-
-                const res = await fetch(`${apiBase}/flights/inventory/`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${access}`
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!res.ok) {
-                    const errText = await res.text();
-                    throw new Error(`Failed to save date ${dateStr}: ${errText}`);
+                for (const dateStr of returnDates) {
+                    await postInventory(dateStr, returnSegs, destination, origin, true);
                 }
             }
 
-            alert("Successfully created flight inventory!");
+            const createdLegs = returnMode ? "outbound and return" : "outbound";
+            alert(`Successfully created ${createdLegs} flight inventory!`);
             router.push("/sale/inventory");
         } catch (error: unknown) {
             console.error(error);
-            const errorMessage = error instanceof Error ? error.message : "Failed to create flight inventory.";
+            const errorMessage =
+                error instanceof Error ? error.message : "Failed to create flight inventory.";
             alert(errorMessage);
         } finally {
             setIsSubmitting(false);
@@ -739,7 +950,8 @@ export default function AddPNRPage() {
         onNext: () => void,
         pickedDate: string | null,
         onPickDate: (iso: string) => void,
-        highlighted = false
+        highlighted = false,
+        availableDates?: Set<string>
     ) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -773,11 +985,11 @@ export default function AddPNRPage() {
                     {title}
                 </div>
                 <div className="bg-[#FFE8EE] text-slate-800 flex items-center justify-between px-5 py-3 font-extrabold text-[15px]">
-                    <button onClick={onPrev} className="hover:text-[#D60D26] transition-colors p-1 rounded">
+                    <button type="button" onClick={onPrev} className="hover:text-[#D60D26] transition-colors p-1 rounded">
                         <ChevronLeft className="w-5 h-5" />
                     </button>
                     {monthName} {year}
-                    <button onClick={onNext} className="hover:text-[#D60D26] transition-colors p-1 rounded">
+                    <button type="button" onClick={onNext} className="hover:text-[#D60D26] transition-colors p-1 rounded">
                         <ChevronRight className="w-5 h-5" />
                     </button>
                 </div>
@@ -792,6 +1004,10 @@ export default function AddPNRPage() {
                             const cellDate = new Date(cell.iso + 'T00:00:00');
                             const isPast = cellDate < today;
                             const isSelected = pickedDate === cell.iso;
+                            const isAvailable =
+                                !isSelected &&
+                                Boolean(availableDates?.has(cell.iso)) &&
+                                cell.type === "curr";
                             const isToday = cell.iso === today.toISOString().slice(0, 10);
                             const isOtherMonth = cell.type !== 'curr';
                             return (
@@ -801,6 +1017,8 @@ export default function AddPNRPage() {
                                     className={`rounded-full w-8 h-8 flex items-center justify-center mx-auto font-bold transition-colors ${
                                         isSelected
                                             ? 'bg-[#D60D26] text-white cursor-pointer'
+                                            : isAvailable
+                                            ? 'bg-[#2B7BB9] text-white cursor-pointer hover:bg-[#246a9e]'
                                             : isOtherMonth
                                             ? 'text-slate-300 font-medium cursor-default'
                                             : isPast
@@ -820,8 +1038,12 @@ export default function AddPNRPage() {
         );
     };
 
-    const originCoords = origin ? AIRPORT_COORDS[origin.code] ?? null : null;
-    const destinationCoords = destination ? AIRPORT_COORDS[destination.code] ?? null : null;
+    const displayOrigin = routeLeg === "return" && origin && destination ? destination : origin;
+    const displayDestination = routeLeg === "return" && origin && destination ? origin : destination;
+    const originCoords = displayOrigin ? AIRPORT_COORDS[displayOrigin.code] ?? null : null;
+    const destinationCoords = displayDestination
+        ? AIRPORT_COORDS[displayDestination.code] ?? null
+        : null;
 
     const handleSwapRoute = () => {
         if (!origin || !destination) return;
@@ -864,16 +1086,46 @@ export default function AddPNRPage() {
                 </div>
             )}
 
-            {/* Step 0-2 View */}
+            {/* Step 0-2 View — Route section */}
             {step < 3 && (
-                <div className="relative z-20 flex-1 overflow-y-auto flex flex-col items-center pt-6 sm:pt-8 pb-24 px-4 pointer-events-none w-full">
+                <div className="relative z-20 flex-1 overflow-y-auto flex flex-col items-center pt-4 sm:pt-6 pb-24 px-4 pointer-events-none w-full">
+                    {returnMode && origin && destination && (
+                        <div className="w-full max-w-[720px] flex items-center gap-8 sm:gap-12 mb-4 pointer-events-auto">
+                            <button
+                                type="button"
+                                onClick={() => setRouteLeg("outbound")}
+                                className={`pb-2 text-[14px] sm:text-[15px] font-bold transition-colors ${
+                                    routeLeg === "outbound"
+                                        ? "text-slate-900 border-b-4 border-[#D60D26]"
+                                        : "text-slate-400 hover:text-slate-600"
+                                }`}
+                            >
+                                {origin.city} → {destination.city}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setRouteLeg("return")}
+                                className={`pb-2 text-[14px] sm:text-[15px] font-bold transition-colors ${
+                                    routeLeg === "return"
+                                        ? "text-slate-900 border-b-4 border-[#D60D26]"
+                                        : "text-slate-400 hover:text-slate-600"
+                                }`}
+                            >
+                                {destination.city} → {origin.city}
+                            </button>
+                        </div>
+                    )}
+
                     <div className="bg-white rounded-[20px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] px-5 py-4 sm:px-8 sm:py-5 flex flex-col sm:flex-row items-center gap-4 w-full max-w-[720px] pointer-events-auto relative shrink-0 z-30">
                         <div 
-                            className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "origin" ? "bg-slate-50 ring-2 ring-[#D60D26]/20" : "hover:bg-slate-50"}`}
-                            onClick={() => setActiveInput("origin")}
+                            className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "origin" && routeLeg === "outbound" ? "bg-slate-50 ring-2 ring-[#D60D26]/20" : "hover:bg-slate-50"}`}
+                            onClick={() => {
+                                if (routeLeg === "return") return;
+                                setActiveInput("origin");
+                            }}
                         >
                             <div className="text-[12px] text-slate-400 font-bold uppercase tracking-wider mb-1">Origin</div>
-                            {activeInput === "origin" ? (
+                            {activeInput === "origin" && routeLeg === "outbound" ? (
                                 <input 
                                     autoFocus
                                     type="text" 
@@ -884,10 +1136,10 @@ export default function AddPNRPage() {
                                 />
                             ) : (
                                 <div className="font-extrabold text-slate-800 text-[20px] truncate">
-                                    {origin ? (
+                                    {displayOrigin ? (
                                         <>
-                                            {origin.city}{" "}
-                                            <span className="text-[#D60D26]">({origin.code})</span>
+                                            {displayOrigin.city}{" "}
+                                            <span className="text-[#D60D26]">({displayOrigin.code})</span>
                                         </>
                                     ) : (
                                         <span className="text-slate-300">Select Origin</span>
@@ -898,20 +1150,29 @@ export default function AddPNRPage() {
                         
                         <button
                             type="button"
-                            onClick={handleSwapRoute}
+                            onClick={() => {
+                                if (returnMode) {
+                                    setRouteLeg((leg) => (leg === "outbound" ? "return" : "outbound"));
+                                    return;
+                                }
+                                handleSwapRoute();
+                            }}
                             disabled={!origin || !destination}
                             className="w-12 h-12 rounded-full border border-[#D60D26] text-[#D60D26] flex items-center justify-center shrink-0 bg-white z-10 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-rose-50 transition-colors"
-                            aria-label="Swap origin and destination"
+                            aria-label={returnMode ? "Switch flight leg" : "Swap origin and destination"}
                         >
-                            <ArrowRight className="w-5 h-5" />
+                            <ArrowRightLeft className="w-5 h-5" />
                         </button>
 
                         <div 
-                            className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "destination" ? "bg-slate-50 ring-2 ring-[#D60D26]/20" : "hover:bg-slate-50"}`}
-                            onClick={() => setActiveInput("destination")}
+                            className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "destination" && routeLeg === "outbound" ? "bg-slate-50 ring-2 ring-[#D60D26]/20" : "hover:bg-slate-50"}`}
+                            onClick={() => {
+                                if (routeLeg === "return") return;
+                                setActiveInput("destination");
+                            }}
                         >
                             <div className="text-[12px] text-slate-400 font-bold uppercase tracking-wider mb-1">Destination</div>
-                            {activeInput === "destination" ? (
+                            {activeInput === "destination" && routeLeg === "outbound" ? (
                                 <input 
                                     autoFocus
                                     type="text" 
@@ -922,10 +1183,10 @@ export default function AddPNRPage() {
                                 />
                             ) : (
                                 <div className="font-extrabold text-slate-800 text-[20px] truncate">
-                                    {destination ? (
+                                    {displayDestination ? (
                                         <>
-                                            {destination.city}{" "}
-                                            <span className="text-[#D60D26]">({destination.code})</span>
+                                            {displayDestination.city}{" "}
+                                            <span className="text-[#D60D26]">({displayDestination.code})</span>
                                         </>
                                     ) : (
                                         <span className="text-slate-300">Select Destination</span>
@@ -934,7 +1195,7 @@ export default function AddPNRPage() {
                             )}
                         </div>
 
-                        {activeInput && (
+                        {activeInput && routeLeg === "outbound" && (
                             <div className="absolute top-full left-0 mt-4 w-full bg-white rounded-2xl shadow-xl border border-slate-100 max-h-[300px] overflow-y-auto z-50">
                                 {filteredAirports.length > 0 ? (
                                     filteredAirports.map((airport, idx) => (
@@ -966,32 +1227,42 @@ export default function AddPNRPage() {
                     </div>
 
                     {step > 0 && (
-                        <div className="mt-8 flex flex-col lg:flex-row gap-5 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-20 items-center justify-center w-full max-w-[700px]">
+                        <div className="mt-8 flex flex-col gap-4 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-20 items-center justify-center w-full max-w-[700px]">
+                            <div className="flex flex-col lg:flex-row gap-5 items-center justify-center w-full">
                             {renderCalendar(
-                                "FROM",
+                                seriesMode || returnMode ? "FROM" : "DEPARTURE",
                                 calendarMonth,
                                 () => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)),
                                 () => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)),
                                 selectedDate,
                                 (iso) => {
                                     setSelectedDate(iso);
-                                    if (seriesMode && selectedReturnDate && selectedReturnDate >= iso) {
-                                        setSelectedOperatingDates(getSeriesOperatingDates(iso, selectedReturnDate));
-                                    } else if (!seriesMode) {
+                                    if (seriesMode) {
+                                        const day = new Date(`${iso}T00:00:00`).getDay();
+                                        const days = seriesWeekdays.length > 0 ? seriesWeekdays : [day];
+                                        if (seriesWeekdays.length === 0) setSeriesWeekdays([day]);
+                                        if (selectedReturnDate && selectedReturnDate >= iso) {
+                                            setSelectedOperatingDates(
+                                                getSeriesOperatingDates(iso, selectedReturnDate, days)
+                                            );
+                                        }
+                                    } else {
                                         setSelectedOperatingDates([iso]);
                                     }
-                                }
+                                },
+                                false,
+                                seriesMode ? seriesAvailableSet : undefined
                             )}
                             {showBothCalendars &&
                                 renderCalendar(
-                                    "TO",
+                                    seriesMode || returnMode ? "TO" : "RETURN",
                                     returnCalendarMonth,
                                     () => setReturnCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)),
                                     () => setReturnCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)),
                                     selectedReturnDate,
                                     (iso) => {
                                         setSelectedReturnDate(iso);
-                                        if (returnMode) setStep(2);
+                                        if (returnMode && !seriesMode) setStep(1);
                                         if (seriesMode && selectedDate) {
                                             const start = selectedDate <= iso ? selectedDate : iso;
                                             const end = selectedDate <= iso ? iso : selectedDate;
@@ -999,11 +1270,66 @@ export default function AddPNRPage() {
                                                 setSelectedDate(start);
                                                 setSelectedReturnDate(end);
                                             }
-                                            setSelectedOperatingDates(getSeriesOperatingDates(start, end));
+                                            const days =
+                                                seriesWeekdays.length > 0
+                                                    ? seriesWeekdays
+                                                    : [new Date(`${start}T00:00:00`).getDay()];
+                                            if (seriesWeekdays.length === 0) setSeriesWeekdays(days);
+                                            setSelectedOperatingDates(
+                                                getSeriesOperatingDates(start, end, days)
+                                            );
                                         }
                                     },
-                                    returnMode || seriesMode
+                                    returnMode || seriesMode,
+                                    seriesMode ? seriesAvailableSet : undefined
                                 )}
+                            </div>
+
+                            {seriesMode && (
+                                <div className="w-full max-w-[640px] bg-slate-100 rounded-xl px-4 py-3 flex flex-wrap items-center justify-center gap-3 sm:gap-5">
+                                    {SERIES_WEEKDAY_OPTIONS.map(({ label, day }) => {
+                                        const checked = seriesWeekdays.includes(day);
+                                        return (
+                                            <label
+                                                key={day}
+                                                className="flex items-center gap-2 cursor-pointer select-none"
+                                            >
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleSeriesWeekday(day)}
+                                                    className={`w-5 h-5 rounded-[4px] border flex items-center justify-center transition-colors ${
+                                                        checked
+                                                            ? "bg-[#D60D26] border-[#D60D26] text-white"
+                                                            : "bg-white border-slate-300"
+                                                    }`}
+                                                    aria-pressed={checked}
+                                                    aria-label={label}
+                                                >
+                                                    {checked && <Check className="w-3.5 h-3.5" />}
+                                                </button>
+                                                <span className="text-[13px] font-bold text-slate-700">
+                                                    {label}
+                                                </span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {seriesMode && selectedDate && selectedReturnDate && (
+                                <div className="text-[12px] font-semibold text-slate-500 text-center">
+                                    {selectedOperatingDates.length} available date
+                                    {selectedOperatingDates.length === 1 ? "" : "s"} in series
+                                    <span className="mx-2 text-slate-300">·</span>
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-[#D60D26]" /> range
+                                    </span>
+                                    <span className="mx-2 text-slate-300">·</span>
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-[#2B7BB9]" /> available
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -1085,59 +1411,131 @@ export default function AddPNRPage() {
                                 </div>
                             </div>
 
-                            {hasScheduledFlight && (
-                                <div className="mt-4 flex items-stretch justify-between bg-white border border-slate-200 rounded-xl shadow-sm relative overflow-x-auto sm:overflow-hidden h-[70px] animate-in slide-in-from-top-2 duration-300">
-                                    <div className="w-24 bg-[#D60D26] shrink-0"></div>
-                                    <div className="flex-1 flex items-center px-4 sm:px-8 font-bold text-slate-600 text-[14px] justify-between min-w-[500px]">
-                                        <div className="w-[180px]">
-                                            {segments.map((seg) => seg.flightNumber || "-").join(" / ")}
+                            {hasScheduledFlight && (scheduledOutbound || segments).length > 0 && (
+                                <div className="mt-4 flex items-stretch justify-between bg-white border border-slate-200 rounded-xl shadow-sm relative overflow-x-auto sm:overflow-hidden min-h-[70px] animate-in slide-in-from-top-2 duration-300">
+                                    <div className="w-1.5 bg-[#D60D26] shrink-0 rounded-l-xl" />
+                                    <div className="flex-1 flex items-center px-4 sm:px-8 font-bold text-slate-700 text-[14px] justify-between gap-4 min-w-[520px] py-3">
+                                        <div className="min-w-[160px] tracking-tight">
+                                            {formatScheduledFlightNumbers(scheduledOutbound || segments)}
                                         </div>
-                                        <div className="w-[150px] text-center">
-                                            {segments.map((seg) => seg.airlineName || seg.airlineCode || "-").join(" / ")}
+                                        <div className="min-w-[120px] text-center uppercase tracking-wide">
+                                            {formatScheduledAirline(scheduledOutbound || segments)}
                                         </div>
-                                        <div className="w-[200px] text-right">
-                                            {segments.map((seg) => `${seg.fromTime}-${seg.toTime}${seg.plusOneDay ? "(+1)" : ""}`).join(" / ")}
+                                        <div className="min-w-[200px] text-right tabular-nums">
+                                            {formatScheduledTimes(scheduledOutbound || segments)}
                                         </div>
                                     </div>
-                                    <button 
-                                        onClick={() => setHasScheduledFlight(false)} 
-                                        className="w-[70px] flex items-center justify-center border-l border-slate-200 hover:bg-slate-50 transition-colors"
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setHasScheduledFlight(false);
+                                            setScheduledOutbound(null);
+                                            outboundSegmentsRef.current = null;
+                                        }}
+                                        className="w-[70px] flex items-center justify-center border-l border-slate-200 hover:bg-slate-50 transition-colors shrink-0"
                                     >
                                         <X className="w-5 h-5 text-slate-700" />
                                     </button>
                                 </div>
                             )}
+
+                            {!returnMode && (
+                                <div className="mt-8 flex flex-col items-center justify-center gap-2 text-slate-400">
+                                    <div className="relative w-10 h-10 flex items-center justify-center">
+                                        <Plane className="w-8 h-8 opacity-40" />
+                                        <span className="absolute inset-0 flex items-center justify-center text-[#D60D26] text-2xl font-light leading-none">×</span>
+                                    </div>
+                                    <span className="text-[14px] font-semibold">No return flight</span>
+                                </div>
+                            )}
                         </div>
 
-                        {returnMode && selectedReturnDate ? (
+                        {returnMode && (
                             <div className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 mb-6">
-                                <div className="flex flex-wrap items-center gap-4">
+                                <div className="flex flex-wrap items-center gap-4 mb-6">
                                     <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-4 py-2 font-bold text-slate-700 text-[14px]">
-                                        {destination?.code || "---"} <ArrowRight className="w-4 h-4 text-[#D60D26]" /> {origin?.code || "---"}
+                                        {destination?.code || "---"}{" "}
+                                        <ArrowRight className="w-4 h-4 text-[#D60D26]" />{" "}
+                                        {origin?.code || "---"}
                                     </div>
                                     <div className="flex items-center border border-[#D60D26] rounded-xl overflow-hidden font-bold">
                                         <div className="bg-[#D60D26] text-white px-3 py-2 text-[14px]">
-                                            {new Date(selectedReturnDate + "T00:00:00").toLocaleString("default", { month: "short" }).toUpperCase()}
+                                            {selectedReturnDate
+                                                ? new Date(selectedReturnDate + "T00:00:00")
+                                                      .toLocaleString("default", { month: "short" })
+                                                      .toUpperCase()
+                                                : "DATE"}
                                         </div>
                                         <div className="bg-white text-[#D60D26] px-3 py-2 text-[14px]">
-                                            {String(new Date(selectedReturnDate + "T00:00:00").getDate()).padStart(2, "0")}
+                                            {selectedReturnDate
+                                                ? String(
+                                                      new Date(selectedReturnDate + "T00:00:00").getDate()
+                                                  ).padStart(2, "0")
+                                                : "--"}
                                         </div>
                                     </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setStep(1);
+                                            setRouteLeg("return");
+                                        }}
+                                        className="inline-flex items-center gap-2 text-[14px] font-bold text-[#D60D26] hover:underline"
+                                    >
+                                        <ArrowRightLeft className="w-4 h-4" /> Check return flight
+                                    </button>
                                     {hasScheduledReturnFlight && (
                                         <span className="text-[13px] font-bold text-emerald-600">
                                             Return flight scheduled
                                         </span>
                                     )}
                                 </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => openScheduleModal("return")}
+                                    className="w-full bg-[#0C2342] rounded-[12px] p-5 flex items-center justify-between text-white cursor-pointer hover:opacity-95 transition-opacity border-2 border-[#090001]"
+                                >
+                                    <Plane className="w-10 h-10 fill-white" />
+                                    <div className="font-bold text-[18px] flex items-center gap-2">
+                                        Schedule A Return Flights <ArrowRight className="w-5 h-5" />
+                                    </div>
+                                </button>
+
+                                {hasScheduledReturnFlight && (scheduledReturn || returnSegmentsRef.current || segments).length > 0 && (
+                                    <div className="mt-4 flex items-stretch justify-between bg-white border border-slate-200 rounded-xl shadow-sm relative overflow-x-auto sm:overflow-hidden min-h-[70px] animate-in slide-in-from-top-2 duration-300">
+                                        <div className="w-1.5 bg-[#D60D26] shrink-0 rounded-l-xl" />
+                                        <div className="flex-1 flex items-center px-4 sm:px-8 font-bold text-slate-700 text-[14px] justify-between gap-4 min-w-[520px] py-3">
+                                            <div className="min-w-[160px] tracking-tight">
+                                                {formatScheduledFlightNumbers(
+                                                    scheduledReturn || returnSegmentsRef.current || segments
+                                                )}
+                                            </div>
+                                            <div className="min-w-[120px] text-center uppercase tracking-wide">
+                                                {formatScheduledAirline(
+                                                    scheduledReturn || returnSegmentsRef.current || segments
+                                                )}
+                                            </div>
+                                            <div className="min-w-[200px] text-right tabular-nums">
+                                                {formatScheduledTimes(
+                                                    scheduledReturn || returnSegmentsRef.current || segments
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setHasScheduledReturnFlight(false);
+                                                setScheduledReturn(null);
+                                                returnSegmentsRef.current = null;
+                                            }}
+                                            className="w-[70px] flex items-center justify-center border-l border-slate-200 hover:bg-slate-50 transition-colors shrink-0"
+                                        >
+                                            <X className="w-5 h-5 text-slate-700" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={handleAddReturnFlight}
-                                className="w-full bg-white rounded-[24px] shadow-sm border border-slate-200 p-8 flex items-center justify-center gap-3 text-[#D60D26] font-bold text-[16px] hover:bg-rose-50 transition-colors"
-                            >
-                                <ArrowRightLeft className="w-5 h-5" /> Add return flight
-                            </button>
                         )}
                     </div>
                 </div>
@@ -1161,26 +1559,23 @@ export default function AddPNRPage() {
                         </div>
                         
                         <div className="bg-slate-100 px-4 py-2 text-[13px] font-bold text-slate-700">
-                            Selected Operating Dates
+                            Outbound
                         </div>
                         
                         {selectedOperatingDates.map((dateStr, idx) => {
                             const formattedDate = formatDateLabel(dateStr, { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' });
-                            const depTime = segments[0]?.fromTime || "23:00";
-                            const arrTime = segments[segments.length - 1]?.toTime || "11:00";
-                            const plusOne = segments[segments.length - 1]?.plusOneDay || false;
-                            
-                            const airlineNames = segments.map(seg => seg.airlineName || seg.airlineCode || "-").join(' / ');
-                            const flightNumbers = segments.map(seg => seg.flightNumber || "-").join(' • ');
+                            const displaySegs = scheduledOutbound || segments;
+                            const airlineNames = formatScheduledAirline(displaySegs);
+                            const flightNumbers = formatScheduledFlightNumbers(displaySegs);
 
                             return (
-                                <div key={idx} className="border-b border-slate-200 flex flex-col md:grid md:grid-cols-8 gap-2 md:gap-4 items-start md:items-center py-6 px-4 text-[13px] font-bold text-slate-700">
+                                <div key={`out-${idx}`} className="border-b border-slate-200 flex flex-col md:grid md:grid-cols-8 gap-2 md:gap-4 items-start md:items-center py-6 px-4 text-[13px] font-bold text-slate-700">
                                     <div className="flex flex-col md:col-span-2 w-full">
                                         <span className="md:hidden text-slate-400 font-medium mb-1">Route:</span>
-                                        <span>{origin?.code} → {destination?.code} <span className="text-slate-400 font-medium">• ({segments.length - 1} Stops)</span></span>
+                                        <span>{origin?.code} → {destination?.code} <span className="text-slate-400 font-medium">• ({Math.max(0, displaySegs.length - 1)} Stops)</span></span>
                                     </div>
                                     <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Date:</span>{formattedDate}</div>
-                                    <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Time:</span>{depTime} - {arrTime}{plusOne ? "(+1)" : ""}</div>
+                                    <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Time:</span>{formatScheduledTimes(displaySegs)}</div>
                                     <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Airlines:</span>{airlineNames}</div>
                                     <div className="flex items-center gap-2 w-full"><span className="md:hidden text-slate-400 font-medium w-20">Flight No:</span>{flightNumbers}</div>
                                     <div className="flex items-center gap-1.5 w-full">
@@ -1198,6 +1593,114 @@ export default function AddPNRPage() {
                                 </div>
                             );
                         })}
+
+                        {returnMode && selectedReturnDate && (scheduledReturn || returnSegmentsRef.current) && (
+                            <>
+                                <div className="bg-slate-100 px-4 py-2 text-[13px] font-bold text-slate-700 mt-4">
+                                    Return
+                                </div>
+                                {(() => {
+                                    const returnSegs = scheduledReturn || returnSegmentsRef.current || [];
+                                    const returnDates =
+                                        seriesMode && selectedOperatingDates.length > 1
+                                            ? (() => {
+                                                  const out0 = new Date(
+                                                      `${selectedOperatingDates[0]}T00:00:00`
+                                                  ).getTime();
+                                                  const ret0 = new Date(
+                                                      `${selectedReturnDate}T00:00:00`
+                                                  ).getTime();
+                                                  const gapDays = Math.round((ret0 - out0) / 86400000);
+                                                  return selectedOperatingDates.map((d) => {
+                                                      const base = new Date(`${d}T00:00:00`);
+                                                      base.setDate(base.getDate() + gapDays);
+                                                      const y = base.getFullYear();
+                                                      const m = String(base.getMonth() + 1).padStart(2, "0");
+                                                      const day = String(base.getDate()).padStart(2, "0");
+                                                      return `${y}-${m}-${day}`;
+                                                  });
+                                              })()
+                                            : [selectedReturnDate];
+
+                                    return returnDates.map((dateStr, idx) => {
+                                        const formattedDate = formatDateLabel(dateStr, {
+                                            weekday: "short",
+                                            day: "numeric",
+                                            month: "short",
+                                            year: "2-digit",
+                                        });
+                                        return (
+                                            <div
+                                                key={`ret-${idx}`}
+                                                className="border-b border-slate-200 flex flex-col md:grid md:grid-cols-8 gap-2 md:gap-4 items-start md:items-center py-6 px-4 text-[13px] font-bold text-slate-700"
+                                            >
+                                                <div className="flex flex-col md:col-span-2 w-full">
+                                                    <span className="md:hidden text-slate-400 font-medium mb-1">
+                                                        Route:
+                                                    </span>
+                                                    <span>
+                                                        {destination?.code} → {origin?.code}{" "}
+                                                        <span className="text-slate-400 font-medium">
+                                                            • ({Math.max(0, returnSegs.length - 1)} Stops)
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2 w-full">
+                                                    <span className="md:hidden text-slate-400 font-medium w-20">
+                                                        Date:
+                                                    </span>
+                                                    {formattedDate}
+                                                </div>
+                                                <div className="flex items-center gap-2 w-full">
+                                                    <span className="md:hidden text-slate-400 font-medium w-20">
+                                                        Time:
+                                                    </span>
+                                                    {formatScheduledTimes(returnSegs)}
+                                                </div>
+                                                <div className="flex items-center gap-2 w-full">
+                                                    <span className="md:hidden text-slate-400 font-medium w-20">
+                                                        Airlines:
+                                                    </span>
+                                                    {formatScheduledAirline(returnSegs)}
+                                                </div>
+                                                <div className="flex items-center gap-2 w-full">
+                                                    <span className="md:hidden text-slate-400 font-medium w-20">
+                                                        Flight No:
+                                                    </span>
+                                                    {formatScheduledFlightNumbers(returnSegs)}
+                                                </div>
+                                                <div className="flex items-center gap-1.5 w-full">
+                                                    <span className="md:hidden text-slate-400 font-medium w-20">
+                                                        Seats:
+                                                    </span>
+                                                    {availableSeats || "10"}
+                                                </div>
+                                                <div className="text-[14px] flex items-center gap-2 w-full">
+                                                    <span className="md:hidden text-slate-400 font-medium w-20 text-[13px]">
+                                                        Fare:
+                                                    </span>
+                                                    INR {seatPrice || "00.00"}
+                                                </div>
+                                                <div className="flex items-center gap-2 w-full">
+                                                    <span className="md:hidden text-slate-400 font-medium w-20">
+                                                        APIS:
+                                                    </span>
+                                                    <span
+                                                        className={`rounded-full px-5 py-1.5 text-[12px] font-bold ${
+                                                            requiresApis
+                                                                ? "border border-green-300 text-green-500 bg-green-50"
+                                                                : "border border-slate-300 text-slate-500 bg-slate-50"
+                                                        }`}
+                                                    >
+                                                        {requiresApis ? "Required" : "Not required"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    });
+                                })()}
+                            </>
+                        )}
                             </div>
                         </div>
                     </div>
@@ -1247,10 +1750,10 @@ export default function AddPNRPage() {
                                     type="button"
                                     onClick={() => {
                                         setReturnMode(false);
+                                        setRouteLeg("outbound");
                                         setHasScheduledReturnFlight(false);
                                         if (!seriesMode) {
                                             setSelectedReturnDate(null);
-                                            if (step === 2) setStep(1);
                                         }
                                     }}
                                     className="w-full sm:w-auto justify-center border border-emerald-500 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[14px] sm:text-[15px] flex items-center gap-2 transition-colors"
@@ -1276,26 +1779,24 @@ export default function AddPNRPage() {
                             Change The Route
                         </button>
                         {step === 3 ? (
-                            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
-                                {returnMode && selectedReturnDate && (
-                                    <button
-                                        type="button"
-                                        onClick={() => openScheduleModal("return")}
-                                        className="w-full sm:w-auto justify-center border border-[#D60D26] text-[#D60D26] hover:bg-rose-50 rounded-full px-4 sm:px-8 py-3.5 font-bold text-[14px] sm:text-[15px] flex items-center gap-2 transition-colors"
-                                    >
-                                        <ArrowRightLeft className="w-4 h-4" /> Check return flight
-                                    </button>
-                                )}
-                                <button 
-                                    type="button"
-                                    onClick={() => { if (hasScheduledFlight) setStep(4); }}
-                                    className={`w-full sm:w-auto justify-center px-4 sm:px-10 py-3.5 rounded-full font-bold text-[14px] sm:text-[15px] transition-colors flex items-center gap-2 ${
-                                        hasScheduledFlight ? 'bg-[#D60D26] text-white hover:bg-[#30060F] shadow-md' : 'bg-[#FFA8B3] text-white cursor-not-allowed'
-                                    }`}
-                                >
-                                    Check And Confirm <ArrowRight className="w-5 h-5" />
-                                </button>
-                            </div>
+                            <button 
+                                type="button"
+                                onClick={() => {
+                                    if (!hasScheduledFlight) return;
+                                    if (returnMode && !hasScheduledReturnFlight) {
+                                        alert("Please schedule the return flight first.");
+                                        return;
+                                    }
+                                    setStep(4);
+                                }}
+                                className={`w-full sm:w-auto justify-center px-4 sm:px-10 py-3.5 rounded-full font-bold text-[14px] sm:text-[15px] transition-colors flex items-center gap-2 ${
+                                    hasScheduledFlight && (!returnMode || hasScheduledReturnFlight)
+                                        ? "bg-[#D60D26] text-white hover:bg-[#30060F] shadow-md"
+                                        : "bg-[#FFA8B3] text-white cursor-not-allowed"
+                                }`}
+                            >
+                                Check And Confirm <ArrowRight className="w-5 h-5" />
+                            </button>
                         ) : (
                             <button 
                                 onClick={handleCreateFlights}
@@ -1359,7 +1860,7 @@ export default function AddPNRPage() {
                                     onClick={() => setModalTab(tab)}
                                     className={`pb-4 px-2 transition-colors ${modalTab === tab ? "text-[#D60D26] border-b-2 border-[#D60D26]" : "text-slate-400 hover:text-slate-600"}`}
                                 >
-                                    {tab}. {["Flight detail", "Baggages", "Seats", "Dates", "Policies"][tab - 1]}
+                                    {tab}. {["Flight detail", "Baggages", "Seats & GPNR", "Dates", "Policies"][tab - 1]}
 </button>
                             ))}
                         </div>
@@ -1387,7 +1888,9 @@ export default function AddPNRPage() {
                                             return `${Math.floor(diff / 60)}h ${diff % 60}m`;
                                         };
                                         const requiresNextDay = nextDayNeeded(seg.fromTime, seg.toTime);
-                                        const isConfirmable = !requiresNextDay || seg.plusOneDay;
+                                        const hasAirports = Boolean(seg.fromCode?.trim() && seg.toCode?.trim());
+                                        const isConfirmable =
+                                            hasAirports && (!requiresNextDay || seg.plusOneDay);
                                         const calculatedDuration = getSegDuration(seg.fromTime, seg.toTime, !!seg.plusOneDay);
 
                                         if (seg.isEditing) {
@@ -1401,11 +1904,13 @@ export default function AddPNRPage() {
                                                         <div className="flex-1"></div>
                                                         <Plane className="w-5 h-5 text-slate-400 relative z-10 bg-white shrink-0" />
                                                         <div className="flex-1"></div>
-                                                        {segments.length === 1 && (
-                                                            <button className="relative z-10 flex flex-col items-center cursor-pointer group mx-2" onClick={handleAddStopover}>
+                                                        {segments.length === 1 ? (
+                                                            <button type="button" className="relative z-10 flex flex-col items-center cursor-pointer group mx-2" onClick={handleAddStopover}>
                                                                 <div className="w-7 h-7 bg-white border-2 border-[#D60D26] text-[#D60D26] rounded-full flex items-center justify-center text-xl leading-none font-bold shadow-sm group-hover:bg-rose-50">+</div>
                                                                 <span className="text-[#D60D26] font-bold text-[11px] mt-1 whitespace-nowrap underline underline-offset-2">Add a stop over</span>
                                                             </button>
+                                                        ) : (
+                                                            <div className="w-4 h-4 rounded-full bg-slate-800 relative z-10 shrink-0 mx-2" title="Stop over" />
                                                         )}
                                                         <div className="flex-1"></div>
                                                         <Plane className="w-5 h-5 text-slate-400 relative z-10 bg-white shrink-0" />
@@ -1429,57 +1934,11 @@ export default function AddPNRPage() {
                                                                 </div>
                                                                 <div className="flex-1 relative">
                                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Airport</label>
-                                                                    <input
-                                                                        type="text"
-                                                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-white font-semibold text-slate-700 outline-none shadow-sm text-[14px] focus:border-[#D60D26]"
-                                                                        value={
-                                                                            editingAirport?.segmentId === seg.id && editingAirport.field === "from"
-                                                                                ? editingAirport.query
-                                                                                : `${seg.fromCode} (${seg.fromCity})`
-                                                                        }
-                                                                        onFocus={() =>
-                                                                            setEditingAirport({
-                                                                                segmentId: seg.id,
-                                                                                field: "from",
-                                                                                query: `${seg.fromCode} ${seg.fromCity}`,
-                                                                            })
-                                                                        }
-                                                                        onChange={(e) =>
-                                                                            setEditingAirport({
-                                                                                segmentId: seg.id,
-                                                                                field: "from",
-                                                                                query: e.target.value,
-                                                                            })
-                                                                        }
-                                                                        placeholder="Search airport..."
-                                                                    />
-                                                                    {editingAirport?.segmentId === seg.id && editingAirport.field === "from" && (
-                                                                        <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
-                                                                            {AIRPORTS.filter((a) => {
-                                                                                const q = editingAirport.query.toLowerCase();
-                                                                                return (
-                                                                                    a.code.toLowerCase().includes(q) ||
-                                                                                    a.city.toLowerCase().includes(q) ||
-                                                                                    a.name.toLowerCase().includes(q)
-                                                                                );
-                                                                            })
-                                                                                .slice(0, 8)
-                                                                                .map((airport) => (
-                                                                                    <button
-                                                                                        key={`from-${airport.code}`}
-                                                                                        type="button"
-                                                                                        onClick={() => applyAirportToSegment(airport)}
-                                                                                        className="w-full text-left px-3 py-2.5 hover:bg-rose-50 text-[13px]"
-                                                                                    >
-                                                                                        <span className="font-bold text-slate-800">
-                                                                                            {airport.city}{" "}
-                                                                                            <span className="text-[#D60D26]">({airport.code})</span>
-                                                                                        </span>
-                                                                                        <div className="text-[11px] text-slate-500">{airport.name}</div>
-                                                                                    </button>
-                                                                                ))}
-                                                                        </div>
-                                                                    )}
+                                                                    <div className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 font-semibold text-slate-700 text-[14px] cursor-not-allowed">
+                                                                        {seg.fromCode
+                                                                            ? `${seg.fromCode} (${seg.fromCity})`
+                                                                            : "Place"}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                             <div>
@@ -1521,18 +1980,6 @@ export default function AddPNRPage() {
                                                                     <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-700 outline-none shadow-sm text-[14px] uppercase" value={seg.flightNumber || ""} onChange={(e) => updateSegment(seg.id, 'flightNumber', e.target.value.toUpperCase())} placeholder="----" />
                                                                 </div>
                                                                 <div className="flex-1">
-                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Aircraft</label>
-                                                                    <input
-                                                                        type="text"
-                                                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]"
-                                                                        value={seg.aircraftType || ""}
-                                                                        onChange={(e) => updateSegment(seg.id, "aircraftType", e.target.value)}
-                                                                        placeholder="Airbus A320"
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex gap-3">
-                                                                <div className="flex-1">
                                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Terminal</label>
                                                                     <input
                                                                         type="text"
@@ -1550,60 +1997,73 @@ export default function AddPNRPage() {
                                                             <div className="flex gap-3">
                                                                 <div className="flex-1 relative">
                                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Airport</label>
-                                                                    <input
-                                                                        type="text"
-                                                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-white font-semibold text-slate-700 outline-none shadow-sm text-[14px] focus:border-[#D60D26]"
-                                                                        value={
-                                                                            editingAirport?.segmentId === seg.id && editingAirport.field === "to"
-                                                                                ? editingAirport.query
-                                                                                : `${seg.toCode} ${seg.toCity}`
-                                                                        }
-                                                                        onFocus={() =>
-                                                                            setEditingAirport({
-                                                                                segmentId: seg.id,
-                                                                                field: "to",
-                                                                                query: `${seg.toCode} ${seg.toCity}`,
-                                                                            })
-                                                                        }
-                                                                        onChange={(e) =>
-                                                                            setEditingAirport({
-                                                                                segmentId: seg.id,
-                                                                                field: "to",
-                                                                                query: e.target.value,
-                                                                            })
-                                                                        }
-                                                                        placeholder="Search airport..."
-                                                                    />
-                                                                    {editingAirport?.segmentId === seg.id && editingAirport.field === "to" && (
-                                                                        <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
-                                                                            {AIRPORTS.filter((a) => {
-                                                                                const q = editingAirport.query.toLowerCase();
-                                                                                return (
-                                                                                    a.code.toLowerCase().includes(q) ||
-                                                                                    a.city.toLowerCase().includes(q) ||
-                                                                                    a.name.toLowerCase().includes(q)
-                                                                                );
-                                                                            })
-                                                                                .slice(0, 8)
-                                                                                .map((airport) => (
-                                                                                    <button
-                                                                                        key={`to-${airport.code}`}
-                                                                                        type="button"
-                                                                                        onClick={() => applyAirportToSegment(airport)}
-                                                                                        className="w-full text-left px-3 py-2.5 hover:bg-rose-50 text-[13px]"
-                                                                                    >
-                                                                                        <span className="font-bold text-slate-800">
-                                                                                            {airport.city}{" "}
-                                                                                            <span className="text-[#D60D26]">({airport.code})</span>
-                                                                                        </span>
-                                                                                        <div className="text-[11px] text-slate-500">{airport.name}</div>
-                                                                                    </button>
-                                                                                ))}
+                                                                    {index === segments.length - 1 ? (
+                                                                        <div className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 font-semibold text-slate-700 text-[14px] cursor-not-allowed">
+                                                                            {seg.toCode} {seg.toCity}
                                                                         </div>
+                                                                    ) : (
+                                                                        <>
+                                                                            <input
+                                                                                type="text"
+                                                                                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-white font-semibold text-slate-700 outline-none shadow-sm text-[14px] focus:border-[#D60D26]"
+                                                                                value={
+                                                                                    editingAirport?.segmentId === seg.id && editingAirport.field === "to"
+                                                                                        ? editingAirport.query
+                                                                                        : seg.toCode
+                                                                                          ? `${seg.toCode} ${seg.toCity}`
+                                                                                          : ""
+                                                                                }
+                                                                                onFocus={() =>
+                                                                                    setEditingAirport({
+                                                                                        segmentId: seg.id,
+                                                                                        field: "to",
+                                                                                        query: seg.toCode
+                                                                                            ? `${seg.toCode} ${seg.toCity}`
+                                                                                            : "",
+                                                                                    })
+                                                                                }
+                                                                                onChange={(e) =>
+                                                                                    setEditingAirport({
+                                                                                        segmentId: seg.id,
+                                                                                        field: "to",
+                                                                                        query: e.target.value,
+                                                                                    })
+                                                                                }
+                                                                                placeholder="Place"
+                                                                            />
+                                                                            {editingAirport?.segmentId === seg.id && editingAirport.field === "to" && (
+                                                                                <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                                                                                    {AIRPORTS.filter((a) => {
+                                                                                        const q = editingAirport.query.toLowerCase();
+                                                                                        if (!q) return true;
+                                                                                        return (
+                                                                                            a.code.toLowerCase().includes(q) ||
+                                                                                            a.city.toLowerCase().includes(q) ||
+                                                                                            a.name.toLowerCase().includes(q)
+                                                                                        );
+                                                                                    })
+                                                                                        .slice(0, 8)
+                                                                                        .map((airport) => (
+                                                                                            <button
+                                                                                                key={`to-${airport.code}`}
+                                                                                                type="button"
+                                                                                                onClick={() => applyAirportToSegment(airport)}
+                                                                                                className="w-full text-left px-3 py-2.5 hover:bg-rose-50 text-[13px]"
+                                                                                            >
+                                                                                                <span className="font-bold text-slate-800">
+                                                                                                    {airport.city}{" "}
+                                                                                                    <span className="text-[#D60D26]">({airport.code})</span>
+                                                                                                </span>
+                                                                                                <div className="text-[11px] text-slate-500">{airport.name}</div>
+                                                                                            </button>
+                                                                                        ))}
+                                                                                </div>
+                                                                            )}
+                                                                        </>
                                                                     )}
                                                                 </div>
                                                                 <div className="w-[130px] shrink-0">
-                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">{seg.toCode} local time</label>
+                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">{seg.toCode || "__"} local time</label>
                                                                     <div className="border border-slate-200 rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-sm">
                                                                         <Clock className="w-4 h-4 text-slate-400 shrink-0" />
                                                                         <input type="text" className="w-full font-bold text-slate-700 outline-none bg-transparent text-[14px]" value={seg.toTime} onChange={(e) => updateSegment(seg.id, 'toTime', e.target.value)} />
@@ -1626,7 +2086,11 @@ export default function AddPNRPage() {
                                                             </div>
                                                             <div>
                                                                 {isConfirmable ? (
-                                                                    <button onClick={() => setSegments(segments.map(s => s.id === seg.id ? { ...s, isEditing: false, duration: calculatedDuration } : s))} className="w-full bg-[#E8F4FC] text-[#2B7BB9] border border-[#D0E8F7] font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-[14px] hover:bg-[#D9EEF9] transition-colors">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => confirmSegment(seg.id, calculatedDuration)}
+                                                                        className="w-full bg-[#E8F4FC] text-[#2B7BB9] border border-[#D0E8F7] font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-[14px] hover:bg-[#D9EEF9] transition-colors"
+                                                                    >
                                                                         <Check className="w-4 h-4" /> Confirm segment
                                                                     </button>
                                                                 ) : (
@@ -1644,12 +2108,20 @@ export default function AddPNRPage() {
 
                                         /* ══ CONFIRMED: portrait card, fixed 420px ══ */
                                         return (
-                                            <div key={seg.id} className="w-[420px] shrink-0 flex flex-col animate-in fade-in duration-300">
+                                            <div key={seg.id} className="w-[420px] shrink-0 flex flex-col animate-in fade-in duration-300 relative">
+                                                {/* Visual connector between stopover arrival → next departure */}
+                                                {index > 0 && (
+                                                    <div className="absolute -left-4 top-[calc(1.25rem+10px)] w-8 border-t-2 border-dashed border-slate-300 z-0 pointer-events-none" />
+                                                )}
                                                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                                                     {/* Timeline bar */}
                                                     <div className="flex items-center px-5 pt-5 pb-2 relative">
                                                         <div className="absolute left-5 right-5 top-[calc(1.25rem+10px)] border-t-2 border-dashed border-slate-300 z-0"></div>
-                                                        <div className="w-4 h-4 rounded-full border-[3px] border-slate-800 bg-white relative z-10 shrink-0"></div>
+                                                        {index === 0 ? (
+                                                            <div className="w-4 h-4 rounded-full border-[3px] border-slate-800 bg-white relative z-10 shrink-0"></div>
+                                                        ) : (
+                                                            <div className="w-4 h-4 rounded-full bg-slate-800 relative z-10 shrink-0" title="Stop over"></div>
+                                                        )}
                                                         <div className="flex-1"></div>
                                                         <Plane className="w-5 h-5 text-slate-400 relative z-10 bg-white shrink-0" />
                                                         <div className="flex-1"></div>
@@ -1685,20 +2157,41 @@ export default function AddPNRPage() {
                                                         </div>
                                                     </div>
 
-                                                    <button onClick={() => updateSegment(seg.id, 'isEditing', true)} className="w-full bg-slate-50 text-slate-500 text-[13px] font-bold py-3 border-t border-slate-200 hover:bg-slate-100 transition-colors">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSegments((prev) =>
+                                                                prev.map((s, i) => {
+                                                                    if (s.id !== seg.id) return s;
+                                                                    const prevSeg = i > 0 ? prev[i - 1] : null;
+                                                                    return {
+                                                                        ...s,
+                                                                        isEditing: true,
+                                                                        ...(prevSeg?.toCode
+                                                                            ? {
+                                                                                  fromCode: prevSeg.toCode,
+                                                                                  fromCity: prevSeg.toCity,
+                                                                              }
+                                                                            : {}),
+                                                                    };
+                                                                })
+                                                            );
+                                                        }}
+                                                        className="w-full bg-slate-50 text-slate-500 text-[13px] font-bold py-3 border-t border-slate-200 hover:bg-slate-100 transition-colors"
+                                                    >
                                                         Edit segment
                                                     </button>
                                                 </div>
 
                                                 {/* Below-card badges */}
                                                 {index < segments.length - 1 && (
-                                                    <div className="mt-2 bg-rose-50 border border-rose-100 rounded-xl px-4 py-2.5 flex justify-between items-center">
-                                                        <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5"><Clock className="w-4 h-4" /> Layover {layoverBetween(seg, segments[index + 1])} at {seg.toCode}</div>
+                                                    <div className="mt-2 bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 flex justify-between items-center">
+                                                        <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5"><Clock className="w-4 h-4" /> Layover {layoverBetween(seg, segments[index + 1])}</div>
                                                         <button onClick={handleDeleteStop} className="text-[12px] font-bold text-slate-500 flex items-center gap-1 hover:text-[#D60D26] transition-colors"><Trash2 className="w-3.5 h-3.5" /> Delete stop</button>
                                                     </div>
                                                 )}
                                                 {index === segments.length - 1 && segments.length > 1 && (
-                                                    <div className="mt-2 bg-rose-50 border border-rose-100 rounded-xl px-4 py-2.5">
+                                                    <div className="mt-2 bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5">
                                                         <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5"><Clock className="w-4 h-4" /> Total journey destination {calculatedDuration}</div>
                                                     </div>
                                                 )}
@@ -1771,7 +2264,28 @@ export default function AddPNRPage() {
                             )}
 
                             {modalTab === 3 && (
-                                <div className="flex items-center justify-center py-10 animate-in fade-in duration-300">
+                                <div className="flex flex-col items-center justify-center gap-6 py-8 animate-in fade-in duration-300">
+                                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-full max-w-[500px] overflow-hidden">
+                                        <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 font-bold text-slate-700 text-[15px]">
+                                            Add GPNR
+                                        </div>
+                                        <div className="p-6">
+                                            <input
+                                                type="text"
+                                                value={groupPnr}
+                                                onChange={(e) =>
+                                                    setGroupPnr(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+                                                }
+                                                placeholder="GPNR"
+                                                maxLength={32}
+                                                className="w-full border border-slate-200 rounded-lg p-3.5 text-slate-700 font-bold tracking-wide outline-none shadow-sm uppercase focus:border-[#D60D26]"
+                                            />
+                                            <p className="mt-2 text-[12px] text-slate-400 font-medium">
+                                                Optional group PNR for this inventory. Leave blank to auto-generate.
+                                            </p>
+                                        </div>
+                                    </div>
+
                                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-full max-w-[500px] overflow-hidden">
                                         <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 font-bold text-slate-700 text-[15px]">
                                             Seats and price
@@ -1799,7 +2313,7 @@ export default function AddPNRPage() {
                                                 <div className="flex-1">
                                                     <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Ticket Price (INR)</label>
                                                     <div className="relative">
-                                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium">Rs</span>
+                                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
                                                         <input 
                                                             type="text" 
                                                             placeholder="00.00"
@@ -2024,6 +2538,7 @@ export default function AddPNRPage() {
                                     setIsModalOpen(false);
                                     if (schedulingLeg === "return") {
                                         returnSegmentsRef.current = segments;
+                                        setScheduledReturn(segments);
                                         setHasScheduledReturnFlight(true);
                                         if (outboundSegmentsRef.current) {
                                             setSegments(outboundSegmentsRef.current);
@@ -2031,6 +2546,7 @@ export default function AddPNRPage() {
                                         }
                                     } else {
                                         outboundSegmentsRef.current = segments;
+                                        setScheduledOutbound(segments);
                                         setHasScheduledFlight(true);
                                     }
                                     setEditingAirport(null);

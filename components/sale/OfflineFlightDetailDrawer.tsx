@@ -14,12 +14,17 @@ import {
   Ban,
   RefreshCw,
   CircleDollarSign,
+  Copy,
+  Check,
+  ExternalLink,
 } from "lucide-react";
 import {
   cityCountryFromCode,
   cityLabelFromCode,
   formatDisplayDateLong,
+  formatGenderLabel,
   formatInrPortal,
+  formatPassengerDisplayName,
   formatShortDate,
   groupPnrFromId,
   groupPnrBookingRows,
@@ -38,6 +43,38 @@ import { forSaleItemToFlight, type ForSaleInventoryItem } from "@/lib/forSale";
 import { unwrapData } from "@/lib/apiEnvelope";
 import { getPublicApiUrl } from "@/lib/apiConfig";
 import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
+
+function formatTicketModalSubtitle(ticket: OfflineTicketRow, fallbackOrigin: string, fallbackDest: string) {
+  const origin = (ticket.origin || fallbackOrigin || "").toUpperCase();
+  const dest = (ticket.destination || fallbackDest || "").toUpperCase();
+  const iso = ticket.departure_datetime;
+  if (!iso) return `${origin} to ${dest}`;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return `${origin} to ${dest}`;
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${origin} to ${dest}, ${d.getFullYear()} ${months[d.getMonth()]} ${d.getDate()}, ${hh}:${mm}`;
+}
+
+function formatPassengerBorn(dob?: string | null) {
+  if (!dob) return null;
+  const d = new Date(dob);
+  if (Number.isNaN(d.getTime())) return null;
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${dd}/${mm}/${yy}`;
+}
+
+function statusLabel(status?: string) {
+  const s = (status || "").toUpperCase();
+  if (s === "CONFIRMED") return "Confirmed";
+  if (s === "PENDING") return "Pending";
+  if (s === "CANCELLED") return "Cancelled";
+  return status || "—";
+}
 
 function formatClock(iso?: string, withPlusDay?: boolean, depIso?: string) {
   if (!iso) return "—";
@@ -99,9 +136,15 @@ export function OfflineFlightDetailDrawer({
   const [bookingBusy, setBookingBusy] = useState(false);
   const [showFlightDetails, setShowFlightDetails] = useState(false);
   const [seatsModalOpen, setSeatsModalOpen] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<OfflineTicketRow | null>(null);
+  const [expandedPassengerIdx, setExpandedPassengerIdx] = useState<number | null>(null);
+  const [pnrCopied, setPnrCopied] = useState(false);
   const [editingSeats, setEditingSeats] = useState(false);
   const [editSeats, setEditSeats] = useState(String(flight.seats_available ?? 0));
   const [editPrice, setEditPrice] = useState(String(Number(flight.price).toFixed(2)));
+  const [editingBaggage, setEditingBaggage] = useState(false);
+  const [editCheckIn, setEditCheckIn] = useState(flight.baggage_check_in || "15 kg");
+  const [editHand, setEditHand] = useState(flight.baggage_hand || "7 kg");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [salesEndHours, setSalesEndHours] = useState("56");
@@ -117,9 +160,15 @@ export function OfflineFlightDetailDrawer({
     setEditSeats(String(flight.seats_available ?? 0));
     setEditPrice(String(Number(flight.price).toFixed(2)));
     setEditingSeats(false);
+    setEditingBaggage(false);
+    setEditCheckIn(flight.baggage_check_in || "15 kg");
+    setEditHand(flight.baggage_hand || "7 kg");
     setSaveMsg(null);
     setShowFlightDetails(false);
     setSeatsModalOpen(false);
+    setSelectedTicket(null);
+    setExpandedPassengerIdx(null);
+    setPnrCopied(false);
     setOpenPolicy(null);
     setPolicyTexts({
       cancellation: flight.policies?.cancellation || "",
@@ -136,6 +185,8 @@ export function OfflineFlightDetailDrawer({
     flight.id,
     flight.price,
     flight.seats_available,
+    flight.baggage_check_in,
+    flight.baggage_hand,
     flight.policies,
     flight.departure_datetime,
     flight.sales_closing_datetime,
@@ -261,6 +312,7 @@ export function OfflineFlightDetailDrawer({
   const saveSeatsAndPrice = async (extra?: {
     policies?: Record<string, string>;
     includeSalesClosing?: boolean;
+    baggage?: { checkIn: string; hand: string };
   }) => {
     if (!access) {
       openAuthModal();
@@ -282,6 +334,10 @@ export function OfflineFlightDetailDrawer({
       const api = getPublicApiUrl();
       const body: Record<string, unknown> = { seats_available: seats, price };
       if (extra?.policies) body.policies = extra.policies;
+      if (extra?.baggage) {
+        body.baggage_check_in = extra.baggage.checkIn.trim() || "15 kg";
+        body.baggage_hand = extra.baggage.hand.trim() || "7 kg";
+      }
       if (extra?.includeSalesClosing !== false) {
         const closing = salesClosingFromEnding(
           flight.departure_datetime,
@@ -302,6 +358,7 @@ export function OfflineFlightDetailDrawer({
       if (!res.ok) throw new Error((json as { detail?: string }).detail || `Save failed (${res.status})`);
       setSaveMsg("Saved.");
       setEditingSeats(false);
+      setEditingBaggage(false);
       setOpenPolicy(null);
       onInventoryUpdated?.();
     } catch (err) {
@@ -313,6 +370,12 @@ export function OfflineFlightDetailDrawer({
 
   const saveSalesEnding = async () => {
     await saveSeatsAndPrice({ includeSalesClosing: true });
+  };
+
+  const saveBaggage = async () => {
+    await saveSeatsAndPrice({
+      baggage: { checkIn: editCheckIn, hand: editHand },
+    });
   };
 
   const savePolicy = async (key: "cancellation" | "change" | "refund") => {
@@ -693,12 +756,39 @@ export function OfflineFlightDetailDrawer({
                 <div className="font-bold text-[14px] text-slate-800">Tickets Volume</div>
                 <button
                   type="button"
-                  onClick={() => setSeatsModalOpen(true)}
+                  onClick={() => {
+                    // GPNR / Add PNR choice only on Inventory; Flight edits seats inline
+                    if (drawerVariant === "inventory") {
+                      setSeatsModalOpen(true);
+                      return;
+                    }
+                    if (editingSeats) void saveSeatsAndPrice();
+                    else setEditingSeats(true);
+                  }}
                   className="inline-flex items-center gap-1 text-[12px] font-bold text-[#D60D26]"
                 >
-                  <Pencil className="w-3 h-3" /> Edit
+                  <Pencil className="w-3 h-3" />{" "}
+                  {drawerVariant !== "inventory" && editingSeats
+                    ? saving
+                      ? "Saving…"
+                      : "Save"
+                    : "Edit"}
                 </button>
               </div>
+              {drawerVariant !== "inventory" && editingSeats && (
+                <div className="mb-2 flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-[12px] font-bold">
+                  <span className="text-slate-600">Total seats</span>
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => bumpSeats(-1)} className="text-[#D60D26] font-black text-base">
+                      ‹
+                    </button>
+                    <span className="w-7 text-center text-slate-800">{editSeats}</span>
+                    <button type="button" onClick={() => bumpSeats(1)} className="text-[#D60D26] font-black text-base">
+                      ›
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-5 gap-1.5">
                 {(
                   [
@@ -723,16 +813,59 @@ export function OfflineFlightDetailDrawer({
             </div>
 
             <div>
-              <div className="font-bold text-[14px] text-slate-800 mb-2">Baggage</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="font-bold text-[14px] text-slate-800">Baggage</div>
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => {
+                    if (editingBaggage) void saveBaggage();
+                    else {
+                      setEditCheckIn(
+                        (flight.baggage_check_in || "15 kg").replace(/\s*,\s*Included$/i, "").trim()
+                      );
+                      setEditHand(
+                        (flight.baggage_hand || "7 kg").replace(/\s*,\s*Included$/i, "").trim()
+                      );
+                      setEditingBaggage(true);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#D60D26] hover:underline disabled:opacity-50"
+                >
+                  <Pencil className="w-3 h-3" />{" "}
+                  {editingBaggage ? (saving ? "Saving…" : "Save") : "Edit"}
+                </button>
+              </div>
               <div className="flex items-center gap-2 text-[12px] font-bold text-slate-600 mb-1.5">
                 <Luggage className="w-3.5 h-3.5 text-slate-400" />
                 Checked baggage
               </div>
               <input
                 type="text"
-                readOnly
-                value={`${flight.baggage_check_in || "15 kg"}, Included`}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-[12px] font-bold text-slate-600 bg-slate-50 mb-2"
+                readOnly={!editingBaggage}
+                value={
+                  editingBaggage
+                    ? editCheckIn
+                    : `${flight.baggage_check_in || "15 kg"}, Included`
+                }
+                onChange={(e) => setEditCheckIn(e.target.value)}
+                onFocus={() => {
+                  if (!editingBaggage) {
+                    setEditCheckIn(
+                      (flight.baggage_check_in || "15 kg").replace(/\s*,\s*Included$/i, "").trim()
+                    );
+                    setEditHand(
+                      (flight.baggage_hand || "7 kg").replace(/\s*,\s*Included$/i, "").trim()
+                    );
+                    setEditingBaggage(true);
+                  }
+                }}
+                placeholder="e.g. 15 kg"
+                className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-[12px] font-bold text-slate-600 mb-2 outline-none ${
+                  editingBaggage
+                    ? "bg-white focus:border-[#D60D26] cursor-text"
+                    : "bg-slate-50 cursor-pointer"
+                }`}
               />
               <div className="flex items-center gap-2 text-[12px] font-bold text-slate-600 mb-1.5">
                 <Luggage className="w-3.5 h-3.5 text-slate-400" />
@@ -740,9 +873,30 @@ export function OfflineFlightDetailDrawer({
               </div>
               <input
                 type="text"
-                readOnly
-                value={`${flight.baggage_hand || "7 kg"}, Included`}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-[12px] font-bold text-slate-600 bg-slate-50"
+                readOnly={!editingBaggage}
+                value={
+                  editingBaggage
+                    ? editHand
+                    : `${flight.baggage_hand || "7 kg"}, Included`
+                }
+                onChange={(e) => setEditHand(e.target.value)}
+                onFocus={() => {
+                  if (!editingBaggage) {
+                    setEditCheckIn(
+                      (flight.baggage_check_in || "15 kg").replace(/\s*,\s*Included$/i, "").trim()
+                    );
+                    setEditHand(
+                      (flight.baggage_hand || "7 kg").replace(/\s*,\s*Included$/i, "").trim()
+                    );
+                    setEditingBaggage(true);
+                  }
+                }}
+                placeholder="e.g. 7 kg"
+                className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-[12px] font-bold text-slate-600 outline-none ${
+                  editingBaggage
+                    ? "bg-white focus:border-[#D60D26] cursor-text"
+                    : "bg-slate-50 cursor-pointer"
+                }`}
               />
             </div>
 
@@ -781,7 +935,9 @@ export function OfflineFlightDetailDrawer({
                           onTicketSelect(t);
                           return;
                         }
-                        router.push(`/my-booking/${t.id}`);
+                        setExpandedPassengerIdx(null);
+                        setPnrCopied(false);
+                        setSelectedTicket(t);
                       }}
                       className="w-full text-left hover:bg-slate-50 p-2.5 rounded-lg border border-slate-100"
                     >
@@ -807,7 +963,7 @@ export function OfflineFlightDetailDrawer({
           <div className="flex-1 overflow-y-auto bg-white">
             <div className="px-4 pt-4 pb-2">
               <div className="font-bold text-[14px] text-slate-900">
-                PNR Booking (GPNR→{groupPnrFromId(flight.id)})
+                PNR Booking (GPNR→{groupPnrFromId(flight.id, flight.group_pnr)})
               </div>
             </div>
 
@@ -832,7 +988,15 @@ export function OfflineFlightDetailDrawer({
                       <button
                         key={row.key}
                         type="button"
-                        onClick={() => onTicketSelect?.(row.ticket)}
+                        onClick={() => {
+                          if (onTicketSelect) {
+                            onTicketSelect(row.ticket);
+                            return;
+                          }
+                          setExpandedPassengerIdx(null);
+                          setPnrCopied(false);
+                          setSelectedTicket(row.ticket);
+                        }}
                         className="w-full grid grid-cols-[1.4fr_1fr_1.1fr] gap-2 px-4 py-2.5 text-left text-[12px] border-b border-slate-100 hover:bg-slate-50 transition-colors"
                       >
                         <div className="font-bold text-slate-800 truncate">{row.name}</div>
@@ -848,8 +1012,310 @@ export function OfflineFlightDetailDrawer({
         )}
       </div>
 
-      {/* Figma: Change seats voloume modal (exact copy) */}
-      {seatsModalOpen && (
+      {/* Booking details modal — open from Booking tab; Check reservation → ticket */}
+      {selectedTicket && (
+        <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 p-4 flex justify-center items-start md:items-center">
+          <div className="bg-white rounded-2xl w-full max-w-[520px] shadow-2xl overflow-hidden flex flex-col my-8 md:my-auto max-h-[85vh]">
+            <div
+              className={`p-6 relative shrink-0 border-b ${
+                selectedTicket.status === "CONFIRMED"
+                  ? "bg-[#EAF7EE] border-emerald-100"
+                  : selectedTicket.status === "CANCELLED"
+                    ? "bg-rose-50 border-rose-100"
+                    : "bg-[#F2FBFF] border-slate-100"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setSelectedTicket(null)}
+                className="absolute top-6 right-6 text-slate-500 hover:bg-white/50 p-1 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="flex items-baseline gap-2 mb-1 pr-8">
+                <span className="font-extrabold text-[20px] text-slate-900">
+                  {(
+                    selectedTicket.pnr_number ||
+                    selectedTicket.booking_ref ||
+                    selectedTicket.id.replace(/-/g, "").slice(0, 6)
+                  ).toUpperCase()}
+                </span>
+                <span
+                  className={`font-bold text-[16px] ${
+                    selectedTicket.status === "CONFIRMED"
+                      ? "text-emerald-700"
+                      : selectedTicket.status === "CANCELLED"
+                        ? "text-[#D60D26]"
+                        : "text-slate-600"
+                  }`}
+                >
+                  {statusLabel(selectedTicket.status)}
+                </span>
+              </div>
+              <div className="text-slate-600 font-medium text-[13px]">
+                {formatTicketModalSubtitle(selectedTicket, flight.origin, flight.destination)}
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto bg-white flex-1 space-y-7">
+              <div>
+                <div className="font-bold text-[15px] text-slate-800 mb-4">General information</div>
+                <div className="space-y-3.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-[13px] font-bold text-slate-600">
+                      <span className="w-3.5 h-3.5 rounded-[3px] bg-[#D60D26] shrink-0" />
+                      MTDPNR reference
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const value = (
+                          selectedTicket.booking_ref ||
+                          selectedTicket.pnr_number ||
+                          selectedTicket.id.replace(/-/g, "").slice(0, 6)
+                        ).toUpperCase();
+                        try {
+                          await navigator.clipboard.writeText(value);
+                          setPnrCopied(true);
+                          window.setTimeout(() => setPnrCopied(false), 1600);
+                        } catch {
+                          /* ignore */
+                        }
+                      }}
+                      className="inline-flex items-center gap-1.5 font-bold text-[13px] text-[#2B7BB9] underline underline-offset-2 hover:text-[#1f5f8f]"
+                    >
+                      {(
+                        selectedTicket.booking_ref ||
+                        selectedTicket.pnr_number ||
+                        selectedTicket.id.replace(/-/g, "").slice(0, 6)
+                      ).toUpperCase()}
+                      {pnrCopied ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-[13px] font-bold text-slate-600">
+                      <Luggage className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      Reservation
+                    </div>
+                    <Link
+                      href={`/my-booking/${selectedTicket.id}`}
+                      className="inline-flex items-center gap-1.5 font-bold text-[13px] text-[#2B7BB9] underline underline-offset-2 hover:text-[#1f5f8f]"
+                    >
+                      Check reservation
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-[13px] font-bold text-slate-600">Flight</div>
+                    <div className="font-bold text-slate-800 text-[13px] text-right">
+                      {selectedTicket.airline_name ||
+                        selectedTicket.airline_code ||
+                        flight.airline_name ||
+                        flight.airline_code}{" "}
+                      · {selectedTicket.flight_number || flight.flight_number}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-[13px] font-bold text-slate-600">Cabin</div>
+                    <div className="font-bold text-slate-800 text-[13px]">
+                      {selectedTicket.cabin_class || flight.cabin_class || "Economy"}
+                    </div>
+                  </div>
+                  {(selectedTicket.pnr_number || selectedTicket.ticket_number) && (
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-[13px] font-bold text-slate-600">Airline PNR / Ticket</div>
+                      <div className="font-bold text-slate-800 text-[13px] text-right">
+                        {[selectedTicket.pnr_number, selectedTicket.ticket_number]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-[13px] font-bold text-slate-600">Ticket cost</div>
+                    <div className="font-bold text-slate-800 text-[13px]">
+                      {formatInrPortal(
+                        selectedTicket.total_amount != null && selectedTicket.total_amount !== ""
+                          ? selectedTicket.total_amount
+                          : Number(flight.price) *
+                              Math.max(selectedTicket.passengers_data?.length || 1, 1)
+                      )}
+                    </div>
+                  </div>
+                  {(selectedTicket.basic_amount != null || selectedTicket.tax_amount != null) && (
+                    <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-2.5 space-y-1.5">
+                      {selectedTicket.basic_amount != null && (
+                        <div className="flex items-center justify-between text-[12px]">
+                          <span className="text-slate-500 font-medium">Base fare</span>
+                          <span className="font-bold text-slate-700">
+                            {formatInrPortal(selectedTicket.basic_amount)}
+                          </span>
+                        </div>
+                      )}
+                      {selectedTicket.tax_amount != null && (
+                        <div className="flex items-center justify-between text-[12px]">
+                          <span className="text-slate-500 font-medium">Taxes</span>
+                          <span className="font-bold text-slate-700">
+                            {formatInrPortal(selectedTicket.tax_amount)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {(selectedTicket.passengers_data?.length || 0) > 0 && (
+                <div>
+                  <div className="font-bold text-[15px] text-slate-800 mb-4">Passengers</div>
+                  <div className="space-y-3">
+                    {selectedTicket.passengers_data!.map((pax, idx) => {
+                      const open = expandedPassengerIdx === idx;
+                      const gender = formatGenderLabel(pax.gender);
+                      const born = formatPassengerBorn(pax.dob || pax.date_of_birth);
+                      const meta = [
+                        gender !== "—" ? gender : null,
+                        born ? `Born ${born}` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" • ");
+                      return (
+                        <div
+                          key={`${selectedTicket.id}-pax-${idx}`}
+                          className="rounded-xl border border-slate-200 bg-white overflow-hidden"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setExpandedPassengerIdx(open ? null : idx)}
+                            className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left hover:bg-slate-50"
+                          >
+                            <div className="min-w-0">
+                              <div className="font-bold text-[14px] text-slate-800 truncate">
+                                {formatPassengerDisplayName(pax)}
+                              </div>
+                              {meta && (
+                                <div className="text-[12px] text-slate-500 font-medium mt-0.5">
+                                  {meta}
+                                </div>
+                              )}
+                            </div>
+                            {open ? (
+                              <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                            )}
+                          </button>
+                          {open && (
+                            <div className="px-4 pb-4 pt-1 border-t border-slate-100 space-y-4 text-[12px]">
+                              <div>
+                                <div className="font-bold text-slate-700 mb-2">Basic information</div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <div className="text-slate-400 mb-0.5">Date of birth</div>
+                                    <div className="font-bold text-slate-800">
+                                      {pax.dob || pax.date_of_birth || "—"}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-slate-400 mb-0.5">Nationality</div>
+                                    <div className="font-bold text-slate-800">
+                                      {pax.nationality || "—"}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div>
+                                <div className="font-bold text-slate-700 mb-2">Passport details</div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <div className="text-slate-400 mb-0.5">Passport number</div>
+                                    <div className="font-bold text-slate-800">
+                                      {pax.passport_number || "—"}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-slate-400 mb-0.5">Expiry date</div>
+                                    <div className="font-bold text-slate-800">
+                                      {pax.passport_expiry || "—"}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-slate-400 mb-0.5">Country issue</div>
+                                    <div className="font-bold text-slate-800">
+                                      {pax.passport_country || "—"}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-slate-400 mb-0.5">Ticket No.</div>
+                                    <div className="font-bold text-slate-800">
+                                      {pax.ticket_number || selectedTicket.ticket_number || "—"}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <div className="font-bold text-[15px] text-slate-800 mb-4">Ancillaries</div>
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3">
+                    <Luggage className="w-5 h-5 text-slate-500" />
+                    <div>
+                      <div className="font-bold text-slate-700 text-[14px]">Checked baggage</div>
+                      <div className="text-[12px] text-slate-400 font-medium mt-0.5">
+                        {(() => {
+                          const bag =
+                            selectedTicket.baggage_check_in || flight.baggage_check_in || "15 kg";
+                          const paxCount = Math.max(
+                            selectedTicket.passengers_data?.length || 1,
+                            1
+                          );
+                          return `${paxCount} * ${bag} • Free`;
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="font-bold text-[#2B7BB9] text-[12px] tracking-wide">INCLUDED</div>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3">
+                    <Luggage className="w-5 h-5 text-slate-500" />
+                    <div>
+                      <div className="font-bold text-slate-700 text-[14px]">Hand baggage</div>
+                      <div className="text-[12px] text-slate-400 font-medium mt-0.5">
+                        {(() => {
+                          const bag =
+                            selectedTicket.baggage_hand || flight.baggage_hand || "7 kg";
+                          const paxCount = Math.max(
+                            selectedTicket.passengers_data?.length || 1,
+                            1
+                          );
+                          return `${paxCount} * ${bag} • Free`;
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="font-bold text-[#2B7BB9] text-[12px] tracking-wide">INCLUDED</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Figma: Change seats volume — Inventory only (Add PNR / same GPNR) */}
+      {seatsModalOpen && drawerVariant === "inventory" && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[rgba(18,17,33,0.7)] p-4">
           <div className="bg-white rounded-[20px] w-full max-w-[441px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="bg-[#fbe6e8] px-[30px] py-5 flex items-center justify-between">
