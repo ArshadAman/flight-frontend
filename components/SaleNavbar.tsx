@@ -152,7 +152,7 @@ export function SaleNavbar() {
                 name="For sale"
                 options={[
                   { label: "All Flights", href: "/sale/flight/all", icon: <CurvedArrowIcon /> },
-                  { label: "Add PNR", href: "/sale/inventory/new", icon: <CurvedArrowIcon /> },
+                  { label: "Add PNR", href: "/sale/inventory/new?mode=pnr", icon: <CurvedArrowIcon /> },
                   { label: "Bookings", href: "/sale/booking", icon: <CurvedArrowIcon /> },
                   { label: "Inventory", href: "/sale/inventory", icon: <CurvedArrowIcon /> },
                   { label: "History", href: "/sale/history", icon: <CurvedArrowIcon /> },
@@ -345,7 +345,7 @@ export function SaleNavbar() {
             <div className="flex flex-col gap-1">
               {[
                 { label: "All Flights", href: "/sale/flight/all" },
-                { label: "Add PNR", href: "/sale/inventory/new" },
+                { label: "Add PNR", href: "/sale/inventory/new?mode=pnr" },
                 { label: "Bookings", href: "/sale/booking" },
                 { label: "Inventory", href: "/sale/inventory" },
                 { label: "History", href: "/sale/history" },

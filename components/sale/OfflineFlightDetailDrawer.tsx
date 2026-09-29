@@ -1014,10 +1014,15 @@ export function OfflineFlightDetailDrawer({
 
       {/* Booking details modal — open from Booking tab; Check reservation → ticket */}
       {selectedTicket && (
-        <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 p-4 flex justify-center items-start md:items-center">
-          <div className="bg-white rounded-2xl w-full max-w-[520px] shadow-2xl overflow-hidden flex flex-col my-8 md:my-auto max-h-[85vh]">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 pt-20 sm:pt-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div
+            className="absolute inset-0"
+            onClick={() => setSelectedTicket(null)}
+            aria-hidden
+          />
+          <div className="relative bg-white rounded-2xl w-full max-w-[520px] shadow-2xl overflow-hidden flex flex-col max-h-[min(85vh,calc(100dvh-5.5rem))]">
             <div
-              className={`p-6 relative shrink-0 border-b ${
+              className={`p-5 sm:p-6 relative shrink-0 border-b ${
                 selectedTicket.status === "CONFIRMED"
                   ? "bg-[#EAF7EE] border-emerald-100"
                   : selectedTicket.status === "CANCELLED"
@@ -1028,7 +1033,7 @@ export function OfflineFlightDetailDrawer({
               <button
                 type="button"
                 onClick={() => setSelectedTicket(null)}
-                className="absolute top-6 right-6 text-slate-500 hover:bg-white/50 p-1 rounded-full"
+                className="absolute top-4 right-4 sm:top-5 sm:right-5 text-slate-500 hover:bg-white/50 p-1 rounded-full"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1057,7 +1062,7 @@ export function OfflineFlightDetailDrawer({
               </div>
             </div>
 
-            <div className="p-6 overflow-y-auto bg-white flex-1 space-y-7">
+            <div className="p-5 sm:p-6 overflow-y-auto bg-white flex-1 min-h-0 space-y-7">
               <div>
                 <div className="font-bold text-[15px] text-slate-800 mb-4">General information</div>
                 <div className="space-y-3.5">
@@ -1316,7 +1321,7 @@ export function OfflineFlightDetailDrawer({
 
       {/* Figma: Change seats volume — Inventory only (Add PNR / same GPNR) */}
       {seatsModalOpen && drawerVariant === "inventory" && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[rgba(18,17,33,0.7)] p-4">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[rgba(18,17,33,0.7)] p-4">
           <div className="bg-white rounded-[20px] w-full max-w-[441px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="bg-[#fbe6e8] px-[30px] py-5 flex items-center justify-between">
               <h3 className="font-bold text-[18px] text-[#121121] tracking-[0.36px]">

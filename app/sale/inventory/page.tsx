@@ -819,7 +819,7 @@ export default function InventoryPage() {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" /></svg>
                                 Export
                             </button>
-                            <Link href="/sale/inventory/new" className="bg-[#D60D26] hover:bg-[#b80b20] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center justify-center gap-2">
+                            <Link href="/sale/inventory/new?mode=pnr" className="bg-[#D60D26] hover:bg-[#b80b20] text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-colors shadow-sm flex items-center justify-center gap-2">
                                 <Plus className="w-4 h-4" /> Add PNR
                             </Link>
                         </div>
@@ -890,10 +890,15 @@ export default function InventoryPage() {
 
             {/* Booking Details Modal — Figma Ticket */}
             {selectedBooking && (
-                <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 p-4 flex justify-center items-start md:items-center">
-                    <div className="bg-white rounded-2xl w-full max-w-[520px] shadow-2xl overflow-hidden flex flex-col my-8 md:my-auto max-h-[85vh]">
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 pt-20 sm:pt-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div
+                        className="absolute inset-0"
+                        onClick={() => setSelectedBooking(null)}
+                        aria-hidden
+                    />
+                    <div className="relative bg-white rounded-2xl w-full max-w-[520px] shadow-2xl overflow-hidden flex flex-col max-h-[min(85vh,calc(100dvh-5.5rem))]">
                         <div
-                            className={`p-6 relative shrink-0 border-b ${
+                            className={`p-5 sm:p-6 relative shrink-0 border-b ${
                                 selectedBooking.status === "CONFIRMED"
                                     ? "bg-[#EAF7EE] border-emerald-100"
                                     : selectedBooking.status === "CANCELLED"
@@ -904,7 +909,7 @@ export default function InventoryPage() {
                             <button
                                 type="button"
                                 onClick={() => setSelectedBooking(null)}
-                                className="absolute top-6 right-6 text-slate-500 hover:bg-white/50 p-1 rounded-full"
+                                className="absolute top-4 right-4 sm:top-5 sm:right-5 text-slate-500 hover:bg-white/50 p-1 rounded-full"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -925,7 +930,7 @@ export default function InventoryPage() {
                             <div className="text-slate-600 font-medium text-[13px]">{selectedBooking.subtitle}</div>
                         </div>
 
-                        <div className="p-6 overflow-y-auto bg-white flex-1 space-y-7">
+                        <div className="p-5 sm:p-6 overflow-y-auto bg-white flex-1 min-h-0 space-y-7">
                             {/* General information */}
                             <div>
                                 <div className="font-bold text-[15px] text-slate-800 mb-4">General information</div>
@@ -1256,7 +1261,7 @@ export default function InventoryPage() {
 
             {/* Edit Modal */}
             {isEditModalOpen && selectedFlight && (
-                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+                <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 p-4">
                     <div className="bg-white rounded-2xl w-full max-w-[450px] shadow-2xl overflow-hidden flex flex-col">
                         <div className="bg-rose-50 p-5 relative shrink-0">
                             <button onClick={() => setIsEditModalOpen(false)} className="absolute top-5 right-5 text-slate-500 hover:bg-white/50 p-1 rounded-full transition-colors"><X className="w-5 h-5" /></button>

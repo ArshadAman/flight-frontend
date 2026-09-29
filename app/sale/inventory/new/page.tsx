@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, ArrowRightLeft, X, Plane, ChevronLeft, ChevronRight, Check, Clock, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getPublicApiUrl } from "@/lib/apiConfig";
 import { RouteMapBackground } from "@/components/sale/RouteMapBackground";
@@ -327,6 +327,9 @@ const SERIES_WEEKDAY_OPTIONS: { label: string; day: number }[] = [
 
 export default function AddPNRPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    /** GPNR only for Add PNR flow — not for Add / New Flight. */
+    const isPnrMode = searchParams.get("mode") === "pnr";
     const { access } = useAuth();
     const [step, setStep] = useState(0); // 0 = empty, 1 = filled + dep date, 2 = return date, 3 = schedule screen
     
@@ -762,7 +765,7 @@ export default function AddPNRPage() {
             baggage_hand: handBaggage || "7 kg",
             apis_required: requiresApis,
             policies: filledPolicies,
-            group_pnr: groupPnr.trim().toUpperCase(),
+            group_pnr: isPnrMode ? groupPnr.trim().toUpperCase() : "",
         };
 
         const apiBase = getPublicApiUrl();
@@ -1058,7 +1061,7 @@ export default function AddPNRPage() {
             {/* Header */}
             <div className="w-full h-16 bg-gradient-to-r from-[#D60D26] to-[#30060F] text-white flex items-center justify-between px-4 sm:px-6 z-20 shrink-0 shadow-md overflow-x-auto no-scrollbar">
                 <button onClick={() => router.back()} className="flex items-center gap-1 sm:gap-2 font-bold text-[14px] sm:text-[15px] hover:text-white/80 transition-colors shrink-0">
-                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> Add flights
+                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> {isPnrMode ? "Add PNR" : "Add flights"}
                 </button>
                 <div className="flex items-center gap-1.5 sm:gap-3 text-[11px] sm:text-[14px] shrink-0 mx-auto px-4">
                     <div className="flex flex-col items-center relative">
@@ -1086,36 +1089,39 @@ export default function AddPNRPage() {
                 </div>
             )}
 
+            {/* Return leg tabs — fixed under header, not part of scroll */}
+            {step < 3 && returnMode && origin && destination && (
+                <div className="relative z-30 shrink-0 w-full bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
+                    <div className="w-full max-w-[720px] mx-auto px-4 flex items-center gap-6 sm:gap-10">
+                        <button
+                            type="button"
+                            onClick={() => setRouteLeg("outbound")}
+                            className={`py-3.5 text-[14px] sm:text-[15px] font-bold transition-colors border-b-4 ${
+                                routeLeg === "outbound"
+                                    ? "text-slate-900 border-[#D60D26]"
+                                    : "text-slate-400 border-transparent hover:text-slate-600"
+                            }`}
+                        >
+                            {origin.city} → {destination.city}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setRouteLeg("return")}
+                            className={`py-3.5 text-[14px] sm:text-[15px] font-bold transition-colors border-b-4 ${
+                                routeLeg === "return"
+                                    ? "text-slate-900 border-[#D60D26]"
+                                    : "text-slate-400 border-transparent hover:text-slate-600"
+                            }`}
+                        >
+                            {destination.city} → {origin.city}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Step 0-2 View — Route section */}
             {step < 3 && (
-                <div className="relative z-20 flex-1 overflow-y-auto flex flex-col items-center pt-4 sm:pt-6 pb-24 px-4 pointer-events-none w-full">
-                    {returnMode && origin && destination && (
-                        <div className="w-full max-w-[720px] flex items-center gap-8 sm:gap-12 mb-4 pointer-events-auto">
-                            <button
-                                type="button"
-                                onClick={() => setRouteLeg("outbound")}
-                                className={`pb-2 text-[14px] sm:text-[15px] font-bold transition-colors ${
-                                    routeLeg === "outbound"
-                                        ? "text-slate-900 border-b-4 border-[#D60D26]"
-                                        : "text-slate-400 hover:text-slate-600"
-                                }`}
-                            >
-                                {origin.city} → {destination.city}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setRouteLeg("return")}
-                                className={`pb-2 text-[14px] sm:text-[15px] font-bold transition-colors ${
-                                    routeLeg === "return"
-                                        ? "text-slate-900 border-b-4 border-[#D60D26]"
-                                        : "text-slate-400 hover:text-slate-600"
-                                }`}
-                            >
-                                {destination.city} → {origin.city}
-                            </button>
-                        </div>
-                    )}
-
+                <div className="relative z-20 flex-1 overflow-y-auto flex flex-col items-center pt-4 sm:pt-6 pb-24 px-4 pointer-events-none w-full min-h-0">
                     <div className="bg-white rounded-[20px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] px-5 py-4 sm:px-8 sm:py-5 flex flex-col sm:flex-row items-center gap-4 w-full max-w-[720px] pointer-events-auto relative shrink-0 z-30">
                         <div 
                             className={`w-full sm:flex-1 px-6 py-2 rounded-xl cursor-text transition-colors ${activeInput === "origin" && routeLeg === "outbound" ? "bg-slate-50 ring-2 ring-[#D60D26]/20" : "hover:bg-slate-50"}`}
@@ -1823,7 +1829,7 @@ export default function AddPNRPage() {
             {/* Modal for "Schedule A Flights" */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 pointer-events-auto animate-in fade-in duration-200 p-4">
-                    <div className="bg-white rounded-3xl w-full max-w-[900px] max-h-[90vh] shadow-2xl overflow-hidden flex flex-col">
+                    <div className="bg-white rounded-3xl w-full max-w-[960px] max-h-[90vh] shadow-2xl overflow-hidden flex flex-col">
                         {/* Modal Header */}
                         <div className="bg-gradient-to-r from-[#D60D26] to-[#30060F] text-white p-6 relative shrink-0">
                             <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 hover:bg-white/20 p-1 rounded-full transition-colors">
@@ -1860,344 +1866,620 @@ export default function AddPNRPage() {
                                     onClick={() => setModalTab(tab)}
                                     className={`pb-4 px-2 transition-colors ${modalTab === tab ? "text-[#D60D26] border-b-2 border-[#D60D26]" : "text-slate-400 hover:text-slate-600"}`}
                                 >
-                                    {tab}. {["Flight detail", "Baggages", "Seats & GPNR", "Dates", "Policies"][tab - 1]}
+                                    {tab}. {["Flight detail", "Baggages", isPnrMode ? "Seats & GPNR" : "Seats", "Dates", "Policies"][tab - 1]}
 </button>
                             ))}
                         </div>
 
                         {/* Modal Body */}
-                        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white p-8">
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white p-5 sm:p-8 min-h-0">
                             {modalTab === 1 && (
-                                <div className="flex gap-6 overflow-x-auto pb-4 items-start w-full min-w-0 custom-horizontal-scrollbar">
-                                    {segments.map((seg, index) => {
-                                        const nextDayNeeded = (from: string, to: string) => {
-                                            if (!from || !to) return false;
-                                            const [fH, fM] = from.split(':').map(Number);
-                                            const [tH, tM] = to.split(':').map(Number);
-                                            if (tH < fH) return true;
-                                            if (tH === fH && tM < fM) return true;
-                                            return false;
-                                        };
-                                        const getSegDuration = (from: string, to: string, p1: boolean) => {
-                                            if (!from || !to) return "2h 0m";
-                                            const [fH, fM] = from.split(':').map(Number);
-                                            const [tH, tM] = to.split(':').map(Number);
-                                            let diff = (tH * 60 + tM) - (fH * 60 + fM);
-                                            if (p1) diff += 24 * 60;
-                                            else if (diff < 0) diff += 24 * 60;
-                                            return `${Math.floor(diff / 60)}h ${diff % 60}m`;
-                                        };
-                                        const requiresNextDay = nextDayNeeded(seg.fromTime, seg.toTime);
-                                        const hasAirports = Boolean(seg.fromCode?.trim() && seg.toCode?.trim());
-                                        const isConfirmable =
-                                            hasAirports && (!requiresNextDay || seg.plusOneDay);
-                                        const calculatedDuration = getSegDuration(seg.fromTime, seg.toTime, !!seg.plusOneDay);
+                                <div className="flex flex-col gap-8 w-full min-w-0">
+                                    {/* Editing forms — full width so they aren't crushed beside confirmed cards */}
+                                    {segments.some((s) => s.isEditing) && (
+                                        <div className="flex flex-col gap-8 w-full">
+                                            {segments.map((seg, index) => {
+                                                if (!seg.isEditing) return null;
+                                                const nextDayNeeded = (from: string, to: string) => {
+                                                    if (!from || !to) return false;
+                                                    const [fH, fM] = from.split(":").map(Number);
+                                                    const [tH, tM] = to.split(":").map(Number);
+                                                    if (tH < fH) return true;
+                                                    if (tH === fH && tM < fM) return true;
+                                                    return false;
+                                                };
+                                                const getSegDuration = (from: string, to: string, p1: boolean) => {
+                                                    if (!from || !to) return "2h 0m";
+                                                    const [fH, fM] = from.split(":").map(Number);
+                                                    const [tH, tM] = to.split(":").map(Number);
+                                                    let diff = tH * 60 + tM - (fH * 60 + fM);
+                                                    if (p1) diff += 24 * 60;
+                                                    else if (diff < 0) diff += 24 * 60;
+                                                    return `${Math.floor(diff / 60)}h ${diff % 60}m`;
+                                                };
+                                                const requiresNextDay = nextDayNeeded(seg.fromTime, seg.toTime);
+                                                const hasAirports = Boolean(seg.fromCode?.trim() && seg.toCode?.trim());
+                                                const isConfirmable =
+                                                    hasAirports && (!requiresNextDay || seg.plusOneDay);
+                                                const calculatedDuration = getSegDuration(
+                                                    seg.fromTime,
+                                                    seg.toTime,
+                                                    !!seg.plusOneDay
+                                                );
+                                                const placeOpen =
+                                                    editingAirport?.segmentId === seg.id &&
+                                                    editingAirport.field === "to";
 
-                                        if (seg.isEditing) {
-                                            return (
-                                                /* ══ EDITING: open form, no card border, takes remaining width ══ */
-                                                <div key={seg.id} className="flex-1 min-w-[480px] animate-in fade-in duration-300">
-                                                    {/* Timeline */}
-                                                    <div className="flex items-center relative mb-8">
-                                                        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-slate-300 z-0"></div>
-                                                        <div className="w-4 h-4 rounded-full border-[3px] border-slate-800 bg-white relative z-10 shrink-0"></div>
-                                                        <div className="flex-1"></div>
-                                                        <Plane className="w-5 h-5 text-slate-400 relative z-10 bg-white shrink-0" />
-                                                        <div className="flex-1"></div>
-                                                        {segments.length === 1 ? (
-                                                            <button type="button" className="relative z-10 flex flex-col items-center cursor-pointer group mx-2" onClick={handleAddStopover}>
-                                                                <div className="w-7 h-7 bg-white border-2 border-[#D60D26] text-[#D60D26] rounded-full flex items-center justify-center text-xl leading-none font-bold shadow-sm group-hover:bg-rose-50">+</div>
-                                                                <span className="text-[#D60D26] font-bold text-[11px] mt-1 whitespace-nowrap underline underline-offset-2">Add a stop over</span>
-                                                            </button>
-                                                        ) : (
-                                                            <div className="w-4 h-4 rounded-full bg-slate-800 relative z-10 shrink-0 mx-2" title="Stop over" />
-                                                        )}
-                                                        <div className="flex-1"></div>
-                                                        <Plane className="w-5 h-5 text-slate-400 relative z-10 bg-white shrink-0" />
-                                                        <div className="flex-1"></div>
-                                                        <div className="relative z-10 flex items-center justify-center w-5 h-5 bg-white border-2 border-slate-800 rounded-full shrink-0">
-                                                            <svg className="w-2.5 h-2.5 text-slate-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                                return (
+                                                    <div
+                                                        key={`edit-${seg.id}`}
+                                                        className={`w-full max-w-3xl mx-auto animate-in fade-in duration-300 ${
+                                                            placeOpen ? "pb-52" : ""
+                                                        }`}
+                                                    >
+                                                        <div className="text-[13px] font-bold text-slate-500 mb-4">
+                                                            Segment {index + 1}
+                                                            {segments.length > 1
+                                                                ? index === 0
+                                                                    ? " · Origin → stopover"
+                                                                    : " · Stopover → destination"
+                                                                : ""}
                                                         </div>
-                                                    </div>
 
-                                                    {/* Two-column form */}
-                                                    <div className="flex gap-8">
-                                                        {/* LEFT: departure */}
-                                                        <div className="flex-1 space-y-5">
-                                                            <div className="flex gap-3">
-                                                                <div className="w-[130px] shrink-0">
-                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">{seg.fromCode} local time</label>
-                                                                    <div className="border border-slate-200 rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-sm">
-                                                                        <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-                                                                        <input type="text" className="w-full font-bold text-slate-700 outline-none bg-transparent text-[14px]" value={seg.fromTime} onChange={(e) => updateSegment(seg.id, 'fromTime', e.target.value)} />
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex-1 relative">
-                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Airport</label>
-                                                                    <div className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 font-semibold text-slate-700 text-[14px] cursor-not-allowed">
-                                                                        {seg.fromCode
-                                                                            ? `${seg.fromCode} (${seg.fromCity})`
-                                                                            : "Place"}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Airline</label>
-                                                                <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]" value={seg.airlineName || ""} onChange={(e) => updateSegment(seg.id, 'airlineName', e.target.value)} placeholder="Airline" />
-                                                            </div>
-                                                            {seg.technicalStop != null ? (
-                                                                <div className="space-y-1.5">
-                                                                    <div className="flex items-center justify-between">
-                                                                        <label className="text-[12px] font-bold text-slate-500">Technical stop</label>
-                                                                        <button
-                                                                            type="button"
-                                                                            className="text-[12px] font-bold text-[#2B7BB9] hover:underline"
-                                                                            onClick={() => updateSegment(seg.id, "technicalStop", null)}
-                                                                        >
-                                                                            − remove
-                                                                        </button>
-                                                                    </div>
-                                                                    <input
-                                                                        type="text"
-                                                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]"
-                                                                        value={seg.technicalStop}
-                                                                        onChange={(e) => updateSegment(seg.id, "technicalStop", e.target.value)}
-                                                                        placeholder="Airport code e.g. DOH"
-                                                                    />
-                                                                </div>
-                                                            ) : (
+                                                        {/* Timeline */}
+                                                        <div className="flex items-center relative mb-8 px-1">
+                                                            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-slate-300 z-0" />
+                                                            <div className="w-4 h-4 rounded-full border-[3px] border-slate-800 bg-white relative z-10 shrink-0" />
+                                                            <div className="flex-1" />
+                                                            <Plane className="w-5 h-5 text-slate-400 relative z-10 bg-white shrink-0" />
+                                                            <div className="flex-1" />
+                                                            {segments.length === 1 ? (
                                                                 <button
                                                                     type="button"
-                                                                    className="text-[12px] font-bold text-[#2B7BB9] mt-0.5 hover:underline text-left"
-                                                                    onClick={() => updateSegment(seg.id, "technicalStop", "")}
+                                                                    className="relative z-10 flex flex-col items-center cursor-pointer group mx-2"
+                                                                    onClick={handleAddStopover}
                                                                 >
-                                                                    + add technical stop
+                                                                    <div className="w-7 h-7 bg-white border-2 border-[#D60D26] text-[#D60D26] rounded-full flex items-center justify-center text-xl leading-none font-bold shadow-sm group-hover:bg-rose-50">
+                                                                        +
+                                                                    </div>
+                                                                    <span className="text-[#D60D26] font-bold text-[11px] mt-1 whitespace-nowrap underline underline-offset-2">
+                                                                        Add a stop over
+                                                                    </span>
                                                                 </button>
+                                                            ) : (
+                                                                <div
+                                                                    className="w-4 h-4 rounded-full bg-slate-800 relative z-10 shrink-0 mx-2"
+                                                                    title="Stop over"
+                                                                />
                                                             )}
-                                                            <div className="flex gap-3">
-                                                                <div className="flex-1">
-                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Flight number</label>
-                                                                    <input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-700 outline-none shadow-sm text-[14px] uppercase" value={seg.flightNumber || ""} onChange={(e) => updateSegment(seg.id, 'flightNumber', e.target.value.toUpperCase())} placeholder="----" />
+                                                            <div className="flex-1" />
+                                                            <Plane className="w-5 h-5 text-slate-400 relative z-10 bg-white shrink-0" />
+                                                            <div className="flex-1" />
+                                                            <div className="relative z-10 flex items-center justify-center w-5 h-5 bg-white border-2 border-slate-800 rounded-full shrink-0">
+                                                                <svg
+                                                                    className="w-2.5 h-2.5 text-slate-800"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth="3"
+                                                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                                                    />
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth="3"
+                                                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                                                    />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Two-column form — stacks on narrow widths */}
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+                                                            {/* LEFT: departure */}
+                                                            <div className="space-y-4">
+                                                                <div className="grid grid-cols-[110px_1fr] gap-3">
+                                                                    <div>
+                                                                        <label className="text-[12px] font-bold text-slate-500 mb-1.5 block truncate">
+                                                                            {seg.fromCode || "—"} local time
+                                                                        </label>
+                                                                        <div className="border border-slate-200 rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-sm">
+                                                                            <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+                                                                            <input
+                                                                                type="text"
+                                                                                className="w-full font-bold text-slate-700 outline-none bg-transparent text-[14px]"
+                                                                                value={seg.fromTime}
+                                                                                onChange={(e) =>
+                                                                                    updateSegment(
+                                                                                        seg.id,
+                                                                                        "fromTime",
+                                                                                        e.target.value
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">
+                                                                            Airport
+                                                                        </label>
+                                                                        <div className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 font-semibold text-slate-700 text-[14px] cursor-not-allowed truncate">
+                                                                            {seg.fromCode
+                                                                                ? `${seg.fromCode} (${seg.fromCity})`
+                                                                                : "Place"}
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="flex-1">
-                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Terminal</label>
+                                                                <div>
+                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">
+                                                                        Airline
+                                                                    </label>
                                                                     <input
                                                                         type="text"
                                                                         className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]"
-                                                                        value={seg.fromTerminal}
-                                                                        onChange={(e) => updateSegment(seg.id, "fromTerminal", e.target.value)}
+                                                                        value={seg.airlineName || ""}
+                                                                        onChange={(e) =>
+                                                                            updateSegment(
+                                                                                seg.id,
+                                                                                "airlineName",
+                                                                                e.target.value
+                                                                            )
+                                                                        }
+                                                                        placeholder="Airline"
+                                                                    />
+                                                                </div>
+                                                                {seg.technicalStop != null ? (
+                                                                    <div className="space-y-1.5">
+                                                                        <div className="flex items-center justify-between">
+                                                                            <label className="text-[12px] font-bold text-slate-500">
+                                                                                Technical stop
+                                                                            </label>
+                                                                            <button
+                                                                                type="button"
+                                                                                className="text-[12px] font-bold text-[#2B7BB9] hover:underline"
+                                                                                onClick={() =>
+                                                                                    updateSegment(
+                                                                                        seg.id,
+                                                                                        "technicalStop",
+                                                                                        null
+                                                                                    )
+                                                                                }
+                                                                            >
+                                                                                − remove
+                                                                            </button>
+                                                                        </div>
+                                                                        <input
+                                                                            type="text"
+                                                                            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]"
+                                                                            value={seg.technicalStop}
+                                                                            onChange={(e) =>
+                                                                                updateSegment(
+                                                                                    seg.id,
+                                                                                    "technicalStop",
+                                                                                    e.target.value
+                                                                                )
+                                                                            }
+                                                                            placeholder="Airport code e.g. DOH"
+                                                                        />
+                                                                    </div>
+                                                                ) : (
+                                                                    <button
+                                                                        type="button"
+                                                                        className="text-[12px] font-bold text-[#2B7BB9] hover:underline text-left"
+                                                                        onClick={() =>
+                                                                            updateSegment(seg.id, "technicalStop", "")
+                                                                        }
+                                                                    >
+                                                                        + add technical stop
+                                                                    </button>
+                                                                )}
+                                                                <div className="grid grid-cols-2 gap-3">
+                                                                    <div>
+                                                                        <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">
+                                                                            Flight number
+                                                                        </label>
+                                                                        <input
+                                                                            type="text"
+                                                                            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-700 outline-none shadow-sm text-[14px] uppercase"
+                                                                            value={seg.flightNumber || ""}
+                                                                            onChange={(e) =>
+                                                                                updateSegment(
+                                                                                    seg.id,
+                                                                                    "flightNumber",
+                                                                                    e.target.value.toUpperCase()
+                                                                                )
+                                                                            }
+                                                                            placeholder="----"
+                                                                        />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">
+                                                                            Terminal
+                                                                        </label>
+                                                                        <input
+                                                                            type="text"
+                                                                            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]"
+                                                                            value={seg.fromTerminal}
+                                                                            onChange={(e) =>
+                                                                                updateSegment(
+                                                                                    seg.id,
+                                                                                    "fromTerminal",
+                                                                                    e.target.value
+                                                                                )
+                                                                            }
+                                                                            placeholder="Terminal 3"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* RIGHT: arrival */}
+                                                            <div className="space-y-4 relative z-20">
+                                                                <div className="grid grid-cols-[1fr_110px] gap-3">
+                                                                    <div className="relative">
+                                                                        <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">
+                                                                            Airport
+                                                                        </label>
+                                                                        {index === segments.length - 1 ? (
+                                                                            <div className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 font-semibold text-slate-700 text-[14px] cursor-not-allowed truncate">
+                                                                                {seg.toCode} {seg.toCity}
+                                                                            </div>
+                                                                        ) : (
+                                                                            <>
+                                                                                <input
+                                                                                    type="text"
+                                                                                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-white font-semibold text-slate-700 outline-none shadow-sm text-[14px] focus:border-[#D60D26]"
+                                                                                    value={
+                                                                                        placeOpen
+                                                                                            ? editingAirport!.query
+                                                                                            : seg.toCode
+                                                                                              ? `${seg.toCode} ${seg.toCity}`
+                                                                                              : ""
+                                                                                    }
+                                                                                    onFocus={() =>
+                                                                                        setEditingAirport({
+                                                                                            segmentId: seg.id,
+                                                                                            field: "to",
+                                                                                            query: seg.toCode
+                                                                                                ? `${seg.toCode} ${seg.toCity}`
+                                                                                                : "",
+                                                                                        })
+                                                                                    }
+                                                                                    onChange={(e) =>
+                                                                                        setEditingAirport({
+                                                                                            segmentId: seg.id,
+                                                                                            field: "to",
+                                                                                            query: e.target.value,
+                                                                                        })
+                                                                                    }
+                                                                                    placeholder="Place"
+                                                                                />
+                                                                                {placeOpen && (
+                                                                                    <div className="absolute z-50 left-0 right-0 top-full mt-1 max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-2xl">
+                                                                                        {AIRPORTS.filter((a) => {
+                                                                                            const q =
+                                                                                                editingAirport!.query.toLowerCase();
+                                                                                            if (!q) return true;
+                                                                                            return (
+                                                                                                a.code
+                                                                                                    .toLowerCase()
+                                                                                                    .includes(q) ||
+                                                                                                a.city
+                                                                                                    .toLowerCase()
+                                                                                                    .includes(q) ||
+                                                                                                a.name
+                                                                                                    .toLowerCase()
+                                                                                                    .includes(q)
+                                                                                            );
+                                                                                        })
+                                                                                            .slice(0, 8)
+                                                                                            .map((airport) => (
+                                                                                                <button
+                                                                                                    key={`to-${airport.code}`}
+                                                                                                    type="button"
+                                                                                                    onClick={() =>
+                                                                                                        applyAirportToSegment(
+                                                                                                            airport
+                                                                                                        )
+                                                                                                    }
+                                                                                                    className="w-full text-left px-3 py-2.5 hover:bg-rose-50 text-[13px] border-b border-slate-50 last:border-0"
+                                                                                                >
+                                                                                                    <span className="font-bold text-slate-800">
+                                                                                                        {airport.city}{" "}
+                                                                                                        <span className="text-[#D60D26]">
+                                                                                                            ({airport.code})
+                                                                                                        </span>
+                                                                                                    </span>
+                                                                                                    <div className="text-[11px] text-slate-500">
+                                                                                                        {airport.name}
+                                                                                                    </div>
+                                                                                                </button>
+                                                                                            ))}
+                                                                                    </div>
+                                                                                )}
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="text-[12px] font-bold text-slate-500 mb-1.5 block truncate">
+                                                                            {seg.toCode || "—"} local time
+                                                                        </label>
+                                                                        <div className="border border-slate-200 rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-sm">
+                                                                            <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+                                                                            <input
+                                                                                type="text"
+                                                                                className="w-full font-bold text-slate-700 outline-none bg-transparent text-[14px]"
+                                                                                value={seg.toTime}
+                                                                                onChange={(e) =>
+                                                                                    updateSegment(
+                                                                                        seg.id,
+                                                                                        "toTime",
+                                                                                        e.target.value
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                        <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={!!seg.plusOneDay}
+                                                                                onChange={(e) =>
+                                                                                    updateSegment(
+                                                                                        seg.id,
+                                                                                        "plusOneDay",
+                                                                                        e.target.checked
+                                                                                    )
+                                                                                }
+                                                                                className="w-4 h-4 rounded border-slate-300 accent-[#D60D26] cursor-pointer"
+                                                                            />
+                                                                            <span className="text-[12px] font-bold text-slate-600">
+                                                                                + 1 day
+                                                                            </span>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">
+                                                                        Terminal
+                                                                    </label>
+                                                                    <input
+                                                                        type="text"
+                                                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]"
+                                                                        value={seg.toTerminal}
+                                                                        onChange={(e) =>
+                                                                            updateSegment(
+                                                                                seg.id,
+                                                                                "toTerminal",
+                                                                                e.target.value
+                                                                            )
+                                                                        }
                                                                         placeholder="Terminal 3"
                                                                     />
                                                                 </div>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* RIGHT: arrival */}
-                                                        <div className="flex-1 space-y-5">
-                                                            <div className="flex gap-3">
-                                                                <div className="flex-1 relative">
-                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Airport</label>
-                                                                    {index === segments.length - 1 ? (
-                                                                        <div className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 font-semibold text-slate-700 text-[14px] cursor-not-allowed">
-                                                                            {seg.toCode} {seg.toCity}
-                                                                        </div>
+                                                                <div className="relative z-10">
+                                                                    {isConfirmable ? (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                confirmSegment(
+                                                                                    seg.id,
+                                                                                    calculatedDuration
+                                                                                )
+                                                                            }
+                                                                            className="w-full bg-[#E8F4FC] text-[#2B7BB9] border border-[#D0E8F7] font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-[14px] hover:bg-[#D9EEF9] transition-colors"
+                                                                        >
+                                                                            <Check className="w-4 h-4" /> Confirm
+                                                                            segment
+                                                                        </button>
                                                                     ) : (
-                                                                        <>
-                                                                            <input
-                                                                                type="text"
-                                                                                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-white font-semibold text-slate-700 outline-none shadow-sm text-[14px] focus:border-[#D60D26]"
-                                                                                value={
-                                                                                    editingAirport?.segmentId === seg.id && editingAirport.field === "to"
-                                                                                        ? editingAirport.query
-                                                                                        : seg.toCode
-                                                                                          ? `${seg.toCode} ${seg.toCity}`
-                                                                                          : ""
-                                                                                }
-                                                                                onFocus={() =>
-                                                                                    setEditingAirport({
-                                                                                        segmentId: seg.id,
-                                                                                        field: "to",
-                                                                                        query: seg.toCode
-                                                                                            ? `${seg.toCode} ${seg.toCity}`
-                                                                                            : "",
-                                                                                    })
-                                                                                }
-                                                                                onChange={(e) =>
-                                                                                    setEditingAirport({
-                                                                                        segmentId: seg.id,
-                                                                                        field: "to",
-                                                                                        query: e.target.value,
-                                                                                    })
-                                                                                }
-                                                                                placeholder="Place"
-                                                                            />
-                                                                            {editingAirport?.segmentId === seg.id && editingAirport.field === "to" && (
-                                                                                <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
-                                                                                    {AIRPORTS.filter((a) => {
-                                                                                        const q = editingAirport.query.toLowerCase();
-                                                                                        if (!q) return true;
-                                                                                        return (
-                                                                                            a.code.toLowerCase().includes(q) ||
-                                                                                            a.city.toLowerCase().includes(q) ||
-                                                                                            a.name.toLowerCase().includes(q)
-                                                                                        );
-                                                                                    })
-                                                                                        .slice(0, 8)
-                                                                                        .map((airport) => (
-                                                                                            <button
-                                                                                                key={`to-${airport.code}`}
-                                                                                                type="button"
-                                                                                                onClick={() => applyAirportToSegment(airport)}
-                                                                                                className="w-full text-left px-3 py-2.5 hover:bg-rose-50 text-[13px]"
-                                                                                            >
-                                                                                                <span className="font-bold text-slate-800">
-                                                                                                    {airport.city}{" "}
-                                                                                                    <span className="text-[#D60D26]">({airport.code})</span>
-                                                                                                </span>
-                                                                                                <div className="text-[11px] text-slate-500">{airport.name}</div>
-                                                                                            </button>
-                                                                                        ))}
-                                                                                </div>
-                                                                            )}
-                                                                        </>
+                                                                        <div className="space-y-2">
+                                                                            <div className="text-[12px] font-bold text-amber-600 leading-snug">
+                                                                                {!hasAirports
+                                                                                    ? "Select the stopover airport (Place) before confirming."
+                                                                                    : "Arrival looks like the next day — tick "}
+                                                                                {hasAirports && (
+                                                                                    <span
+                                                                                        className="underline cursor-pointer"
+                                                                                        onClick={() =>
+                                                                                            updateSegment(
+                                                                                                seg.id,
+                                                                                                "plusOneDay",
+                                                                                                true
+                                                                                            )
+                                                                                        }
+                                                                                    >
+                                                                                        +1 day to correct it
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                disabled
+                                                                                className="w-full bg-[#E8F4FC] text-[#A8C9DE] font-bold py-3.5 rounded-xl text-[14px] cursor-not-allowed"
+                                                                            >
+                                                                                Confirm segment
+                                                                            </button>
+                                                                        </div>
                                                                     )}
                                                                 </div>
-                                                                <div className="w-[130px] shrink-0">
-                                                                    <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">{seg.toCode || "__"} local time</label>
-                                                                    <div className="border border-slate-200 rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-sm">
-                                                                        <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-                                                                        <input type="text" className="w-full font-bold text-slate-700 outline-none bg-transparent text-[14px]" value={seg.toTime} onChange={(e) => updateSegment(seg.id, 'toTime', e.target.value)} />
-                                                                    </div>
-                                                                    <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                                                                        <input type="checkbox" checked={!!seg.plusOneDay} onChange={(e) => updateSegment(seg.id, 'plusOneDay', e.target.checked)} className="w-4 h-4 rounded border-slate-300 accent-[#D60D26] cursor-pointer" />
-                                                                        <span className="text-[12px] font-bold text-slate-600">+ 1 day</span>
-                                                                    </label>
-                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                <label className="text-[12px] font-bold text-slate-500 mb-1.5 block">Terminal</label>
-                                                                <input
-                                                                    type="text"
-                                                                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-700 outline-none shadow-sm text-[14px]"
-                                                                    value={seg.toTerminal}
-                                                                    onChange={(e) => updateSegment(seg.id, "toTerminal", e.target.value)}
-                                                                    placeholder="Terminal 3"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                {isConfirmable ? (
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => confirmSegment(seg.id, calculatedDuration)}
-                                                                        className="w-full bg-[#E8F4FC] text-[#2B7BB9] border border-[#D0E8F7] font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-[14px] hover:bg-[#D9EEF9] transition-colors"
-                                                                    >
-                                                                        <Check className="w-4 h-4" /> Confirm segment
-                                                                    </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {/* Confirmed cards — own row, no collision with the edit form */}
+                                    {segments.some((s) => !s.isEditing) && (
+                                        <div className="flex gap-5 overflow-x-auto pb-2 items-start w-full min-w-0">
+                                            {segments.map((seg, index) => {
+                                                if (seg.isEditing) return null;
+                                                const getSegDuration = (from: string, to: string, p1: boolean) => {
+                                                    if (!from || !to) return "2h 0m";
+                                                    const [fH, fM] = from.split(":").map(Number);
+                                                    const [tH, tM] = to.split(":").map(Number);
+                                                    let diff = tH * 60 + tM - (fH * 60 + fM);
+                                                    if (p1) diff += 24 * 60;
+                                                    else if (diff < 0) diff += 24 * 60;
+                                                    return `${Math.floor(diff / 60)}h ${diff % 60}m`;
+                                                };
+                                                const calculatedDuration = getSegDuration(
+                                                    seg.fromTime,
+                                                    seg.toTime,
+                                                    !!seg.plusOneDay
+                                                );
+
+                                                return (
+                                                    <div
+                                                        key={seg.id}
+                                                        className="w-[360px] shrink-0 flex flex-col animate-in fade-in duration-300 relative"
+                                                    >
+                                                        {index > 0 && !segments[index - 1]?.isEditing && (
+                                                            <div className="absolute -left-3 top-[calc(1.25rem+10px)] w-6 border-t-2 border-dashed border-slate-300 z-0 pointer-events-none" />
+                                                        )}
+                                                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                                            <div className="flex items-center px-5 pt-5 pb-2 relative">
+                                                                <div className="absolute left-5 right-5 top-[calc(1.25rem+10px)] border-t-2 border-dashed border-slate-300 z-0" />
+                                                                {index === 0 ? (
+                                                                    <div className="w-4 h-4 rounded-full border-[3px] border-slate-800 bg-white relative z-10 shrink-0" />
                                                                 ) : (
-                                                                    <div className="space-y-2">
-                                                                        <div className="text-[12px] font-bold text-amber-500">It seems that the arrival is the day after. Just click on <span className="underline cursor-pointer" onClick={() => updateSegment(seg.id, 'plusOneDay', true)}>+1 day to correct it</span></div>
-                                                                        <button type="button" disabled className="w-full bg-[#E8F4FC] text-[#A8C9DE] font-bold py-3.5 rounded-xl text-[14px] cursor-not-allowed">Confirm segment</button>
+                                                                    <div className="w-4 h-4 rounded-full bg-slate-800 relative z-10 shrink-0" title="Stop over" />
+                                                                )}
+                                                                <div className="flex-1" />
+                                                                <Plane className="w-5 h-5 text-slate-400 relative z-10 bg-white shrink-0" />
+                                                                <div className="flex-1" />
+                                                                {index === segments.length - 1 ? (
+                                                                    <div className="relative z-10 flex items-center justify-center w-5 h-5 bg-white border-2 border-slate-800 rounded-full shrink-0">
+                                                                        <svg
+                                                                            className="w-2.5 h-2.5 text-slate-800"
+                                                                            fill="none"
+                                                                            viewBox="0 0 24 24"
+                                                                            stroke="currentColor"
+                                                                        >
+                                                                            <path
+                                                                                strokeLinecap="round"
+                                                                                strokeLinejoin="round"
+                                                                                strokeWidth="3"
+                                                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                                                            />
+                                                                            <path
+                                                                                strokeLinecap="round"
+                                                                                strokeLinejoin="round"
+                                                                                strokeWidth="3"
+                                                                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                                                            />
+                                                                        </svg>
                                                                     </div>
+                                                                ) : (
+                                                                    <div className="w-4 h-4 rounded-full bg-slate-800 relative z-10 shrink-0" />
                                                                 )}
                                                             </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        }
-
-                                        /* ══ CONFIRMED: portrait card, fixed 420px ══ */
-                                        return (
-                                            <div key={seg.id} className="w-[420px] shrink-0 flex flex-col animate-in fade-in duration-300 relative">
-                                                {/* Visual connector between stopover arrival → next departure */}
-                                                {index > 0 && (
-                                                    <div className="absolute -left-4 top-[calc(1.25rem+10px)] w-8 border-t-2 border-dashed border-slate-300 z-0 pointer-events-none" />
-                                                )}
-                                                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                                                    {/* Timeline bar */}
-                                                    <div className="flex items-center px-5 pt-5 pb-2 relative">
-                                                        <div className="absolute left-5 right-5 top-[calc(1.25rem+10px)] border-t-2 border-dashed border-slate-300 z-0"></div>
-                                                        {index === 0 ? (
-                                                            <div className="w-4 h-4 rounded-full border-[3px] border-slate-800 bg-white relative z-10 shrink-0"></div>
-                                                        ) : (
-                                                            <div className="w-4 h-4 rounded-full bg-slate-800 relative z-10 shrink-0" title="Stop over"></div>
-                                                        )}
-                                                        <div className="flex-1"></div>
-                                                        <Plane className="w-5 h-5 text-slate-400 relative z-10 bg-white shrink-0" />
-                                                        <div className="flex-1"></div>
-                                                        {index === segments.length - 1 ? (
-                                                            <div className="relative z-10 flex items-center justify-center w-5 h-5 bg-white border-2 border-slate-800 rounded-full shrink-0">
-                                                                <svg className="w-2.5 h-2.5 text-slate-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="w-4 h-4 rounded-full bg-slate-800 relative z-10 shrink-0"></div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Card body */}
-                                                    <div className="px-5 pb-3">
-                                                        <div className="flex justify-between items-start">
-                                                            <div>
-                                                                <div className="font-bold text-slate-800 text-[14px]">{seg.fromCity}, {seg.fromCode}</div>
-                                                                <div className="text-[12px] text-slate-400 mb-2">{seg.fromTerminal}</div>
-                                                                <div className="border border-slate-200 rounded-lg px-2.5 py-1 text-[13px] font-bold text-slate-700 inline-block">{seg.fromTime}</div>
-                                                            </div>
-                                                            <div className="flex flex-col items-center px-2 mt-1">
-                                                                <div className="w-9 h-9 bg-[#D60D26] rounded-xl mb-1 flex items-center justify-center shrink-0">
-                                                                    <Plane className="w-5 h-5 text-white" />
+                                                            <div className="px-5 pb-3">
+                                                                <div className="flex justify-between items-start gap-2">
+                                                                    <div className="min-w-0">
+                                                                        <div className="font-bold text-slate-800 text-[14px] truncate">
+                                                                            {seg.fromCity}, {seg.fromCode}
+                                                                        </div>
+                                                                        <div className="text-[12px] text-slate-400 mb-2">
+                                                                            {seg.fromTerminal}
+                                                                        </div>
+                                                                        <div className="border border-slate-200 rounded-lg px-2.5 py-1 text-[13px] font-bold text-slate-700 inline-block">
+                                                                            {seg.fromTime}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex flex-col items-center px-1 mt-1 shrink-0">
+                                                                        <div className="w-9 h-9 bg-[#D60D26] rounded-xl mb-1 flex items-center justify-center">
+                                                                            <Plane className="w-5 h-5 text-white" />
+                                                                        </div>
+                                                                        <div className="text-[11px] text-slate-600 font-bold text-center max-w-[100px] truncate">
+                                                                            {seg.airlineName || "–"} (
+                                                                            {seg.flightNumber || "—"})
+                                                                        </div>
+                                                                        <div className="text-[12px] text-blue-500 font-bold mt-0.5 flex items-center gap-1">
+                                                                            <Clock className="w-3 h-3" />
+                                                                            {seg.duration}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-right min-w-0">
+                                                                        <div className="font-bold text-slate-800 text-[14px] truncate">
+                                                                            {seg.toCity}, {seg.toCode}
+                                                                        </div>
+                                                                        <div className="text-[12px] text-slate-400 mb-2">
+                                                                            {seg.toTerminal}
+                                                                        </div>
+                                                                        <div className="border border-slate-200 rounded-lg px-2.5 py-1 text-[13px] font-bold text-slate-700 inline-block">
+                                                                            {seg.toTime}
+                                                                            {seg.plusOneDay && (
+                                                                                <span className="text-[#D60D26] ml-1 text-[11px]">
+                                                                                    +1
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="text-[11px] text-slate-600 font-bold text-center">{seg.airlineName || "–"} ({seg.flightNumber || "—"})</div>
-                                                                <div className="text-[12px] text-blue-500 font-bold mt-0.5 flex items-center gap-1"><Clock className="w-3 h-3" />{seg.duration}</div>
                                                             </div>
-                                                            <div className="text-right">
-                                                                <div className="font-bold text-slate-800 text-[14px]">{seg.toCity}, {seg.toCode}</div>
-                                                                <div className="text-[12px] text-slate-400 mb-2">{seg.toTerminal}</div>
-                                                                <div className="border border-slate-200 rounded-lg px-2.5 py-1 text-[13px] font-bold text-slate-700 inline-block">{seg.toTime}{seg.plusOneDay && <span className="text-[#D60D26] ml-1 text-[11px]">+1</span>}</div>
-                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSegments((prev) =>
+                                                                        prev.map((s, i) => {
+                                                                            if (s.id !== seg.id) return s;
+                                                                            const prevSeg =
+                                                                                i > 0 ? prev[i - 1] : null;
+                                                                            return {
+                                                                                ...s,
+                                                                                isEditing: true,
+                                                                                ...(prevSeg?.toCode
+                                                                                    ? {
+                                                                                          fromCode: prevSeg.toCode,
+                                                                                          fromCity: prevSeg.toCity,
+                                                                                      }
+                                                                                    : {}),
+                                                                            };
+                                                                        })
+                                                                    );
+                                                                }}
+                                                                className="w-full bg-slate-50 text-slate-500 text-[13px] font-bold py-3 border-t border-slate-200 hover:bg-slate-100 transition-colors"
+                                                            >
+                                                                Edit segment
+                                                            </button>
                                                         </div>
+                                                        {index < segments.length - 1 &&
+                                                            !segments[index + 1]?.isEditing && (
+                                                                <div className="mt-2 bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 flex justify-between items-center">
+                                                                    <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5">
+                                                                        <Clock className="w-4 h-4" /> Layover{" "}
+                                                                        {layoverBetween(seg, segments[index + 1])}
+                                                                    </div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={handleDeleteStop}
+                                                                        className="text-[12px] font-bold text-slate-500 flex items-center gap-1 hover:text-[#D60D26] transition-colors"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                                                                        stop
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        {index === segments.length - 1 &&
+                                                            segments.length > 1 && (
+                                                                <div className="mt-2 bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5">
+                                                                    <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5">
+                                                                        <Clock className="w-4 h-4" /> Total
+                                                                        journey destination {calculatedDuration}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                     </div>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setSegments((prev) =>
-                                                                prev.map((s, i) => {
-                                                                    if (s.id !== seg.id) return s;
-                                                                    const prevSeg = i > 0 ? prev[i - 1] : null;
-                                                                    return {
-                                                                        ...s,
-                                                                        isEditing: true,
-                                                                        ...(prevSeg?.toCode
-                                                                            ? {
-                                                                                  fromCode: prevSeg.toCode,
-                                                                                  fromCity: prevSeg.toCity,
-                                                                              }
-                                                                            : {}),
-                                                                    };
-                                                                })
-                                                            );
-                                                        }}
-                                                        className="w-full bg-slate-50 text-slate-500 text-[13px] font-bold py-3 border-t border-slate-200 hover:bg-slate-100 transition-colors"
-                                                    >
-                                                        Edit segment
-                                                    </button>
-                                                </div>
-
-                                                {/* Below-card badges */}
-                                                {index < segments.length - 1 && (
-                                                    <div className="mt-2 bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 flex justify-between items-center">
-                                                        <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5"><Clock className="w-4 h-4" /> Layover {layoverBetween(seg, segments[index + 1])}</div>
-                                                        <button onClick={handleDeleteStop} className="text-[12px] font-bold text-slate-500 flex items-center gap-1 hover:text-[#D60D26] transition-colors"><Trash2 className="w-3.5 h-3.5" /> Delete stop</button>
-                                                    </div>
-                                                )}
-                                                {index === segments.length - 1 && segments.length > 1 && (
-                                                    <div className="mt-2 bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5">
-                                                        <div className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5"><Clock className="w-4 h-4" /> Total journey destination {calculatedDuration}</div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -2265,6 +2547,7 @@ export default function AddPNRPage() {
 
                             {modalTab === 3 && (
                                 <div className="flex flex-col items-center justify-center gap-6 py-8 animate-in fade-in duration-300">
+                                    {isPnrMode && (
                                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-full max-w-[500px] overflow-hidden">
                                         <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 font-bold text-slate-700 text-[15px]">
                                             Add GPNR
@@ -2285,6 +2568,7 @@ export default function AddPNRPage() {
                                             </p>
                                         </div>
                                     </div>
+                                    )}
 
                                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-full max-w-[500px] overflow-hidden">
                                         <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 font-bold text-slate-700 text-[15px]">
@@ -2467,7 +2751,8 @@ export default function AddPNRPage() {
                             )}
                         </div>
 
-                        <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-100 flex flex-row items-center justify-between gap-3 sm:gap-4 shrink-0">
+                        <div className="shrink-0 bg-slate-50 border-t border-slate-100">
+                            <div className="p-4 sm:p-6 flex flex-row items-center justify-between gap-3 sm:gap-4">
                             <button 
                                 onClick={() => setModalTab(Math.max(1, modalTab - 1))}
                                 disabled={modalTab === 1}
@@ -2492,12 +2777,13 @@ export default function AddPNRPage() {
                             >
                                 {modalTab === 5 ? "Finish" : "Next Step"} {modalTab < 5 && <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />}
                             </button>
-                        </div>
+                            </div>
                         {hasUnconfirmedSegments && (
-                            <div className="px-6 pb-5 text-sm font-medium text-amber-600 bg-slate-50">
+                            <div className="px-6 pb-4 text-[13px] font-medium text-amber-600 leading-snug">
                                 Confirm the segment in 1. Flight detail before finishing this flight.
                             </div>
                         )}
+                        </div>
                     </div>
                 </div>
             )}
