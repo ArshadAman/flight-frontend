@@ -148,6 +148,7 @@ export function SaleNavbar() {
             {/* Nav Links */}
             <nav className="hidden lg:flex items-center space-x-4 xl:space-x-8 mt-1" ref={dropdownRef}>
               <NavItem name="Home" hasDropdown={false} linkHref="/" />
+              <NavItem name="Dashboard" hasDropdown={false} linkHref="/sale/dashboard" />
               <NavItem
                 name="For sale"
                 options={[
@@ -337,6 +338,7 @@ export function SaleNavbar() {
 
         <nav className="flex flex-col space-y-2 mt-4 px-4 w-full">
           <NavLink href="/" isMobile onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
+          <NavLink href="/sale/dashboard" isMobile onClick={() => setIsMobileMenuOpen(false)}>Dashboard</NavLink>
           <div className="flex flex-col w-full my-3 bg-slate-50/50 rounded-2xl border border-slate-100 p-2">
             <div className="flex items-center gap-2 px-3 py-2 mb-1">
               <div className="w-1.5 h-1.5 bg-[#D60D26] rounded-full"></div>

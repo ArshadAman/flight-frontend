@@ -24,7 +24,7 @@ export default function LoginPage() {
     try {
       const loggedInUser = await login(username, password)
       if (loggedInUser && loggedInUser.role === "AGENT") {
-        router.push("/agent/dashboard")
+        router.push("/sale/dashboard")
       } else {
         router.push("/")
       }

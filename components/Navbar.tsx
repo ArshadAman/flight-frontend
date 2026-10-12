@@ -24,7 +24,7 @@ export function Navbar() {
   const pathname = usePathname();
 
   const forSaleHref =
-    user?.role === "AGENT" || user?.role === "ADMIN" ? "/sale/flight/all" : "/for-sale";
+    user?.role === "AGENT" || user?.role === "ADMIN" ? "/sale/dashboard" : "/for-sale";
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -230,7 +230,7 @@ export function Navbar() {
                           Sale Inventory
                         </Link>
                         <Link
-                          href="/agent/dashboard"
+                          href="/sale/dashboard"
                           onClick={() => setIsDropdownOpen(false)}
                           className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-slate-50"
                         >
@@ -399,7 +399,7 @@ export function Navbar() {
                     Sale Inventory
                   </Link>
                   <Link
-                    href="/agent/dashboard"
+                    href="/sale/dashboard"
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center justify-center w-full py-3 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-colors"
                   >
