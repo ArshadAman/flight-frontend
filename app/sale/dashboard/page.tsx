@@ -4,20 +4,31 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
+  Bell,
   Calendar,
   Check,
+  ChevronDown,
+  ChevronRight,
   Clock,
   CloudUpload,
   CreditCard,
+  Download,
+  Filter,
+  HelpCircle,
   IndianRupee,
+  LayoutDashboard,
   ListOrdered,
   Plane,
   RefreshCw,
+  Search,
+  Settings,
+  SlidersHorizontal,
+  Ticket,
+  UserPlus,
   Users,
   Wallet,
 } from "lucide-react";
-import { SaleNavbar } from "@/components/SaleNavbar";
-import { Footer } from "@/components/Footer";
+import { Logo } from "@/components/ui/logo";
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
 import { AdminDonutChart } from "@/components/admin/AdminCharts";
 import { useAuth } from "@/context/AuthContext";
@@ -133,21 +144,96 @@ const quickActionMeta: Record<
     color: "bg-emerald-50 text-emerald-600",
     hrefFallback: "/sale/profile?tab=update-profile",
   },
-  "Publish Inventory": {
-    icon: Calendar,
+  "Create Agent": {
+    icon: UserPlus,
     color: "bg-orange-50 text-orange-600",
-    hrefFallback: "/sale/inventory",
+    hrefFallback: "/sale/profile?tab=manage-user&action=create-sub-user",
   },
 };
 
+const sideNav = [
+  {
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    children: [
+      { label: "Business Overview", href: "/sale/dashboard" },
+      { label: "Administration", href: "/sale/profile?tab=manage-user" },
+    ],
+  },
+  { label: "Booking", icon: Ticket, href: "/sale/booking" },
+  { label: "Pricing & Rules", icon: SlidersHorizontal, href: "/sale/inventory" },
+  { label: "Finance", icon: Wallet, href: "/sale/profile?tab=update-profile" },
+  { label: "Reports", icon: LayoutDashboard, href: "/sale/reports" },
+  { label: "Staff Manage", icon: Users, href: "/sale/profile?tab=manage-user" },
+  { label: "Settings", icon: Settings, href: "/sale/profile?tab=update-profile" },
+];
+
+function MonthCalendar({
+  selected,
+  marked,
+  onSelect,
+}: {
+  selected: string;
+  marked: Set<string>;
+  onSelect: (iso: string) => void;
+}) {
+  const anchor = selected ? new Date(`${selected}T12:00:00`) : new Date();
+  const year = anchor.getFullYear();
+  const month = anchor.getMonth();
+  const first = new Date(year, month, 1);
+  const startPad = first.getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells: (number | null)[] = [
+    ...Array.from({ length: startPad }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+  const label = anchor.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+
+  return (
+    <div>
+      <p className="mb-2 text-sm font-semibold text-[#1c304a]">{label}</p>
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-slate-400">
+        {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+          <span key={`${d}-${i}`}>{d}</span>
+        ))}
+      </div>
+      <div className="mt-1 grid grid-cols-7 gap-1 text-center text-[12px]">
+        {cells.map((day, i) => {
+          if (!day) return <span key={`e-${i}`} />;
+          const iso = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+          const active = iso === selected;
+          return (
+            <button
+              key={iso}
+              type="button"
+              onClick={() => onSelect(iso)}
+              className={cn(
+                "mx-auto flex h-7 w-7 items-center justify-center rounded-full",
+                active ? "bg-[#006aec] text-white" : "text-[#1c304a] hover:bg-slate-100",
+                marked.has(iso) && !active && "font-bold text-[#D60D26]"
+              )}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function AgentBusinessOverviewPage() {
-  const { access, openAuthModal, isLoading: authLoading } = useAuth();
+  const { access, user, openAuthModal, isLoading: authLoading } = useAuth();
   const [tab, setTab] = useState<"Business Summary" | "Operations">("Business Summary");
+  const [range, setRange] = useState<"24h" | "7d" | "30d">("24h");
+  const [query, setQuery] = useState("");
+  const [dashOpen, setDashOpen] = useState(true);
+  const [selectedDay, setSelectedDay] = useState("");
   const [data, setData] = useState<AgentDashboardPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = async (nextRange = range) => {
     if (!access) {
       setLoading(false);
       setError("Sign in as an agent to view your dashboard.");
@@ -156,7 +242,7 @@ export default function AgentBusinessOverviewPage() {
     setLoading(true);
     setError(null);
     try {
-      const payload = await fetchAgentDashboard(access);
+      const payload = await fetchAgentDashboard(access, nextRange);
       setData(payload);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load dashboard");
@@ -167,9 +253,9 @@ export default function AgentBusinessOverviewPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    void load();
+    void load(range);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [access, authLoading]);
+  }, [access, authLoading, range]);
 
   const nowLabel = useMemo(() => {
     const d = data?.now ? new Date(data.now) : new Date();
@@ -184,37 +270,169 @@ export default function AgentBusinessOverviewPage() {
     };
   }, [data?.now]);
 
+  const rangeLabel = range === "24h" ? "Last 24 hours" : range === "7d" ? "Last 7 days" : "Last 30 days";
+  const needle = query.trim().toLowerCase();
+  const activities = (data?.activities || []).filter(
+    (a) => !needle || `${a.title} ${a.pnr} ${a.role}`.toLowerCase().includes(needle)
+  );
+  const schedule = data?.schedule || [];
+  const markedDays = useMemo(() => new Set(schedule.map((s) => s.date)), [schedule]);
+  const dayItems = schedule.filter((s) => !selectedDay || s.date === selectedDay);
+
+  const downloadCsv = () => {
+    if (!data) return;
+    const lines = [
+      "metric,value",
+      `revenue,${data.kpi.total_revenue}`,
+      `bookings,${data.kpi.total_booking}`,
+      `agents,${data.kpi.total_agents}`,
+      `wallet,${data.kpi.wallet_balance}`,
+      `departures,${data.kpi.departures}`,
+      `profit,${data.analytics.profit}`,
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "agent-dashboard.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const kpiTrend = (pct: number) => ({
     value: `${Math.abs(pct).toFixed(1)}% vs yesterday`,
     positive: pct >= 0,
   });
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc] flex flex-col font-sans">
-      <SaleNavbar />
-      <main className="flex-1">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-10 py-6 space-y-5">
+    <div className="flex h-screen overflow-hidden bg-[#f7f9fc] font-sans text-[#1c304a]">
+      <aside className="hidden w-[220px] shrink-0 flex-col border-r border-[#e8ebef] bg-white md:flex">
+        <Link href="/" className="flex items-center gap-2 px-4 py-4">
+          <Logo />
+          <span className="text-[13px] font-black leading-tight text-[#D60D26]">
+            My Travel Deal
+          </span>
+        </Link>
+        <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-4">
+          {sideNav.map((item) => {
+            const Icon = item.icon;
+            if (item.children) {
+              return (
+                <div key={item.label}>
+                  <button
+                    type="button"
+                    onClick={() => setDashOpen((v) => !v)}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-bold text-[#D60D26]"
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {dashOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  </button>
+                  {dashOpen &&
+                    item.children.map((child) => (
+                      <Link
+                        key={child.label}
+                        href={child.href}
+                        className={cn(
+                          "ml-6 block border-l-2 py-1.5 pl-3 text-[12px] font-semibold",
+                          child.href === "/sale/dashboard"
+                            ? "border-[#D60D26] text-[#D60D26]"
+                            : "border-transparent text-slate-500 hover:text-[#1c304a]"
+                        )}
+                      >
+                        {child.label}
+                      </Link>
+                    ))}
+                </div>
+              );
+            }
+            return (
+              <Link
+                key={item.label}
+                href={item.href || "/sale/dashboard"}
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                <Icon className="h-4 w-4" />
+                <span className="flex-1">{item.label}</span>
+                <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e8ebef] bg-white px-4 py-3 sm:px-6">
+          <div>
+            <p className="text-[11px] font-semibold text-slate-400">Workspace</p>
+            <p className="text-sm font-bold">{data?.workspace || user?.username || "Agent workspace"}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={range}
+              onChange={(e) => setRange(e.target.value as "24h" | "7d" | "30d")}
+              className="rounded-full border border-[#e8ebef] bg-white px-3 py-1.5 text-[12px] font-semibold"
+            >
+              <option value="24h">Last 24 hours</option>
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+            </select>
+            <Link href="/sale/history" className="rounded-full border border-[#e8ebef] p-2 text-slate-500">
+              <Bell className="h-4 w-4" />
+            </Link>
+            <Link href="/sale/profile?tab=contact" className="rounded-full border border-[#e8ebef] p-2 text-slate-500">
+              <HelpCircle className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/sale/profile?tab=update-profile"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1c304a] text-xs font-bold text-white"
+            >
+              {(user?.username || "A").slice(0, 1).toUpperCase()}
+            </Link>
+          </div>
+        </header>
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-[1200px] space-y-5 px-4 py-6 sm:px-6">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#D60D26]">
-                Agent panel
-              </p>
               <h1 className="text-2xl font-black text-[#1c304a]">Business Overview</h1>
+              <div className="mt-3 flex items-center gap-4 text-[13px] font-bold">
+                {(["Business Summary", "Operations"] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTab(t)}
+                    className={cn(
+                      "border-b-2 pb-1",
+                      tab === t ? "border-[#D60D26] text-[#D60D26]" : "border-transparent text-slate-400"
+                    )}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-2 rounded-full border border-[#e8ebef] bg-white p-1 text-[13px] font-bold">
-              {(["Business Summary", "Operations"] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTab(t)}
-                  className={cn(
-                    "rounded-full px-4 py-1.5 transition-colors",
-                    tab === t ? "bg-[#D60D26] text-white" : "text-slate-500 hover:text-[#1c304a]"
-                  )}
-                >
-                  {t}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="flex items-center gap-2 rounded-full border border-[#e8ebef] bg-white px-3 py-1.5">
+                <Search className="h-3.5 w-3.5 text-slate-400" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search"
+                  className="w-28 bg-transparent text-[12px] outline-none sm:w-40"
+                />
+              </label>
+              <span className="rounded-full border border-[#e8ebef] bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-500">
+                {rangeLabel}
+              </span>
+              <span className="rounded-full border border-[#e8ebef] bg-white p-2 text-slate-400">
+                <Filter className="h-3.5 w-3.5" />
+              </span>
+              <button type="button" onClick={downloadCsv} className="rounded-full border border-[#e8ebef] bg-white p-2 text-slate-500">
+                <Download className="h-3.5 w-3.5" />
+              </button>
+              <Link href="/sale/profile?tab=update-profile" className="rounded-full border border-[#e8ebef] bg-white p-2 text-slate-500">
+                <Settings className="h-3.5 w-3.5" />
+              </Link>
             </div>
           </div>
 
@@ -275,8 +493,8 @@ export default function AgentBusinessOverviewPage() {
                   trend={kpiTrend(data.kpi.booking_trend_pct)}
                 />
                 <AdminStatCard
-                  title="Inventory"
-                  value={String(data.kpi.inventory_listings)}
+                  title="Total Agents"
+                  value={String(data.kpi.total_agents ?? 1)}
                   icon={Users}
                   iconClassName="bg-orange-50"
                   trend={kpiTrend(data.kpi.booking_trend_pct)}
@@ -336,10 +554,10 @@ export default function AgentBusinessOverviewPage() {
                   }
                 >
                   <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
-                    {data.activities.length === 0 && (
+                    {activities.length === 0 && (
                       <p className="text-xs text-slate-400 py-6 text-center">No recent activity yet.</p>
                     )}
-                    {data.activities.map((a, i) => (
+                    {activities.map((a, i) => (
                       <div key={`${a.title}-${i}`} className="flex items-start gap-3 border-b border-slate-50 pb-3 last:border-0">
                         <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-50 text-slate-500">
                           <Plane className="h-3.5 w-3.5" />
@@ -477,23 +695,35 @@ export default function AgentBusinessOverviewPage() {
                 </Card>
 
                 <Card title="Calendar">
-                  <p className="text-xs text-slate-500 mb-3">
-                    Today&apos;s departures from your inventory:{" "}
-                    <span className="font-bold text-[#1c304a]">{data.kpi.departures}</span>
-                  </p>
-                  <Link
-                    href="/sale/booking"
-                    className="inline-flex items-center gap-2 rounded-full bg-[#D60D26] px-4 py-2 text-[13px] font-bold text-white"
-                  >
-                    Open bookings
-                  </Link>
-                  <div className="mt-4 space-y-2">
-                    {data.activities.slice(0, 5).map((a, i) => (
-                      <div key={i} className="flex items-center gap-3 text-[12px]">
-                        <span className="text-slate-400 w-16 shrink-0">{a.time}</span>
-                        <span className="font-semibold text-[#1c304a] truncate">{a.title}</span>
-                      </div>
-                    ))}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <MonthCalendar
+                      selected={selectedDay || new Date().toISOString().slice(0, 10)}
+                      marked={markedDays}
+                      onSelect={setSelectedDay}
+                    />
+                    <div className="space-y-2">
+                      <p className="text-[12px] font-semibold text-slate-500">
+                        {selectedDay || "Upcoming departures"}
+                      </p>
+                      {dayItems.length === 0 && (
+                        <p className="text-xs text-slate-400">No departures on this day.</p>
+                      )}
+                      {dayItems.slice(0, 6).map((item, i) => (
+                        <div key={`${item.date}-${item.time}-${i}`} className="flex items-start gap-2 text-[12px]">
+                          {item.done ? (
+                            <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-600" />
+                          ) : (
+                            <span className="mt-1 h-2.5 w-2.5 rounded-full border border-slate-300" />
+                          )}
+                          <div className="min-w-0">
+                            <p className="font-semibold text-[#1c304a]">
+                              {item.time} · {item.title}
+                            </p>
+                            <p className="text-slate-400">{item.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </Card>
               </div>
@@ -551,7 +781,7 @@ export default function AgentBusinessOverviewPage() {
           )}
         </div>
       </main>
-      <Footer />
+      </div>
     </div>
   );
 }

@@ -5,10 +5,13 @@ export type AgentDashboardPayload = {
   greeting: string;
   subtitle: string;
   now: string;
+  range?: string;
+  workspace?: string;
   kpi: {
     total_revenue: number;
     total_revenue_display: string;
     total_booking: number;
+    total_agents: number;
     wallet_balance: number;
     wallet_balance_display: string;
     wallet_currency: string;
@@ -64,11 +67,21 @@ export type AgentDashboardPayload = {
     growth: string;
   }[];
   quick_actions: { label: string; href: string }[];
+  schedule?: {
+    date: string;
+    time: string;
+    title: string;
+    desc: string;
+    done: boolean;
+  }[];
 };
 
-export async function fetchAgentDashboard(access: string): Promise<AgentDashboardPayload> {
+export async function fetchAgentDashboard(
+  access: string,
+  range: "24h" | "7d" | "30d" = "24h"
+): Promise<AgentDashboardPayload> {
   const apiBase = getPublicApiUrl();
-  const res = await fetch(`${apiBase}/agents/dashboard/`, {
+  const res = await fetch(`${apiBase}/agents/dashboard/?range=${range}`, {
     headers: { Authorization: `Bearer ${access}` },
     cache: "no-store",
   });
