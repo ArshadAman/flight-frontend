@@ -24,6 +24,7 @@ import {
   fetchRestrictions,
   type InventoryRestriction,
 } from "@/lib/admin/restrictionsApi";
+import { createSupplier, fetchSuppliers } from "@/lib/admin/suppliersApi";
 
 const airlines = ["AIR INDIA", "INDIGO", "QATAR", "SPICEJET", "VISTARA", "EMIRATES", "SINGAPORE"];
 const suppliers = [
@@ -252,16 +253,35 @@ export function BlockAirlinesModal({
 export function AddSuppliersModal({
   open,
   onOpenChange,
+  onCreated,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated?: () => void;
 }) {
+  const { access, openAuthModal } = useAuth();
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<Set<string>>(new Set(["Harshit Chirgania"]));
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [known, setKnown] = useState<string[]>([]);
+  const [customName, setCustomName] = useState("");
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const filtered = suppliers.filter((s) =>
-    s.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    if (!open || !access) return;
+    void (async () => {
+      try {
+        const rows = await fetchSuppliers(access);
+        setKnown(rows.map((r) => r.name));
+      } catch {
+        setKnown([]);
+      }
+    })();
+  }, [open, access]);
+
+  const catalog = Array.from(new Set([...suppliers, ...known]));
+  const filtered = catalog.filter((s) => s.toLowerCase().includes(search.toLowerCase()));
 
   const toggle = (item: string) => {
     setSelected((prev) => {
@@ -272,10 +292,45 @@ export function AddSuppliersModal({
     });
   };
 
+  const submit = async () => {
+    if (!access) {
+      openAuthModal();
+      return;
+    }
+    const names = new Set(selected);
+    if (customName.trim()) names.add(customName.trim());
+    if (!names.size) {
+      setError("Select or type a supplier name.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const existing = new Set(known.map((n) => n.toLowerCase()));
+      for (const name of names) {
+        if (existing.has(name.toLowerCase())) continue;
+        await createSupplier(access, {
+          name,
+          email: name === customName.trim() ? email.trim() : "",
+          status: "pending",
+        });
+      }
+      setSelected(new Set());
+      setCustomName("");
+      setEmail("");
+      onOpenChange(false);
+      onCreated?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save supplier");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <AdminFigmaModal open={open} onOpenChange={onOpenChange} title="Agent's Add Suppliers">
       <FigmaSearchBar placeholder="Search Suppliers" value={search} onChange={setSearch} />
-      <div className="max-h-[280px] overflow-y-auto">
+      <div className="max-h-[220px] overflow-y-auto">
         {filtered.map((item) => (
           <label
             key={item}
@@ -290,14 +345,24 @@ export function AddSuppliersModal({
             {item}
           </label>
         ))}
-        <button
-          type="button"
-          className="w-full py-3 text-center text-xs font-medium text-[#006aec] hover:underline"
-        >
-          More
-        </button>
       </div>
-      <FigmaModalFooter onReset={() => setSelected(new Set())} onSubmit={() => onOpenChange(false)} />
+      <div className="grid gap-2 px-6 py-3">
+        <input
+          value={customName}
+          onChange={(e) => setCustomName(e.target.value)}
+          placeholder="New supplier name"
+          className="rounded border border-[#e8ebef] px-3 py-2 text-xs"
+        />
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email (optional)"
+          className="rounded border border-[#e8ebef] px-3 py-2 text-xs"
+        />
+      </div>
+      {error && <p className="px-6 pb-2 text-xs text-rose-600">{error}</p>}
+      <FigmaModalFooter onReset={() => setSelected(new Set())} onSubmit={() => void submit()} />
+      {saving && <p className="px-6 pb-3 text-[10px] text-slate-400">Saving…</p>}
     </AdminFigmaModal>
   );
 }

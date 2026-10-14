@@ -1,38 +1,79 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AdminListPage } from "@/components/admin/AdminListPage";
 import { AddSuppliersModal } from "@/components/admin/modals";
-import { supplierRequests } from "@/lib/admin/mock-data";
 import { Button } from "@/components/ui/button";
-import { Info, MoreVertical, Plus } from "lucide-react";
-
-const supplierNames = [
-  "Harshit Chirgania",
-  "Ajay Mehto",
-  "Lokesh Gidwani",
-  "Kusum Meena",
-  "Riya Roy",
-  "Vaibhav Raj",
-];
-
-const rows = supplierRequests.map((s, i) => ({
-  ...s,
-  supplierId: String(23853 + i * 111),
-  supplierName: supplierNames[i % supplierNames.length],
-}));
+import { Plus } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { fetchSuppliers, type SupplierRow } from "@/lib/admin/suppliersApi";
 
 export default function AgentSuppliersPage() {
+  const { access, openAuthModal, isLoading } = useAuth();
   const [modalOpen, setModalOpen] = useState(false);
+  const [tab, setTab] = useState("All Suppliers");
+  const [rows, setRows] = useState<SupplierRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!access) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      setRows(await fetchSuppliers(access));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load suppliers");
+    } finally {
+      setLoading(false);
+    }
+  }, [access]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    void load();
+  }, [isLoading, load]);
+
+  const visible = rows.filter((row) => {
+    if (tab === "Active") return row.status === "approved";
+    if (tab === "Pending") return row.status === "pending";
+    return true;
+  });
 
   return (
     <>
+      {!access && !isLoading && (
+        <div className="m-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Sign in as admin to manage suppliers.{" "}
+          <button type="button" className="font-bold underline" onClick={openAuthModal}>
+            Login
+          </button>
+        </div>
+      )}
+      {error && <p className="px-6 pt-4 text-sm text-rose-600">{error}</p>}
       <AdminListPage
         title="Agent's Add Suppliers"
-        subtitle={`${rows.length} Suppliers`}
+        subtitle={`${visible.length} Suppliers`}
         tabs={["All Suppliers", "Active", "Pending"]}
+        activeTab={tab}
+        onTabChange={setTab}
         keyField="id"
-        data={rows}
+        loading={loading}
+        emptyTitle="No suppliers yet"
+        emptyDescription="Add a supplier. It stays pending until approved on Supplier Requests."
+        data={visible.map((row) => ({
+          id: row.id,
+          supplierId: row.code || row.id.slice(0, 8),
+          supplierName: row.name,
+          contact: row.contact_name || row.phone || "—",
+          email: row.email || "—",
+          inventory: row.inventory_count,
+          submitted: row.created_at ? row.created_at.slice(0, 10) : "—",
+          status: row.status,
+        }))}
         action={
           <Button
             size="sm"
@@ -44,32 +85,16 @@ export default function AgentSuppliersPage() {
           </Button>
         }
         columns={[
-          {
-            key: "select",
-            header: "",
-            render: () => (
-              <input type="checkbox" className="rounded border-slate-300" onClick={(e) => e.stopPropagation()} />
-            ),
-          },
           { key: "supplierId", header: "Supplier Id" },
-          { key: "supplierName", header: "Name of Suppliers Activate" },
+          { key: "supplierName", header: "Name of Suppliers" },
           { key: "contact", header: "Contact" },
           { key: "email", header: "Email" },
-          { key: "inventory", header: "No. of Supplier Activate" },
+          { key: "inventory", header: "Inventory" },
+          { key: "status", header: "Status" },
           { key: "submitted", header: "Added On" },
-          {
-            key: "actions",
-            header: "",
-            render: () => (
-              <div className="flex items-center gap-2 text-slate-400">
-                <Info className="h-4 w-4" />
-                <MoreVertical className="h-4 w-4" />
-              </div>
-            ),
-          },
         ]}
       />
-      <AddSuppliersModal open={modalOpen} onOpenChange={setModalOpen} />
+      <AddSuppliersModal open={modalOpen} onOpenChange={setModalOpen} onCreated={() => void load()} />
     </>
   );
 }
