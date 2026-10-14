@@ -16,6 +16,23 @@ export type GroupBookingRow = {
   total_paid: string;
   has_payment_proof?: boolean;
   payment_proof_name?: string;
+  airline_preference?: string | null;
+  created_at?: string;
+  passengers?: Array<{
+    first_name: string;
+    last_name: string;
+    gender?: string;
+    passport_number?: string | null;
+  }>;
+  quotes?: Array<{
+    airline?: string;
+    flight_number?: string;
+    departure_time?: string;
+    arrival_time?: string;
+    fare_per_pax?: string;
+    tax_per_pax?: string;
+    is_selected?: boolean;
+  }>;
   service_cases?: Array<{
     id: string;
     case_id: string;

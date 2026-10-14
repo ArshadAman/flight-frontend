@@ -1,10 +1,14 @@
 "use client";
 
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { B2BNavbar } from "@/components/B2BNavbar";
 import { Footer } from "@/components/Footer";
 import { HeroBanner } from "@/components/HeroBanner";
+import { BookingSubnav } from "@/components/b2b/BookingSubnav";
 import { Plane, Trash2, Clock, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { fetchGroupBookings, type GroupBookingRow } from "@/lib/b2b/groupBookings";
 
 const BookingCard = ({
     bookingNo,
@@ -40,7 +44,7 @@ const BookingCard = ({
                 <span>Booking Date: <b className="text-gray-700 tracking-tighter ml-1">{date}</b></span>
             </div>
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end mt-2 sm:mt-0">
-                <Link href={`/b2b/my-booking/${bookingNo}`} className="flex items-center gap-1 text-[14px] font-[700] text-primary hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
+                <Link href={`/b2b/my-booking/download?id=${bookingNo}`} className="flex items-center gap-1 text-[14px] font-[700] text-primary hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
                     <span>View Details</span>
                     <ChevronRight className="w-[16px] h-[16px]" strokeWidth={3} />
                 </Link>
@@ -102,7 +106,7 @@ const BookingCard = ({
                         {passengers.map((p, i: number) => (
                             <div key={i} className="flex justify-between text-[15px] font-[600] text-gray-500">
                                 <span>{p.name}</span>
-                                <span>{p.age}yr</span>
+                                <span>{p.age > 0 ? `${p.age}yr` : ""}</span>
                             </div>
                         ))}
                     </div>
@@ -112,31 +116,52 @@ const BookingCard = ({
     </div>
 );
 
+function toCard(row: GroupBookingRow) {
+    const quote = row.quotes?.find((item) => item.is_selected) || row.quotes?.[0];
+    const people = (row.passengers || []).map((person) => ({
+        name: `${person.first_name} ${person.last_name}`.trim(),
+        age: 0,
+    }));
+    return {
+        no: row.request_id,
+        date: (row.created_at || row.departure_date || "").slice(0, 10),
+        from: row.origin,
+        fromCode: row.origin,
+        to: row.destination,
+        toCode: row.destination,
+        terminal: "—",
+        flight: `${quote?.airline || row.airline_preference || "Group"} ${quote?.flight_number || row.status}`,
+        price: row.total_paid || "0.00",
+        passengers: people.length ? people : [{ name: row.group_name, age: row.pax_adults }],
+    };
+}
+
 export default function B2BMyBooking() {
-    const bookings = [
-        {
-            no: "3124123522421",
-            date: "October 12, 2025",
-            from: "New Delhi", fromCode: "DEL",
-            to: "Bangkok", toCode: "BKK",
-            terminal: "3", flight: "Air India (AI 121)",
-            price: "2,063.00",
-            passengers: [{ name: "Harshit chirgania", age: 23 }, { name: "Vaibhav Arora", age: 43 }]
-        },
-        {
-            no: "3124123522421",
-            date: "October 12, 2025",
-            from: "New Delhi", fromCode: "DEL",
-            to: "Bombay", toCode: "BOM",
-            terminal: "3", flight: "Air India (AI 121)",
-            price: "2,063.00",
-            passengers: [{ name: "Harshit chirgania", age: 23 }, { name: "Vaibhav Arora", age: 43 }]
-        }
-    ];
+    return (
+        <Suspense>
+            <B2BMyBookingList />
+        </Suspense>
+    );
+}
+
+function B2BMyBookingList() {
+    const search = useSearchParams();
+    const openOnly = search.get("open") === "1";
+    const [bookings, setBookings] = useState<ReturnType<typeof toCard>[]>([]);
+
+    useEffect(() => {
+        fetchGroupBookings().then((rows) => {
+            const filtered = openOnly
+                ? rows.filter((row) => !["COMPLETED", "TICKETED"].includes(row.status))
+                : rows;
+            setBookings(filtered.map(toCard));
+        });
+    }, [openOnly]);
 
     return (
         <div className="w-full min-h-screen bg-white flex flex-col font-sans">
             <B2BNavbar />
+            <BookingSubnav />
 
             {/* Header Banner */}
             <div className="w-full bg-[#F2FBFF] py-14 sm:py-16 border-b border-rose-100">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { B2BNavbar } from "@/components/B2BNavbar";
+import { BookingSubnav } from "@/components/b2b/BookingSubnav";
 import { Footer } from "@/components/Footer";
 import { getPublicApiUrl } from "@/lib/apiConfig";
 import { unwrapList } from "@/lib/apiEnvelope";
@@ -73,6 +74,7 @@ export default function ImportPnrPage() {
   return (
     <div className="min-h-screen bg-[#F2FBFF] flex flex-col">
       <B2BNavbar />
+      <BookingSubnav />
       <main className="flex-1 container mx-auto px-4 sm:px-8 py-8 max-w-xl">
         <h1 className="text-[28px] font-extrabold text-[#0C2342] mb-6">Import PNR</h1>
         <div className="bg-white rounded-3xl border border-slate-100 p-6 space-y-4">
