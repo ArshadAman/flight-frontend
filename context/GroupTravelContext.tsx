@@ -77,7 +77,7 @@ interface GroupTravelContextType {
   addRequest: (req: any) => Promise<TravelRequest | null>;
   negotiateRequest: (bookingId: string, remarks: string) => Promise<boolean>;
   acceptQuote: (bookingId: string, quoteOptionId: string) => Promise<boolean>;
-  recordPayment: (bookingId: string, amount: string) => Promise<boolean>;
+  recordPayment: (bookingId: string, amount: string, proof?: { name: string; data: string }) => Promise<boolean>;
   uploadPassengers: (bookingId: string, passengers: GroupPassenger[]) => Promise<boolean>;
   createChangeRequest: (bookingId: string, changeType: "UPSIZE" | "DOWNSIZE", paxDelta: number, notes: string) => Promise<boolean>;
   resolveChangeRequest: (bookingId: string, crId: string, status: "APPROVED" | "REJECTED", remarks: string, adjustedFare?: string) => Promise<boolean>;
@@ -317,7 +317,11 @@ export function GroupTravelProvider({ children }: { children: React.ReactNode })
     }
   };
 
-  const recordPayment = async (bookingId: string, amount: string) => {
+  const recordPayment = async (
+    bookingId: string,
+    amount: string,
+    proof?: { name: string; data: string }
+  ) => {
     try {
       const dbId = resolveDbId(bookingId);
       const response = await fetch(`/api/group-bookings/${dbId}/payment/`, {
@@ -327,7 +331,11 @@ export function GroupTravelProvider({ children }: { children: React.ReactNode })
           "X-Mock-Role": "AGENT",
           ...getAuthHeaders(),
         },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({
+          amount,
+          proof_name: proof?.name || "",
+          proof_data: proof?.data || "",
+        }),
       });
       if (!response.ok) throw new Error(await response.text());
       await refreshRequests("AGENT");

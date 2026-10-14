@@ -32,6 +32,7 @@ import {
 import { cn } from "@/lib/utils";
 import { B2BNavbar } from "@/components/B2BNavbar";
 import { Footer } from "@/components/Footer";
+import { NoticeBoard } from "@/components/b2b/NoticeBoard";
 
 type TabType = "update-profile" | "manage-user" | "change-logo" | "customer-profile" | "notice-board" | "contact";
 
@@ -854,88 +855,7 @@ export default function B2BMyAccountPage() {
                     )}
 
                     {/* TAB: NOTICE BOARD (Screenshot 2) */}
-                    {activeTab === "notice-board" && (
-                        <div className="animate-in fade-in duration-300">
-                            {/* 4-column block layout matching screenshot 2 exactly */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 select-none mt-2">
-                                
-                                {/* 1. Airline information */}
-                                <div className="flex flex-col border border-slate-200/80 rounded-xl overflow-hidden shadow-sm bg-white min-h-[420px]">
-                                    <div className="bg-[#FFFFFF] text-[#D60D26] font-extrabold text-[14px] py-3.5 px-5 border-b border-slate-150 uppercase tracking-wide flex items-center gap-2">
-                                        <Plane className="w-4 h-4 text-[#D60D26]" />
-                                        <span>Airline information</span>
-                                    </div>
-                                    <div className="p-5 flex-1 flex flex-col gap-4 text-[13px] font-semibold text-slate-700">
-                                        <div className="p-3 bg-red-50/50 rounded-lg border border-red-100">
-                                            <span className="text-[11px] font-extrabold text-red-600 block mb-1">ALERT</span>
-                                            <p className="text-slate-700 text-[12.5px] leading-relaxed">Air India operations to Kathmandu suspended due to airport maintenance waivers.</p>
-                                        </div>
-                                        <div className="p-3 bg-blue-50/30 rounded-lg border border-blue-100">
-                                            <span className="text-[11px] font-extrabold text-blue-600 block mb-1">UPDATE</span>
-                                            <p className="text-slate-700 text-[12.5px] leading-relaxed">Indigo introduces extra bags luggage allowances for Gulf sectors starting next week.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* 2. Finance Information */}
-                                <div className="flex flex-col border border-slate-200/80 rounded-xl overflow-hidden shadow-sm bg-white min-h-[420px]">
-                                    <div className="bg-[#FFFFFF] text-[#D60D26] font-extrabold text-[14px] py-3.5 px-5 border-b border-slate-150 uppercase tracking-wide flex items-center gap-2">
-                                        <Coins className="w-4 h-4 text-[#D60D26]" />
-                                        <span>Finance Information</span>
-                                    </div>
-                                    <div className="p-5 flex-1 flex flex-col gap-4 text-[13px] font-semibold text-slate-700">
-                                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-150">
-                                            <span className="text-[11px] font-extrabold text-slate-500 block mb-1">DEPOSIT WINDOW</span>
-                                            <p className="text-slate-700 text-[12.5px] leading-relaxed">Instant net banking wallet deposit service upgraded with 0% extra gateway charges.</p>
-                                        </div>
-                                        <div className="p-3 bg-amber-50/30 rounded-lg border border-amber-100">
-                                            <span className="text-[11px] font-extrabold text-amber-600 block mb-1">PROMOTION</span>
-                                            <p className="text-slate-700 text-[12.5px] leading-relaxed">Earn 1.5% loyalty points bonus on credit card requests processed before Friday midnight.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* 3. Contact Information */}
-                                <div className="flex flex-col border border-slate-200/80 rounded-xl overflow-hidden shadow-sm bg-white min-h-[420px]">
-                                    <div className="bg-[#FFFFFF] text-[#D60D26] font-extrabold text-[14px] py-3.5 px-5 border-b border-slate-150 uppercase tracking-wide flex items-center gap-2">
-                                        <Contact2 className="w-4 h-4 text-[#D60D26]" />
-                                        <span>Contact Information</span>
-                                    </div>
-                                    <div className="p-5 flex-1 flex flex-col gap-4 text-[13px] font-semibold text-slate-700">
-                                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-150 space-y-1">
-                                            <span className="text-[11px] font-extrabold text-slate-500 block">B2B HELPDESK</span>
-                                            <span className="block text-[13px] font-bold text-slate-800">Support Desk: +91 99999-88888</span>
-                                            <span className="block text-[12px] text-slate-500 font-medium">Desk timings: 24/7 Hotline support</span>
-                                        </div>
-                                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-150 space-y-1">
-                                            <span className="text-[11px] font-extrabold text-slate-500 block">ACCOUNT MANAGER</span>
-                                            <span className="block text-[13px] font-bold text-slate-800">Anand Kumar (Sr Head)</span>
-                                            <span className="block text-[12px] text-slate-500 font-medium">anand.k@mytraveldeal.com</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* 4. Others */}
-                                <div className="flex flex-col border border-slate-200/80 rounded-xl overflow-hidden shadow-sm bg-white min-h-[420px]">
-                                    <div className="bg-[#FFFFFF] text-[#D60D26] font-extrabold text-[14px] py-3.5 px-5 border-b border-slate-150 uppercase tracking-wide flex items-center gap-2">
-                                        <Settings className="w-4 h-4 text-[#D60D26]" />
-                                        <span>Others</span>
-                                    </div>
-                                    <div className="p-5 flex-1 flex flex-col gap-4 text-[13px] font-semibold text-slate-700">
-                                        <div className="p-3 bg-blue-50/20 rounded-lg border border-blue-100">
-                                            <span className="text-[11px] font-extrabold text-blue-600 block mb-1">PORTAL SYSTEM</span>
-                                            <p className="text-slate-700 text-[12.5px] leading-relaxed">Dedicated B2B agent mobile ticketing application launching soon on Play Store.</p>
-                                        </div>
-                                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-150">
-                                            <span className="text-[11px] font-extrabold text-slate-500 block mb-1">GDS ANNOUNCEMENT</span>
-                                            <p className="text-slate-700 text-[12.5px] leading-relaxed">Dynamic seat mapping features enabled on Sabre direct airline connections.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    )}
+                    {activeTab === "notice-board" && <NoticeBoard />}
 
                     {/* TAB: CONTACT SUPPORT */}
                     {activeTab === "contact" && (

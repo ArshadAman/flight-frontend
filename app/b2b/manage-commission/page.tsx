@@ -1,16 +1,68 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { B2BNavbar } from "@/components/B2BNavbar";
 import { Footer } from "@/components/Footer";
 import { ChevronDown, Plus } from "lucide-react";
 import Link from "next/link";
+import { getPublicApiUrl } from "@/lib/apiConfig";
+import { unwrapList } from "@/lib/apiEnvelope";
 
 type Tab = "No Calculation" | "Flat Calculation" | "Standard Calculation" | "Simple Calculation" | "Custom Calculation";
+
+const METHOD_BY_TAB: Record<Tab, string> = {
+    "No Calculation": "none",
+    "Flat Calculation": "flat",
+    "Standard Calculation": "standard",
+    "Simple Calculation": "simple",
+    "Custom Calculation": "custom",
+};
 
 export default function B2BManageCommissionPage() {
     const [activeCategory, setActiveCategory] = useState<"Flight" | "Rebooking">("Flight");
     const [activeTab, setActiveTab] = useState<Tab>("No Calculation");
+    const [markup, setMarkup] = useState("20.00");
+    const [status, setStatus] = useState("");
+
+    useEffect(() => {
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+        fetch(`${getPublicApiUrl()}/agents/commission/`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then((res) => res.json())
+            .then((json) => {
+                const rows = unwrapList<{ category: string; method: string; markup: string }>(json);
+                const category = activeCategory === "Flight" ? "flight" : "rebook";
+                const row = rows.find((item) => item.category === category);
+                if (!row) return;
+                setMarkup(String(row.markup));
+                const tab = (Object.keys(METHOD_BY_TAB) as Tab[]).find((key) => METHOD_BY_TAB[key] === row.method);
+                if (tab) setActiveTab(tab);
+            })
+            .catch(() => undefined);
+    }, [activeCategory]);
+
+    const save = async () => {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            setStatus("Sign in as an agent to save commission.");
+            return;
+        }
+        const res = await fetch(`${getPublicApiUrl()}/agents/commission/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                category: activeCategory === "Flight" ? "flight" : "rebook",
+                method: METHOD_BY_TAB[activeTab],
+                markup: markup.replace(/[^\d.]/g, "") || "0",
+            }),
+        });
+        setStatus(res.ok ? "Commission saved." : "Could not save commission.");
+    };
 
     return (
         <div className="w-full min-h-screen bg-white flex flex-col font-sans">
@@ -70,14 +122,15 @@ export default function B2BManageCommissionPage() {
                     <div className="w-full bg-white border-b border-slate-100 py-6 sm:py-8">
                         <div className="container mx-auto px-6 lg:px-12 flex justify-between items-center max-w-5xl">
                             <h1 className="text-[20px] sm:text-[22px] font-bold text-[#0C2342]">All Fares types:</h1>
-                            <button className="bg-[#D60D26] hover:bg-[#D60D26] text-white px-6 sm:px-8 py-2 rounded-full font-bold text-sm transition-colors shadow-sm">
-                                Edit
+                            <button type="button" onClick={save} className="bg-[#D60D26] hover:bg-[#D60D26] text-white px-6 sm:px-8 py-2 rounded-full font-bold text-sm transition-colors shadow-sm">
+                                Save
                             </button>
                         </div>
                     </div>
                 )}
 
                 <div className="container mx-auto px-6 lg:px-12 py-10 w-full max-w-5xl">
+                    {status && <p className="mb-4 text-sm font-semibold text-[#0C2342]">{status}</p>}
                     
                     {activeTab === "No Calculation" && (
                         <p className="text-slate-600 font-medium">
@@ -91,12 +144,13 @@ export default function B2BManageCommissionPage() {
                                 <span className="text-slate-600 font-medium text-lg sm:w-40">Your Markup:</span>
                                 <input 
                                     type="text" 
-                                    defaultValue="INR 20.00" 
+                                    value={markup}
+                                    onChange={(event) => setMarkup(event.target.value)}
                                     className="border border-slate-200 rounded-full px-6 py-2.5 w-full sm:w-48 text-center font-medium text-slate-700 outline-none focus:border-[#888]"
                                 />
                             </div>
                             <div className="flex flex-col sm:flex-row gap-4">
-                                <button className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white py-3 rounded-full font-bold transition-colors">
+                                <button type="button" onClick={save} className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white py-3 rounded-full font-bold transition-colors">
                                     Upload
                                 </button>
                                 <button className="flex-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 py-3 rounded-full font-bold transition-colors">
@@ -124,7 +178,7 @@ export default function B2BManageCommissionPage() {
                                 </div>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-4">
-                                <button className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white py-3 rounded-full font-bold transition-colors">
+                                <button type="button" onClick={save} className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white py-3 rounded-full font-bold transition-colors">
                                     Upload
                                 </button>
                                 <button className="flex-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 py-3 rounded-full font-bold transition-colors">
@@ -151,7 +205,7 @@ export default function B2BManageCommissionPage() {
                                 </div>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-4">
-                                <button className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white py-3 rounded-full font-bold transition-colors">
+                                <button type="button" onClick={save} className="flex-1 bg-[#D60D26] hover:bg-[#D60D26] text-white py-3 rounded-full font-bold transition-colors">
                                     Upload
                                 </button>
                                 <button className="flex-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 py-3 rounded-full font-bold transition-colors">

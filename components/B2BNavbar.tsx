@@ -160,6 +160,7 @@ export function B2BNavbar() {
                   { label: "Ticket Prints/Shares", href: "/b2b/my-booking/prints", icon: <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg> },
                   { label: "Import PNR", href: "/b2b/my-booking/import-pnr", icon: <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg> },
                   { label: "Trips(Recent/Upcoming)", href: "/b2b/my-booking/trips", icon: <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg> },
+                  { label: "Calendar", href: "/b2b/calendar", icon: <svg className="w-4.5 h-4.5 text-[#D60D26] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6a3 3 0 003 3h11" /><path d="M14 11l4 4-4 4" /></svg> },
                 ]}
               />
 

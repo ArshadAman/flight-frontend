@@ -64,18 +64,33 @@ function PaymentPortalContent() {
       return;
     }
     setIsUploading(true);
-    // Simulate upload
-    setTimeout(async () => {
-      setIsUploading(false);
-      showToast("Payment screenshot submitted successfully!", "success");
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const data = typeof reader.result === "string" ? reader.result : "";
       if (requestId) {
         const rawAmount = amountToPay.replace(/,/g, "");
-        await recordPayment(requestId, rawAmount);
+        const ok = await recordPayment(requestId, rawAmount, {
+          name: selectedFile.name,
+          data,
+        });
+        setIsUploading(false);
+        if (!ok) {
+          showToast("Could not save the payment on the server.", "error");
+          return;
+        }
+      } else {
+        setIsUploading(false);
       }
+      showToast("Payment screenshot submitted successfully!", "success");
       setTimeout(() => {
-        router.push(`/b2b/group-travel/make-payment/payment-summary?id=${requestId || 'GRP1134718273'}`);
-      }, 1200);
-    }, 2000);
+        router.push(`/b2b/group-travel/make-payment/payment-summary?id=${requestId || "GRP1134718273"}`);
+      }, 800);
+    };
+    reader.onerror = () => {
+      setIsUploading(false);
+      showToast("Could not read the screenshot.", "error");
+    };
+    reader.readAsDataURL(selectedFile);
   };
 
   return (
