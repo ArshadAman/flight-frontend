@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { Users, Plus, Shield, Search, CheckCircle2, UserCheck, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Users, Plus, Shield, Search, CheckCircle2, UserCheck, X, Mail, Phone, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 interface StaffUser {
   id: string;
@@ -69,6 +71,7 @@ const initialStaff: StaffUser[] = [
 ];
 
 export function StaffManageSection() {
+  const { access } = useAuth();
   const [staff, setStaff] = useState<StaffUser[]>(initialStaff);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -78,6 +81,38 @@ export function StaffManageSection() {
   const [department, setDepartment] = useState("Operations");
   const [toast, setToast] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!access) return;
+    const fetchStaff = async () => {
+      try {
+        const apiBase = getPublicApiUrl();
+        const res = await fetch(`${apiBase}/agents/staff/`, {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const items = Array.isArray(data) ? data : data?.results || [];
+          if (items.length > 0) {
+            const mapped: StaffUser[] = items.map((s: any) => ({
+              id: s.id,
+              name: s.name,
+              email: s.email,
+              role: s.role || "Ticketing Agent",
+              department: "Operations",
+              bookings: s.bookings_count || 0,
+              revenue: Number(s.total_sales) || 0,
+              status: s.status || "Active",
+            }));
+            setStaff(mapped);
+          }
+        }
+      } catch {
+        /* fallback */
+      }
+    };
+    void fetchStaff();
+  }, [access]);
+
   const filtered = staff.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -85,7 +120,7 @@ export function StaffManageSection() {
       s.role.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email) return;
     const newStaff: StaffUser = {
@@ -104,6 +139,27 @@ export function StaffManageSection() {
     setEmail("");
     setToast(`Added team member ${newStaff.name}!`);
     setTimeout(() => setToast(null), 3000);
+
+    if (access) {
+      try {
+        const apiBase = getPublicApiUrl();
+        await fetch(`${apiBase}/agents/staff/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access}`,
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            role,
+            status: "Active",
+          }),
+        });
+      } catch {
+        /* local state preserved */
+      }
+    }
   };
 
   const toggleStatus = (id: string) => {

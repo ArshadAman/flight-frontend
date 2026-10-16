@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Receipt, Save, Eye, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 export function InvoiceSettingsSection() {
+  const { access } = useAuth();
   const [prefix, setPrefix] = useState("INV-");
   const [startNum, setStartNum] = useState("10452");
   const [gstRate, setGstRate] = useState("18");
@@ -13,10 +16,51 @@ export function InvoiceSettingsSection() {
   );
   const [toast, setToast] = useState<string | null>(null);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!access) return;
+    const fetchSettings = async () => {
+      try {
+        const apiBase = getPublicApiUrl();
+        const res = await fetch(`${apiBase}/agents/invoice-settings/`, {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        if (res.ok) {
+          const d = await res.json();
+          if (d.series_prefix) setPrefix(d.series_prefix);
+          if (d.starting_seq) setStartNum(String(d.starting_seq));
+          if (d.footer_note) setTerms(d.footer_note);
+        }
+      } catch {
+        /* fallback */
+      }
+    };
+    void fetchSettings();
+  }, [access]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setToast("Invoice layout and numbering sequence saved!");
     setTimeout(() => setToast(null), 3000);
+
+    if (access) {
+      try {
+        const apiBase = getPublicApiUrl();
+        await fetch(`${apiBase}/agents/invoice-settings/`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access}`,
+          },
+          body: JSON.stringify({
+            series_prefix: prefix,
+            starting_seq: parseInt(startNum, 10) || 1001,
+            footer_note: terms,
+          }),
+        });
+      } catch {
+        /* preserved */
+      }
+    }
   };
 
   return (

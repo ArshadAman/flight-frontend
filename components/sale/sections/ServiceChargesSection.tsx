@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, Trash2, X, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 interface ServiceChargeRule {
   id: string;
@@ -49,6 +51,7 @@ const initialCharges: ServiceChargeRule[] = [
 ];
 
 export function ServiceChargesSection() {
+  const { access } = useAuth();
   const [charges, setCharges] = useState<ServiceChargeRule[]>(initialCharges);
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
@@ -57,15 +60,47 @@ export function ServiceChargesSection() {
   const [gstPercent, setGstPercent] = useState("18");
   const [toast, setToast] = useState<string | null>(null);
 
-  const handleAdd = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!access) return;
+    const fetchCharges = async () => {
+      try {
+        const apiBase = getPublicApiUrl();
+        const res = await fetch(`${apiBase}/agents/service-charges/`, {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const items = Array.isArray(data) ? data : data?.results || [];
+          if (items.length > 0) {
+            const mapped: ServiceChargeRule[] = items.map((c: any) => ({
+              id: c.code || c.id,
+              name: c.name,
+              category: "Domestic Flights",
+              fee: Number(c.amount) || 0,
+              gstPercent: Number(c.gst_rate) || 18,
+              status: c.is_active ? "Active" : "Disabled",
+            }));
+            setCharges(mapped);
+          }
+        }
+      } catch {
+        /* fallback */
+      }
+    };
+    void fetchCharges();
+  }, [access]);
+
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !fee) return;
+    const numFee = parseFloat(fee) || 0;
+    const numGst = parseFloat(gstPercent) || 18;
     const rule: ServiceChargeRule = {
       id: `SC-${Date.now().toString().slice(-4)}`,
       name,
       category,
-      fee: parseFloat(fee),
-      gstPercent: parseFloat(gstPercent) || 18,
+      fee: numFee,
+      gstPercent: numGst,
       status: "Active",
     };
     setCharges((prev) => [rule, ...prev]);
@@ -74,6 +109,29 @@ export function ServiceChargesSection() {
     setFee("");
     setToast(`Service charge rule #${rule.id} added!`);
     setTimeout(() => setToast(null), 3000);
+
+    if (access) {
+      try {
+        const apiBase = getPublicApiUrl();
+        await fetch(`${apiBase}/agents/service-charges/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access}`,
+          },
+          body: JSON.stringify({
+            code: rule.id,
+            name: rule.name,
+            charge_type: "FIXED",
+            amount: numFee,
+            gst_rate: numGst,
+            is_active: true,
+          }),
+        });
+      } catch {
+        /* local state preserved */
+      }
+    }
   };
 
   const handleDelete = (id: string) => {

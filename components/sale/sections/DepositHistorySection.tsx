@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Download, Search, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 interface DepositEntry {
   id: string;
@@ -54,8 +56,40 @@ const history: DepositEntry[] = [
 ];
 
 export function DepositHistorySection() {
+  const { access } = useAuth();
   const [items, setItems] = useState<DepositEntry[]>(history);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (!access) return;
+    const fetchHistory = async () => {
+      try {
+        const apiBase = getPublicApiUrl();
+        const res = await fetch(`${apiBase}/payments/deposit-requests/`, {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : data?.results || [];
+          if (list.length > 0) {
+            const mapped: DepositEntry[] = list.map((d: any) => ({
+              id: d.request_id || d.id,
+              date: d.created_at ? new Date(d.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "Recently",
+              amount: Number(d.amount) || 0,
+              mode: (d.payment_mode as any) || "NEFT",
+              bank: d.bank_name || "HDFC Bank (A/C ...4910)",
+              utr: d.utr_number || "—",
+              status: d.status === "APPROVED" ? "Approved" : d.status === "REJECTED" ? "Rejected" : "Pending",
+            }));
+            setItems(mapped);
+          }
+        }
+      } catch {
+        /* fallback */
+      }
+    };
+    void fetchHistory();
+  }, [access]);
 
   const filtered = items.filter(
     (i) =>

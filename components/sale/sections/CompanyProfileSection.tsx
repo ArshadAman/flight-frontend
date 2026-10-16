@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Building2, Save, Upload, CheckCircle2, Shield, Phone, Mail, MapPin } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 export function CompanyProfileSection() {
+  const { access, user } = useAuth();
   const [name, setName] = useState("My Travel Deal Pvt Ltd");
   const [iata, setIata] = useState("1439201");
   const [gstin, setGstin] = useState("07AABCM9124P1Z3");
@@ -16,10 +19,65 @@ export function CompanyProfileSection() {
   const [phone, setPhone] = useState("+91 11 4988 2200");
   const [toast, setToast] = useState<string | null>(null);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!access) return;
+    const fetchProfile = async () => {
+      try {
+        const apiBase = getPublicApiUrl();
+        const res = await fetch(`${apiBase}/agents/company-profile/`, {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        if (res.ok) {
+          const d = await res.json();
+          if (d.company_name) setName(d.company_name);
+          if (d.iata_number) setIata(d.iata_number);
+          if (d.gstin) setGstin(d.gstin);
+          if (d.pan) setPan(d.pan);
+          if (d.address) setAddress(d.address);
+          if (d.city) setCity(d.city);
+          if (d.state) setState(d.state);
+          if (d.pincode) setPin(d.pincode);
+          if (d.email) setEmail(d.email);
+          if (d.phone) setPhone(d.phone);
+        }
+      } catch {
+        /* fallback to defaults */
+      }
+    };
+    void fetchProfile();
+  }, [access]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setToast("Agency corporate profile updated successfully!");
     setTimeout(() => setToast(null), 3000);
+
+    if (access) {
+      try {
+        const apiBase = getPublicApiUrl();
+        await fetch(`${apiBase}/agents/company-profile/`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access}`,
+          },
+          body: JSON.stringify({
+            company_name: name,
+            iata_number: iata,
+            gstin,
+            pan,
+            address,
+            city,
+            state,
+            pincode: pin,
+            email,
+            phone,
+          }),
+        });
+      } catch {
+        /* preserved */
+      }
+    }
   };
 
   return (

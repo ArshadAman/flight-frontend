@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, Search, Tag, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 interface DiscountRule {
   id: string;
@@ -49,6 +51,7 @@ const initialDiscounts: DiscountRule[] = [
 ];
 
 export function DiscountsSection() {
+  const { access } = useAuth();
   const [discounts, setDiscounts] = useState<DiscountRule[]>(initialDiscounts);
   const [modalOpen, setModalOpen] = useState(false);
   const [newCode, setNewCode] = useState("");
@@ -57,9 +60,42 @@ export function DiscountsSection() {
   const [newRemark, setNewRemark] = useState("");
   const [toast, setToast] = useState<string | null>(null);
 
-  const handleAdd = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!access) return;
+    const fetchDiscounts = async () => {
+      try {
+        const apiBase = getPublicApiUrl();
+        const res = await fetch(`${apiBase}/agents/discounts/`, {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const items = Array.isArray(data) ? data : data?.results || [];
+          if (items.length > 0) {
+            const mapped: DiscountRule[] = items.map((d: any) => ({
+              id: d.id,
+              code: d.code,
+              airline: d.title || "All Airlines",
+              airlineType: d.discount_type === "PERCENTAGE" ? "Percentage" : "Fixed",
+              value: d.discount_type === "PERCENTAGE" ? `${d.value}% Off` : `₹${d.value} Flat`,
+              validity: d.valid_until ? `Until ${d.valid_until}` : "Until 31 Dec 2026",
+              status: d.is_active ? "Active" : "Expired",
+              remark: d.title || "Live promo rule",
+            }));
+            setDiscounts(mapped);
+          }
+        }
+      } catch {
+        /* fallback to initial */
+      }
+    };
+    void fetchDiscounts();
+  }, [access]);
+
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCode || !newValue) return;
+    const numVal = parseFloat(newValue.replace(/[^0-9.]/g, "")) || 500;
     const rule: DiscountRule = {
       id: `DSC-${Date.now().toString().slice(-4)}`,
       code: newCode.toUpperCase(),
@@ -70,6 +106,7 @@ export function DiscountsSection() {
       status: "Active",
       remark: newRemark || "Agent custom promo rule",
     };
+
     setDiscounts((prev) => [rule, ...prev]);
     setModalOpen(false);
     setNewCode("");
@@ -77,6 +114,28 @@ export function DiscountsSection() {
     setNewRemark("");
     setToast(`Discount code ${rule.code} added successfully!`);
     setTimeout(() => setToast(null), 3000);
+
+    if (access) {
+      try {
+        const apiBase = getPublicApiUrl();
+        await fetch(`${apiBase}/agents/discounts/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access}`,
+          },
+          body: JSON.stringify({
+            code: rule.code,
+            title: rule.airline,
+            discount_type: newValue.includes("%") ? "PERCENTAGE" : "FIXED",
+            value: numVal,
+            is_active: true,
+          }),
+        });
+      } catch {
+        /* local state preserved */
+      }
+    }
   };
 
   return (

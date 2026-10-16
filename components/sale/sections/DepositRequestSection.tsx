@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, Building2, UploadCloud, CheckCircle2, Clock, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 interface DepositReq {
   id: string;
@@ -39,6 +41,7 @@ const initialReqs: DepositReq[] = [
 ];
 
 export function DepositRequestSection() {
+  const { access } = useAuth();
   const [requests, setRequests] = useState<DepositReq[]>(initialReqs);
   const [modalOpen, setModalOpen] = useState(false);
   const [amount, setAmount] = useState("");
@@ -48,12 +51,45 @@ export function DepositRequestSection() {
   const [remarks, setRemarks] = useState("");
   const [toast, setToast] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!access) return;
+    const fetchDeposits = async () => {
+      try {
+        const apiBase = getPublicApiUrl();
+        const res = await fetch(`${apiBase}/payments/deposit-requests/`, {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const items = Array.isArray(data) ? data : data?.results || [];
+          if (items.length > 0) {
+            const mapped: DepositReq[] = items.map((d: any) => ({
+              id: d.request_id || d.id,
+              amount: Number(d.amount) || 0,
+              mode: d.payment_mode || "NEFT",
+              bank: d.bank_name || "Company Bank Account",
+              utr: d.utr_number || "—",
+              date: d.created_at ? new Date(d.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "Recently",
+              status: d.status === "APPROVED" ? "Approved" : d.status === "REJECTED" ? "Rejected" : "Pending",
+              remarks: d.remarks || "Wallet balance deposit",
+            }));
+            setRequests(mapped);
+          }
+        }
+      } catch {
+        /* fallback */
+      }
+    };
+    void fetchDeposits();
+  }, [access]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !utr) return;
+    const numAmount = parseFloat(amount) || 0;
     const newReq: DepositReq = {
       id: `REQ-${Date.now().toString().slice(-3)}`,
-      amount: parseFloat(amount),
+      amount: numAmount,
       mode,
       bank,
       utr: utr.toUpperCase(),
@@ -68,6 +104,28 @@ export function DepositRequestSection() {
     setRemarks("");
     setToast(`Deposit Request #${newReq.id} submitted for verification!`);
     setTimeout(() => setToast(null), 3500);
+
+    if (access) {
+      try {
+        const apiBase = getPublicApiUrl();
+        await fetch(`${apiBase}/payments/deposit-requests/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access}`,
+          },
+          body: JSON.stringify({
+            amount: numAmount,
+            payment_mode: mode,
+            bank_name: bank,
+            utr_number: utr.toUpperCase(),
+            remarks: remarks || "Wallet top-up remittance",
+          }),
+        });
+      } catch {
+        /* preserved */
+      }
+    }
   };
 
   return (

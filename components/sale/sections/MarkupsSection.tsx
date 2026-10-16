@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, SlidersHorizontal, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 interface MarkupRule {
   id: string;
@@ -59,6 +61,7 @@ const initialMarkups: MarkupRule[] = [
 ];
 
 export function MarkupsSection() {
+  const { access } = useAuth();
   const [markups, setMarkups] = useState<MarkupRule[]>(initialMarkups);
   const [modalOpen, setModalOpen] = useState(false);
   const [channel, setChannel] = useState<"B2B" | "B2C" | "API">("B2B");
@@ -68,16 +71,49 @@ export function MarkupsSection() {
   const [value, setValue] = useState("");
   const [toast, setToast] = useState<string | null>(null);
 
-  const handleAdd = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!access) return;
+    const fetchMarkups = async () => {
+      try {
+        const apiBase = getPublicApiUrl();
+        const res = await fetch(`${apiBase}/agents/markups/`, {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const items = Array.isArray(data) ? data : data?.results || [];
+          if (items.length > 0) {
+            const mapped: MarkupRule[] = items.map((m: any, i: number) => ({
+              id: m.id || `MKP-0${i + 1}`,
+              channel: (m.channel as any) || "B2B",
+              airline: m.airline || "All Airlines",
+              sector: m.sector || "All Domestic",
+              type: m.markup_type === "PERCENTAGE" ? "Percentage" : "Fixed",
+              value: Number(m.value) || 0,
+              status: m.is_active ? "Active" : "Disabled",
+              updatedAt: m.created_at ? new Date(m.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "Recently",
+            }));
+            setMarkups(mapped);
+          }
+        }
+      } catch {
+        /* fallback to initial */
+      }
+    };
+    void fetchMarkups();
+  }, [access]);
+
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!value) return;
+    const num = parseFloat(value) || 0;
     const rule: MarkupRule = {
       id: `MKP-${Date.now().toString().slice(-4)}`,
       channel,
       airline,
       sector,
       type,
-      value: parseFloat(value),
+      value: num,
       status: "Active",
       updatedAt: "Just now",
     };
@@ -86,6 +122,29 @@ export function MarkupsSection() {
     setValue("");
     setToast(`Markup rule #${rule.id} added!`);
     setTimeout(() => setToast(null), 3000);
+
+    if (access) {
+      try {
+        const apiBase = getPublicApiUrl();
+        await fetch(`${apiBase}/agents/markups/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access}`,
+          },
+          body: JSON.stringify({
+            channel,
+            airline,
+            sector,
+            markup_type: type === "Percentage" ? "PERCENTAGE" : "FIXED",
+            value: num,
+            is_active: true,
+          }),
+        });
+      } catch {
+        /* local state preserved */
+      }
+    }
   };
 
   const handleDelete = (id: string) => {

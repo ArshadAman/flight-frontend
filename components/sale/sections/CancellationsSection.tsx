@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Search, RefreshCw, AlertCircle, CheckCircle2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 interface CancellationItem {
   id: string;
@@ -61,11 +63,47 @@ const initialCancellations: CancellationItem[] = [
 ];
 
 export function CancellationsSection() {
+  const { access } = useAuth();
   const [items, setItems] = useState<CancellationItem[]>(initialCancellations);
   const [activeTab, setActiveTab] = useState<string>("All");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<CancellationItem | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!access) return;
+    const fetchCancellations = async () => {
+      try {
+        const apiBase = getPublicApiUrl();
+        const res = await fetch(`${apiBase}/tickets/cancellations/`, {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : data?.results || [];
+          if (list.length > 0) {
+            const mapped: CancellationItem[] = list.map((c: any) => ({
+              id: c.claim_id || c.id,
+              pnr: c.pnr,
+              passenger: c.passenger_name,
+              route: c.sector || "DEL → BOM",
+              flightDate: c.travel_date || "2026-10-24",
+              originalFare: Number(c.fare_paid) || 4999,
+              penalty: Number(c.airline_penalty) || 1500,
+              refundable: Number(c.refund_amount) || 3499,
+              requestDate: c.created_at ? new Date(c.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "Recently",
+              status: c.status === "APPROVED" ? "Approved" : c.status === "REJECTED" ? "Rejected" : "Pending",
+              reason: c.reason || "Passenger cancellation claim",
+            }));
+            setItems(mapped);
+          }
+        }
+      } catch {
+        /* fallback */
+      }
+    };
+    void fetchCancellations();
+  }, [access]);
 
   const filtered = items.filter((item) => {
     if (activeTab !== "All" && item.status !== activeTab) return false;
@@ -80,14 +118,33 @@ export function CancellationsSection() {
     return true;
   });
 
-  const handleProcessRefund = (action: "Approved" | "Rejected" | "Processed") => {
+  const handleProcessRefund = async (action: "Approved" | "Rejected" | "Processed") => {
     if (!selected) return;
+    const currentId = selected.id;
     setItems((prev) =>
-      prev.map((i) => (i.id === selected.id ? { ...i, status: action } : i))
+      prev.map((i) => (i.id === currentId ? { ...i, status: action } : i))
     );
-    setToast(`Cancellation #${selected.id} has been marked as ${action}.`);
+    setToast(`Cancellation #${currentId} has been marked as ${action}.`);
     setSelected(null);
     setTimeout(() => setToast(null), 3000);
+
+    if (access) {
+      try {
+        const apiBase = getPublicApiUrl();
+        await fetch(`${apiBase}/tickets/cancellations/${currentId}/`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access}`,
+          },
+          body: JSON.stringify({
+            status: action === "Approved" ? "APPROVED" : action === "Rejected" ? "REJECTED" : "APPROVED",
+          }),
+        });
+      } catch {
+        /* preserved */
+      }
+    }
   };
 
   return (

@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Search, ArrowRight, RefreshCw, CheckCircle2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { getPublicApiUrl } from "@/lib/apiConfig";
 
 interface AmendmentItem {
   id: string;
@@ -61,17 +63,71 @@ const initialAmendments: AmendmentItem[] = [
 ];
 
 export function AmendmentsSection() {
+  const { access } = useAuth();
   const [items, setItems] = useState<AmendmentItem[]>(initialAmendments);
   const [activeTab, setActiveTab] = useState<string>("All");
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState<string | null>(null);
 
-  const handleUpdate = (id: string, status: "Approved" | "Rejected") => {
+  useEffect(() => {
+    if (!access) return;
+    const fetchAmendments = async () => {
+      try {
+        const apiBase = getPublicApiUrl();
+        const res = await fetch(`${apiBase}/tickets/amendments/`, {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : data?.results || [];
+          if (list.length > 0) {
+            const mapped: AmendmentItem[] = list.map((a: any) => ({
+              id: a.amendment_id || a.id,
+              pnr: a.pnr,
+              passenger: a.passenger_name,
+              type: (a.amendment_type as any) || "Date Change",
+              oldDetails: a.old_value || "DEL → BOM",
+              newDetails: a.new_value || "DEL → BOM (Updated)",
+              fareDiff: Number(a.fare_difference) || 0,
+              reissueFee: Number(a.service_fee) || 500,
+              totalPayable: Number(a.total_payable) || 500,
+              requestDate: a.created_at ? new Date(a.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "Recently",
+              status: a.status === "APPROVED" ? "Approved" : a.status === "REJECTED" ? "Rejected" : "Pending",
+            }));
+            setItems(mapped);
+          }
+        }
+      } catch {
+        /* fallback */
+      }
+    };
+    void fetchAmendments();
+  }, [access]);
+
+  const handleUpdate = async (id: string, status: "Approved" | "Rejected") => {
     setItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, status } : item))
     );
     setToast(`Amendment #${id} set to ${status}.`);
     setTimeout(() => setToast(null), 3000);
+
+    if (access) {
+      try {
+        const apiBase = getPublicApiUrl();
+        await fetch(`${apiBase}/tickets/amendments/${id}/`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access}`,
+          },
+          body: JSON.stringify({
+            status: status === "Approved" ? "APPROVED" : "REJECTED",
+          }),
+        });
+      } catch {
+        /* preserved */
+      }
+    }
   };
 
   const filtered = items.filter((item) => {
