@@ -1,64 +1,108 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Search, RefreshCw, AlertCircle, CheckCircle2, X } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, CheckCircle2, X, Plane, ArrowRight, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { getPublicApiUrl } from "@/lib/apiConfig";
 
 interface CancellationItem {
-  id: string;
+  id: string; // Cancellation Id: 00125618
+  bookingId: string;
   pnr: string;
   passenger: string;
+  source: "Airline" | "Agent";
   route: string;
+  segmentFrom: string;
+  segmentTo: string;
+  airlineWay: string;
+  airlineName: string;
   flightDate: string;
+  cancellationDate: string;
   originalFare: number;
-  penalty: number;
-  refundable: number;
-  requestDate: string;
-  status: "Pending" | "Approved" | "Processed" | "Rejected";
+  airlineCharges: number;
+  refundAmount: number;
+  status: "Pending" | "Refunded" | "Non-Refundable" | "Refund in process";
   reason: string;
 }
 
 const initialCancellations: CancellationItem[] = [
   {
-    id: "CAN-9011",
+    id: "00125618",
+    bookingId: "00125618",
+    pnr: "AD1267900",
+    passenger: "Harshit Chirgania",
+    source: "Airline",
+    route: "DEL → BKK",
+    segmentFrom: "New Delhi (DEL)",
+    segmentTo: "Bangkok (BKK)",
+    airlineWay: "One-way",
+    airlineName: "AIR INDIA IA 121",
+    flightDate: "22, Dec 2021 | 12:30 PM",
+    cancellationDate: "22, Dec 2021 | 12:30 PM",
+    originalFare: 45000,
+    airlineCharges: 5000,
+    refundAmount: 40000,
+    status: "Refund in process",
+    reason:
+      "The booking was cancelled by the airline due to operational reasons. The refund is currently being processed as per airline policy.",
+  },
+  {
+    id: "00125619",
+    bookingId: "00125619",
     pnr: "K2M9N4",
     passenger: "Rahul Roy",
+    source: "Agent",
     route: "CCU → DEL",
-    flightDate: "2026-10-24",
-    originalFare: 4999,
-    penalty: 1500,
-    refundable: 3499,
-    requestDate: "2026-10-15 14:20",
+    segmentFrom: "Kolkata (CCU)",
+    segmentTo: "New Delhi (DEL)",
+    airlineWay: "One-way",
+    airlineName: "IndiGo 6E 204",
+    flightDate: "24, Oct 2026 | 08:15 AM",
+    cancellationDate: "15, Oct 2026 | 02:20 PM",
+    originalFare: 14999,
+    airlineCharges: 2500,
+    refundAmount: 12499,
     status: "Pending",
-    reason: "Personal medical emergency",
+    reason: "Passenger personal emergency requested through agent desk.",
   },
   {
-    id: "CAN-9008",
+    id: "00125620",
+    bookingId: "00125620",
     pnr: "L9P4V2",
     passenger: "Sunita Joshi",
+    source: "Agent",
     route: "DEL → BOM",
-    flightDate: "2026-10-21",
-    originalFare: 8400,
-    penalty: 2500,
-    refundable: 5900,
-    requestDate: "2026-10-14 10:15",
-    status: "Processed",
-    reason: "Meeting rescheduled by client",
+    segmentFrom: "New Delhi (DEL)",
+    segmentTo: "Mumbai (BOM)",
+    airlineWay: "Round-trip",
+    airlineName: "Vistara UK 814",
+    flightDate: "21, Oct 2026 | 06:30 PM",
+    cancellationDate: "14, Oct 2026 | 10:15 AM",
+    originalFare: 28400,
+    airlineCharges: 3500,
+    refundAmount: 24900,
+    status: "Refunded",
+    reason: "Meeting rescheduled by client, processed directly to wallet.",
   },
   {
-    id: "CAN-9004",
+    id: "00125621",
+    bookingId: "00125621",
     pnr: "Z7R3Q1",
     passenger: "Karan Malhotra",
+    source: "Agent",
     route: "BOM → GOI",
-    flightDate: "2026-10-19",
+    segmentFrom: "Mumbai (BOM)",
+    segmentTo: "Goa (GOI)",
+    airlineWay: "One-way",
+    airlineName: "SpiceJet SG 142",
+    flightDate: "19, Oct 2026 | 07:00 PM",
+    cancellationDate: "13, Oct 2026 | 06:40 PM",
     originalFare: 5400,
-    penalty: 5400,
-    refundable: 0,
-    requestDate: "2026-10-13 18:40",
-    status: "Rejected",
-    reason: "Non-refundable promo ticket cancelled within 4 hours",
+    airlineCharges: 5400,
+    refundAmount: 0,
+    status: "Non-Refundable",
+    reason: "Instant saver promotional fare cancelled within 4 hours of departure.",
   },
 ];
 
@@ -82,119 +126,99 @@ export function CancellationsSection() {
           const data = await res.json();
           const list = Array.isArray(data) ? data : data?.results || [];
           if (list.length > 0) {
-            const mapped: CancellationItem[] = list.map((c: any) => ({
-              id: c.claim_id || c.id,
+            const mapped: CancellationItem[] = list.map((c: any, idx: number) => ({
+              id: c.claim_id || c.id || `001256${22 + idx}`,
+              bookingId: c.claim_id || c.id || `001256${22 + idx}`,
               pnr: c.pnr,
               passenger: c.passenger_name,
+              source: (c.source as any) || "Agent",
               route: c.sector || "DEL → BOM",
-              flightDate: c.travel_date || "2026-10-24",
-              originalFare: Number(c.fare_paid) || 4999,
-              penalty: Number(c.airline_penalty) || 1500,
-              refundable: Number(c.refund_amount) || 3499,
-              requestDate: c.created_at ? new Date(c.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "Recently",
-              status: c.status === "APPROVED" ? "Approved" : c.status === "REJECTED" ? "Rejected" : "Pending",
-              reason: c.reason || "Passenger cancellation claim",
+              segmentFrom: c.origin || "New Delhi (DEL)",
+              segmentTo: c.destination || "Bangkok (BKK)",
+              airlineWay: c.trip_type || "One-way",
+              airlineName: c.airline || "AIR INDIA IA 121",
+              flightDate: c.travel_date || "22, Dec 2021 | 12:30 PM",
+              cancellationDate: c.created_at
+                ? new Date(c.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+                : "22, Dec 2021 | 12:30 PM",
+              originalFare: Number(c.fare_paid) || 45000,
+              airlineCharges: Number(c.airline_penalty) || 5000,
+              refundAmount: Number(c.refund_amount) || 40000,
+              status:
+                c.status === "APPROVED" || c.status === "REFUNDED"
+                  ? "Refunded"
+                  : c.status === "IN_PROCESS"
+                  ? "Refund in process"
+                  : c.status === "NON_REFUNDABLE"
+                  ? "Non-Refundable"
+                  : "Pending",
+              reason: c.reason || "The booking was cancelled by the airline due to operational reasons.",
             }));
             setItems(mapped);
           }
         }
       } catch {
-        /* fallback */
+        /* preserved */
       }
     };
     void fetchCancellations();
   }, [access]);
 
-  const filtered = items.filter((item) => {
-    if (activeTab !== "All" && item.status !== activeTab) return false;
+  const handleProcessRefund = (newStatus: "Refunded" | "Non-Refundable" | "Refund in process") => {
+    if (!selected) return;
+    setItems((prev) =>
+      prev.map((c) => (c.id === selected.id ? { ...c, status: newStatus } : c))
+    );
+    setToast(`Cancellation #${selected.id} status updated to ${newStatus}`);
+    setSelected(null);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const filtered = items.filter((c) => {
+    if (activeTab !== "All" && c.status !== activeTab) return false;
     if (search.trim()) {
       const q = search.toLowerCase();
       return (
-        item.pnr.toLowerCase().includes(q) ||
-        item.passenger.toLowerCase().includes(q) ||
-        item.route.toLowerCase().includes(q)
+        c.pnr.toLowerCase().includes(q) ||
+        c.passenger.toLowerCase().includes(q) ||
+        c.id.toLowerCase().includes(q) ||
+        c.route.toLowerCase().includes(q)
       );
     }
     return true;
   });
 
-  const handleProcessRefund = async (action: "Approved" | "Rejected" | "Processed") => {
-    if (!selected) return;
-    const currentId = selected.id;
-    setItems((prev) =>
-      prev.map((i) => (i.id === currentId ? { ...i, status: action } : i))
-    );
-    setToast(`Cancellation #${currentId} has been marked as ${action}.`);
-    setSelected(null);
-    setTimeout(() => setToast(null), 3000);
-
-    if (access) {
-      try {
-        const apiBase = getPublicApiUrl();
-        await fetch(`${apiBase}/tickets/cancellations/${currentId}/`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${access}`,
-          },
-          body: JSON.stringify({
-            status: action === "Approved" ? "APPROVED" : action === "Rejected" ? "REJECTED" : "APPROVED",
-          }),
-        });
-      } catch {
-        /* preserved */
-      }
-    }
-  };
-
   return (
     <div className="space-y-5">
       {toast && (
-        <div className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-md">
+        <div className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-md transition-all">
           ✓ {toast}
         </div>
       )}
 
       <div>
-        <h2 className="text-xl font-black text-[#1c304a]">Cancellations & Refunds</h2>
+        <h2 className="text-xl font-black text-[#1c304a]">Cancellation List</h2>
         <p className="text-xs text-slate-500">
-          Review passenger cancellation requests, airline penalties, and process client wallet refunds.
+          Airline and agent initiated booking cancellations, penalty breakdowns, and refund workflows.
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-[10px] border border-[#e8ebef] bg-white p-4 shadow-sm">
-          <p className="text-[11px] font-semibold text-slate-400">Total Refund Claims</p>
-          <p className="text-xl font-black text-[#1c304a] mt-1">₹18,799</p>
-          <span className="text-[10px] text-slate-400">3 claims this week</span>
-        </div>
-        <div className="rounded-[10px] border border-[#e8ebef] bg-white p-4 shadow-sm">
-          <p className="text-[11px] font-semibold text-slate-400">Pending Review</p>
-          <p className="text-xl font-black text-amber-600 mt-1">₹3,499</p>
-          <span className="text-[10px] text-amber-600 font-bold">1 action required</span>
-        </div>
-        <div className="rounded-[10px] border border-[#e8ebef] bg-white p-4 shadow-sm">
-          <p className="text-[11px] font-semibold text-slate-400">Total Deductions / Penalties</p>
-          <p className="text-xl font-black text-slate-700 mt-1">₹9,400</p>
-          <span className="text-[10px] text-slate-400">Retained by airlines</span>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
-        <div className="flex items-center gap-2 text-xs font-bold">
-          {["All", "Pending", "Approved", "Processed", "Rejected"].map((t) => (
+      {/* Tabs exactly matching Figma: All, Pending, Refunded, Non-Refundable, Refund in process */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#e8ebef] pb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {["All", "Pending", "Refunded", "Non-Refundable", "Refund in process"].map((tab) => (
             <button
-              key={t}
+              key={tab}
               type="button"
-              onClick={() => setActiveTab(t)}
+              onClick={() => setActiveTab(tab)}
               className={cn(
-                "rounded-full px-3 py-1 transition-all",
-                activeTab === t
-                  ? "bg-[#D60D26] text-white shadow-sm"
-                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                "rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
+                activeTab === tab
+                  ? "bg-[#1c304a] text-white shadow-sm"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               )}
             >
-              {t}
+              {tab}
             </button>
           ))}
         </div>
@@ -204,24 +228,26 @@ export function CancellationsSection() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search PNR or Pax..."
-            className="w-36 bg-transparent outline-none sm:w-48"
+            placeholder="Search Cancel Id, PNR..."
+            className="w-36 bg-transparent outline-none sm:w-48 text-xs"
           />
         </label>
       </div>
 
+      {/* Table matching Figma columns */}
       <div className="overflow-hidden rounded-[10px] border border-[#e8ebef] bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-[#e8ebef] bg-slate-50/70 font-semibold text-slate-500 uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="px-4 py-3">Claim ID & PNR</th>
-                <th className="px-4 py-3">Passenger</th>
-                <th className="px-4 py-3">Sector</th>
-                <th className="px-4 py-3">Flight Date</th>
+                <th className="px-4 py-3">Cancel Id</th>
+                <th className="px-4 py-3">Passenger PNR</th>
+                <th className="px-4 py-3">Passenger Name</th>
+                <th className="px-4 py-3">Airline & Segment</th>
+                <th className="px-4 py-3">Cancel Date</th>
                 <th className="px-4 py-3">Original Fare</th>
-                <th className="px-4 py-3">Penalty</th>
-                <th className="px-4 py-3">Refundable</th>
+                <th className="px-4 py-3">Airline Charges</th>
+                <th className="px-4 py-3">Refund Amount</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3 text-right">Action</th>
               </tr>
@@ -229,28 +255,33 @@ export function CancellationsSection() {
             <tbody className="divide-y divide-slate-100 text-[#1c304a]">
               {filtered.map((item) => (
                 <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                  <td className="px-4 py-3 font-semibold">
-                    <span className="font-bold text-[#D60D26]">{item.pnr}</span>
-                    <p className="text-[10px] text-slate-400">{item.id}</p>
+                  <td className="px-4 py-3 font-mono font-bold text-[#006aec]">
+                    #{item.id}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="font-mono font-bold text-[#D60D26]">{item.pnr}</span>
                   </td>
                   <td className="px-4 py-3 font-bold">{item.passenger}</td>
-                  <td className="px-4 py-3">{item.route}</td>
-                  <td className="px-4 py-3 text-slate-500">{item.flightDate}</td>
-                  <td className="px-4 py-3">₹{item.originalFare.toLocaleString("en-IN")}</td>
+                  <td className="px-4 py-3">
+                    <p className="font-semibold">{item.route}</p>
+                    <p className="text-[10px] text-slate-400">{item.airlineName}</p>
+                  </td>
+                  <td className="px-4 py-3 text-slate-500">{item.cancellationDate}</td>
+                  <td className="px-4 py-3 font-semibold">₹{item.originalFare.toLocaleString("en-IN")}</td>
                   <td className="px-4 py-3 text-rose-600 font-semibold">
-                    -₹{item.penalty.toLocaleString("en-IN")}
+                    -₹{item.airlineCharges.toLocaleString("en-IN")}
                   </td>
                   <td className="px-4 py-3 font-black text-emerald-700">
-                    ₹{item.refundable.toLocaleString("en-IN")}
+                    ₹{item.refundAmount.toLocaleString("en-IN")}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={cn(
-                        "rounded-full px-2 py-0.5 text-[10px] font-bold",
-                        item.status === "Pending" && "bg-amber-50 text-amber-700 border border-amber-200",
-                        item.status === "Processed" && "bg-emerald-50 text-emerald-700 border border-emerald-200",
-                        item.status === "Approved" && "bg-blue-50 text-blue-700 border border-blue-200",
-                        item.status === "Rejected" && "bg-rose-50 text-rose-700 border border-rose-200"
+                        "rounded-full px-2 py-0.5 text-[10px] font-bold border",
+                        item.status === "Pending" && "bg-amber-50 text-amber-700 border-amber-200",
+                        item.status === "Refunded" && "bg-emerald-50 text-emerald-700 border-emerald-200",
+                        item.status === "Refund in process" && "bg-blue-50 text-blue-700 border-blue-200",
+                        item.status === "Non-Refundable" && "bg-rose-50 text-rose-700 border-rose-200"
                       )}
                     >
                       ● {item.status}
@@ -262,7 +293,7 @@ export function CancellationsSection() {
                       onClick={() => setSelected(item)}
                       className="rounded border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 hover:text-[#D60D26]"
                     >
-                      Review Claim
+                      Cancellation Details
                     </button>
                   </td>
                 </tr>
@@ -272,13 +303,18 @@ export function CancellationsSection() {
         </div>
       </div>
 
+      {/* Detail Modal matching Figma 2084:73868: Two Linked Cards */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-3xl rounded-xl bg-white p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between border-b pb-3">
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400">Review Cancellation</span>
-                <h3 className="text-lg font-black text-[#1c304a]">Claim: #{selected.id} (PNR {selected.pnr})</h3>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Figma Cancellation Screen
+                </span>
+                <h3 className="text-lg font-black text-[#1c304a]">
+                  Cancellation Id: #{selected.id} (PNR: {selected.pnr})
+                </h3>
               </div>
               <button
                 type="button"
@@ -289,22 +325,118 @@ export function CancellationsSection() {
               </button>
             </div>
 
-            <div className="space-y-2 text-xs">
-              <p><span className="text-slate-400">Passenger:</span> <strong>{selected.passenger}</strong></p>
-              <p><span className="text-slate-400">Route:</span> <strong>{selected.route}</strong> ({selected.flightDate})</p>
-              <p><span className="text-slate-400">Reason:</span> {selected.reason}</p>
-              <div className="rounded-lg bg-slate-50 p-3 space-y-1 mt-2">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Gross Fare:</span>
-                  <span>₹{selected.originalFare}</span>
+            {/* Exactly the 2 linked cards from Figma frame 2084:73868 */}
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Card 1: Cancellation Details */}
+              <div className="rounded-[10px] border border-[#e8ebef] bg-slate-50/70 p-4 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wide text-[#1c304a] border-b border-slate-200 pb-2">
+                  Cancellation Details
+                </h4>
+
+                <div className="space-y-2 text-xs">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                      Cancellation Id:
+                    </span>
+                    <span className="font-mono font-bold text-[#006aec]">#{selected.id}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                      Cancellation Source:
+                    </span>
+                    <span className="font-bold text-[#1c304a]">{selected.source}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                      Cancellation Date:
+                    </span>
+                    <span className="font-semibold text-slate-700">{selected.cancellationDate}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                      Cancellation Reason:
+                    </span>
+                    <p className="mt-1 rounded-md bg-white p-2.5 text-[11px] leading-relaxed text-slate-600 border border-slate-200">
+                      {selected.reason}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex justify-between text-rose-600 font-semibold">
-                  <span>Airline Cancellation Penalty:</span>
-                  <span>-₹{selected.penalty}</span>
+              </div>
+
+              {/* Card 2: Booking Details */}
+              <div className="rounded-[10px] border border-[#e8ebef] bg-white p-4 space-y-3 shadow-sm">
+                <h4 className="text-xs font-bold uppercase tracking-wide text-[#1c304a] border-b border-slate-200 pb-2">
+                  Booking Details
+                </h4>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                      Booking Id:
+                    </span>
+                    <span className="font-mono font-bold text-slate-700">#{selected.bookingId}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                      Passenger PNR:
+                    </span>
+                    <span className="font-mono font-bold text-[#D60D26]">{selected.pnr}</span>
+                  </div>
+
+                  <div className="col-span-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                      Passenger Name:
+                    </span>
+                    <span className="font-bold text-[#1c304a]">{selected.passenger}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                      Airline Way:
+                    </span>
+                    <span className="font-semibold text-slate-700">{selected.airlineWay}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                      Segment:
+                    </span>
+                    <span className="font-bold text-[#1c304a]">{selected.route}</span>
+                  </div>
+
+                  <div className="col-span-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                      Airline Name
+                    </span>
+                    <span className="font-bold text-slate-700">{selected.airlineName}</span>
+                  </div>
+
+                  <div className="col-span-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                      Booking Date
+                    </span>
+                    <span className="font-medium text-slate-600">{selected.flightDate}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between border-t pt-1 font-bold text-emerald-700">
-                  <span>Net Refundable to Client Wallet:</span>
-                  <span>₹{selected.refundable}</span>
+
+                {/* Fare math from Figma */}
+                <div className="rounded-lg bg-slate-50 p-2.5 text-xs space-y-1.5 border border-slate-100">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Original Fare:</span>
+                    <span className="font-bold">₹{selected.originalFare.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div className="flex justify-between text-rose-600 font-semibold">
+                    <span>Airline Charges:</span>
+                    <span>-₹{selected.airlineCharges.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-slate-200 pt-1 font-black text-emerald-700 text-sm">
+                    <span>Refund Amount:</span>
+                    <span>₹{selected.refundAmount.toLocaleString("en-IN")}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -312,24 +444,24 @@ export function CancellationsSection() {
             <div className="flex justify-end gap-2 border-t pt-3">
               <button
                 type="button"
-                onClick={() => handleProcessRefund("Processed")}
-                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+                onClick={() => handleProcessRefund("Refunded")}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 shadow-sm"
               >
-                Approve & Refund
+                Approve & Process Refund
               </button>
               <button
                 type="button"
-                onClick={() => handleProcessRefund("Rejected")}
-                className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-700"
+                onClick={() => handleProcessRefund("Non-Refundable")}
+                className="rounded-lg bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 border border-rose-200 hover:bg-rose-100"
               >
-                Reject Claim
+                Mark Non-Refundable
               </button>
               <button
                 type="button"
                 onClick={() => setSelected(null)}
-                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                className="rounded-lg border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                Close
               </button>
             </div>
           </div>

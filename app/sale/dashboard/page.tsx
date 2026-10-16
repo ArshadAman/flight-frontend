@@ -58,6 +58,7 @@ import { FinancialReportsSection } from "@/components/sale/sections/FinancialRep
 import { CompanyProfileSection } from "@/components/sale/sections/CompanyProfileSection";
 import { InvoiceSettingsSection } from "@/components/sale/sections/InvoiceSettingsSection";
 import { StaffManageSection } from "@/components/sale/sections/StaffManageSection";
+import { SettingsTicketsSection } from "@/components/sale/sections/SettingsTicketsSection";
 import { HelpCenterSection } from "@/components/sale/sections/HelpCenterSection";
 
 function Card({
@@ -169,7 +170,7 @@ const quickActionMeta: Record<
   "Create Agent": {
     icon: UserPlus,
     color: "bg-orange-50 text-orange-600",
-    hrefFallback: "/sale/dashboard?section=settings/staff",
+    hrefFallback: "/sale/dashboard?section=staff/list",
   },
 };
 
@@ -191,11 +192,11 @@ const navCategories = [
     label: "Booking",
     icon: Ticket,
     children: [
-      { id: "booking/list", label: "Booking list" },
-      { id: "booking/cancellation", label: "Cancellation" },
+      { id: "booking/list", label: "Booking List" },
+      { id: "booking/cancellations", label: "Cancellations" },
       { id: "booking/amendments", label: "Amendments" },
       { id: "booking/search-history", label: "Flight Search History" },
-      { id: "booking/traveller", label: "Traveller profile" },
+      { id: "booking/traveller", label: "Traveller Profiles" },
     ],
   },
   {
@@ -205,7 +206,7 @@ const navCategories = [
     children: [
       { id: "pricing/discounts", label: "Discounts" },
       { id: "pricing/markups", label: "Markups" },
-      { id: "pricing/service-charges", label: "Service Charges" },
+      { id: "pricing/service-charge", label: "Service Charge" },
     ],
   },
   {
@@ -213,8 +214,8 @@ const navCategories = [
     label: "Finance",
     icon: Wallet,
     children: [
-      { id: "finance/customer-payment", label: "Customer Payment" },
       { id: "finance/ledger", label: "Ledger" },
+      { id: "finance/customer-payment", label: "Customer Payment" },
       { id: "finance/deposit-history", label: "Deposit History" },
       { id: "finance/deposit-request", label: "Deposit Request" },
       { id: "finance/agent-dep-req", label: "Agent Dep. Req." },
@@ -230,13 +231,23 @@ const navCategories = [
     ],
   },
   {
+    id: "staff",
+    label: "Staff Manage",
+    icon: Users,
+    children: [
+      { id: "staff/list", label: "Staff List" },
+      { id: "staff/data", label: "Staff Data" },
+    ],
+  },
+  {
     id: "settings",
     label: "Settings",
     icon: Settings,
     children: [
-      { id: "settings/company", label: "Company profile" },
-      { id: "settings/invoice", label: "Invoice Setting" },
-      { id: "settings/staff", label: "Staff Manage" },
+      { id: "settings/tickets", label: "Tickets" },
+      { id: "settings/invoice", label: "Invoice Settings" },
+      { id: "settings/company", label: "Company Profile" },
+      { id: "settings/staff", label: "Staff Management" },
       { id: "settings/help", label: "Help Center" },
     ],
   },
@@ -305,6 +316,7 @@ export default function AgentBusinessOverviewPage() {
     pricing: false,
     finance: false,
     reports: false,
+    staff: false,
     settings: false,
   });
 
@@ -868,16 +880,20 @@ export default function AgentBusinessOverviewPage() {
             {/* 3. Booking: Booking List */}
             {activeSection === "booking/list" && <BookingListSection />}
 
-            {/* 4. Booking: Cancellations & Refunds */}
-            {activeSection === "booking/cancellation" && <CancellationsSection />}
+            {/* 4. Booking: Cancellations & Refunds (matches Figma Cancellations) */}
+            {(activeSection === "booking/cancellations" || activeSection === "booking/cancellation") && (
+              <CancellationsSection />
+            )}
 
             {/* 5. Booking: Amendments & Reissue */}
             {activeSection === "booking/amendments" && <AmendmentsSection />}
 
             {/* 6. Booking: Flight Search History */}
-            {activeSection === "booking/search-history" && <FlightSearchHistorySection />}
+            {(activeSection === "booking/search-history" || activeSection === "booking/flight-search") && (
+              <FlightSearchHistorySection />
+            )}
 
-            {/* 7. Booking: Traveller Profile Directory */}
+            {/* 7. Booking: Traveller Profiles */}
             {activeSection === "booking/traveller" && <TravellerProfileSection />}
 
             {/* 8. Pricing & Rules: Discounts */}
@@ -886,14 +902,16 @@ export default function AgentBusinessOverviewPage() {
             {/* 9. Pricing & Rules: Markups */}
             {activeSection === "pricing/markups" && <MarkupsSection />}
 
-            {/* 10. Pricing & Rules: Service Charges */}
-            {activeSection === "pricing/service-charges" && <ServiceChargesSection />}
+            {/* 10. Pricing & Rules: Service Charge (matches Figma Service Charge) */}
+            {(activeSection === "pricing/service-charge" || activeSection === "pricing/service-charges") && (
+              <ServiceChargesSection />
+            )}
 
-            {/* 11. Finance: Customer Payment & Balances */}
-            {activeSection === "finance/customer-payment" && <CustomerPaymentSection />}
-
-            {/* 12. Finance: Account Ledger & Statement */}
+            {/* 11. Finance: Ledger (First in Figma Finance) */}
             {activeSection === "finance/ledger" && <LedgerSection />}
+
+            {/* 12. Finance: Customer Payment & Balances */}
+            {activeSection === "finance/customer-payment" && <CustomerPaymentSection />}
 
             {/* 13. Finance: Deposit History */}
             {activeSection === "finance/deposit-history" && <DepositHistorySection />}
@@ -910,16 +928,25 @@ export default function AgentBusinessOverviewPage() {
             {/* 17. Reports: Financial Reports */}
             {activeSection === "reports/financial" && <FinancialReportsSection />}
 
-            {/* 18. Settings: Company Profile */}
-            {activeSection === "settings/company" && <CompanyProfileSection />}
+            {/* 18. Staff Manage: Staff List (Figma Top-Level Category) */}
+            {activeSection === "staff/list" && <StaffManageSection initialTab="list" />}
 
-            {/* 19. Settings: Invoice Settings */}
+            {/* 19. Staff Manage: Staff Data (Figma Top-Level Category) */}
+            {activeSection === "staff/data" && <StaffManageSection initialTab="data" />}
+
+            {/* 20. Settings: Tickets (Figma Settings -> Tickets) */}
+            {activeSection === "settings/tickets" && <SettingsTicketsSection />}
+
+            {/* 21. Settings: Invoice Settings */}
             {activeSection === "settings/invoice" && <InvoiceSettingsSection />}
 
-            {/* 20. Settings: Staff Manage */}
-            {activeSection === "settings/staff" && <StaffManageSection />}
+            {/* 22. Settings: Company Profile */}
+            {activeSection === "settings/company" && <CompanyProfileSection />}
 
-            {/* 21. Settings: Help Center */}
+            {/* 23. Settings: Staff Management (fallback alias to StaffManageSection) */}
+            {activeSection === "settings/staff" && <StaffManageSection initialTab="list" />}
+
+            {/* 24. Settings: Help Center */}
             {activeSection === "settings/help" && <HelpCenterSection />}
           </div>
         </main>

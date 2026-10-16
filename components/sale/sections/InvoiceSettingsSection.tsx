@@ -1,14 +1,17 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Receipt, Save, Eye, CheckCircle2 } from "lucide-react";
+import { Receipt, Save, Eye, CheckCircle2, Clock, Calendar, DollarSign, Globe } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { getPublicApiUrl } from "@/lib/apiConfig";
 
 export function InvoiceSettingsSection() {
   const { access } = useAuth();
   const [prefix, setPrefix] = useState("INV-");
-  const [startNum, setStartNum] = useState("10452");
+  const [startNum, setStartNum] = useState("1001");
+  const [currency, setCurrency] = useState("INR (₹)");
+  const [dateFormat, setDateFormat] = useState("DD MM YYYY");
+  const [timeZone, setTimeZone] = useState("Asia/kolkata (IST)");
   const [gstRate, setGstRate] = useState("18");
   const [sacCode, setSacCode] = useState("998552");
   const [terms, setTerms] = useState(
@@ -28,6 +31,9 @@ export function InvoiceSettingsSection() {
           const d = await res.json();
           if (d.series_prefix) setPrefix(d.series_prefix);
           if (d.starting_seq) setStartNum(String(d.starting_seq));
+          if (d.currency) setCurrency(d.currency);
+          if (d.date_format) setDateFormat(d.date_format);
+          if (d.time_zone) setTimeZone(d.time_zone);
           if (d.footer_note) setTerms(d.footer_note);
         }
       } catch {
@@ -39,7 +45,7 @@ export function InvoiceSettingsSection() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setToast("Invoice layout and numbering sequence saved!");
+    setToast("Invoice layout, series prefix, currency, and date formats saved!");
     setTimeout(() => setToast(null), 3000);
 
     if (access) {
@@ -54,6 +60,9 @@ export function InvoiceSettingsSection() {
           body: JSON.stringify({
             series_prefix: prefix,
             starting_seq: parseInt(startNum, 10) || 1001,
+            currency,
+            date_format: dateFormat,
+            time_zone: timeZone,
             footer_note: terms,
           }),
         });
@@ -63,18 +72,20 @@ export function InvoiceSettingsSection() {
     }
   };
 
+  const previewNumber = `${prefix}${startNum}`;
+
   return (
     <div className="space-y-5">
       {toast && (
-        <div className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-md">
+        <div className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-md transition-all">
           ✓ {toast}
         </div>
       )}
 
       <div>
-        <h2 className="text-xl font-black text-[#1c304a]">Invoice Settings & Series</h2>
+        <h2 className="text-xl font-black text-[#1c304a]">Invoice Settings</h2>
         <p className="text-xs text-slate-500">
-          Configure automated billing numbering, GST tax settings, and invoice footer terms.
+          Configure automated billing numbering sequence, currency, date formatting, and regional timezone per Figma.
         </p>
       </div>
 
@@ -82,27 +93,95 @@ export function InvoiceSettingsSection() {
         <form onSubmit={handleSave} className="lg:col-span-2 space-y-5">
           <div className="rounded-[10px] border border-[#e8ebef] bg-white p-5 shadow-sm space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wide text-[#1c304a] border-b pb-2">
-              Numbering & Tax Rules
+              Numbering & Regional Preferences (Figma Specifications)
             </h3>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Invoice Prefix</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Invoice Prefix:
+                </label>
                 <input
                   value={prefix}
                   onChange={(e) => setPrefix(e.target.value)}
+                  placeholder="e.g. INV-"
                   className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-mono font-bold uppercase outline-none focus:border-[#D60D26]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Next Sequence Number</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Starting Invoice Number:
+                </label>
                 <input
                   type="number"
                   value={startNum}
                   onChange={(e) => setStartNum(e.target.value)}
+                  placeholder="e.g. 1001"
                   className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-mono font-bold outline-none focus:border-[#D60D26]"
                 />
+              </div>
+
+              {/* Number Format Preview */}
+              <div className="sm:col-span-2 rounded-lg bg-slate-50 p-3 border border-slate-200 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                    Number Format Preview:
+                  </span>
+                  <span className="font-mono font-black text-sm text-[#D60D26]">{previewNumber}</span>
+                </div>
+                <span className="text-[11px] text-slate-500 font-semibold">
+                  Incremented sequentially on ticket issue
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Currency:
+                </label>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-semibold outline-none focus:border-[#D60D26] bg-white"
+                >
+                  <option value="INR (₹)">INR (₹)</option>
+                  <option value="USD ($)">USD ($)</option>
+                  <option value="EUR (€)">EUR (€)</option>
+                  <option value="GBP (£)">GBP (£)</option>
+                  <option value="AED (AED)">AED (AED)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Date Format:
+                </label>
+                <select
+                  value={dateFormat}
+                  onChange={(e) => setDateFormat(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-semibold outline-none focus:border-[#D60D26] bg-white"
+                >
+                  <option value="DD MM YYYY">DD MM YYYY</option>
+                  <option value="MM DD YYYY">MM DD YYYY</option>
+                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Time Zone:
+                </label>
+                <select
+                  value={timeZone}
+                  onChange={(e) => setTimeZone(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-semibold outline-none focus:border-[#D60D26] bg-white"
+                >
+                  <option value="Asia/kolkata (IST)">Asia/kolkata (IST)</option>
+                  <option value="UTC">UTC (Coordinated Universal Time)</option>
+                  <option value="America/New_York (EST)">America/New_York (EST)</option>
+                  <option value="Asia/Dubai (GST)">Asia/Dubai (GST)</option>
+                  <option value="Europe/London (GMT)">Europe/London (GMT)</option>
+                </select>
               </div>
 
               <div>
@@ -126,7 +205,9 @@ export function InvoiceSettingsSection() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Invoice Footer Terms & Conditions</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Invoice Footer Terms & Conditions
+              </label>
               <textarea
                 rows={4}
                 value={terms}
@@ -156,10 +237,14 @@ export function InvoiceSettingsSection() {
           <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-4 text-[11px] space-y-3">
             <div className="flex justify-between items-start border-b pb-2">
               <div>
-                <p className="font-bold text-[#1c304a]">My Travel Deal</p>
+                <p className="font-bold text-[#1c304a]">My Travel Deal Pvt Ltd</p>
                 <p className="text-[10px] text-slate-400">GSTIN: 07AABCM9124P1Z3</p>
+                <p className="text-[10px] text-slate-400">TZ: {timeZone}</p>
               </div>
-              <span className="font-mono font-bold text-[#D60D26]">{prefix}{startNum}</span>
+              <div className="text-right">
+                <span className="font-mono font-bold text-[#D60D26]">{previewNumber}</span>
+                <p className="text-[9px] text-slate-400">{dateFormat}</p>
+              </div>
             </div>
 
             <div className="space-y-1">

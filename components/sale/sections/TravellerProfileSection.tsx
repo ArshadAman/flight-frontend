@@ -1,82 +1,107 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, User, Globe, Award, Calendar, Eye, X } from "lucide-react";
+import { Search, User, Globe, Award, Calendar, Eye, X, Phone, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface Traveller {
-  id: string;
-  name: string;
+interface TravellerItem {
+  id: string; // 47522
+  name: string; // Harshit Singh
+  contactNo: string; // 0987654321
+  passport: string; // ND1234567
+  nationality: string; // Indian
+  totalTrip: number; // 23
+  assignedAgent: string; // Ajay Kumar
+  lastBooking: string; // 22, Dec 2021 | 12:30 PM
   gender: string;
-  dob: string;
-  nationality: string;
-  passport: string;
-  frequentFlyer: string;
-  totalTrips: number;
-  lastTrip: string;
-  recentRoutes: string[];
+  email: string;
 }
 
-const travellers: Traveller[] = [
+const mockTravellers: TravellerItem[] = [
   {
-    id: "TRV-001",
-    name: "Amit Sharma",
-    gender: "Male",
-    dob: "1988-05-14",
+    id: "47522",
+    name: "Harshit Singh",
+    contactNo: "0987654321",
+    passport: "ND1234567",
     nationality: "Indian",
+    totalTrip: 23,
+    assignedAgent: "Ajay Kumar",
+    lastBooking: "22, Dec 2021 | 12:30 PM",
+    gender: "Male",
+    email: "harshit.singh@corporate.in",
+  },
+  {
+    id: "23853",
+    name: "Vaibhav Gour",
+    contactNo: "0981234567",
     passport: "Z9482103",
-    frequentFlyer: "6E (IndiGo) #8841209",
-    totalTrips: 14,
-    lastTrip: "2026-10-10",
-    recentRoutes: ["DEL → BOM", "BOM → DEL", "DEL → BLR"],
-  },
-  {
-    id: "TRV-002",
-    name: "Sneha Reddy",
-    gender: "Female",
-    dob: "1994-11-22",
     nationality: "Indian",
-    passport: "K3391802",
-    frequentFlyer: "AI (Air India) #9012391",
-    totalTrips: 8,
-    lastTrip: "2026-09-28",
-    recentRoutes: ["BLR → DEL", "DEL → HYD"],
-  },
-  {
-    id: "TRV-003",
-    name: "Vikram Patel",
+    totalTrip: 43,
+    assignedAgent: "Ajay Kumar",
+    lastBooking: "18, Dec 2021 | 04:15 PM",
     gender: "Male",
-    dob: "1982-02-09",
-    nationality: "Indian",
-    passport: "M7194012",
-    frequentFlyer: "UK (Vistara) #Club-774",
-    totalTrips: 22,
-    lastTrip: "2026-10-04",
-    recentRoutes: ["BOM → GOI", "MAA → CCU", "DEL → BOM"],
+    email: "vaibhav.g@travelcorp.com",
   },
   {
-    id: "TRV-004",
-    name: "Neha Gupta",
-    gender: "Female",
-    dob: "1991-08-17",
+    id: "01272",
+    name: "Rahul Meena",
+    contactNo: "0976543210",
+    passport: "K3391802",
     nationality: "Indian",
+    totalTrip: 12,
+    assignedAgent: "Vicky Mehra",
+    lastBooking: "15, Dec 2021 | 10:00 AM",
+    gender: "Male",
+    email: "rahul.meena@delhitech.in",
+  },
+  {
+    id: "90726",
+    name: "Vaibhav Sharma",
+    contactNo: "0988776655",
+    passport: "M7194012",
+    nationality: "Indian",
+    totalTrip: 32,
+    assignedAgent: "Lokesh Gidwani",
+    lastBooking: "12, Dec 2021 | 08:30 PM",
+    gender: "Male",
+    email: "sharma.v@global.com",
+  },
+  {
+    id: "90727",
+    name: "Lokesh Gidwani",
+    contactNo: "0911223344",
     passport: "V8190241",
-    frequentFlyer: "None",
-    totalTrips: 5,
-    lastTrip: "2026-08-19",
-    recentRoutes: ["BOM → GOI"],
+    nationality: "Indian",
+    totalTrip: 54,
+    assignedAgent: "Ajay Kumar",
+    lastBooking: "08, Dec 2021 | 01:20 PM",
+    gender: "Male",
+    email: "lokesh.gidwani@agency.com",
+  },
+  {
+    id: "90728",
+    name: "Ajay Mehra",
+    contactNo: "0922334455",
+    passport: "A9102934",
+    nationality: "Indian",
+    totalTrip: 9,
+    assignedAgent: "Harshit Chirgania",
+    lastBooking: "01, Dec 2021 | 05:40 PM",
+    gender: "Male",
+    email: "ajay.mehra@enterprise.in",
   },
 ];
 
 export function TravellerProfileSection() {
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<Traveller | null>(null);
+  const [selected, setSelected] = useState<TravellerItem | null>(null);
 
-  const filtered = travellers.filter(
+  const filtered = mockTravellers.filter(
     (t) =>
       t.name.toLowerCase().includes(search.toLowerCase()) ||
+      t.id.toLowerCase().includes(search.toLowerCase()) ||
       t.passport.toLowerCase().includes(search.toLowerCase()) ||
-      t.frequentFlyer.toLowerCase().includes(search.toLowerCase())
+      t.contactNo.includes(search)
   );
 
   return (
@@ -85,59 +110,74 @@ export function TravellerProfileSection() {
         <div>
           <h2 className="text-xl font-black text-[#1c304a]">Traveller Profiles</h2>
           <p className="text-xs text-slate-500">
-            Corporate & frequent passenger directory with passport, loyalty cards, and booking history.
+            Corporate & frequent passenger directory with passport, nationality, and agent assignment.
           </p>
         </div>
-        <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-sm">
-          <Search className="h-3.5 w-3.5 text-slate-400" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name, passport..."
-            className="w-36 bg-transparent outline-none sm:w-48"
-          />
-        </label>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-sm">
+            <Search className="h-3.5 w-3.5 text-slate-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search Name, Passport, ID..."
+              className="w-36 bg-transparent outline-none sm:w-48 text-xs"
+            />
+          </label>
+        </div>
       </div>
 
+      <div className="flex items-center justify-between border-b border-[#e8ebef] pb-3">
+        <span className="text-xs font-bold text-slate-400">49 Profiles on File</span>
+      </div>
+
+      {/* Table matching Figma columns */}
       <div className="overflow-hidden rounded-[10px] border border-[#e8ebef] bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-[#e8ebef] bg-slate-50/70 font-semibold text-slate-500 uppercase tracking-wider text-[11px]">
               <tr>
+                <th className="px-4 py-3">Traveller Id</th>
                 <th className="px-4 py-3">Traveller Name</th>
-                <th className="px-4 py-3">Gender & DOB</th>
-                <th className="px-4 py-3">Passport No.</th>
-                <th className="px-4 py-3">Frequent Flyer #</th>
-                <th className="px-4 py-3">Total Flights</th>
-                <th className="px-4 py-3">Last Trip</th>
+                <th className="px-4 py-3">Contact No.</th>
+                <th className="px-4 py-3">Passport</th>
+                <th className="px-4 py-3">Nationality</th>
+                <th className="px-4 py-3 text-center">Total Trip</th>
+                <th className="px-4 py-3">Assigned Agent</th>
+                <th className="px-4 py-3">Last Booking</th>
                 <th className="px-4 py-3 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-[#1c304a]">
-              {filtered.map((t) => (
-                <tr key={t.id} className="hover:bg-slate-50/70 transition-colors">
-                  <td className="px-4 py-3 font-bold">
+              {filtered.map((item) => (
+                <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                  <td className="px-4 py-3 font-mono font-bold text-[#006aec]">
+                    #{item.id}
+                  </td>
+                  <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-600">
-                        {t.name.slice(0, 1)}
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-[10px] font-black text-slate-700">
+                        {item.name.slice(0, 2).toUpperCase()}
                       </div>
-                      <span>{t.name}</span>
+                      <span className="font-bold">{item.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {t.gender} · {t.dob}
+                  <td className="px-4 py-3 font-mono text-slate-700">{item.contactNo}</td>
+                  <td className="px-4 py-3 font-mono font-bold text-[#D60D26]">{item.passport}</td>
+                  <td className="px-4 py-3 text-slate-600 font-medium">{item.nationality}</td>
+                  <td className="px-4 py-3 text-center">
+                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
+                      {item.totalTrip}
+                    </span>
                   </td>
-                  <td className="px-4 py-3 font-mono font-semibold text-slate-700">{t.passport}</td>
-                  <td className="px-4 py-3 font-semibold text-blue-700">{t.frequentFlyer}</td>
-                  <td className="px-4 py-3 font-bold text-slate-800">{t.totalTrips} Trips</td>
-                  <td className="px-4 py-3 text-slate-500">{t.lastTrip}</td>
+                  <td className="px-4 py-3 font-semibold text-slate-800">{item.assignedAgent}</td>
+                  <td className="px-4 py-3 text-slate-500">{item.lastBooking}</td>
                   <td className="px-4 py-3 text-right">
                     <button
                       type="button"
-                      onClick={() => setSelected(t)}
-                      className="rounded border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 hover:text-[#D60D26]"
+                      onClick={() => setSelected(item)}
+                      className="rounded border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 hover:text-[#006aec]"
                     >
-                      View Travels
+                      View Profile
                     </button>
                   </td>
                 </tr>
@@ -147,13 +187,19 @@ export function TravellerProfileSection() {
         </div>
       </div>
 
+      {/* Drawer / Detail Modal matching Figma */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl space-y-4">
             <div className="flex items-start justify-between border-b pb-3">
-              <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400">Traveller History</span>
-                <h3 className="text-lg font-black text-[#1c304a]">{selected.name}</h3>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#006aec]/10 font-black text-[#006aec]">
+                  {selected.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-[#1c304a]">{selected.name}</h3>
+                  <p className="text-xs text-slate-400">ID: #{selected.id} · {selected.nationality}</p>
+                </div>
               </div>
               <button
                 type="button"
@@ -164,34 +210,36 @@ export function TravellerProfileSection() {
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="rounded-lg bg-slate-50 p-3 space-y-1">
-                <p><span className="text-slate-400">Passport:</span> <strong>{selected.passport}</strong> ({selected.nationality})</p>
-                <p><span className="text-slate-400">Date of Birth:</span> <strong>{selected.dob}</strong></p>
-                <p><span className="text-slate-400">Loyalty Program:</span> <strong>{selected.frequentFlyer}</strong></p>
-                <p><span className="text-slate-400">Total Bookings Completed:</span> <strong>{selected.totalTrips}</strong></p>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="rounded-lg bg-slate-50 p-3 border border-slate-100">
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Passport Number</span>
+                <span className="font-mono font-bold text-[#D60D26] text-sm">{selected.passport}</span>
               </div>
-
-              <div>
-                <p className="font-bold text-slate-700 mb-2">Recent Travel Routes:</p>
-                <div className="space-y-1">
-                  {selected.recentRoutes.map((r, i) => (
-                    <div key={i} className="flex items-center justify-between rounded border border-slate-100 p-2 text-xs font-semibold">
-                      <span>✈️ {r}</span>
-                      <span className="text-emerald-700 text-[10px]">Confirmed & Flown</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="rounded-lg bg-slate-50 p-3 border border-slate-100">
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Contact No.</span>
+                <span className="font-mono font-bold text-slate-800 text-sm">{selected.contactNo}</span>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3 border border-slate-100">
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Trips Completed</span>
+                <span className="font-black text-emerald-700 text-sm">{selected.totalTrip} Flights</span>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3 border border-slate-100">
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Assigned Travel Agent</span>
+                <span className="font-bold text-slate-800 text-sm">{selected.assignedAgent}</span>
+              </div>
+              <div className="col-span-2 rounded-lg bg-slate-50 p-3 border border-slate-100">
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Last Flight Booking</span>
+                <span className="font-medium text-slate-700 text-xs">{selected.lastBooking}</span>
               </div>
             </div>
 
-            <div className="flex justify-end pt-2 border-t">
+            <div className="flex justify-end border-t pt-3">
               <button
                 type="button"
                 onClick={() => setSelected(null)}
-                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                className="rounded-lg bg-[#1c304a] px-4 py-2 text-xs font-bold text-white hover:bg-[#2a4568]"
               >
-                Close
+                Done
               </button>
             </div>
           </div>
